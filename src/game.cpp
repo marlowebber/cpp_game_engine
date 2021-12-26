@@ -1,6 +1,7 @@
 #include "game.h"
 #include "graphics.h"
 #include "menus.h"
+#include "main.h"
 
 #include <ctime>
 #include <chrono>
@@ -40,6 +41,8 @@ void destroyMouseJoint ()
 {
 	if (m_mouseJoint)
 	{
+
+		printf("destroyMouseJoint\n");
 		m_world->DestroyJoint(m_mouseJoint);
 		m_mouseJoint = nullptr;
 		mouseDraggingBody = nullptr;
@@ -58,10 +61,35 @@ void maintainMouseJoint (b2Vec2 p)
 bool getMouseJointStatus ()
 {
 	if (m_mouseJoint)
-	{	return true;
+	{
+		return true;
 	}
 	return false;
+}
 
+void initMouseJointWithBody (b2Vec2 p, b2Body * body)
+{
+	if (m_mouseJoint != NULL)
+	{
+		return;
+	}
+
+	b2MouseJointDef md;
+	md.bodyA = m_groundBody;
+	md.bodyB = body;
+	md.target = p;
+	md.maxForce = 100.0f * body->GetMass();
+	m_mouseJoint = (b2MouseJoint*)m_world->CreateJoint(&md);
+	body->SetAwake(true);
+
+	m_mouseJoint->SetStiffness(1000.00f);
+	m_mouseJoint->SetDamping(100.00f);
+
+	mouseDraggingBody = body;
+
+	printf("mouse joint\n");
+
+	return;
 }
 
 
@@ -70,8 +98,6 @@ bool getMouseJointStatus ()
 class PhysicalObject
 {
 public:
-	// b2RevoluteJointDef jointDef;
-	// b2RevoluteJoint * p_joint;
 	b2BodyDef bodyDef;
 	b2Body * p_body;
 	b2PolygonShape shape;
@@ -112,6 +138,24 @@ public:
 
 std::list<b2Body* > rayContacts;
 std::list<PhysicalObject> physicalObjects;
+
+int checkClickObjects (b2Vec2 worldClick)
+{
+	std::list<PhysicalObject>::iterator object;
+	for (object = physicalObjects.begin(); object !=  physicalObjects.end(); ++object)
+	{
+
+		if (object->p_fixture->TestPoint( worldClick) )
+		{
+
+			initMouseJointWithBody (worldClick, object->p_body);
+			return 1;
+		}
+
+	}
+
+	return 0;
+}
 
 void collisionHandler (b2Contact * contact)
 {
@@ -267,19 +311,19 @@ void initializeGame ()
 
 
 void rebuildMenus ()
-{	
-    int spacing = 10;
+{
+	int spacing = 10;
 
 	// -----------------------------------------------------------------------------------
 	// Add your menu code in below:
 
 
 
-	menuItem * exampleMenu = setupMenu ( std::string ("test") , RIGHT, nullptr, (void *)exampleMenuCallback, nullptr, b2Color(0.1f, 0.1f, 0.1f, 1.0f), b2Vec2(200,200));
+	menuItem * exampleMenu = setupMenu ( std::string ("test") , RIGHT, nullptr, (void *)exampleMenuCallback, nullptr, b2Color(0.1f, 0.1f, 0.1f, 1.0f), b2Vec2(200, 200));
 	exampleMenu->collapsed = false;
 
 
-  	menus.push_back(*exampleMenu);
+	menus.push_back(*exampleMenu);
 	// -----------------------------------------------------------------------------------
 
 
@@ -396,6 +440,10 @@ void threadGraphics()
 	glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
 	cleanupAfterWorldDraw();
 	drawMenus ();
+
+			b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
+	drawTestCoordinate(worldMousePos.x, worldMousePos.y);
+
 	postDraw();
 
 #ifdef THREAD_TIMING

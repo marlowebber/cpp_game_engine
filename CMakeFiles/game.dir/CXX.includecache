@@ -6,22 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/marlo/Documents/cpp_game_engine/src/game.cpp
-game.h
-/home/marlo/Documents/cpp_game_engine/src/game.h
-graphics.h
-/home/marlo/Documents/cpp_game_engine/src/graphics.h
-menus.h
-/home/marlo/Documents/cpp_game_engine/src/menus.h
-ctime
--
-chrono
--
-iostream
--
-box2d.h
--
-
 /home/marlo/Documents/cpp_game_engine/src/game.h
 stdio.h
 -
@@ -55,20 +39,6 @@ box2d.h
 /home/marlo/Documents/cpp_game_engine/src/graphics.h
 game.h
 /home/marlo/Documents/cpp_game_engine/src/game.h
-
-/home/marlo/Documents/cpp_game_engine/src/main.cpp
-ctime
--
-chrono
--
-iostream
--
-game.h
-/home/marlo/Documents/cpp_game_engine/src/game.h
-graphics.h
-/home/marlo/Documents/cpp_game_engine/src/graphics.h
-menus.h
-/home/marlo/Documents/cpp_game_engine/src/menus.h
 
 /home/marlo/Documents/cpp_game_engine/src/menus.cpp
 game.h

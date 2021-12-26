@@ -52,7 +52,7 @@ std::list<menuItem> menus;
 b2Vec2 transformScreenPositionToWorld( b2Vec2 screen )
 {
     float worldX =       ( ((screen.x - (width / 2))) * (viewZoom  ) / 96) + viewPanX ;
-    float worldY =  -1 * ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
+    float worldY =       ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
     return b2Vec2(worldX, worldY);
 }
 
@@ -661,11 +661,6 @@ void drawPanel ( menuItem * menu , unsigned int * cursor, GLfloat * vertex_buffe
     {
         float alpha = 1.0f;
 
-        printf(" menu->aabb.lowerBound.x  %f\n",  menu->aabb.lowerBound.x );
-        printf(" menu->aabb.upperBound.x  %f\n",  menu->aabb.upperBound.x );
-        printf(" menu->aabb.lowerBound.y  %f\n",  menu->aabb.lowerBound.y );
-        printf(" menu->aabb.upperBound.y  %f\n",  menu->aabb.upperBound.y );
-
         vertToBuffer ( vertex_buffer_data, cursor, menu->panelColor, alpha,  b2Vec2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
         advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
@@ -919,5 +914,115 @@ void setupMenus()
 
     resetMenus();
     initText2D();
+
+}
+t_mat4x4 egg_matrix;
+
+// this function just draws a mark on the screen in world coordinates.
+void drawTestCoordinate (float x, float y) 
+{
+
+    printf( " %f %f\n ", x, y);
+
+    unsigned int nVertsToRenderThisTurn = 0;
+    unsigned int nIndicesToUseThisTurn = 0;
+
+    nVertsToRenderThisTurn = 4 ;
+    nIndicesToUseThisTurn = 5 ;
+    unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
+
+    // Create the buffer.
+    unsigned int g_vertex_buffer_cursor = 0;
+    GLfloat vertex_buffer_data[totalNumberOfFields];
+
+    unsigned int index_buffer_cursor = 0;
+    unsigned int index_buffer_content = 0;
+    unsigned int index_buffer_data[nIndicesToUseThisTurn];
+
+    glUseProgram( program );
+    glBindBuffer( GL_ARRAY_BUFFER, vbo );
+
+    glEnableVertexAttribArray( attrib_position );
+    glEnableVertexAttribArray( attrib_color );
+
+    glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
+    glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
+
+    unsigned int cursor = 0;
+
+    unsigned int bloopSize = 0.1 * viewZoom;
+    b2Color bloopColor = b2Color( 1.0f, 1.0f, 1.0f);
+
+    vertex_buffer_data[(cursor) + 0] = bloopColor.r;
+    vertex_buffer_data[(cursor) + 1] = bloopColor.g;
+    vertex_buffer_data[(cursor) + 2] = bloopColor.b;
+    vertex_buffer_data[(cursor) + 3] = 1.0f;
+    vertex_buffer_data[(cursor) + 4] = x - bloopSize;
+    vertex_buffer_data[(cursor) + 5] = y + bloopSize ;
+    cursor += 6;
+
+    index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
+    (index_buffer_cursor)++;
+    (index_buffer_content)++;
+
+    vertex_buffer_data[(cursor) + 0] = bloopColor.r;
+    vertex_buffer_data[(cursor) + 1] = bloopColor.g;
+    vertex_buffer_data[(cursor) + 2] = bloopColor.b;
+    vertex_buffer_data[(cursor) + 3] = 1.0f;
+    vertex_buffer_data[(cursor) + 4] = x - bloopSize;
+    vertex_buffer_data[(cursor) + 5] = y - bloopSize ;
+    cursor += 6;
+
+    index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
+    (index_buffer_cursor)++;
+    (index_buffer_content)++;
+
+    vertex_buffer_data[(cursor) + 0] = bloopColor.r;
+    vertex_buffer_data[(cursor) + 1] = bloopColor.g;
+    vertex_buffer_data[(cursor) + 2] = bloopColor.b;
+    vertex_buffer_data[(cursor) + 3] = 0.5f;
+    vertex_buffer_data[(cursor) + 4] = x + bloopSize;
+    vertex_buffer_data[(cursor) + 5] = y - bloopSize;
+    cursor += 6;
+
+    index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
+    (index_buffer_cursor)++;
+    (index_buffer_content)++;
+
+    vertex_buffer_data[(cursor) + 0] = bloopColor.r;
+    vertex_buffer_data[(cursor) + 1] = bloopColor.g;
+    vertex_buffer_data[(cursor) + 2] = bloopColor.b;
+    vertex_buffer_data[(cursor) + 3] = 0.5f;
+    vertex_buffer_data[(cursor) + 4] = x + bloopSize;
+    vertex_buffer_data[(cursor) + 5] = y + bloopSize;
+
+    index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
+    (index_buffer_cursor)++;
+    (index_buffer_content)++;
+
+    index_buffer_data[(index_buffer_cursor)] = 0xffff;
+    (index_buffer_cursor)++;
+
+    glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_buffer_data ), vertex_buffer_data, GL_DYNAMIC_DRAW );
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_DYNAMIC_DRAW);
+
+    mat4x4_ortho(
+        egg_matrix,
+        -10   * viewZoom + viewPanX,
+        +10   * viewZoom + viewPanX,
+        +5.625 * viewZoom + viewPanY,
+        -5.625 * viewZoom + viewPanY,
+        -10.0f,
+        +10.0f
+    );
+
+    glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, egg_matrix );
+
+    glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
+
+    glDisableVertexAttribArray(attrib_position);
+    glDisableVertexAttribArray(attrib_color);
+
+
 
 }

@@ -3,4 +3,8 @@
 
 #include "game.h"
 
+
+extern int mouseX;
+extern int mouseY;
+
 #endif

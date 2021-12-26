@@ -49,4 +49,7 @@ void destroyMouseJoint ();
 
 bool getMouseJointStatus () ;
 
+
+int checkClickObjects (b2Vec2 worldClick);
+
 #endif

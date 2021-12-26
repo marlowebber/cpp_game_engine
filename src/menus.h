@@ -62,4 +62,6 @@ b2Vec2 transformScreenPositionToWorld( b2Vec2 screen );
 
 b2Vec2 transformWorldPositionToScreen( b2Vec2 world );
 
+void drawTestCoordinate (float x, float y) ;
+
 #endif // menus_h

@@ -4,6 +4,7 @@
 CMakeFiles/game.dir/src/game.cpp.o: src/game.cpp
 CMakeFiles/game.dir/src/game.cpp.o: src/game.h
 CMakeFiles/game.dir/src/game.cpp.o: src/graphics.h
+CMakeFiles/game.dir/src/game.cpp.o: src/main.h
 CMakeFiles/game.dir/src/game.cpp.o: src/menus.h
 CMakeFiles/game.dir/src/game.cpp.o: src/utilities.h
 CMakeFiles/game.dir/src/game.cpp.o: /usr/local/include/SDL2/SDL.h

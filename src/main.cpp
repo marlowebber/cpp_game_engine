@@ -79,6 +79,18 @@ void threadInterface()
 			case SDL_BUTTON_LEFT:
 			{
 				int clickResult = checkMenus ( mouseX,  mouseY);
+
+				if (!clickResult)
+				{
+
+					b2Vec2 worldClick = transformScreenPositionToWorld(b2Vec2(mouseX, mouseY));
+					if ( ! checkClickObjects ( worldClick) )
+					{
+						;
+					}
+
+				}
+
 				break;
 			}
 			break;
@@ -104,9 +116,13 @@ void threadInterface()
 		{
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
+
+
+			b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
+
+
 			if (getMouseJointStatus())
 			{
-				b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
 				maintainMouseJoint (worldMousePos) ;
 			}
 			break;
@@ -125,7 +141,7 @@ int main( int argc, char * argv[] )
 {
 	setupGraphics();
 	initializeGame();
- 	setupMenus();
+	setupMenus();
 
 	for ( ;; )
 	{
@@ -135,6 +151,8 @@ int main( int argc, char * argv[] )
 
 		// graphics only works in this thread, because it is the process the SDL context was created in.
 		threadGraphics();
+
+		
 
 		// you can have this thread wait for another to end by saying:
 		t2.join();
