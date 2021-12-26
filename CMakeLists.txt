@@ -24,6 +24,8 @@ set(SRCS
 	src/game.cpp
 	src/graphics.cpp
 	src/graphics.h
+	src/menus.h
+	src/menus.cpp
 )
 
 link_directories(

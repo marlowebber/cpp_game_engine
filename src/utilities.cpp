@@ -3,7 +3,7 @@
 //https://github.com/edrosten/8bit_rng/blob/master/rng-4261412736.c
 uint16_t x, y, z, a;
 
-const float pi = 3.14159f; 
+const float pi = 3.14159f;
 
 vec_u2::vec_u2(unsigned int a, unsigned int b)
 {
@@ -37,6 +37,22 @@ vec_f2 rotatePointPrecomputed( vec_f2 center, float s, float c, vec_f2 point)
 	point.x = xnew + center.x;
 	point.y = ynew + center.y;
 	return vec_f2(point.x, point.y);
+};
+
+b2Vec2 b2RotatePointPrecomputed( b2Vec2 center, float s, float c, b2Vec2 point)
+{
+	// translate point back to origin:
+	point.x -= center.x;
+	point.y -= center.y;
+
+	// rotate point
+	float xnew = point.x * c - point.y * s;
+	float ynew = point.x * s + point.y * c;
+
+	// translate point back:
+	point.x = xnew + center.x;
+	point.y = ynew + center.y;
+	return b2Vec2(point.x, point.y);
 };
 
 // lookup table for character alphanumeric values
@@ -157,7 +173,7 @@ float magnitude_int( int x,  int y)
 	return mag;
 }
 
- inline uint16_t extremelyFastRandomByte()
+inline uint16_t extremelyFastRandomByte()
 {
 	// it used to be an actual byte, but that makes it eventually run out of randomness and always choose the same number!!
 	// mask off the top 8 if you really need a byte.
@@ -170,14 +186,14 @@ float magnitude_int( int x,  int y)
 	return a;
 }
 
- uint16_t extremelyFastNumberInRange(uint16_t from, uint16_t to)
+uint16_t extremelyFastNumberInRange(uint16_t from, uint16_t to)
 {
 	return from + ( extremelyFastRandomByte() % ( to - from + 1 ) );
 }
 
- uint16_t extremelyFastNumberFromZeroTo( uint16_t to)
+uint16_t extremelyFastNumberFromZeroTo( uint16_t to)
 {
-	return( extremelyFastRandomByte() % ( to + 1 ) );
+	return ( extremelyFastRandomByte() % ( to + 1 ) );
 }
 
 
@@ -188,3 +204,11 @@ void setupExtremelyFastNumberGenerators()
 	z = 0;
 	a = 1;
 }
+
+
+
+	uDataWrap::uDataWrap(void * dat, unsigned int typ)
+	{
+		uData = dat;
+		dataType = typ;
+	}

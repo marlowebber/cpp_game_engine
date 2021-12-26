@@ -204,6 +204,33 @@ src/main.cpp.s:
 	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/menus.o: src/menus.cpp.o
+
+.PHONY : src/menus.o
+
+# target to build an object file
+src/menus.cpp.o:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/menus.cpp.o
+.PHONY : src/menus.cpp.o
+
+src/menus.i: src/menus.cpp.i
+
+.PHONY : src/menus.i
+
+# target to preprocess a source file
+src/menus.cpp.i:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/menus.cpp.i
+.PHONY : src/menus.cpp.i
+
+src/menus.s: src/menus.cpp.s
+
+.PHONY : src/menus.s
+
+# target to generate assembly for a file
+src/menus.cpp.s:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/menus.cpp.s
+.PHONY : src/menus.cpp.s
+
 src/utilities.o: src/utilities.cpp.o
 
 .PHONY : src/utilities.o
@@ -249,6 +276,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/menus.o"
+	@echo "... src/menus.i"
+	@echo "... src/menus.s"
 	@echo "... src/utilities.o"
 	@echo "... src/utilities.i"
 	@echo "... src/utilities.s"

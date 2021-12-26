@@ -1,5 +1,5 @@
-#ifndef DEEPGARDEN_H
-#define DEEPGARDEN_H
+#ifndef GAME_H
+#define GAME_H
 
 #define GL_GLEXT_PROTOTYPES
 #include <stdio.h>
@@ -19,20 +19,23 @@ using namespace glm;
 
 #include "utilities.h"
 
-struct Color
-{
-	float r;
-	float g;
-	float b;
-	float a;
 
-	Color(float r, float g, float b, float a);
-};
+#define THREAD_TIMING
 
-void initialize ();
+// struct Color
+// {
+// 	float r;
+// 	float g;
+// 	float b;
+// 	float a;
 
-void thread_game () ;
+// 	Color(float r, float g, float b, float a);
+// };
 
-void thread_graphics () ;
+void initializeGame ();
+
+void threadGame () ;
+
+void threadGraphics () ;
 
 #endif

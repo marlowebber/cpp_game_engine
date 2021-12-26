@@ -1,6 +1,7 @@
 #include "game.h"
+#include "graphics.h"
 
-float viewZoom = 10.0f;
+float viewZoom = 1.0f;
 float viewPanX = 0.0f;
 float viewPanY = 0.0f;
 
@@ -20,14 +21,6 @@ SDL_GLContext context;
 GLuint vs, fs, program;
 GLuint vao, vbo;
 GLuint IndexBufferId;
-
-Color::Color(float r, float g, float b, float a)
-{
-	this->r = r;
-	this->g = g;
-	this->b = b;
-	this->a = a;
-}
 
 static const char * vertex_shader =
     "#version 130\n"
@@ -161,7 +154,7 @@ void setupGraphics()
 	glViewport( 0, 0, width, height );
 
 	glEnable(GL_PRIMITIVE_RESTART);
-	glPrimitiveRestartIndex(0xffff);
+	glPrimitiveRestartIndex(PRIMITIVE_RESTART);
 
 	glGenBuffers(1, &IndexBufferId);
 	glGenVertexArrays( 1, &vao );
@@ -179,7 +172,7 @@ void setupGraphics()
 	glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
 	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
 
-	glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
+	glClearColor( 0.2f, 0.2f, 0.2f, 1.0f );
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -189,6 +182,14 @@ void setupGraphics()
 
 void prepareForWorldDraw ()
 {
+
+	glUseProgram( program );
+	glBindBuffer( GL_ARRAY_BUFFER, vbo );
+	glEnableVertexAttribArray( attrib_position );
+	glEnableVertexAttribArray( attrib_color );
+	glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
+	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
+
 	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
 	mat4x4_ortho(
 	    projection_matrix,
@@ -202,34 +203,23 @@ void prepareForWorldDraw ()
 	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
 }
 
-const unsigned int floats_per_color = 16;
-void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, Color vert_color, unsigned int x, unsigned int y)
-{
-	float floatx = x;
-	float floaty = y;
-	unsigned int cursorValue = *(cursor);
-	memcpy((vertex_buffer_data + cursorValue), &vert_color , floats_per_color); // a float is 4 bytes, 4 floats = 16 bytes
-	vertex_buffer_data[cursorValue + 4] = floatx;
-	vertex_buffer_data[cursorValue + 5] = floaty;
-	(*cursor) += 6;
-}
 
-void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor)
+void cleanupAfterWorldDraw() 
 {
-	index_buffer_data[(*index_buffer_cursor)] = (*index_buffer_content);
-	(*index_buffer_cursor)++;
-	(*index_buffer_content)++;
-}
+    glDisable(GL_BLEND);
 
+    glDisableVertexAttribArray(attrib_position);
+    glDisableVertexAttribArray(attrib_color);
+}
 void preDraw()
 {
-	prepareForWorldDraw ();
+	// prepareForWorldDraw ();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-
 void postDraw ()
 {
+	// cleanupAfterWorldDraw();
 	SDL_GL_SwapWindow( window );
 	float zoomDifference = (viewZoom - viewZoomSetpoint);
 	float zoomResponse = (zoomDifference * -1) / cameraTrackingResponse;

@@ -18,10 +18,16 @@ One day, I hope this will be the most popular game engine in the world!
 
 ## Components
 
-Rendering is done with OpenGL.
+Rendering is done with OpenGL. It is a modern implementation using proper vbo philosophy. It can be made faster if you don't clumsily iterate through the list of objects (twice), but it is easy to understand this way.
+
 Threading is done with boost thread.
+File IO, for saving and importing, also comes from boost.
 Game physics is done with Box2D.
-keyboard, mouse, windowing, and audio is provided by SDL2.
+keyboard, mouse, windowing, and audio is provided by SDL2. This means great portability.
+
+Menus are provided by my source code, which has a lightweight custom implementation. You can set up menus with callback functions when they are clicked on, or display the value of a variable.
+The ability to draw text was taken from the OpenGL tutorial. http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-11-2d-text/
+It uses bitmap text, which is fast and efficient, but inflexible. You must alter the image to change the font or the color.
 
 ## How to use it
 
@@ -31,4 +37,27 @@ You need to make sure boost, SDL2, and openGL are installed. A portable copy of 
 
 ### Building
 
-Building is done with cmake and make. Just go in to the project folder and say 'make'.
+Building is done with cmake and make.
+	1a. clone this repository.
+	1b. install its requirements.
+	1c. cmake .
+	1d. make
+	1e. ./game
+
+	if it worked, a scene will show up where a black square falls onto a black rectangle. Hit escape to close it.
+
+
+### Customization
+
+You want to make a game but don't want to spend forever choosing a sensible set of tools and getting them all set up. Use this instead to hit the ground running.
+
+1. build and make this project, so you know it works.
+
+2. add your custom game logic to 'src/game.cpp'. The function 'threadGame' gets run once every frame, and 'initializeGame' gets run once at startup. 
+	If you want to use the physics, a class for physical bodies is provided, with functions to cleanly create and destroy it from the world.
+
+3. add your graphics logic to the function 'threadGraphics' in 'src/game.cpp'. This also gets run once every frame. Inside it, you must instruct the computer how to draw the vertices of your game objects. They must be transcribed into the format (r, g, b, a, x, y). R, G, and B are colors between 0 and 1. A is the alpha, or transparency, which is between 0 and 1. X and Y are the position, and can be any real number. All six numbers are floats.
+
+4. add key controls in 'main.cpp'. 
+
+5. That's it, build and run your game.
