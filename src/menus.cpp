@@ -52,7 +52,7 @@ std::list<menuItem> menus;
 b2Vec2 transformScreenPositionToWorld( b2Vec2 screen )
 {
     float worldX =       ( ((screen.x - (width / 2))) * (viewZoom  ) / 96) + viewPanX ;
-    float worldY =       ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
+    float worldY =     -1*  ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
     return b2Vec2(worldX, worldY);
 }
 
@@ -922,7 +922,7 @@ t_mat4x4 egg_matrix;
 void drawTestCoordinate (float x, float y) 
 {
 
-    printf( " %f %f\n ", x, y);
+    // printf( " %f %f\n ", x, y);
 
     unsigned int nVertsToRenderThisTurn = 0;
     unsigned int nIndicesToUseThisTurn = 0;

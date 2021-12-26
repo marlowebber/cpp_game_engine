@@ -41,7 +41,6 @@ void destroyMouseJoint ()
 {
 	if (m_mouseJoint)
 	{
-
 		printf("destroyMouseJoint\n");
 		m_world->DestroyJoint(m_mouseJoint);
 		m_mouseJoint = nullptr;
@@ -78,11 +77,11 @@ void initMouseJointWithBody (b2Vec2 p, b2Body * body)
 	md.bodyA = m_groundBody;
 	md.bodyB = body;
 	md.target = p;
-	md.maxForce = 100.0f * body->GetMass();
+	md.maxForce = 10000.0f * body->GetMass();
 	m_mouseJoint = (b2MouseJoint*)m_world->CreateJoint(&md);
 	body->SetAwake(true);
 
-	m_mouseJoint->SetStiffness(1000.00f);
+	m_mouseJoint->SetStiffness(10000.00f);
 	m_mouseJoint->SetDamping(100.00f);
 
 	mouseDraggingBody = body;
@@ -141,6 +140,9 @@ std::list<PhysicalObject> physicalObjects;
 
 int checkClickObjects (b2Vec2 worldClick)
 {
+
+
+	printf("testing world position %f %f\n", worldClick.x, worldClick.y);
 	std::list<PhysicalObject>::iterator object;
 	for (object = physicalObjects.begin(); object !=  physicalObjects.end(); ++object)
 	{
@@ -341,6 +343,8 @@ void threadGame ()
 	{
 
 
+		threadInterface(); // if you do this while the world is unlocked, you can add and remove stuff.
+
 		// -----------------------------------------------------------------------------------
 		// Your custom game logic goes here!
 
@@ -358,6 +362,7 @@ void threadGame ()
 
 		float timeStep = nominalFramerate > 0.0f ? 1.0f / nominalFramerate : float(0.0f);
 		m_world->Step(timeStep, 1, 1);
+
 	}
 
 #ifdef THREAD_TIMING
@@ -441,8 +446,9 @@ void threadGraphics()
 	cleanupAfterWorldDraw();
 	drawMenus ();
 
-			b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
-	drawTestCoordinate(worldMousePos.x, worldMousePos.y);
+	
+				b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
+				// drawTestCoordinate(worldMousePos.x, worldMousePos.y);
 
 	postDraw();
 

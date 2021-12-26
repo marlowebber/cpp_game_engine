@@ -1,12 +1,12 @@
 #include "game.h"
 #include "graphics.h"
 
-float viewZoom = 1.0f;
+float viewZoom = 10.0f;
 float viewPanX = 0.0f;
 float viewPanY = 0.0f;
 
 
-float viewZoomSetpoint = 1000.0f;
+float viewZoomSetpoint = 10.0f;
 float viewPanSetpointX = 0.0f;
 float viewPanSetpointY = 0.0f;
 
@@ -162,15 +162,15 @@ void prepareForWorldDraw ()
 	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
 
 	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-	mat4x4_ortho(
-	    projection_matrix,
-	    (-1 * viewZoom) + viewPanX,
-	    (+1 * viewZoom) + viewPanX,
-	    (-1 * 0.6 * viewZoom) + viewPanY,
-	    (+1 * 0.6 * viewZoom) + viewPanY,
-	    -10.0f,
-	    +10.0f
-	);
+  mat4x4_ortho(
+        projection_matrix,
+        -1 * 10  * viewZoom + viewPanX,
+        +1 * 10  * viewZoom + viewPanX,
+        -1 * 5.625 * viewZoom + viewPanY,
+        +1 * 5.625 * viewZoom + viewPanY,
+        -10.0f,
+        +10.0f
+    );
 	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
 }
 

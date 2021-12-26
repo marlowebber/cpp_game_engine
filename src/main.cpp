@@ -11,6 +11,7 @@ bool flagQuit = false;
 
 int mouseX;
 int mouseY;
+b2Vec2 worldMousePos;
 
 float panSpeed = 0.5f;
 
@@ -78,18 +79,26 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
-				int clickResult = checkMenus ( mouseX,  mouseY);
 
-				if (!clickResult)
+				if (getMouseJointStatus())
 				{
+					destroyMouseJoint();
+				}
 
-					b2Vec2 worldClick = transformScreenPositionToWorld(b2Vec2(mouseX, mouseY));
-					if ( ! checkClickObjects ( worldClick) )
+
+				if ( ! checkMenus ( mouseX,  mouseY) ) 
+				{
+					if ( ! checkClickObjects ( worldMousePos) )
 					{
 						;
 					}
 
+
 				}
+
+
+
+
 
 				break;
 			}
@@ -103,10 +112,10 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
-				if (getMouseJointStatus())
-				{
-					destroyMouseJoint();
-				}
+				// if (getMouseJointStatus())
+				// {
+				// 	destroyMouseJoint();
+				// }
 				break;
 			}
 			break;
@@ -117,8 +126,7 @@ void threadInterface()
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
 
-
-			b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
+			worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
 
 
 			if (getMouseJointStatus())
@@ -146,16 +154,16 @@ int main( int argc, char * argv[] )
 	for ( ;; )
 	{
 		// you can start your threads like this:
-		boost::thread t2{ threadInterface };
+		// boost::thread t2{ threadInterface };
 		boost::thread t3{ threadGame };
 
 		// graphics only works in this thread, because it is the process the SDL context was created in.
 		threadGraphics();
 
-		
+
 
 		// you can have this thread wait for another to end by saying:
-		t2.join();
+		// t2.join();
 		t3.join();
 
 		if (flagQuit)
