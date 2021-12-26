@@ -1,11 +1,69 @@
 #include "game.h"
 #include "graphics.h"
+#include "menus.h"
 
 #include <ctime>
 #include <chrono>
 #include <iostream>
 
 #include <box2d.h>
+
+
+b2World * m_world = nullptr;
+
+b2MouseJoint* m_mouseJoint;
+b2Body * mouseDraggingBody;
+b2BodyDef groundBodyDef;
+b2Body * m_groundBody;
+
+class MyDestructionListener : public b2DestructionListener
+{
+	void SayGoodbye(b2Joint* joint)
+	{
+		// remove all references to joint.
+		if (m_mouseJoint == joint)
+		{
+			m_mouseJoint = NULL;
+		}
+	}
+};
+
+b2DestructionListener * myDestructionListener;
+
+void setupForMouseJoint()
+{
+	m_groundBody = m_world->CreateBody(&groundBodyDef);
+	m_world->SetDestructionListener(myDestructionListener);
+}
+
+void destroyMouseJoint ()
+{
+	if (m_mouseJoint)
+	{
+		m_world->DestroyJoint(m_mouseJoint);
+		m_mouseJoint = nullptr;
+		mouseDraggingBody = nullptr;
+	}
+}
+
+void maintainMouseJoint (b2Vec2 p)
+{
+	if (m_mouseJoint)
+	{
+		m_mouseJoint->SetTarget(p);
+		m_groundBody->SetTransform(p, 0.0f);
+	}
+}
+
+bool getMouseJointStatus ()
+{
+	if (m_mouseJoint)
+	{	return true;
+	}
+	return false;
+
+}
+
 
 // this class pins together the parts you need for a box2d physical-world object.
 // if you make your own classes that represent physical objects, you should either have them inherit from this, or have a copy of one of these as a member.
@@ -52,11 +110,8 @@ public:
 	}
 };
 
-b2World * m_world = nullptr;
 std::list<b2Body* > rayContacts;
 std::list<PhysicalObject> physicalObjects;
-
-static const unsigned int nominalFramerate = 60;
 
 void collisionHandler (b2Contact * contact)
 {
@@ -162,16 +217,26 @@ void deleteFromWorld (PhysicalObject * object)
 	m_world->DestroyBody(object->p_body); 	// this action is for real, you can't grow it back.
 }
 
+void exampleMenuCallback(void * userData)
+{
+	printf("a menu was clicked\n");
+}
+
 void initializeGame ()
 {
+	// The first parts are necessary to set up the game world. Don't change them unless you know what you're doing.
+
 	// https://stackoverflow.com/questions/9459035/why-does-rand-yield-the-same-sequence-of-numbers-on-every-run
 	setupExtremelyFastNumberGenerators();
 	srand((unsigned int)time(NULL));
-
 	b2Vec2 gravity = b2Vec2(0.0f, -10.0f);
 	m_world = new b2World(gravity);
-
 	m_world->SetContactListener(&listener);
+	setupForMouseJoint();
+
+	// -----------------------------------------------------------------------------------
+	// Add your initialization code in below:
+
 
 	float exampleBoxSize = 10.0f;
 	std::vector<b2Vec2> exampleBoxVertices =
@@ -191,7 +256,36 @@ void initializeGame ()
 		b2Vec2( +10 * exampleBoxSize ,  +1 * exampleBoxSize) // b2Vec2 tipVertexB =
 	};
 	addToWorld( PhysicalObject(exampleBox2Vertices, true) , b2Vec2(0.0f, -20.0f), 3.0f );
+
+
+
+
+	// -----------------------------------------------------------------------------------
 }
+
+
+
+
+void rebuildMenus ()
+{	
+    int spacing = 10;
+
+	// -----------------------------------------------------------------------------------
+	// Add your menu code in below:
+
+
+
+	menuItem * exampleMenu = setupMenu ( std::string ("test") , RIGHT, nullptr, (void *)exampleMenuCallback, nullptr, b2Color(0.1f, 0.1f, 0.1f, 1.0f), b2Vec2(200,200));
+	exampleMenu->collapsed = false;
+
+
+  	menus.push_back(*exampleMenu);
+	// -----------------------------------------------------------------------------------
+
+
+}
+
+
 
 void threadGame ()
 {
@@ -199,9 +293,25 @@ void threadGame ()
 	auto start = std::chrono::steady_clock::now();
 #endif
 
-	// custom logic goes here!
 	if (!m_world->IsLocked() )
 	{
+
+
+		// -----------------------------------------------------------------------------------
+		// Your custom game logic goes here!
+
+
+
+
+
+
+
+
+
+
+
+		// -----------------------------------------------------------------------------------
+
 		float timeStep = nominalFramerate > 0.0f ? 1.0f / nominalFramerate : float(0.0f);
 		m_world->Step(timeStep, 1, 1);
 	}
@@ -222,12 +332,12 @@ void threadGraphics()
 
 	preDraw();
 
-
-
-
 	unsigned int nVertsToRenderThisTurn = 0;
 	unsigned int nIndicesToUseThisTurn = 0;
 
+
+	// -----------------------------------------------------------------------------------
+	/** your graphics logic here. turn your data into floats and pack it into vertex_buffer_data. The sequence is r, g, b, a, x, y; repeat for each point. **/
 	std::list<PhysicalObject>::iterator object;
 	for (object = physicalObjects.begin(); object !=  physicalObjects.end(); ++object)
 	{
@@ -237,14 +347,11 @@ void threadGraphics()
 	}
 
 	long unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
-
 	unsigned int vertex_buffer_cursor = 0;
 	float vertex_buffer_data[totalNumberOfFields];
 	unsigned int index_buffer_cursor = 0;
 	unsigned int index_buffer_content = 0;
 	unsigned int index_buffer_data[nIndicesToUseThisTurn];
-
-	/** your graphics logic here. turn your data into floats and pack it into vertex_buffer_data. The sequence is r, g, b, a, x, y; repeat for each point. **/
 
 	// std::list<PhysicalObject>::iterator object;
 	for (object = physicalObjects.begin(); object !=  physicalObjects.end(); ++object)
@@ -282,17 +389,13 @@ void threadGraphics()
 	}
 
 
+	// -----------------------------------------------------------------------------------
 	prepareForWorldDraw();
-	
-    glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_buffer_data ), vertex_buffer_data, GL_DYNAMIC_DRAW );
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_DYNAMIC_DRAW);
-    glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
-
-    cleanupAfterWorldDraw();
-
-
-
-
+	glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_buffer_data ), vertex_buffer_data, GL_DYNAMIC_DRAW );
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_DYNAMIC_DRAW);
+	glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
+	cleanupAfterWorldDraw();
+	drawMenus ();
 	postDraw();
 
 #ifdef THREAD_TIMING
@@ -301,5 +404,3 @@ void threadGraphics()
 	std::cout << "threadGraphics " << elapsed.count() << " microseconds." << std::endl;
 #endif
 }
-
-

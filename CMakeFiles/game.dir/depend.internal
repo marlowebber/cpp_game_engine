@@ -5,6 +5,7 @@ CMakeFiles/game.dir/src/game.cpp.o
  /home/marlo/Documents/cpp_game_engine/src/game.cpp
  /home/marlo/Documents/cpp_game_engine/src/game.h
  /home/marlo/Documents/cpp_game_engine/src/graphics.h
+ /home/marlo/Documents/cpp_game_engine/src/menus.h
  /home/marlo/Documents/cpp_game_engine/src/utilities.h
  /usr/local/include/SDL2/SDL.h
  /usr/local/include/SDL2/SDL_assert.h
@@ -189,6 +190,7 @@ CMakeFiles/game.dir/src/main.cpp.o
  /home/marlo/Documents/cpp_game_engine/src/game.h
  /home/marlo/Documents/cpp_game_engine/src/graphics.h
  /home/marlo/Documents/cpp_game_engine/src/main.cpp
+ /home/marlo/Documents/cpp_game_engine/src/menus.h
  /home/marlo/Documents/cpp_game_engine/src/utilities.h
  /usr/local/include/SDL2/SDL.h
  /usr/local/include/SDL2/SDL_assert.h
@@ -281,6 +283,7 @@ CMakeFiles/game.dir/src/menus.cpp.o
  /home/marlo/Documents/cpp_game_engine/src/game.h
  /home/marlo/Documents/cpp_game_engine/src/graphics.h
  /home/marlo/Documents/cpp_game_engine/src/menus.cpp
+ /home/marlo/Documents/cpp_game_engine/src/menus.h
  /home/marlo/Documents/cpp_game_engine/src/utilities.h
  /usr/local/include/SDL2/SDL.h
  /usr/local/include/SDL2/SDL_assert.h

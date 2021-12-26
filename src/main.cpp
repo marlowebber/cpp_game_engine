@@ -4,6 +4,7 @@
 
 #include "game.h"
 #include "graphics.h"
+#include "menus.h"
 
 bool paused = false;
 bool flagQuit = false;
@@ -16,6 +17,7 @@ float panSpeed = 0.5f;
 void quit ()
 {
 	shutdownGraphics();
+	cleanupText2D();
 	SDL_Quit();
 	flagQuit = true;
 }
@@ -76,9 +78,36 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
+				int clickResult = checkMenus ( mouseX,  mouseY);
 				break;
 			}
+			break;
+			}
 
+		}
+		case SDL_MOUSEBUTTONUP:
+		{
+			switch (event.button.button)
+			{
+			case SDL_BUTTON_LEFT:
+			{
+				if (getMouseJointStatus())
+				{
+					destroyMouseJoint();
+				}
+				break;
+			}
+			break;
+			}
+		}
+		case SDL_MOUSEMOTION:
+		{
+			mouseX = event.motion.x;
+			mouseY = event.motion.y;
+			if (getMouseJointStatus())
+			{
+				b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
+				maintainMouseJoint (worldMousePos) ;
 			}
 			break;
 		}
@@ -96,6 +125,7 @@ int main( int argc, char * argv[] )
 {
 	setupGraphics();
 	initializeGame();
+ 	setupMenus();
 
 	for ( ;; )
 	{

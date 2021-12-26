@@ -19,8 +19,9 @@ using namespace glm;
 
 #include "utilities.h"
 
+#include <box2d.h>
 
-#define THREAD_TIMING
+// #define THREAD_TIMING
 
 // struct Color
 // {
@@ -32,10 +33,20 @@ using namespace glm;
 // 	Color(float r, float g, float b, float a);
 // };
 
+;
+// extern b2MouseJoint* m_mouseJoint;
+
 void initializeGame ();
 
 void threadGame () ;
 
 void threadGraphics () ;
+void rebuildMenus ();
+
+void maintainMouseJoint (b2Vec2 p);
+
+void destroyMouseJoint ();
+
+bool getMouseJointStatus () ;
 
 #endif

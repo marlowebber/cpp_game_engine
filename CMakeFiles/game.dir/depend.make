@@ -4,6 +4,7 @@
 CMakeFiles/game.dir/src/game.cpp.o: src/game.cpp
 CMakeFiles/game.dir/src/game.cpp.o: src/game.h
 CMakeFiles/game.dir/src/game.cpp.o: src/graphics.h
+CMakeFiles/game.dir/src/game.cpp.o: src/menus.h
 CMakeFiles/game.dir/src/game.cpp.o: src/utilities.h
 CMakeFiles/game.dir/src/game.cpp.o: /usr/local/include/SDL2/SDL.h
 CMakeFiles/game.dir/src/game.cpp.o: /usr/local/include/SDL2/SDL_assert.h
@@ -188,6 +189,7 @@ CMakeFiles/game.dir/src/graphics.cpp.o: box2d/include/box2d/box2d.h
 CMakeFiles/game.dir/src/main.cpp.o: src/game.h
 CMakeFiles/game.dir/src/main.cpp.o: src/graphics.h
 CMakeFiles/game.dir/src/main.cpp.o: src/main.cpp
+CMakeFiles/game.dir/src/main.cpp.o: src/menus.h
 CMakeFiles/game.dir/src/main.cpp.o: src/utilities.h
 CMakeFiles/game.dir/src/main.cpp.o: /usr/local/include/SDL2/SDL.h
 CMakeFiles/game.dir/src/main.cpp.o: /usr/local/include/SDL2/SDL_assert.h
@@ -280,6 +282,7 @@ CMakeFiles/game.dir/src/main.cpp.o: box2d/include/box2d/box2d.h
 CMakeFiles/game.dir/src/menus.cpp.o: src/game.h
 CMakeFiles/game.dir/src/menus.cpp.o: src/graphics.h
 CMakeFiles/game.dir/src/menus.cpp.o: src/menus.cpp
+CMakeFiles/game.dir/src/menus.cpp.o: src/menus.h
 CMakeFiles/game.dir/src/menus.cpp.o: src/utilities.h
 CMakeFiles/game.dir/src/menus.cpp.o: /usr/local/include/SDL2/SDL.h
 CMakeFiles/game.dir/src/menus.cpp.o: /usr/local/include/SDL2/SDL_assert.h

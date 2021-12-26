@@ -5,9 +5,6 @@ float viewZoom = 1.0f;
 float viewPanX = 0.0f;
 float viewPanY = 0.0f;
 
-const unsigned int nominalFramerate = 60;
-const unsigned int width = 1920;
-const unsigned int height = 1080;
 
 float viewZoomSetpoint = 1000.0f;
 float viewPanSetpointX = 0.0f;

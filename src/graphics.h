@@ -9,6 +9,13 @@ extern float viewZoomSetpoint ;
 extern float viewPanSetpointX;
 extern float viewPanSetpointY;
 
+extern float viewZoom;
+extern float viewPanX;
+extern float viewPanY;
+
+const unsigned int nominalFramerate = 60;
+const unsigned int width = 1920;
+const unsigned int height = 1080;
 
 extern GLuint vs, fs, program;
 extern GLuint vao, vbo;
@@ -42,7 +49,6 @@ static inline void mat4x4_ortho( t_mat4x4 out, float left, float right, float bo
 #undef T
 }
 
-
 const unsigned int numberOfFieldsPerVertex = 6; /*  R, G, B, A, X, Y  */
 
 void setupGraphics() ;
@@ -51,11 +57,8 @@ void shutdownGraphics() ;
 void preDraw() ;
 void postDraw();
 
-
 void prepareForWorldDraw ();
-
 void cleanupAfterWorldDraw();
-
 
 void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, b2Color color, float alpha, b2Vec2 vert) ;
 
