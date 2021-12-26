@@ -57,6 +57,7 @@ extern std::list<menuItem> menus;
 
 menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback, void * userData, b2Color color, b2Vec2 position);
 
+void editUserData (uDataWrap * itemToEdit);
 
 b2Vec2 transformScreenPositionToWorld( b2Vec2 screen );
 

@@ -17,6 +17,26 @@ b2Body * mouseDraggingBody;
 b2BodyDef groundBodyDef;
 b2Body * m_groundBody;
 
+
+
+// -----------------------------------------------------------------------------------
+
+// add in the variables and constants for your code here.
+
+int exampleNumberCapture = 15;
+std::string exampleTextCapture = std::string("exampleText");
+
+
+
+
+
+
+
+
+// -----------------------------------------------------------------------------------
+
+
+
 class MyDestructionListener : public b2DestructionListener
 {
 	void SayGoodbye(b2Joint* joint)
@@ -321,11 +341,21 @@ void rebuildMenus ()
 
 
 
-	menuItem * exampleMenu = setupMenu ( std::string ("test") , RIGHT, nullptr, (void *)exampleMenuCallback, nullptr, b2Color(0.1f, 0.1f, 0.1f, 1.0f), b2Vec2(200, 200));
-	exampleMenu->collapsed = false;
+
+	menuItem * exampleMenuRoot = setupMenu ( std::string ("test") , RIGHT, nullptr, (void *)exampleMenuCallback, nullptr, b2Color(0.1f, 0.1f, 0.1f, 1.0f), b2Vec2(200, 200));
+	exampleMenuRoot->collapsed = false;
 
 
-	menus.push_back(*exampleMenu);
+	uDataWrap *     tempDataWrap = new uDataWrap( (void*)&exampleNumberCapture, TYPE_UDATA_INT  );
+	menuItem * exampleMenuNumber = setupMenu ( std::string ("editable number") , BELOW, exampleMenuRoot, (void *)editUserData, (void*)tempDataWrap, b2Color(0.1f, 0.1f, 0.1f, 1.0f), b2Vec2(200, 200));
+	exampleMenuNumber->collapsed = false;
+
+
+	  tempDataWrap = new uDataWrap( (void*)&exampleTextCapture, TYPE_UDATA_STRING  );
+	menuItem * exampleMenuText = setupMenu ( std::string ("editable text") , BELOW, exampleMenuRoot, (void *)editUserData, (void*)tempDataWrap, b2Color(0.1f, 0.1f, 0.1f, 1.0f), b2Vec2(200, 200));
+	exampleMenuText->collapsed = false;
+
+	menus.push_back(*exampleMenuRoot);
 	// -----------------------------------------------------------------------------------
 
 
@@ -446,9 +476,9 @@ void threadGraphics()
 	cleanupAfterWorldDraw();
 	drawMenus ();
 
-	
-				b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
-				// drawTestCoordinate(worldMousePos.x, worldMousePos.y);
+
+	b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
+	// drawTestCoordinate(worldMousePos.x, worldMousePos.y);
 
 	postDraw();
 

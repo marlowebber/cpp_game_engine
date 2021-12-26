@@ -693,24 +693,62 @@ void drawPanels(unsigned int * j, GLfloat * vertex_buffer_data, unsigned int * i
 }
 
 
+struct polyCounter {
+    unsigned int verts;
+    unsigned int indices;
+};
+
+
+polyCounter analyzeMenu ( menuItem * menu) ;
+
+polyCounter analyzeMenu ( menuItem * menu) {
+    polyCounter n;
+    n.verts = 0;
+    n.indices = 0;
+
+    if (!menu->collapsed) {
+        // if (  menu->clicked) {
+        n.verts += 4;
+        n.indices += 5;
+
+        // }
+    }
+
+    std::list<menuItem>::iterator subMenu;
+    for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
+    {
+        polyCounter m = analyzeMenu(&(*subMenu));
+        n.verts += m.verts;
+        n.indices += m.indices;
+    }
+    return n;
+}
+
+polyCounter analyzeMenus() {
+    polyCounter n;
+    n.verts = 0;
+    n.indices = 0;
+    std::list<menuItem>::iterator menu;
+    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
+    {
+        polyCounter m = analyzeMenu(&(*menu));
+        n.verts += m.verts;
+        n.indices += m.indices;
+    }
+    return n;
+}
+
+
+
 void drawMenus ()
 {
     std::list<menuItem>::iterator menu;
 
-    unsigned int nVertsToRenderThisTurn = 0;
-    unsigned int nIndicesToUseThisTurn = 0;
 
-    // std::list<menuItem>::iterator menu;
-    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
-    {
-        if (!menu->collapsed)
-        {
-            nVertsToRenderThisTurn += 4;
-            nIndicesToUseThisTurn += 5;
-        }
-    }
+   polyCounter rocks = analyzeMenus();
 
-
+    unsigned int nVertsToRenderThisTurn = rocks.verts;
+    unsigned int nIndicesToUseThisTurn = rocks.indices;
     unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
 
     // Create the buffer.
