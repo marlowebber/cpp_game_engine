@@ -57,7 +57,6 @@ std::list<b2Body* > rayContacts;
 std::list<PhysicalObject> physicalObjects;
 
 static const unsigned int nominalFramerate = 60;
-const unsigned int numberOfFieldsPerVertex = 6; /*  R, G, B, A, X, Y  */
 
 void collisionHandler (b2Contact * contact)
 {
@@ -214,15 +213,6 @@ void threadGame ()
 #endif
 }
 
-void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, b2Color color, float alpha, b2Vec2 vert) {
-	vertex_buffer_data[(*cursor) + 0] = color.r;
-	vertex_buffer_data[(*cursor) + 1] = color.g;
-	vertex_buffer_data[(*cursor) + 2] = color.b;
-	vertex_buffer_data[(*cursor) + 3] = alpha;
-	vertex_buffer_data[(*cursor) + 4] = vert.x;
-	vertex_buffer_data[(*cursor) + 5] = vert.y ;
-	(*cursor) += 6;
-}
 
 void threadGraphics()
 {

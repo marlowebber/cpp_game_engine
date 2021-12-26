@@ -47,33 +47,7 @@ typedef enum t_attrib_id
 	attrib_color
 } t_attrib_id;
 
-typedef float t_mat4x4[16];
-static inline void mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-{
-#define T(a, b) (a * 4 + b)
 
-	out[T(0, 0)] = 2.0f / (right - left);
-	out[T(0, 1)] = 0.0f;
-	out[T(0, 2)] = 0.0f;
-	out[T(0, 3)] = 0.0f;
-
-	out[T(1, 1)] = 2.0f / (top - bottom);
-	out[T(1, 0)] = 0.0f;
-	out[T(1, 2)] = 0.0f;
-	out[T(1, 3)] = 0.0f;
-
-	out[T(2, 2)] = -2.0f / (zfar - znear);
-	out[T(2, 0)] = 0.0f;
-	out[T(2, 1)] = 0.0f;
-	out[T(2, 3)] = 0.0f;
-
-	out[T(3, 0)] = -(right + left) / (right - left);
-	out[T(3, 1)] = -(top + bottom) / (top - bottom);
-	out[T(3, 2)] = -(zfar + znear) / (zfar - znear);
-	out[T(3, 3)] = 1.0f;
-
-#undef T
-}
 
 // The projection matrix efficiently handles all panning, zooming, and rotation.
 t_mat4x4 projection_matrix;
@@ -233,3 +207,19 @@ void postDraw ()
 	viewPanY += panResponseY ;
 }
 
+void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, b2Color color, float alpha, b2Vec2 vert) {
+	vertex_buffer_data[(*cursor) + 0] = color.r;
+	vertex_buffer_data[(*cursor) + 1] = color.g;
+	vertex_buffer_data[(*cursor) + 2] = color.b;
+	vertex_buffer_data[(*cursor) + 3] = alpha;
+	vertex_buffer_data[(*cursor) + 4] = vert.x;
+	vertex_buffer_data[(*cursor) + 5] = vert.y ;
+	(*cursor) += 6;
+}
+
+void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor)
+{
+    index_buffer_data[(*index_buffer_cursor)] = (*index_buffer_content);
+    (*index_buffer_cursor)++;
+    (*index_buffer_content)++;
+}

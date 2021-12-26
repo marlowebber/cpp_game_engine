@@ -19,15 +19,24 @@ float viewportScaleFactorX = 2.4;
 float viewportScaleFactorY = 1.8;
 
 
+bool flagRebuildMenus = false;
 bool capturingNumber = false;
 bool capturingText = false;
-
-
-menuItem * lastActiveMenu;
-
+std::string capturedString;
+b2Vec2 captureTextPosition;
 uDataWrap * editItem;
+bool capitalizing = false;
+
+
+
 
 enum menuDirection { LEFT, RIGHT, ABOVE, BELOW };
+
+typedef enum t_attrib_id
+{
+    attrib_position,
+    attrib_color
+} t_attrib_id;
 
 
 
@@ -87,6 +96,9 @@ menuItem::menuItem( )
 }
 
 
+menuItem * lastActiveMenu;
+
+
 std::list<menuItem> menus;
 
 
@@ -106,7 +118,7 @@ b2Vec2 transformWorldPositionToScreen( b2Vec2 world, int width, int height, floa
     return b2Vec2(screenX, screenY);
 }
 
-GLuint loadBMP_custom(const char * imagepath) 
+GLuint loadBMP_custom(const char * imagepath)
 {
     printf("Reading image %s\n", imagepath);
 
@@ -192,7 +204,7 @@ GLuint loadBMP_custom(const char * imagepath)
 #define FOURCC_DXT3 0x33545844 // Equivalent to "DXT3" in ASCII
 #define FOURCC_DXT5 0x35545844 // Equivalent to "DXT5" in ASCII
 
-GLuint loadDDS(const char * imagepath) 
+GLuint loadDDS(const char * imagepath)
 {
 
     unsigned char header[124];
@@ -370,8 +382,10 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
     return ProgramID;
 }
 
-void initText2D(const char * texturePath) 
+void initText2D()
 {
+    const char * texturePath = "fonts/ubuntuMonoR.DDS";
+
     // Initialize textureF
     Text2DTextureID = loadDDS(texturePath);
 
@@ -386,7 +400,7 @@ void initText2D(const char * texturePath)
     Text2DUniformID = glGetUniformLocation( Text2DShaderID, "myTextureSampler" );
 }
 
-void printText2D(std::string m_text, int x, int y, int size) 
+void printText2D(std::string m_text, int x, int y, int size)
 {
     const char * text = m_text.c_str();
 
@@ -398,7 +412,7 @@ void printText2D(std::string m_text, int x, int y, int size)
     float vertexKerning = 0.5f;
     float uvKerning = 0.3f;
 
-    for ( unsigned int i = 0 ; i < length ; i++ ) 
+    for ( unsigned int i = 0 ; i < length ; i++ )
     {
         glm::vec2 vertex_up_left    = glm::vec2( x + i * (size * vertexKerning)                             , y + size );
         glm::vec2 vertex_up_right   = glm::vec2( x + i * (size * vertexKerning) + (size * vertexKerning)    , y + size );
@@ -465,7 +479,7 @@ void printText2D(std::string m_text, int x, int y, int size)
     glDisableVertexAttribArray(1);
 }
 
-void cleanupText2D() 
+void cleanupText2D()
 {
     // Delete buffers
     glDeleteBuffers(1, &Text2DVertexBufferID);
@@ -478,7 +492,7 @@ void cleanupText2D()
     glDeleteProgram(Text2DShaderID);
 }
 
-menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback, void * userData, b2Color color) 
+menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback, void * userData, b2Color color)
 {
     unsigned int menuTextSize = 10;
     menuItem * newMenu = new menuItem();
@@ -491,7 +505,7 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
     newMenu->below = menuTextSize;
     newMenu->above = menuTextSize + menuTextSize;
 
-    if (parentMenu == nullptr) 
+    if (parentMenu == nullptr)
     {
         // newMenu->x = 0 ;
         // newMenu->y = 0;
@@ -543,18 +557,18 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
     newMenu->onClick = callback;
     newMenu->userData = userData;
 
-    if (parentMenu == nullptr) 
+    if (parentMenu == nullptr)
     {
         return newMenu;
     }
-    else 
+    else
     {
         parentMenu->subMenus.push_back( *newMenu );
         return &(parentMenu->subMenus.back());
     }
 }
 
-void expandMenu (menuItem * menu) 
+void expandMenu (menuItem * menu)
 {
     menu->collapsed = false;
     std::list<menuItem>::iterator subMenu;
@@ -572,9 +586,9 @@ void expandMenu (menuItem * menu)
     }
 }
 
-void collapseMenu (menuItem * menu) 
+void collapseMenu (menuItem * menu)
 {
-    if (menu->collapsible) 
+    if (menu->collapsible)
     {
         menu->collapsed = true;
     }
@@ -586,7 +600,7 @@ void collapseMenu (menuItem * menu)
     }
 }
 
-void collapseAllMenus () 
+void collapseAllMenus ()
 {
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
@@ -605,28 +619,28 @@ void drawMenuText (menuItem * menu, int width, int height)
 
         if (menu->userData != nullptr) {
 
-            if (menu->userData != editItem) 
+            if (menu->userData != editItem)
             {
 
                 uDataWrap * tempDataWrap = (uDataWrap *) menu->userData;
 
-                if (tempDataWrap->dataType == TYPE_UDATA_INT ) 
+                if (tempDataWrap->dataType == TYPE_UDATA_INT )
                 {
                     printText2D( std::to_string( *((int *)tempDataWrap->uData) ) , menu->x + menu->right, menu->y, menu->size);
                 }
-                else  if (tempDataWrap->dataType == TYPE_UDATA_UINT ) 
+                else  if (tempDataWrap->dataType == TYPE_UDATA_UINT )
                 {
                     printText2D( std::to_string( *((unsigned int *)tempDataWrap->uData)  ) , menu->x + menu->right, menu->y, menu->size);
                 }
-                else  if (tempDataWrap->dataType == TYPE_UDATA_BOOL ) 
+                else  if (tempDataWrap->dataType == TYPE_UDATA_BOOL )
                 {
                     printText2D( std::to_string( *((bool *)tempDataWrap->uData)  ) , menu->x + menu->right, menu->y, menu->size);
                 }
-                else  if (tempDataWrap->dataType == TYPE_UDATA_FLOAT ) 
+                else  if (tempDataWrap->dataType == TYPE_UDATA_FLOAT )
                 {
                     printText2D( std::to_string( *((float *)tempDataWrap->uData)  ) , menu->x + menu->right, menu->y, menu->size);
                 }
-                else if (tempDataWrap->dataType == TYPE_UDATA_STRING ) 
+                else if (tempDataWrap->dataType == TYPE_UDATA_STRING )
                 {
                     printText2D( *((std::string *)tempDataWrap->uData) , menu->x + menu->right, menu->y, menu->size);
                 }
@@ -640,7 +654,7 @@ void drawMenuText (menuItem * menu, int width, int height)
     }
 }
 
-void prepareForMenuDraw(int width, int height, float viewZoom, b2Vec2 viewPan) 
+void prepareForMenuDraw(int width, int height, float viewZoom, b2Vec2 viewPan)
 {
 
     // glUseProgram( program );
@@ -671,13 +685,30 @@ void prepareForMenuDraw(int width, int height, float viewZoom, b2Vec2 viewPan)
 
 }
 
-void cleanupAfterMenuDraw () 
+void cleanupAfterMenuDraw ()
 {
     glDisable(GL_BLEND);
 
     glDisableVertexAttribArray(attrib_position);
     glDisableVertexAttribArray(attrib_color);
 }
+
+// void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, b2Color color, float alpha, b2Vec2 vert) {
+//     vertex_buffer_data[(*cursor) + 0] = color.r;
+//     vertex_buffer_data[(*cursor) + 1] = color.g;
+//     vertex_buffer_data[(*cursor) + 2] = color.b;
+//     vertex_buffer_data[(*cursor) + 3] = alpha;
+//     vertex_buffer_data[(*cursor) + 4] = vert.x;
+//     vertex_buffer_data[(*cursor) + 5] = vert.y ;
+//     (*cursor) += 6;
+// }
+
+// void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor)
+// {
+//     index_buffer_data[(*index_buffer_cursor)] = (*index_buffer_content);
+//     (*index_buffer_cursor)++;
+//     (*index_buffer_content)++;
+// }
 
 void drawPanel ( menuItem * menu , unsigned int * cursor, GLfloat * vertex_buffer_data, unsigned int * index_buffer_cursor, unsigned int * index_buffer_content, unsigned int * index_buffer_data ) ;
 
@@ -738,10 +769,16 @@ void drawMenus (int width, int height, float viewZoom, b2Vec2 viewPan)
     unsigned int nVertsToRenderThisTurn = 0;
     unsigned int nIndicesToUseThisTurn = 0;
 
-    polyCounter rocks = analyzeMenus();
+    // std::list<menuItem>::iterator menu;
+    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
+    {
+        if (!menu->collapsed) 
+        {
+            nVertsToRenderThisTurn += 4;
+            nIndicesToUseThisTurn += 5;
+        }
+    }
 
-    nVertsToRenderThisTurn = rocks.verts ;
-    nIndicesToUseThisTurn = rocks.indices ;
     unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
 
     // Create the buffer.
@@ -755,17 +792,132 @@ void drawMenus (int width, int height, float viewZoom, b2Vec2 viewPan)
     prepareForMenuDraw(width, height, viewZoom, viewPan);
 
     drawPanels(&g_vertex_buffer_cursor, vertex_buffer_data, &index_buffer_cursor, &index_buffer_content, index_buffer_data);
+
     glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_buffer_data ), vertex_buffer_data, GL_DYNAMIC_DRAW );
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_DYNAMIC_DRAW);
     glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
 
     cleanupAfterMenuDraw();
 
-    for (menu = menus.begin(); menu !=  menus.end(); ++menu)     
+    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
         drawMenuText(&(*menu),  width,  height);
     }
 }
+
+
+void resetMenus () {
+    int width = 1920;
+    int height = 1080;
+// printf("reset menus\n");
+
+
+    // go through menus and DELETE all the udatawraps.
+    std::list<menuItem>::iterator menu;
+
+    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
+    {
+        if (menu->userData != nullptr) {
+            delete ( (uDataWrap*)(menu->userData));
+        }
+    }
+
+
+    menus.clear();
+
+
+    // rollingMenuColorA = b2Color(RNG(), RNG(), RNG());
+
+    float topMenuX =  25;
+    float topMenuY = 575;
+    int spacing = 10;
+
+    uDataWrap * tempDataWrap;
+
+    menuItem * tempMenuItem;
+
+
+
+}
+
+
+void editUserDataCallback () {
+
+    if (editItem->dataType == TYPE_UDATA_STRING) {
+        *(std::string *)editItem->uData = capturedString;
+    }
+
+    else if (editItem->dataType == TYPE_UDATA_INT) {
+
+        if (capturedString.length() > 0) {
+            *(int *)editItem->uData = std::stoi( capturedString );
+        }
+        else {
+
+            *(int *)editItem->uData = 0;
+        }
+    }
+
+    else if (editItem->dataType == TYPE_UDATA_UINT)
+    {
+        if (capturedString.length() > 0)
+        {
+            int result = std::stoi( capturedString );
+
+            if (result > 0)
+            {
+                unsigned int applicable = result;
+                *(unsigned int *)editItem->uData = applicable;
+            }
+            else
+            {
+                *(unsigned int *)editItem->uData = 0;
+            }
+        }
+        else
+        {
+
+            *(unsigned int *)editItem->uData = 0;
+        }
+
+    }
+    else if (editItem->dataType == TYPE_UDATA_FLOAT) {
+        float * jemima = (float *)  editItem->uData ;
+        *jemima = std::stof( capturedString );
+    }
+
+    capturingText = false;
+    resetMenus();
+}
+
+void editUserData (uDataWrap * itemToEdit) {
+    editItem = itemToEdit;
+
+    capturingText = true;
+
+    if (itemToEdit->dataType == TYPE_UDATA_STRING) {
+        capturedString = *(std::string *)(itemToEdit->uData);
+    }
+    else  if (itemToEdit->dataType == TYPE_UDATA_INT) {
+        capturedString =  std::to_string(  *(int *)(itemToEdit->uData) );
+    }
+    else  if (itemToEdit->dataType == TYPE_UDATA_UINT) {
+        capturedString =  std::to_string(  *(unsigned int *)(itemToEdit->uData) );
+    }
+    else  if (itemToEdit->dataType == TYPE_UDATA_FLOAT) {
+        capturedString =  std::to_string(  *(float *)(itemToEdit->uData) );
+    }
+    else  if (itemToEdit->dataType == TYPE_UDATA_BOOL) {
+        capturedString =  std::to_string(  *(bool *)(itemToEdit->uData) );
+    }
+}
+
+void drawCaptureText () {
+    if (capturingText || capturingNumber) {
+        printText2D( capturedString, lastActiveMenu->x + lastActiveMenu->right, lastActiveMenu->y, 10);
+    }
+}
+
 
 
 int checkMenu (menuItem * menu, float mouseX, float mouseY) ;
@@ -787,7 +939,7 @@ int checkMenu (menuItem * menu, float mouseX, float mouseY)
                 lastActiveMenu = &(*menu);
                 uDataWrap * menuUserData = (uDataWrap*)(menu->userData);
 
-                if (menu->onClick != nullptr) 
+                if (menu->onClick != nullptr)
                 {
                     if (menu->editable) // why do you need editable to run the function? editUserData function is also used to display values. but sometimes you want to disable editing.
                     {
@@ -815,7 +967,7 @@ int checkMenu (menuItem * menu, float mouseX, float mouseY)
 int checkMenus (int mouseX, int mouseY)
 {
 
-    if (capturingText) 
+    if (capturingText)
     {
         editUserDataCallback () ;
     }
