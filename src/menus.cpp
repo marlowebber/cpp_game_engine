@@ -19,12 +19,17 @@ float viewportScaleFactorX = 2.4;
 float viewportScaleFactorY = 1.8;
 
 bool flagRebuildMenus = false;
-bool capturingNumber = false;
+// bool capturingNumber = false;
 bool capturingText = false;
 std::string capturedString;
 b2Vec2 captureTextPosition;
 uDataWrap * editItem;
 bool capitalizing = false;
+
+
+unsigned int menuTextSize = 10;
+float vertexKerning = 0.5f;
+float uvKerning = 0.3f;
 
 menuItem::menuItem( )
 {
@@ -52,7 +57,7 @@ std::list<menuItem> menus;
 b2Vec2 transformScreenPositionToWorld( b2Vec2 screen )
 {
     float worldX =       ( ((screen.x - (width / 2))) * (viewZoom  ) / 96) + viewPanX ;
-    float worldY =     -1*  ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
+    float worldY =     -1 *  ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
     return b2Vec2(worldX, worldY);
 }
 
@@ -356,9 +361,6 @@ void printText2D(std::string m_text, int x, int y, int size)
     std::vector<glm::vec2> vertices;
     std::vector<glm::vec2> UVs;
 
-    float vertexKerning = 0.5f;
-    float uvKerning = 0.3f;
-
     for ( unsigned int i = 0 ; i < length ; i++ )
     {
         glm::vec2 vertex_up_left    = glm::vec2( x + i * (size * vertexKerning)                             , y + size );
@@ -443,14 +445,14 @@ void cleanupText2D()
 
 menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback, void * userData, b2Color color, b2Vec2 position)
 {
-    unsigned int menuTextSize = 10;
+
     menuItem * newMenu = new menuItem();
     newMenu->text = menuName;
 
     newMenu->panelColor = color;
 
     newMenu->left = menuTextSize;
-    newMenu->right = (menuTextSize * menuName.length()) + menuTextSize;
+    newMenu->right = (menuTextSize * menuName.length() * vertexKerning) + menuTextSize;
     newMenu->below = menuTextSize;
     newMenu->above = menuTextSize + menuTextSize;
 
@@ -463,7 +465,7 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
             newMenu->x = parentMenu->x - (parentMenu->left) ;
             newMenu->y = parentMenu->y ;
 
-            parentMenu->left += (menuTextSize * menuName.length()) + menuTextSize;
+            parentMenu->left += (menuTextSize * menuName.length() * vertexKerning) + menuTextSize;
 
             break;
 
@@ -471,7 +473,7 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
             newMenu->x = parentMenu->x + (parentMenu->right) ;
             newMenu->y = parentMenu->y ;
 
-            parentMenu->right += (menuTextSize * menuName.length()) + menuTextSize;
+            parentMenu->right += (menuTextSize * menuName.length()* vertexKerning) + menuTextSize;
             break;
 
         case ABOVE:
@@ -497,7 +499,7 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
 
     // draw a rectangle around the menu to calculate aabb
     newMenu->aabb.lowerBound = b2Vec2(  newMenu->x - (0.5 * menuTextSize) ,  newMenu->y - (0.5 * menuTextSize)  );
-    newMenu->aabb.upperBound = b2Vec2( newMenu->x  + (newMenu->text.length() * menuTextSize) + (0.5 * menuTextSize) ,    newMenu->y + menuTextSize + (0.5 * menuTextSize));
+    newMenu->aabb.upperBound = b2Vec2( newMenu->x  + (newMenu->text.length() * menuTextSize* vertexKerning) + (0.5 * menuTextSize) ,    newMenu->y + menuTextSize + (0.5 * menuTextSize));
 
     newMenu->size = menuTextSize;
     newMenu->collapsed = true;
@@ -745,7 +747,7 @@ void drawMenus ()
     std::list<menuItem>::iterator menu;
 
 
-   polyCounter rocks = analyzeMenus();
+    polyCounter rocks = analyzeMenus();
 
     unsigned int nVertsToRenderThisTurn = rocks.verts;
     unsigned int nIndicesToUseThisTurn = rocks.indices;
@@ -838,7 +840,8 @@ void editUserDataCallback ()
         }
 
     }
-    else if (editItem->dataType == TYPE_UDATA_FLOAT) {
+    else if (editItem->dataType == TYPE_UDATA_FLOAT)
+    {
         float * jemima = (float *)  editItem->uData ;
         *jemima = std::stof( capturedString );
     }
@@ -850,34 +853,37 @@ void editUserDataCallback ()
 void editUserData (uDataWrap * itemToEdit)
 {
     editItem = itemToEdit;
-
-    capturingText = true;
-
+    capturingText  = true;
     if (itemToEdit->dataType == TYPE_UDATA_STRING)
     {
+
         capturedString = *(std::string *)(itemToEdit->uData);
     }
     else  if (itemToEdit->dataType == TYPE_UDATA_INT)
     {
+
         capturedString =  std::to_string(  *(int *)(itemToEdit->uData) );
     }
     else  if (itemToEdit->dataType == TYPE_UDATA_UINT)
     {
+
         capturedString =  std::to_string(  *(unsigned int *)(itemToEdit->uData) );
     }
     else  if (itemToEdit->dataType == TYPE_UDATA_FLOAT)
     {
+
         capturedString =  std::to_string(  *(float *)(itemToEdit->uData) );
     }
     else  if (itemToEdit->dataType == TYPE_UDATA_BOOL)
     {
+
         capturedString =  std::to_string(  *(bool *)(itemToEdit->uData) );
     }
 }
 
 void drawCaptureText ()
 {
-    if (capturingText || capturingNumber)
+    if (capturingText)
     {
         printText2D( capturedString, lastActiveMenu->x + lastActiveMenu->right, lastActiveMenu->y, 10);
     }
@@ -957,7 +963,7 @@ void setupMenus()
 t_mat4x4 egg_matrix;
 
 // this function just draws a mark on the screen in world coordinates.
-void drawTestCoordinate (float x, float y) 
+void drawTestCoordinate (float x, float y)
 {
 
     // printf( " %f %f\n ", x, y);

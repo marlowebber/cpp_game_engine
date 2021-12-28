@@ -43,6 +43,25 @@ void threadInterface()
 
 		case SDL_KEYDOWN:
 		{
+
+			if (capturingText)
+			{
+				if (event.key.keysym.sym > 0x20 && event.key.keysym.sym < 0x7f)
+				{
+					capturedString += event.key.keysym.sym;
+				}
+
+				switch ( event.key.keysym.sym )
+				{
+				case SDLK_RETURN:
+					editUserDataCallback();
+					break;
+				}
+				break;
+			}
+
+
+
 			switch ( event.key.keysym.sym )
 			{
 
@@ -80,17 +99,19 @@ void threadInterface()
 			case SDL_BUTTON_LEFT:
 			{
 
-				if (getMouseJointStatus())
+
+
+				if (capturingText)
 				{
-					destroyMouseJoint();
+					editUserDataCallback () ;
 				}
 
 
-				if ( ! checkMenus ( mouseX,  mouseY) ) 
+				if ( ! checkMenus ( mouseX,  mouseY) )
 				{
-					if ( ! checkClickObjects ( worldMousePos) )
+					if (  checkClickObjects ( worldMousePos) )
 					{
-						;
+						return;
 					}
 
 
@@ -112,10 +133,10 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
-				// if (getMouseJointStatus())
-				// {
-				// 	destroyMouseJoint();
-				// }
+				if (getMouseJointStatus())
+				{
+					destroyMouseJoint();
+				}
 				break;
 			}
 			break;

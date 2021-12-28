@@ -264,7 +264,6 @@ void shine (b2Vec2 p1, b2Vec2 p2)
 
 void addToWorld(PhysicalObject object, b2Vec2 position, float angle)
 {
-
 	physicalObjects.push_back( object  );
 	PhysicalObject * pushedObject = &(physicalObjects.back());
 	pushedObject->p_body = m_world->CreateBody( &(pushedObject->bodyDef) );
@@ -475,6 +474,7 @@ void threadGraphics()
 	glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
 	cleanupAfterWorldDraw();
 	drawMenus ();
+	drawCaptureText ();
 
 
 	b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
