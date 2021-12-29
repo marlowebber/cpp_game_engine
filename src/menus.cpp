@@ -26,6 +26,7 @@ b2Vec2 captureTextPosition;
 uDataWrap * editItem;
 bool capitalizing = false;
 
+menuItem * draggedMenu = nullptr;
 
 unsigned int menuTextSize = 10;
 float vertexKerning = 0.5f;
@@ -456,8 +457,14 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
     newMenu->below = menuTextSize;
     newMenu->above = menuTextSize + menuTextSize;
 
+
+    newMenu->parentMenu = parentMenu;
+
+    newMenu->direction = direction;
+
     if (parentMenu != nullptr)
     {
+
 
         switch (direction)
         {
@@ -473,7 +480,7 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
             newMenu->x = parentMenu->x + (parentMenu->right) ;
             newMenu->y = parentMenu->y ;
 
-            parentMenu->right += (menuTextSize * menuName.length()* vertexKerning) + menuTextSize;
+            parentMenu->right += (menuTextSize * menuName.length() * vertexKerning) + menuTextSize;
             break;
 
         case ABOVE:
@@ -499,7 +506,7 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
 
     // draw a rectangle around the menu to calculate aabb
     newMenu->aabb.lowerBound = b2Vec2(  newMenu->x - (0.5 * menuTextSize) ,  newMenu->y - (0.5 * menuTextSize)  );
-    newMenu->aabb.upperBound = b2Vec2( newMenu->x  + (newMenu->text.length() * menuTextSize* vertexKerning) + (0.5 * menuTextSize) ,    newMenu->y + menuTextSize + (0.5 * menuTextSize));
+    newMenu->aabb.upperBound = b2Vec2( newMenu->x  + (newMenu->text.length() * menuTextSize * vertexKerning) + (0.5 * menuTextSize) ,    newMenu->y + menuTextSize + (0.5 * menuTextSize));
 
     newMenu->size = menuTextSize;
     newMenu->collapsed = true;
@@ -521,6 +528,9 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
 
 void expandMenu (menuItem * menu)
 {
+
+
+
     menu->collapsed = false;
     std::list<menuItem>::iterator subMenu;
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
@@ -537,6 +547,92 @@ void expandMenu (menuItem * menu)
     }
 }
 
+
+
+
+
+
+
+int expandMenuRecursive (menuItem * targetMenu , menuItem * menu);
+
+int expandMenuRecursive (menuItem * targetMenu , menuItem * menu)
+{
+
+    // bool foundIt = false;
+
+
+
+
+    std::list<menuItem>::iterator subMenu;
+    for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
+    {
+
+
+        if (!(menu->collapsed) && subMenu->scaffold)
+        {
+            subMenu->collapsed = false;
+        }
+
+
+        // else {
+        if  (expandMenuRecursive (targetMenu, &(*subMenu) ) )
+        {
+            // subMenu->collapsed = false;
+            // menu->collapsed = false;
+            // break;
+
+            std::list<menuItem>::iterator subMenu2;
+            for (subMenu2 = menu->subMenus.begin(); subMenu2 !=  menu->subMenus.end(); ++subMenu2)
+            {
+
+                subMenu2->collapsed = false;
+            }
+
+
+
+            return 1;
+        }
+        // }
+
+
+
+    }
+
+    if ( menu == targetMenu )
+    {
+        // foundIt = true;
+        // subMenu->collapsed = false;
+        menu->collapsed = false;
+        // break;
+        return 1;
+    }
+
+
+
+
+    // if (foundIt)
+    // {
+    //     menu->collapsed = false;
+    //     return 1;
+    // }
+
+
+
+    return 0;
+}
+
+void searchAndExpandMenuChain(menuItem * targetMenu)
+{
+    std::list<menuItem>::iterator menu;
+    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
+    {
+
+        menu->collapsed = false; // top level menus always expand
+        expandMenuRecursive(targetMenu,  &(*menu)  );
+    }
+}
+
+
 void collapseMenu (menuItem * menu)
 {
     if (menu->collapsible)
@@ -551,12 +647,20 @@ void collapseMenu (menuItem * menu)
     }
 }
 
+
+
 void collapseAllMenus ()
 {
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
         collapseMenu( &(*menu)  );
+    }
+
+    // expand root level menus and their scaffolds again.
+    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
+    {
+        expandMenu( &(*menu) );
     }
 }
 
@@ -570,7 +674,7 @@ void drawMenuText (menuItem * menu)
 
         if (menu->userData != nullptr) {
 
-            if (menu->userData != editItem)
+            if (menu->userData != editItem || !capturingText)
             {
 
                 uDataWrap * tempDataWrap = (uDataWrap *) menu->userData;
@@ -847,7 +951,7 @@ void editUserDataCallback ()
     }
 
     capturingText = false;
-    resetMenus();
+    // resetMenus();
 }
 
 void editUserData (uDataWrap * itemToEdit)
@@ -903,7 +1007,9 @@ int checkMenu (menuItem * menu, float mouseX, float mouseY)
                 menu->clicked = true;
 
                 collapseAllMenus();
-                expandMenu(menu);
+                // expandMenu(menu);
+
+                searchAndExpandMenuChain(menu);
 
                 lastActiveMenu = &(*menu);
                 uDataWrap * menuUserData = (uDataWrap*)(menu->userData);
@@ -915,6 +1021,10 @@ int checkMenu (menuItem * menu, float mouseX, float mouseY)
                         ((void (*)(void*)) menu->onClick)(menu->userData);
                     }
                 }
+
+
+
+
                 return 1;
             }
         }
@@ -932,14 +1042,86 @@ int checkMenu (menuItem * menu, float mouseX, float mouseY)
     return 0;
 }
 
+
+
+void setDraggingMenu ( menuItem * menu )
+{
+
+    draggedMenu = menu;
+}
+
+
+void clearDraggingMenu()
+{
+
+
+    draggedMenu = nullptr;
+
+
+}
+
+
+void resetAccumulatedSubmenuPositions(menuItem * menu)
+{
+
+
+    menu->left = 0;
+    menu->right = 0;
+    menu->below = 0;
+    menu->above = 0;
+
+    std::list<menuItem>::iterator subMenu;
+    for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
+    {
+
+
+        resetAccumulatedSubmenuPositions( &(*subMenu) );
+    }
+
+}
+
+
+// move a menu and all its submenus on the screen
+void rebaseMenu (menuItem * menu, int moveByX, int moveByY)
+{
+
+
+
+
+    menu->x += moveByX;
+    menu->y += moveByY;
+
+
+    menu->aabb.upperBound.x += moveByX;
+    menu->aabb.upperBound.y += moveByY;
+    menu->aabb.lowerBound.x += moveByX;
+    menu->aabb.lowerBound.y += moveByY;
+
+
+
+
+    std::list<menuItem>::iterator subMenu;
+    for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
+    {
+        rebaseMenu( &(*subMenu),  moveByX, moveByY);
+    }
+
+
+}
+
+
+
+
 // check to see which menu has been clicked on
 int checkMenus (int mouseX, int mouseY)
 {
 
-    if (capturingText)
-    {
-        editUserDataCallback () ;
-    }
+    // if (capturingText)
+    // {
+    //     editUserDataCallback () ;
+    // }
+
+
 
     mouseX = (mouseX / viewportScaleFactorX);
     mouseY = (((mouseY) * -1) / viewportScaleFactorY) + (1080 / viewportScaleFactorY);
@@ -947,8 +1129,28 @@ int checkMenus (int mouseX, int mouseY)
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
+
+        if (!menu->collapsed)
+        {
+            if (mouseX > menu->aabb.lowerBound.x && mouseX < menu->aabb.upperBound.x)
+            {
+                if (mouseY > menu->aabb.lowerBound.y && mouseY < menu->aabb.upperBound.y)
+                {
+
+                    setDraggingMenu( &(*menu) );
+                }
+            }
+        }
+
+
         if (  checkMenu(&(*menu), mouseX, mouseY) == 1) { return 1;}
+
+
+
+
     }
+
+    collapseAllMenus();
 
     return 0;
 }

@@ -107,14 +107,21 @@ void threadInterface()
 				}
 
 
-				if ( ! checkMenus ( mouseX,  mouseY) )
+				if ( checkMenus ( mouseX,  mouseY) )
 				{
+
+					return;
+
+
+
+				}
+				else
+				{
+
 					if (  checkClickObjects ( worldMousePos) )
 					{
 						return;
 					}
-
-
 				}
 
 
@@ -137,6 +144,11 @@ void threadInterface()
 				{
 					destroyMouseJoint();
 				}
+
+				if ( draggedMenu != nullptr ) 
+				{
+					clearDraggingMenu();
+				}
 				break;
 			}
 			break;
@@ -144,8 +156,26 @@ void threadInterface()
 		}
 		case SDL_MOUSEMOTION:
 		{
+
+			int prevMouseX = mouseX;
+			int prevMouseY = mouseY;
+
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
+
+			int deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) ;
+			int deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) ;
+
+			if ( draggedMenu != nullptr) 
+			{
+
+
+
+			 rebaseMenu (draggedMenu, deltaMouseX, deltaMouseY);
+
+
+
+			}
 
 			worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
 
