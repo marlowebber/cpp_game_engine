@@ -26,6 +26,8 @@ set(SRCS
 	src/graphics.h
 	src/menus.h
 	src/menus.cpp
+	src/physics.cpp
+	src/physics.h
 )
 
 link_directories(

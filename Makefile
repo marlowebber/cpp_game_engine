@@ -231,6 +231,33 @@ src/menus.cpp.s:
 	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/menus.cpp.s
 .PHONY : src/menus.cpp.s
 
+src/physics.o: src/physics.cpp.o
+
+.PHONY : src/physics.o
+
+# target to build an object file
+src/physics.cpp.o:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/physics.cpp.o
+.PHONY : src/physics.cpp.o
+
+src/physics.i: src/physics.cpp.i
+
+.PHONY : src/physics.i
+
+# target to preprocess a source file
+src/physics.cpp.i:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/physics.cpp.i
+.PHONY : src/physics.cpp.i
+
+src/physics.s: src/physics.cpp.s
+
+.PHONY : src/physics.s
+
+# target to generate assembly for a file
+src/physics.cpp.s:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/physics.cpp.s
+.PHONY : src/physics.cpp.s
+
 src/utilities.o: src/utilities.cpp.o
 
 .PHONY : src/utilities.o
@@ -279,6 +306,9 @@ help:
 	@echo "... src/menus.o"
 	@echo "... src/menus.i"
 	@echo "... src/menus.s"
+	@echo "... src/physics.o"
+	@echo "... src/physics.i"
+	@echo "... src/physics.s"
 	@echo "... src/utilities.o"
 	@echo "... src/utilities.i"
 	@echo "... src/utilities.s"

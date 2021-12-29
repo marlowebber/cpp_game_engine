@@ -2,7 +2,7 @@
 #include <chrono>
 #include <iostream>
 
-#include "game.h"
+#include "physics.h"
 #include "graphics.h"
 #include "menus.h"
 
@@ -199,6 +199,7 @@ void threadInterface()
 int main( int argc, char * argv[] )
 {
 	setupGraphics();
+	initializePhysics();
 	initializeGame();
 	setupMenus();
 
@@ -206,7 +207,7 @@ int main( int argc, char * argv[] )
 	{
 		// you can start your threads like this:
 		// boost::thread t2{ threadInterface };
-		boost::thread t3{ threadGame };
+		boost::thread t3{ threadPhysics };
 
 		// graphics only works in this thread, because it is the process the SDL context was created in.
 		threadGraphics();

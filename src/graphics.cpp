@@ -1,4 +1,4 @@
-#include "game.h"
+#include "physics.h"
 #include "graphics.h"
 
 float viewZoom = 10.0f;

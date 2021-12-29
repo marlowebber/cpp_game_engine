@@ -1,7 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include "game.h"
+#include "physics.h"
 #include <box2d.h>
 
 extern const float pi;
