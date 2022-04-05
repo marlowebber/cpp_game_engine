@@ -39,7 +39,7 @@ void rebuildMenus ()
 	menuItem * exampleMenu6 = setupMenu ( std::string ("sub-submenu") , BELOW, exampleMenu4, (void *)editUserData, (void*)tempDataWrap);
 	exampleMenu6->collapsed = true;
 
-	menus.push_back(*exampleMenuRoot);
+	menus.push_back(*exampleMenuRoot); 
 }
 
 void initializeGame ()
