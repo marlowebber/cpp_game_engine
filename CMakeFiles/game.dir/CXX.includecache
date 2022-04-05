@@ -6,9 +6,25 @@
 
 #IncludeRegexTransform: 
 
+/home/marlo/Documents/cpp_game_engine/src/game.cpp
+physics.h
+/home/marlo/Documents/cpp_game_engine/src/physics.h
+graphics.h
+/home/marlo/Documents/cpp_game_engine/src/graphics.h
+menus.h
+/home/marlo/Documents/cpp_game_engine/src/menus.h
+main.h
+/home/marlo/Documents/cpp_game_engine/src/main.h
+
 /home/marlo/Documents/cpp_game_engine/src/game.h
 physics.h
 /home/marlo/Documents/cpp_game_engine/src/physics.h
+
+/home/marlo/Documents/cpp_game_engine/src/graphics.cpp
+physics.h
+/home/marlo/Documents/cpp_game_engine/src/physics.h
+graphics.h
+/home/marlo/Documents/cpp_game_engine/src/graphics.h
 
 /home/marlo/Documents/cpp_game_engine/src/graphics.h
 game.h
@@ -31,6 +47,24 @@ menus.h
 /home/marlo/Documents/cpp_game_engine/src/main.h
 physics.h
 /home/marlo/Documents/cpp_game_engine/src/physics.h
+
+/home/marlo/Documents/cpp_game_engine/src/menus.cpp
+physics.h
+/home/marlo/Documents/cpp_game_engine/src/physics.h
+graphics.h
+/home/marlo/Documents/cpp_game_engine/src/graphics.h
+utilities.h
+/home/marlo/Documents/cpp_game_engine/src/utilities.h
+menus.h
+/home/marlo/Documents/cpp_game_engine/src/menus.h
+box2d.h
+-
+stdio.h
+-
+iostream
+-
+fstream
+-
 
 /home/marlo/Documents/cpp_game_engine/src/menus.h
 
@@ -77,10 +111,10 @@ random
 -
 boost/thread.hpp
 -
+
+/home/marlo/Documents/cpp_game_engine/src/utilities.cpp
 utilities.h
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
-box2d.h
--
 
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
 physics.h

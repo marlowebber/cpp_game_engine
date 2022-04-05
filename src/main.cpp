@@ -199,15 +199,15 @@ void threadInterface()
 int main( int argc, char * argv[] )
 {
 	setupGraphics();
-	initializePhysics();
-	initializeGame();
-	setupMenus();
+	// initializePhysics();
+	// initializeGame();
+	// setupMenus();
 
 	for ( ;; )
 	{
 		// you can start your threads like this:
 		// boost::thread t2{ threadInterface };
-		boost::thread t3{ threadPhysics };
+		// boost::thread t3{ threadPhysics };
 
 		// graphics only works in this thread, because it is the process the SDL context was created in.
 		threadGraphics();
@@ -216,7 +216,7 @@ int main( int argc, char * argv[] )
 
 		// you can have this thread wait for another to end by saying:
 		// t2.join();
-		t3.join();
+		// t3.join();
 
 		if (flagQuit)
 		{

@@ -17,9 +17,9 @@ using namespace glm;
 
 #include <boost/thread.hpp>
 
-#include "utilities.h"
+// #include "utilities.h"
 
-#include <box2d.h>
+// #include <box2d.h>
 
 // #define THREAD_TIMING
 
@@ -37,48 +37,48 @@ using namespace glm;
 // extern b2MouseJoint* m_mouseJoint;
 
 
-class PhysicalObject
-{
-public:
-	b2BodyDef bodyDef;
-	b2Body * p_body;
-	b2PolygonShape shape;
-	b2Fixture * p_fixture;
-	float fraction;
-	bool flagDelete;
-	bool flagReady;
-	b2Color color;
+// class PhysicalObject
+// {
+// public:
+// 	b2BodyDef bodyDef;
+// 	b2Body * p_body;
+// 	b2PolygonShape shape;
+// 	b2Fixture * p_fixture;
+// 	float fraction;
+// 	bool flagDelete;
+// 	bool flagReady;
+// 	b2Color color;
 
-	std::vector<b2Vec2>  vertices;
+// 	std::vector<b2Vec2>  vertices;
 
-	PhysicalObject (std::vector<b2Vec2>   vertices, bool flagStatic);
-};
+// 	PhysicalObject (std::vector<b2Vec2>   vertices, bool flagStatic);
+// };
 
 
-extern std::list<b2Body* > rayContacts;
-extern std::list<PhysicalObject> physicalObjects;
+// extern std::list<b2Body* > rayContacts;
+// extern std::list<PhysicalObject> physicalObjects;
 
-void initializePhysics ();
+// void initializePhysics ();
 
-void threadPhysics ();
+// void threadPhysics ();
 
 // void threadGame () ;
 
 void threadGraphics () ;
 
-void maintainMouseJoint (b2Vec2 p);
+// void maintainMouseJoint (b2Vec2 p);
 
-void destroyMouseJoint ();
+// void destroyMouseJoint ();
 
-bool getMouseJointStatus () ;
-
-
-void exampleMenuCallback(void * userData);
-int checkClickObjects (b2Vec2 worldClick);
+// bool getMouseJointStatus () ;
 
 
-void addToWorld(PhysicalObject object, b2Vec2 position, float angle);
+// void exampleMenuCallback(void * userData);
+// int checkClickObjects (b2Vec2 worldClick);
 
-void deleteFromWorld (PhysicalObject * object);
+
+// void addToWorld(PhysicalObject object, b2Vec2 position, float angle);
+
+// void deleteFromWorld (PhysicalObject * object);
 
 #endif
