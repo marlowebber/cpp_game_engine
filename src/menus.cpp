@@ -556,12 +556,6 @@ int expandMenuRecursive (menuItem * targetMenu , menuItem * menu);
 
 int expandMenuRecursive (menuItem * targetMenu , menuItem * menu)
 {
-
-    // bool foundIt = false;
-
-
-
-
     std::list<menuItem>::iterator subMenu;
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
     {
@@ -708,35 +702,35 @@ void drawMenuText (menuItem * menu)
     }
 }
 
-// void prepareForMenuDraw()
-// {
-//     // glUseProgram( program );
-//     glBindBuffer( GL_ARRAY_BUFFER, vbo );
+void prepareForMenuDraw()
+{
+    // glUseProgram( program );
+    glBindBuffer( GL_ARRAY_BUFFER, vbo );
 
-//     glEnableVertexAttribArray( attrib_position );
-//     glEnableVertexAttribArray( attrib_color );
+    // glEnableVertexAttribArray( attrib_position );
+    // glEnableVertexAttribArray( attrib_color );
 
-//     glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
-//     glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
+    // glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
+    // glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
 
-//     t_mat4x4 menu_matrix;
+    t_mat4x4 menu_matrix;
 
-//     // mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-//     mat4x4_ortho(
-//         menu_matrix,
-//         0,
-//         width / viewportScaleFactorX,
-//         0,
-//         height / viewportScaleFactorY,
-//         -10.0f,
-//         +10.0f
-//     );
-//     glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, menu_matrix );
+    // mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
+    mat4x4_ortho(
+        menu_matrix,
+        0,
+        width / viewportScaleFactorX,
+        0,
+        height / viewportScaleFactorY,
+        -10.0f,
+        +10.0f
+    );
+    glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, menu_matrix );
 
-//     glEnable(GL_BLEND);
-//     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-// }
+}
 
 // void cleanupAfterMenuDraw ()
 // {
@@ -757,7 +751,7 @@ void drawPanel ( menuItem * menu )
     if ( menu->clicked)
     {
         if (menu->visualDelayCount > 3 || menu->visualDelayCount < 0)
-         {
+        {
             menu->clicked = false;
             // menu->alpha = 0.0f;
             menu->visualDelayCount = 0;
@@ -767,37 +761,38 @@ void drawPanel ( menuItem * menu )
 
     if (!menu->collapsed)
     {
-        float alpha = 1.0f;
+        // float alpha = 1.0f;
 
         vertToBuffer (
-         // vertex_buffer_data, cursor,
-          menu->panelColor, 
-          // alpha, 
-           Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
-        // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
-
-        vertToBuffer ( 
             // vertex_buffer_data, cursor,
-         menu->panelColor,
-          // alpha, 
-          menu->aabb.lowerBound ) ;
+            menu->panelColor,
+            // alpha,
+            Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
         // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
         vertToBuffer (
-         // vertex_buffer_data, cursor, 
-         menu->panelColor, 
-         // alpha, 
-         Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
-        // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
-
-        vertToBuffer ( 
             // vertex_buffer_data, cursor,
-             menu->panelColor, 
-             // alpha, 
-             menu->aabb.upperBound ) ;
+            menu->panelColor,
+            // alpha,
+            menu->aabb.lowerBound ) ;
         // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
-        insertPrimitiveRestart (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
+        vertToBuffer (
+            // vertex_buffer_data, cursor,
+            menu->panelColor,
+            // alpha,
+            Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
+        // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
+
+        vertToBuffer (
+            // vertex_buffer_data, cursor,
+            menu->panelColor,
+            // alpha,
+            menu->aabb.upperBound ) ;
+        // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
+
+        insertPrimitiveRestart ();
+        // index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
         // index_buffer_data[(*index_buffer_cursor)] = 0xffff;
         // (*index_buffer_cursor)++;
@@ -806,25 +801,25 @@ void drawPanel ( menuItem * menu )
 
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
     {
-        drawPanel( &(*subMenu ) 
-            // , cursor, vertex_buffer_data, index_buffer_cursor, index_buffer_content, index_buffer_data
-             );
+        drawPanel( &(*subMenu )
+                   // , cursor, vertex_buffer_data, index_buffer_cursor, index_buffer_content, index_buffer_data
+                 );
     }
 }
 
-// void drawPanels(unsigned int * j, GLfloat * vertex_buffer_data, unsigned int * index_buffer_cursor, unsigned int * index_buffer_content, unsigned int * index_buffer_data) 
-void drawPanels();
+// void drawPanels(unsigned int * j, GLfloat * vertex_buffer_data, unsigned int * index_buffer_cursor, unsigned int * index_buffer_content, unsigned int * index_buffer_data)
+void drawPanels()
 {
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
         drawPanel( &(*menu ) );
-            // , j, vertex_buffer_data, index_buffer_cursor, index_buffer_content, index_buffer_data );
+        // , j, vertex_buffer_data, index_buffer_cursor, index_buffer_content, index_buffer_data );
     }
 }
 
 
-struct polyCounter 
+struct polyCounter
 {
     unsigned int verts;
     unsigned int indices;
@@ -875,32 +870,17 @@ polyCounter analyzeMenus() {
 
 
 
-void draw()
-{
-    
-}
-
-
 void drawMenus ()
 {
+
+
+    // polyCounter rocks = analyzeMenus();
+
+
+    prepareForMenuDraw();
+    drawPanels();
+
     std::list<menuItem>::iterator menu;
-
-
-    polyCounter rocks = analyzeMenus();
-
-
-    // prepareForMenuDraw();
-
-    // drawPanels(&g_vertex_buffer_cursor, vertex_buffer_data, &index_buffer_cursor, &index_buffer_content, index_buffer_data);
-
- drawPanels();
-
-    glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_buffer_data ), vertex_buffer_data, GL_DYNAMIC_DRAW );
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_DYNAMIC_DRAW);
-    glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
-
-    // cleanupAfterMenuDraw();
-
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
         drawMenuText(&(*menu));

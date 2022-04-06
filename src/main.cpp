@@ -137,6 +137,8 @@ void threadInterface()
 				// 	destroyMouseJoint();
 				// }
 
+
+
 				if ( draggedMenu != nullptr )
 				{
 					clearDraggingMenu();
@@ -149,6 +151,8 @@ void threadInterface()
 		case SDL_MOUSEMOTION:
 		{
 
+ drawTestCoordinate (mouseX, mouseY) ;
+
 			int prevMouseX = mouseX;
 			int prevMouseY = mouseY;
 
@@ -157,6 +161,9 @@ void threadInterface()
 
 			int deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) ;
 			int deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) ;
+
+
+
 
 			if ( draggedMenu != nullptr)
 			{

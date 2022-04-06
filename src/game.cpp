@@ -61,65 +61,6 @@ void threadGame()
 
 
 
-void gameGraphics()
-{
-	/** your graphics logic here. turn your data into floats and pack it into vertex_buffer_data. The sequence is r, g, b, a, x, y; repeat for each point. **/
-
-	unsigned int nVertsToRenderThisTurn = 0;
-	unsigned int nIndicesToUseThisTurn = 0;
-
-	// std::list<PhysicalObject>::iterator object;
-	// for (object = physicalObjects.begin(); object !=  physicalObjects.end(); ++object)
-	// {
-	// 	unsigned int nObjectVerts = object->vertices.size();
-	// 	nVertsToRenderThisTurn += nObjectVerts;
-	// 	nIndicesToUseThisTurn  += nObjectVerts + 1;
-	// }
-
-	long unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
-	unsigned int vertex_buffer_cursor = 0;
-	float vertex_buffer_data[totalNumberOfFields];
-	unsigned int index_buffer_cursor = 0;
-	unsigned int index_buffer_content = 0;
-	unsigned int index_buffer_data[nIndicesToUseThisTurn];
-
-	// std::list<PhysicalObject>::iterator object;
-	// for (object = physicalObjects.begin(); object !=  physicalObjects.end(); ++object)
-	// {
-
-	// 	b2Vec2 bodyPosition = object->p_body->GetWorldCenter();
-	// 	float bodyAngle = object->p_body->GetAngle();
-	// 	float bodyAngleSin = sin(bodyAngle);
-	// 	float bodyAngleCos = cos(bodyAngle);
-
-	// 	std::vector<b2Vec2>::iterator vert;
-	// 	for (vert = std::begin(object->vertices); vert !=  std::end(object->vertices); ++vert)
-	// 	{
-	// 		// add the position and rotation of the game-world object that the vertex belongs to.
-	// 		b2Vec2 rotatedPoint = b2Vec2(   vert->x + bodyPosition.x, vert->y + bodyPosition.y   );
-	// 		rotatedPoint = b2RotatePointPrecomputed( bodyPosition, bodyAngleSin, bodyAngleCos, rotatedPoint);
-
-	// 		vertex_buffer_data[(vertex_buffer_cursor) + 0] = object->color.r;
-	// 		vertex_buffer_data[(vertex_buffer_cursor) + 1] = object->color.g;
-	// 		vertex_buffer_data[(vertex_buffer_cursor) + 2] = object->color.b;
-	// 		vertex_buffer_data[(vertex_buffer_cursor) + 3] = object->color.a;
-	// 		vertex_buffer_data[(vertex_buffer_cursor) + 4] = rotatedPoint.x;
-	// 		vertex_buffer_data[(vertex_buffer_cursor) + 5] = rotatedPoint.y ;
-	// 		(vertex_buffer_cursor) += 6;
-
-	// 		index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
-	// 		(index_buffer_cursor)++;
-	// 		(index_buffer_content)++;
-	// 	}
-
-	// 	index_buffer_data[(index_buffer_cursor)] = PRIMITIVE_RESTART;
-	// 	(index_buffer_cursor)++;
-	// }
-
-	glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_buffer_data ), vertex_buffer_data, GL_DYNAMIC_DRAW );
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_DYNAMIC_DRAW);
-	glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
-}
 
 void threadGraphics()
 {
@@ -131,9 +72,7 @@ void threadGraphics()
 
 	prepareForWorldDraw();
 
-	gameGraphics();
-
-
+	
 	cleanupAfterWorldDraw();
 	drawMenus ();
 	drawCaptureText ();
