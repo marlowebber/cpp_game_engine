@@ -74,17 +74,18 @@ struct uDataWrap
 	void * uData;
 	unsigned int dataType;
 
+	uDataWrap();
 	uDataWrap(void * dat, unsigned int typ);
 
 };
 
 struct AABB
 {
-    Vec_f2 upperBound;
-    Vec_f2 lowerBound;
+	Vec_f2 upperBound;
+	Vec_f2 lowerBound;
 
-    AABB();
-    AABB(Vec_f2 upperBound, Vec_f2 lowerBound);
+	AABB();
+	AABB(Vec_f2 upperBound, Vec_f2 lowerBound);
 };
 
 

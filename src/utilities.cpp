@@ -71,6 +71,18 @@ Color::Color(float r, float g, float b, float a)
 	this->a = a;
 }
 
+uDataWrap::uDataWrap()
+{
+	uData = nullptr;
+	dataType = TYPE_UNINIT;
+}
+
+uDataWrap::uDataWrap(void * dat, unsigned int typ)
+{
+	uData = dat;
+	dataType = typ;
+}
+
 
 Vec_f2 rotatePointPrecomputed( Vec_f2 center, float s, float c, Vec_f2 point)
 {

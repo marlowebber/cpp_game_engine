@@ -192,8 +192,8 @@ int main( int argc, char * argv[] )
 {
 	setupGraphics();
 	// initializePhysics();
-	// initializeGame();
-	// setupMenus();
+	initializeGame();
+	setupMenus();
 
 	for ( ;; )
 	{
