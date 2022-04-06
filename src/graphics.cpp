@@ -16,6 +16,24 @@ GLuint vs, fs, program;
 GLuint vao, vbo;
 GLuint IndexBufferId;
 
+
+
+unsigned int nVertsToRenderThisTurn ;//= rocks.verts;
+unsigned int nIndicesToUseThisTurn  ;//= rocks.indices;
+unsigned int totalNumberOfFields    ;//= nVertsToRenderThisTurn * numberOfFieldsPerVertex;
+
+const unsigned int initialBufferSize = 1000000;
+
+// Create the buffer.
+unsigned int g_vertex_buffer_cursor ;//= 0;
+GLfloat vertex_buffer_data[initialBufferSize];
+
+unsigned int index_buffer_cursor ;// = 0;
+unsigned int index_buffer_content;// = 0;
+unsigned int index_buffer_data[nIndicesToUseThisTurn];
+
+
+
 static const char * vertex_shader =
     "#version 130\n"
     "in vec2 i_position;\n"
@@ -152,24 +170,24 @@ void prepareForWorldDraw ()
 	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
 
 	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-    mat4x4_ortho(
-        projection_matrix,
-        -1 * 10  * viewZoom + viewPanX,
-        +1 * 10  * viewZoom + viewPanX,
-        -1 * 5.625 * viewZoom + viewPanY,
-        +1 * 5.625 * viewZoom + viewPanY,
-        -10.0f,
-        +10.0f
-    );
+	mat4x4_ortho(
+	    projection_matrix,
+	    -1 * 10  * viewZoom + viewPanX,
+	    +1 * 10  * viewZoom + viewPanX,
+	    -1 * 5.625 * viewZoom + viewPanY,
+	    +1 * 5.625 * viewZoom + viewPanY,
+	    -10.0f,
+	    +10.0f
+	);
 	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
 }
 
-void cleanupAfterWorldDraw() 
+void cleanupAfterWorldDraw()
 {
-    glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 
-    glDisableVertexAttribArray(attrib_position);
-    glDisableVertexAttribArray(attrib_color);
+	glDisableVertexAttribArray(attrib_position);
+	glDisableVertexAttribArray(attrib_color);
 }
 void preDraw()
 {
@@ -178,6 +196,12 @@ void preDraw()
 
 void postDraw ()
 {
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_buffer_data ), vertex_buffer_data, GL_DYNAMIC_DRAW );
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_DYNAMIC_DRAW);
+	glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
+
+
 	SDL_GL_SwapWindow( window );
 	float zoomDifference = (viewZoom - viewZoomSetpoint);
 	float zoomResponse = (zoomDifference * -1) / cameraTrackingResponse;
@@ -191,20 +215,37 @@ void postDraw ()
 	viewPanY += panResponseY ;
 }
 
-void vertToBuffer (float * vertex_buffer_data, unsigned int * cursor, Color color, float alpha, Vec_f2 vert) 
+void vertToBuffer (
+    // float * vertex_buffer_data, unsigned int * cursor,
+    Color color,
+    // float alpha,
+    Vec_f2 vert)
 {
-	vertex_buffer_data[(*cursor) + 0] = color.r;
-	vertex_buffer_data[(*cursor) + 1] = color.g;
-	vertex_buffer_data[(*cursor) + 2] = color.b;
-	vertex_buffer_data[(*cursor) + 3] = alpha;
-	vertex_buffer_data[(*cursor) + 4] = vert.x;
-	vertex_buffer_data[(*cursor) + 5] = vert.y ;
-	(*cursor) += 6;
+	vertex_buffer_data[(cursor) + 0] = color.r;
+	vertex_buffer_data[(cursor) + 1] = color.g;
+	vertex_buffer_data[(cursor) + 2] = color.b;
+	vertex_buffer_data[(cursor) + 3] = alpha;
+	vertex_buffer_data[(cursor) + 4] = vert.x;
+	vertex_buffer_data[(cursor) + 5] = vert.y ;
+	(cursor) += 6;
+
+	index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
+	(index_buffer_cursor)++;
+	(index_buffer_content)++;
 }
 
-void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor)
+// void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor)
+// {
+// 	index_buffer_data[(*index_buffer_cursor)] = (*index_buffer_content);
+// 	(*index_buffer_cursor)++;
+// 	(*index_buffer_content)++;
+// }
+
+
+void insertPrimitiveRestart (
+	// unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor
+	)
 {
-    index_buffer_data[(*index_buffer_cursor)] = (*index_buffer_content);
-    (*index_buffer_cursor)++;
-    (*index_buffer_content)++;
+	index_buffer_data[(index_buffer_cursor)] = 0xffff;
+	(index_buffer_cursor)++;
 }

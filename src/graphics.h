@@ -70,4 +70,5 @@ void vertToBuffer (float * vertex_buffer_data, unsigned int * cursor, Color colo
 
 void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor);
 
+void insertPrimitiveRestart (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor);
 #endif
