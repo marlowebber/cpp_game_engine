@@ -1,7 +1,7 @@
 
 #include "graphics.h"
 #include "menus.h"
-
+#include "utilities.h"
 
 #include <stdio.h>
 #include <iostream>
@@ -39,8 +39,6 @@ menuItem::menuItem( )
     this->y = 0.0f;
     this->alpha = 0.8f;
     this->size = 50;
-    this->aabb.lowerBound = AABB(0.0f, 0.0f);
-    this->aabb.upperBound = AABB(0.0f, 0.0f);
     this->onClick = nullptr;
     this->printValue = true;
     this->flagDelete = false;

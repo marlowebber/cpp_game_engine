@@ -1,7 +1,26 @@
-
+#include "utilities.h"
 
 //https://github.com/edrosten/8bit_rng/blob/master/rng-4261412736.c
 uint32_t x, y, z, a;
+
+Vec_u2::Vec_u2()
+{
+	this->x = 0;
+	this->y = 0;
+}
+
+Vec_i2::Vec_i2()
+{
+	this->x = 0;
+	this->y = 0;
+}
+
+Vec_f2::Vec_f2()
+{
+	this->x = 0.0f;
+	this->y = 0.0f;
+}
+
 
 Vec_u2::Vec_u2(unsigned int a, unsigned int b)
 {
@@ -21,11 +40,37 @@ Vec_f2::Vec_f2( float a,  float b)
 	this->y = b;
 }
 
+
+AABB::AABB()
+{
+	this->upperBound = Vec_f2(0.0f, 0.0f);
+	this->lowerBound = Vec_f2(0.0f, 0.0f);;
+}
+
 AABB::AABB(Vec_f2 upperBound, Vec_f2 lowerBound)
 {
 	this->upperBound = upperBound;
 	this->lowerBound = lowerBound;
 }
+
+
+Color::Color()
+{
+	this->r = 0.0f;
+	this->g = 0.0f;
+	this->b = 0.0f;
+	this->a = 0.0f;
+}
+
+
+Color::Color(float r, float g, float b, float a)
+{
+	this->r = r;
+	this->g = g;
+	this->b = b;
+	this->a = a;
+}
+
 
 Vec_f2 rotatePointPrecomputed( Vec_f2 center, float s, float c, Vec_f2 point)
 {

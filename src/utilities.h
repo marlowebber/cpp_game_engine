@@ -2,6 +2,23 @@
 #define UTILITIES_H
 
 
+#define GL_GLEXT_PROTOTYPES
+#include <stdio.h>
+#include <SDL.h>
+#include <SDL_opengl.h>
+#include "SDL.h"
+#include <vector>
+#include <list>
+#include <string>
+#include <sstream>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+using namespace glm;
+
+#include <random>
+
+#include <boost/thread.hpp>
 
 
 struct Color
@@ -11,6 +28,7 @@ struct Color
 	float b;
 	float a;
 
+	Color();
 	Color(float r, float g, float b, float a);
 };
 
@@ -19,6 +37,8 @@ struct Vec_u2
 {
 	unsigned int x;
 	unsigned int y;
+
+	Vec_u2();
 	Vec_u2(unsigned int a, unsigned int b);
 
 };
@@ -28,6 +48,7 @@ struct Vec_i2
 	int x;
 	int y;
 
+	Vec_i2();
 	Vec_i2( int a,  int b);
 };
 
@@ -36,6 +57,7 @@ struct Vec_f2
 	float x;
 	float y;
 
+	Vec_f2();
 	Vec_f2(float  a, float  b);
 };
 
@@ -61,6 +83,7 @@ struct AABB
     Vec_f2 upperBound;
     Vec_f2 lowerBound;
 
+    AABB();
     AABB(Vec_f2 upperBound, Vec_f2 lowerBound);
 };
 

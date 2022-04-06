@@ -5,7 +5,11 @@
 
 #define PRIMITIVE_RESTART 0xffff
 
-
+typedef enum t_attrib_id
+{
+	attrib_position,
+	attrib_color
+} t_attrib_id;
 
 extern float viewZoomSetpoint ;
 extern float viewPanSetpointX;

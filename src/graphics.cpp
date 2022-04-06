@@ -35,11 +35,7 @@ static const char * fragment_shader =
     "    o_color = v_color;\n"
     "}\n";
 
-typedef enum t_attrib_id
-{
-	attrib_position,
-	attrib_color
-} t_attrib_id;
+
 
 // The projection matrix efficiently handles all panning, zooming, and rotation.
 t_mat4x4 projection_matrix;

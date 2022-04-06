@@ -7,8 +7,8 @@ enum menuDirection { LEFT, RIGHT, ABOVE, BELOW };
 struct menuItem 
 {
     std::string text;
-    Color textColor;
-    Color panelColor;
+    Color textColor  ;
+    Color panelColor ;
     int x;
     int y;
     int size;
@@ -19,7 +19,7 @@ struct menuItem
     int visualDelayCount;
     float alpha;
 
-    AABB aabb;
+    AABB aabb ;
 
     std::list<menuItem> subMenus;
 

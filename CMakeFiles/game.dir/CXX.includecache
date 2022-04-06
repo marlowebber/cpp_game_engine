@@ -15,30 +15,6 @@ main.h
 /home/marlo/Documents/cpp_game_engine/src/main.h
 
 /home/marlo/Documents/cpp_game_engine/src/game.h
-stdio.h
--
-SDL.h
--
-SDL_opengl.h
--
-SDL.h
-/home/marlo/Documents/cpp_game_engine/src/SDL.h
-vector
--
-list
--
-string
--
-sstream
--
-glm/glm.hpp
--
-glm/gtc/matrix_transform.hpp
--
-random
--
-boost/thread.hpp
--
 utilities.h
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
 
@@ -69,6 +45,8 @@ graphics.h
 /home/marlo/Documents/cpp_game_engine/src/graphics.h
 menus.h
 /home/marlo/Documents/cpp_game_engine/src/menus.h
+utilities.h
+/home/marlo/Documents/cpp_game_engine/src/utilities.h
 stdio.h
 -
 iostream
@@ -78,9 +56,31 @@ fstream
 
 /home/marlo/Documents/cpp_game_engine/src/menus.h
 
-/home/marlo/Documents/cpp_game_engine/src/utilities.cpp
-
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
+stdio.h
+-
+SDL.h
+-
+SDL_opengl.h
+-
+SDL.h
+/home/marlo/Documents/cpp_game_engine/src/SDL.h
+vector
+-
+list
+-
+string
+-
+sstream
+-
+glm/glm.hpp
+-
+glm/gtc/matrix_transform.hpp
+-
+random
+-
+boost/thread.hpp
+-
 
 /usr/local/include/SDL2/SDL.h
 SDL_main.h

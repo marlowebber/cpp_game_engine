@@ -6,31 +6,6 @@ int exampleNumberCapture = 15;
 std::string exampleTextCapture = std::string("exampleText");
 
 
-Color::Color(float r, float g, float b, float a)
-{
-	this->r = r;
-	this->g = g;
-	this->b = b;
-	this->a = a;
-}
-
-Vec_u2::Vec_u2(unsigned int a, unsigned int b)
-{
-	this->x = a;
-	this->y = b;
-}
-
-Vec_i2::Vec_i2( int a,  int b)
-{
-	this->x = a;
-	this->y = b;
-}
-
-Vec_f2::Vec_f2( float a,  float b)
-{
-	this->x = a;
-	this->y = b;
-}
 
 
 void rebuildMenus ()
