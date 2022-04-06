@@ -1,9 +1,7 @@
-#include "physics.h"
+
 #include "graphics.h"
-#include "utilities.h"
 #include "menus.h"
 
-#include <box2d.h>
 
 #include <stdio.h>
 #include <iostream>
@@ -19,10 +17,8 @@ float viewportScaleFactorX = 2.4;
 float viewportScaleFactorY = 1.8;
 
 bool flagRebuildMenus = false;
-// bool capturingNumber = false;
 bool capturingText = false;
 std::string capturedString;
-b2Vec2 captureTextPosition;
 uDataWrap * editItem;
 bool capitalizing = false;
 
@@ -34,41 +30,46 @@ float uvKerning = 0.3f;
 
 menuItem::menuItem( )
 {
-    scaffold = true;
-    collapsed = true;
-    clicked = false;
-    panelColor = b2Color(0.5f, 0.5f, 0.5f);
-    textColor = b2Color(0.0f, 0.0f, 0.0f);
-    x = 0.0f;
-    y = 0.0f;
-    alpha = 0.8f;
-    size = 50;
-    aabb.lowerBound = b2Vec2(0.0f, 0.0f);
-    aabb.upperBound = b2Vec2(0.0f, 0.0f);
-    onClick = nullptr;
-    printValue = true;
-    flagDelete = false;
-    collapsible = true;
-    editable = true;
+    this->scaffold = true;
+    this->collapsed = true;
+    this->clicked = false;
+    this->panelColor = Color(0.5f, 0.5f, 0.5f, 1.0f);
+    this->textColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
+    this->x = 0.0f;
+    this->y = 0.0f;
+    this->alpha = 0.8f;
+    this->size = 50;
+    this->aabb.lowerBound = AABB(0.0f, 0.0f);
+    this->aabb.upperBound = AABB(0.0f, 0.0f);
+    this->onClick = nullptr;
+    this->printValue = true;
+    this->flagDelete = false;
+    this->collapsible = true;
+    this->editable = true;
 }
 
 menuItem * lastActiveMenu;
 std::list<menuItem> menus;
 
-b2Vec2 transformScreenPositionToWorld( b2Vec2 screen )
+void exampleMenuCallback(void * userData)
+{
+    printf("a menu was clicked\n");
+}
+
+Vec_f2 transformScreenPositionToWorld( Vec_f2 screen )
 {
     float worldX =       ( ((screen.x - (width / 2))) * (viewZoom  ) / 96) + viewPanX ;
     float worldY =     -1 *  ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
-    return b2Vec2(worldX, worldY);
+    return Vec_f2  (worldX, worldY);
 }
 
-b2Vec2 transformWorldPositionToScreen( b2Vec2 world )
+Vec_f2 transformWorldPositionToScreen( Vec_f2 world )
 {
     float screenX = (  192 * world.x - 192 * viewPanX + width  * viewZoom ) / (2 * viewZoom);
     float screenY = (  -192 * (world.y * -1) + 192 * viewPanY + height * viewZoom ) / (2 * viewZoom);
     screenX = screenX / viewportScaleFactorX;
     screenY = screenY / viewportScaleFactorY;
-    return b2Vec2(screenX, screenY);
+    return Vec_f2(screenX, screenY);
 }
 
 GLuint loadBMP_custom(const char * imagepath)
@@ -444,7 +445,7 @@ void cleanupText2D()
 
 
 
-menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback, void * userData, b2Color color, b2Vec2 position)
+menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback, void * userData, Color color, Vec_f2 position)
 {
 
     menuItem * newMenu = new menuItem();
@@ -505,8 +506,8 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
     }
 
     // draw a rectangle around the menu to calculate aabb
-    newMenu->aabb.lowerBound = b2Vec2(  newMenu->x - (0.5 * menuTextSize) ,  newMenu->y - (0.5 * menuTextSize)  );
-    newMenu->aabb.upperBound = b2Vec2( newMenu->x  + (newMenu->text.length() * menuTextSize * vertexKerning) + (0.5 * menuTextSize) ,    newMenu->y + menuTextSize + (0.5 * menuTextSize));
+    newMenu->aabb.lowerBound = Vec_f2(  newMenu->x - (0.5 * menuTextSize) ,  newMenu->y - (0.5 * menuTextSize)  );
+    newMenu->aabb.upperBound = Vec_f2( newMenu->x  + (newMenu->text.length() * menuTextSize * vertexKerning) + (0.5 * menuTextSize) ,    newMenu->y + menuTextSize + (0.5 * menuTextSize));
 
     newMenu->size = menuTextSize;
     newMenu->collapsed = true;
@@ -767,13 +768,13 @@ void drawPanel ( menuItem * menu , unsigned int * cursor, GLfloat * vertex_buffe
     {
         float alpha = 1.0f;
 
-        vertToBuffer ( vertex_buffer_data, cursor, menu->panelColor, alpha,  b2Vec2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
+        vertToBuffer ( vertex_buffer_data, cursor, menu->panelColor, alpha,  Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
         advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
         vertToBuffer ( vertex_buffer_data, cursor, menu->panelColor, alpha, menu->aabb.lowerBound ) ;
         advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
-        vertToBuffer ( vertex_buffer_data, cursor, menu->panelColor, alpha, b2Vec2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
+        vertToBuffer ( vertex_buffer_data, cursor, menu->panelColor, alpha, Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
         advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
         vertToBuffer ( vertex_buffer_data, cursor, menu->panelColor, alpha, menu->aabb.upperBound ) ;
@@ -1197,7 +1198,7 @@ void drawTestCoordinate (float x, float y)
     unsigned int cursor = 0;
 
     unsigned int bloopSize = 0.1 * viewZoom;
-    b2Color bloopColor = b2Color( 1.0f, 1.0f, 1.0f);
+    Color bloopColor = Color( 1.0f, 1.0f, 1.0f, 1.0f);
 
     vertex_buffer_data[(cursor) + 0] = bloopColor.r;
     vertex_buffer_data[(cursor) + 1] = bloopColor.g;

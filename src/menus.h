@@ -3,17 +3,12 @@
 
 enum menuDirection { LEFT, RIGHT, ABOVE, BELOW };
 
-typedef enum t_attrib_id
-{
-    attrib_position,
-    attrib_color
-} t_attrib_id;
 
 struct menuItem 
 {
     std::string text;
-    b2Color textColor;
-    b2Color panelColor;
+    Color textColor;
+    Color panelColor;
     int x;
     int y;
     int size;
@@ -24,7 +19,7 @@ struct menuItem
     int visualDelayCount;
     float alpha;
 
-    b2AABB aabb;
+    AABB aabb;
 
     std::list<menuItem> subMenus;
 
@@ -53,6 +48,7 @@ extern float viewportScaleFactorX;
 extern float viewportScaleFactorY;
 
 
+void exampleMenuCallback(void * userData);
 void cleanupText2D();
 
 void setupMenus();
@@ -71,9 +67,7 @@ extern bool capturingText;
 extern std::string capturedString;
 
 
-menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback=nullptr, void * userData=nullptr, b2Color color=b2Color(0.1f, 0.1f, 0.1f, 1.0f), b2Vec2 position=b2Vec2(0.0f, 0.0f));
-
-// menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback, void * userData, b2Color color, b2Vec2 position);
+menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback=nullptr, void * userData=nullptr, Color color=Color(0.1f, 0.1f, 0.1f, 1.0f), Vec_f2 position=Vec_f2(0.0f, 0.0f));
 
 void editUserData (uDataWrap * itemToEdit);
 
@@ -82,9 +76,9 @@ void editUserDataCallback ();
 
 void drawCaptureText ();
 
-b2Vec2 transformScreenPositionToWorld( b2Vec2 screen );
+Vec_f2 transformScreenPositionToWorld( Vec_f2 screen );
 
-b2Vec2 transformWorldPositionToScreen( b2Vec2 world );
+Vec_f2 transformWorldPositionToScreen( Vec_f2 world );
 
 void drawTestCoordinate (float x, float y) ;
 

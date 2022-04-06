@@ -16,8 +16,6 @@ find_package(Boost REQUIRED COMPONENTS filesystem thread)
 
 # Define the framework files.
 set(SRCS
-	src/utilities.h
-	src/utilities.cpp
 	src/game.h
 	src/main.cpp
 	src/main.h
@@ -26,17 +24,15 @@ set(SRCS
 	src/graphics.h
 	src/menus.h
 	src/menus.cpp
-	src/physics.cpp
-	src/physics.h
+	src/utilities.h
+	src/utilities.cpp
 )
 
 link_directories(
-	${CMAKE_SOURCE_DIR}/box2d/build/bin/
 	${Boost_LIBRARY_DIRS}
 )
 
 include_directories (
-	${CMAKE_SOURCE_DIR}/box2d/include/box2d/
 	${SDL2_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
 )
@@ -46,7 +42,6 @@ add_executable(game ${SRCS} )
 target_link_libraries (
 	game
 	OpenMP::OpenMP_CXX
-	${CMAKE_SOURCE_DIR}/box2d/build/bin/libbox2d.a
 	${SDL2_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${Boost_LIBRARIES}

@@ -8,7 +8,6 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/home/marlo/Documents/cpp_game_engine/src/graphics.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/graphics.cpp.o"
   "/home/marlo/Documents/cpp_game_engine/src/main.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/main.cpp.o"
   "/home/marlo/Documents/cpp_game_engine/src/menus.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/menus.cpp.o"
-  "/home/marlo/Documents/cpp_game_engine/src/physics.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/physics.cpp.o"
   "/home/marlo/Documents/cpp_game_engine/src/utilities.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/utilities.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
@@ -23,7 +22,6 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "box2d/include/box2d"
   "/usr/local/include/SDL2"
   )
 

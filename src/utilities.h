@@ -1,34 +1,51 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include "physics.h"
-#include <box2d.h>
 
-extern const float pi;
 
-struct vec_u2
+
+struct Color
+{
+	float r;
+	float g;
+	float b;
+	float a;
+
+	Color(float r, float g, float b, float a);
+};
+
+
+struct Vec_u2
 {
 	unsigned int x;
 	unsigned int y;
-	vec_u2(unsigned int a, unsigned int b);
+	Vec_u2(unsigned int a, unsigned int b);
 
 };
 
-struct vec_i2
+struct Vec_i2
 {
 	int x;
 	int y;
 
-	vec_i2( int a,  int b);
+	Vec_i2( int a,  int b);
 };
 
-struct vec_f2
+struct Vec_f2
 {
 	float x;
 	float y;
 
-	vec_f2(float  a, float  b);
+	Vec_f2(float  a, float  b);
 };
+
+
+#define TYPE_UDATA_STRING 	(1<<1)
+#define TYPE_UDATA_UINT   	(1<<2)
+#define TYPE_UDATA_INT    	(1<<3)
+#define TYPE_UDATA_FLOAT  	(1<<4)
+#define TYPE_UNINIT		  	(1<<5)
+#define TYPE_UDATA_BOOL	  	(1<<6)
 
 struct uDataWrap
 {
@@ -39,26 +56,32 @@ struct uDataWrap
 
 };
 
-#define TYPE_UDATA_STRING 	(1<<1)
-#define TYPE_UDATA_UINT   	(1<<2)
-#define TYPE_UDATA_INT    	(1<<3)
-#define TYPE_UDATA_FLOAT  	(1<<4)
-#define TYPE_UNINIT		  	(1<<5)
-#define TYPE_UDATA_BOOL	  	(1<<6)
+struct AABB
+{
+    Vec_f2 upperBound;
+    Vec_f2 lowerBound;
+
+    AABB(Vec_f2 upperBound, Vec_f2 lowerBound);
+};
 
 
 
-vec_f2 rotatePointPrecomputed( vec_f2 center, float s, float c, vec_f2 point);
-b2Vec2 b2RotatePointPrecomputed( b2Vec2 center, float s, float c, b2Vec2 point);
+Vec_f2 rotatePointPrecomputed( Vec_f2 center, float s, float c, Vec_f2 point);
 
 int alphanumeric (char c);
+char numeralphabetic (int i);
 
 float RNG();
 
 float magnitude_int( int x,  int y);
 
+int distanceBetweenPoints( Vec_i2 a, Vec_i2 b );
+
+void seedExtremelyFastNumberGenerators();
+uint32_t extremelyFastNumberInRange    (uint32_t from, uint32_t to);
+uint32_t extremelyFastNumberFromZeroTo( uint32_t to);
+
+
 void setupExtremelyFastNumberGenerators();
-uint16_t extremelyFastNumberInRange(uint16_t from, uint16_t to);
-uint16_t extremelyFastNumberFromZeroTo( uint16_t to);
 
 #endif

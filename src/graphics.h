@@ -5,6 +5,8 @@
 
 #define PRIMITIVE_RESTART 0xffff
 
+
+
 extern float viewZoomSetpoint ;
 extern float viewPanSetpointX;
 extern float viewPanSetpointY;
@@ -60,7 +62,7 @@ void postDraw();
 void prepareForWorldDraw ();
 void cleanupAfterWorldDraw();
 
-void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, b2Color color, float alpha, b2Vec2 vert) ;
+void vertToBuffer (float * vertex_buffer_data, unsigned int * cursor, Color color, float alpha, Vec_f2 vert) ;
 
 void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor);
 

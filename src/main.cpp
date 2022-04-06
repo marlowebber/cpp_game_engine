@@ -2,7 +2,6 @@
 #include <chrono>
 #include <iostream>
 
-#include "physics.h"
 #include "graphics.h"
 #include "menus.h"
 
@@ -11,7 +10,6 @@ bool flagQuit = false;
 
 int mouseX;
 int mouseY;
-b2Vec2 worldMousePos;
 
 float panSpeed = 0.5f;
 
@@ -43,7 +41,6 @@ void threadInterface()
 
 		case SDL_KEYDOWN:
 		{
-
 			if (capturingText)
 			{
 				if (event.key.keysym.sym > 0x20 && event.key.keysym.sym < 0x7f)
@@ -60,11 +57,8 @@ void threadInterface()
 				break;
 			}
 
-
-
 			switch ( event.key.keysym.sym )
 			{
-
 			case SDLK_LEFT:
 				viewPanSetpointX = viewPanSetpointX - (panSpeed * viewZoomSetpoint);
 				break;
@@ -99,8 +93,6 @@ void threadInterface()
 			case SDL_BUTTON_LEFT:
 			{
 
-
-
 				if (capturingText)
 				{
 					editUserDataCallback () ;
@@ -118,10 +110,10 @@ void threadInterface()
 				else
 				{
 
-					if (  checkClickObjects ( worldMousePos) )
-					{
-						return;
-					}
+					// if (  checkClickObjects ( worldMousePos) )
+					// {
+					// 	return;
+					// }
 				}
 
 
@@ -140,12 +132,12 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
-				if (getMouseJointStatus())
-				{
-					destroyMouseJoint();
-				}
+				// if (getMouseJointStatus())
+				// {
+				// 	destroyMouseJoint();
+				// }
 
-				if ( draggedMenu != nullptr ) 
+				if ( draggedMenu != nullptr )
 				{
 					clearDraggingMenu();
 				}
@@ -166,24 +158,24 @@ void threadInterface()
 			int deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) ;
 			int deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) ;
 
-			if ( draggedMenu != nullptr) 
+			if ( draggedMenu != nullptr)
 			{
 
 
 
-			 rebaseMenu (draggedMenu, deltaMouseX, deltaMouseY);
+				rebaseMenu (draggedMenu, deltaMouseX, deltaMouseY);
 
 
 
 			}
 
-			worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
+			// worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
 
 
-			if (getMouseJointStatus())
-			{
-				maintainMouseJoint (worldMousePos) ;
-			}
+			// if (getMouseJointStatus())
+			// {
+			// 	maintainMouseJoint (worldMousePos) ;
+			// }
 			break;
 		}
 		}
@@ -206,8 +198,9 @@ int main( int argc, char * argv[] )
 	for ( ;; )
 	{
 		// you can start your threads like this:
-		// boost::thread t2{ threadInterface };
+		boost::thread t2{ threadInterface };
 		// boost::thread t3{ threadPhysics };
+		boost::thread t3{ threadGame };
 
 		// graphics only works in this thread, because it is the process the SDL context was created in.
 		threadGraphics();
@@ -215,8 +208,8 @@ int main( int argc, char * argv[] )
 
 
 		// you can have this thread wait for another to end by saying:
-		// t2.join();
-		// t3.join();
+		t2.join();
+		t3.join();
 
 		if (flagQuit)
 		{

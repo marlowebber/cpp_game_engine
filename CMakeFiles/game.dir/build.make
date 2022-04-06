@@ -57,22 +57,9 @@ include CMakeFiles/game.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/game.dir/flags.make
 
-CMakeFiles/game.dir/src/utilities.cpp.o: CMakeFiles/game.dir/flags.make
-CMakeFiles/game.dir/src/utilities.cpp.o: src/utilities.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/game.dir/src/utilities.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/utilities.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/utilities.cpp
-
-CMakeFiles/game.dir/src/utilities.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/game.dir/src/utilities.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/marlo/Documents/cpp_game_engine/src/utilities.cpp > CMakeFiles/game.dir/src/utilities.cpp.i
-
-CMakeFiles/game.dir/src/utilities.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/game.dir/src/utilities.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/marlo/Documents/cpp_game_engine/src/utilities.cpp -o CMakeFiles/game.dir/src/utilities.cpp.s
-
 CMakeFiles/game.dir/src/main.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/main.cpp.o: src/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/game.dir/src/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/game.dir/src/main.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/main.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/main.cpp
 
 CMakeFiles/game.dir/src/main.cpp.i: cmake_force
@@ -85,7 +72,7 @@ CMakeFiles/game.dir/src/main.cpp.s: cmake_force
 
 CMakeFiles/game.dir/src/game.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/game.cpp.o: src/game.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/game.dir/src/game.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/game.dir/src/game.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/game.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/game.cpp
 
 CMakeFiles/game.dir/src/game.cpp.i: cmake_force
@@ -98,7 +85,7 @@ CMakeFiles/game.dir/src/game.cpp.s: cmake_force
 
 CMakeFiles/game.dir/src/graphics.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/graphics.cpp.o: src/graphics.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/game.dir/src/graphics.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/game.dir/src/graphics.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/graphics.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/graphics.cpp
 
 CMakeFiles/game.dir/src/graphics.cpp.i: cmake_force
@@ -111,7 +98,7 @@ CMakeFiles/game.dir/src/graphics.cpp.s: cmake_force
 
 CMakeFiles/game.dir/src/menus.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/menus.cpp.o: src/menus.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/game.dir/src/menus.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/game.dir/src/menus.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/menus.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/menus.cpp
 
 CMakeFiles/game.dir/src/menus.cpp.i: cmake_force
@@ -122,39 +109,36 @@ CMakeFiles/game.dir/src/menus.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/game.dir/src/menus.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/marlo/Documents/cpp_game_engine/src/menus.cpp -o CMakeFiles/game.dir/src/menus.cpp.s
 
-CMakeFiles/game.dir/src/physics.cpp.o: CMakeFiles/game.dir/flags.make
-CMakeFiles/game.dir/src/physics.cpp.o: src/physics.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/game.dir/src/physics.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/physics.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/physics.cpp
+CMakeFiles/game.dir/src/utilities.cpp.o: CMakeFiles/game.dir/flags.make
+CMakeFiles/game.dir/src/utilities.cpp.o: src/utilities.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/game.dir/src/utilities.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/utilities.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/utilities.cpp
 
-CMakeFiles/game.dir/src/physics.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/game.dir/src/physics.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/marlo/Documents/cpp_game_engine/src/physics.cpp > CMakeFiles/game.dir/src/physics.cpp.i
+CMakeFiles/game.dir/src/utilities.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/game.dir/src/utilities.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/marlo/Documents/cpp_game_engine/src/utilities.cpp > CMakeFiles/game.dir/src/utilities.cpp.i
 
-CMakeFiles/game.dir/src/physics.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/game.dir/src/physics.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/marlo/Documents/cpp_game_engine/src/physics.cpp -o CMakeFiles/game.dir/src/physics.cpp.s
+CMakeFiles/game.dir/src/utilities.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/game.dir/src/utilities.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/marlo/Documents/cpp_game_engine/src/utilities.cpp -o CMakeFiles/game.dir/src/utilities.cpp.s
 
 # Object files for target game
 game_OBJECTS = \
-"CMakeFiles/game.dir/src/utilities.cpp.o" \
 "CMakeFiles/game.dir/src/main.cpp.o" \
 "CMakeFiles/game.dir/src/game.cpp.o" \
 "CMakeFiles/game.dir/src/graphics.cpp.o" \
 "CMakeFiles/game.dir/src/menus.cpp.o" \
-"CMakeFiles/game.dir/src/physics.cpp.o"
+"CMakeFiles/game.dir/src/utilities.cpp.o"
 
 # External object files for target game
 game_EXTERNAL_OBJECTS =
 
-game: CMakeFiles/game.dir/src/utilities.cpp.o
 game: CMakeFiles/game.dir/src/main.cpp.o
 game: CMakeFiles/game.dir/src/game.cpp.o
 game: CMakeFiles/game.dir/src/graphics.cpp.o
 game: CMakeFiles/game.dir/src/menus.cpp.o
-game: CMakeFiles/game.dir/src/physics.cpp.o
+game: CMakeFiles/game.dir/src/utilities.cpp.o
 game: CMakeFiles/game.dir/build.make
-game: box2d/build/bin/libbox2d.a
 game: /usr/local/lib/libSDL2main.a
 game: /usr/local/lib/libSDL2-2.0.so.0.16.0
 game: /usr/lib/x86_64-linux-gnu/libOpenGL.so
@@ -166,7 +150,7 @@ game: /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so
 game: /usr/lib/x86_64-linux-gnu/libpthread.so
 game: /usr/lib/x86_64-linux-gnu/libboost_atomic.so.1.71.0
 game: CMakeFiles/game.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable game"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable game"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/game.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

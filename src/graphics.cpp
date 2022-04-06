@@ -1,15 +1,12 @@
-#include "physics.h"
+
 #include "graphics.h"
 
 float viewZoom = 10.0f;
 float viewPanX = 0.0f;
 float viewPanY = 0.0f;
-
-
 float viewZoomSetpoint = 10.0f;
 float viewPanSetpointX = 0.0f;
 float viewPanSetpointY = 0.0f;
-
 float cameraTrackingResponse = 10;
 
 SDL_Window * window;
@@ -43,8 +40,6 @@ typedef enum t_attrib_id
 	attrib_position,
 	attrib_color
 } t_attrib_id;
-
-
 
 // The projection matrix efficiently handles all panning, zooming, and rotation.
 t_mat4x4 projection_matrix;
@@ -114,7 +109,6 @@ void setupGraphics()
 
 	program = glCreateProgram();
 	glAttachShader( program, vs );
-	// glAttachShader( program, gs );
 	glAttachShader( program, fs );
 
 	glBindAttribLocation( program, attrib_position, "i_position" );
@@ -162,7 +156,7 @@ void prepareForWorldDraw ()
 	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
 
 	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-  mat4x4_ortho(
+    mat4x4_ortho(
         projection_matrix,
         -1 * 10  * viewZoom + viewPanX,
         +1 * 10  * viewZoom + viewPanX,
@@ -174,7 +168,6 @@ void prepareForWorldDraw ()
 	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
 }
 
-
 void cleanupAfterWorldDraw() 
 {
     glDisable(GL_BLEND);
@@ -184,13 +177,11 @@ void cleanupAfterWorldDraw()
 }
 void preDraw()
 {
-	// prepareForWorldDraw ();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void postDraw ()
 {
-	// cleanupAfterWorldDraw();
 	SDL_GL_SwapWindow( window );
 	float zoomDifference = (viewZoom - viewZoomSetpoint);
 	float zoomResponse = (zoomDifference * -1) / cameraTrackingResponse;
@@ -204,7 +195,8 @@ void postDraw ()
 	viewPanY += panResponseY ;
 }
 
-void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, b2Color color, float alpha, b2Vec2 vert) {
+void vertToBuffer (float * vertex_buffer_data, unsigned int * cursor, Color color, float alpha, Vec_f2 vert) 
+{
 	vertex_buffer_data[(*cursor) + 0] = color.r;
 	vertex_buffer_data[(*cursor) + 1] = color.g;
 	vertex_buffer_data[(*cursor) + 2] = color.b;
