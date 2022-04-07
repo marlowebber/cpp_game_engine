@@ -71,10 +71,11 @@ void threadGraphics()
 	preDraw();
 
 	prepareForWorldDraw();
+	cleanupAfterWorldDraw();
 
-	
-	// cleanupAfterWorldDraw();
+	prepareForMenuDraw();
 	drawMenus ();
+	cleanupAfterWorldDraw();
 	drawCaptureText ();
 
 

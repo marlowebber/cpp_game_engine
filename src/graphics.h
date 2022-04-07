@@ -65,7 +65,7 @@ void postDraw();
 
 void prepareForWorldDraw ();
 void prepareForMenuDraw ();
-// void cleanupAfterWorldDraw();
+void cleanupAfterWorldDraw();
 
 void vertToBuffer (
 	 Color color, 
