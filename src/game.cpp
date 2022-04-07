@@ -73,12 +73,11 @@ void threadGraphics()
 	prepareForWorldDraw();
 
 	
-	cleanupAfterWorldDraw();
+	// cleanupAfterWorldDraw();
 	drawMenus ();
 	drawCaptureText ();
 
 
-	// b2Vec2 worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
 
 	postDraw();
 

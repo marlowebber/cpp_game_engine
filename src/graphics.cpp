@@ -25,12 +25,23 @@ unsigned int totalNumberOfFields     = 0;//= nVertsToRenderThisTurn * numberOfFi
 const unsigned int initialBufferSize = 1000000;
 
 // Create the buffer.
-unsigned int g_vertex_buffer_cursor ;//= 0;
-GLfloat vertex_buffer_data[initialBufferSize];
+unsigned int g_vertex_buffer_cursor = 0;
+float vertex_buffer_data[initialBufferSize];
 
-unsigned int index_buffer_cursor ;// = 0;
-unsigned int index_buffer_content;// = 0;
+unsigned int index_buffer_cursor  = 0;
+unsigned int index_buffer_content = 0;
 unsigned int index_buffer_data[initialBufferSize];
+
+
+
+// The projection matrix efficiently handles all panning, zooming, and rotation.
+t_mat4x4 projection_matrix;
+
+// the menu matrix displays menu objects which are unaffected by perspective transformations
+t_mat4x4 menu_matrix;
+
+
+
 
 
 
@@ -54,9 +65,6 @@ static const char * fragment_shader =
     "}\n";
 
 
-
-// The projection matrix efficiently handles all panning, zooming, and rotation.
-t_mat4x4 projection_matrix;
 
 void shutdownGraphics()
 {
@@ -159,6 +167,34 @@ void setupGraphics()
 
 	glBufferData( GL_ARRAY_BUFFER, initialBufferSize, vertex_buffer_data, GL_DYNAMIC_DRAW );
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, initialBufferSize, index_buffer_data, GL_DYNAMIC_DRAW);
+
+	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar );
+	mat4x4_ortho(
+	    projection_matrix,
+	    -1 * viewZoom + viewPanX,
+	    +1 * viewZoom + viewPanX,
+	    -1 * viewZoom + viewPanY,
+	    +1 * viewZoom + viewPanY,
+	    -10.0f,
+	    +10.0f
+	);
+
+
+
+// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
+	mat4x4_ortho(
+	    menu_matrix,
+	    0,
+	    width ,
+	    0,
+	    height ,
+	    -10.0f,
+	    +10.0f
+	);
+
+
+
+
 }
 
 void prepareForWorldDraw ()
@@ -184,16 +220,51 @@ void prepareForWorldDraw ()
 
 
 
+
+
 	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
 }
 
-void cleanupAfterWorldDraw()
-{
-	// glDisable(GL_BLEND);
 
-	// glDisableVertexAttribArray(attrib_position);
-	// glDisableVertexAttribArray(attrib_color);
+void prepareForMenuDraw()
+{
+    // glUseProgram( program );
+    // glBindBuffer( GL_ARRAY_BUFFER, vbo );
+
+    // glEnableVertexAttribArray( attrib_position );
+    // glEnableVertexAttribArray( attrib_color );
+
+    // glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
+    // glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
+
+    // t_mat4x4 menu_matrix;
+
+    // // mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
+    // mat4x4_ortho(
+    //     menu_matrix,
+    //     0,
+    //     width / viewportScaleFactorX,
+    //     0,
+    //     height / viewportScaleFactorY,
+    //     -10.0f,
+    //     +10.0f
+    // );
+    glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, menu_matrix );
+
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 }
+
+
+
+// void cleanupAfterWorldDraw()
+// {
+// 	// glDisable(GL_BLEND);
+
+// 	// glDisableVertexAttribArray(attrib_position);
+// 	// glDisableVertexAttribArray(attrib_color);
+// }
 void preDraw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -205,7 +276,6 @@ void postDraw ()
 	// glBufferData( GL_ARRAY_BUFFER, initialBufferSize, vertex_buffer_data, GL_DYNAMIC_DRAW );
 	// glBufferData(GL_ELEMENT_ARRAY_BUFFER, initialBufferSize, index_buffer_data, GL_DYNAMIC_DRAW);
 
-	printf("printgin %u verts\n", index_buffer_content);
 
 	glDrawElements( GL_TRIANGLE_FAN, index_buffer_content, GL_UNSIGNED_INT, index_buffer_data );
 

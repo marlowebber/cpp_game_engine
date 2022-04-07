@@ -151,7 +151,7 @@ void threadInterface()
 		case SDL_MOUSEMOTION:
 		{
 
- drawTestCoordinate (mouseX, mouseY) ;
+ // drawTestCoordinate (mouseX, mouseY) ;
 
 			int prevMouseX = mouseX;
 			int prevMouseY = mouseY;

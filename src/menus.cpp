@@ -12,21 +12,21 @@ unsigned int Text2DVertexBufferID;
 unsigned int Text2DUVBufferID;
 unsigned int Text2DShaderID;
 unsigned int Text2DUniformID;
+unsigned int menuTextSize = 10;
 
 float viewportScaleFactorX = 2.4;
 float viewportScaleFactorY = 1.8;
+float vertexKerning = 0.5f;
+float uvKerning = 0.3f;
 
 bool flagRebuildMenus = false;
 bool capturingText = false;
-std::string capturedString;
-uDataWrap * editItem;
 bool capitalizing = false;
 
-menuItem * draggedMenu = nullptr;
+std::string capturedString;
 
-unsigned int menuTextSize = 10;
-float vertexKerning = 0.5f;
-float uvKerning = 0.3f;
+uDataWrap * editItem;
+menuItem * draggedMenu = nullptr;
 
 menuItem::menuItem( )
 {
@@ -158,7 +158,6 @@ GLuint loadBMP_custom(const char * imagepath)
 
 GLuint loadDDS(const char * imagepath)
 {
-
     unsigned char header[124];
 
     FILE *fp;
@@ -441,36 +440,25 @@ void cleanupText2D()
     glDeleteProgram(Text2DShaderID);
 }
 
-
-
 menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback, void * userData, Color color, Vec_f2 position)
 {
-
     menuItem * newMenu = new menuItem();
     newMenu->text = menuName;
-
     newMenu->panelColor = color;
-
     newMenu->left = menuTextSize;
     newMenu->right = (menuTextSize * menuName.length() * vertexKerning) + menuTextSize;
     newMenu->below = menuTextSize;
     newMenu->above = menuTextSize + menuTextSize;
-
-
     newMenu->parentMenu = parentMenu;
-
     newMenu->direction = direction;
 
     if (parentMenu != nullptr)
     {
-
-
         switch (direction)
         {
         case LEFT:
             newMenu->x = parentMenu->x - (parentMenu->left) ;
             newMenu->y = parentMenu->y ;
-
             parentMenu->left += (menuTextSize * menuName.length() * vertexKerning) + menuTextSize;
 
             break;
@@ -478,21 +466,18 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
         case RIGHT:
             newMenu->x = parentMenu->x + (parentMenu->right) ;
             newMenu->y = parentMenu->y ;
-
             parentMenu->right += (menuTextSize * menuName.length() * vertexKerning) + menuTextSize;
             break;
 
         case ABOVE:
             newMenu->x = parentMenu->x  ;
             newMenu->y = parentMenu->y + (parentMenu->above);
-
             parentMenu->above += menuTextSize + menuTextSize;
             break;
 
         case BELOW:
             newMenu->x = parentMenu->x  ;
             newMenu->y = parentMenu->y - (parentMenu->above);
-
             parentMenu->above += menuTextSize + menuTextSize;
             break;
         }
@@ -506,14 +491,11 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
     // draw a rectangle around the menu to calculate aabb
     newMenu->aabb.lowerBound = Vec_f2(  newMenu->x - (0.5 * menuTextSize) ,  newMenu->y - (0.5 * menuTextSize)  );
     newMenu->aabb.upperBound = Vec_f2( newMenu->x  + (newMenu->text.length() * menuTextSize * vertexKerning) + (0.5 * menuTextSize) ,    newMenu->y + menuTextSize + (0.5 * menuTextSize));
-
     newMenu->size = menuTextSize;
     newMenu->collapsed = true;
     newMenu->clicked = false;
-
     newMenu->onClick = callback;
     newMenu->userData = userData;
-
     if (parentMenu == nullptr)
     {
         return newMenu;
@@ -527,9 +509,6 @@ menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem 
 
 void expandMenu (menuItem * menu)
 {
-
-
-
     menu->collapsed = false;
     std::list<menuItem>::iterator subMenu;
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
@@ -546,71 +525,33 @@ void expandMenu (menuItem * menu)
     }
 }
 
-
-
-
-
-
-
 int expandMenuRecursive (menuItem * targetMenu , menuItem * menu);
-
 int expandMenuRecursive (menuItem * targetMenu , menuItem * menu)
 {
     std::list<menuItem>::iterator subMenu;
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
     {
-
-
         if (!(menu->collapsed) && subMenu->scaffold)
         {
             subMenu->collapsed = false;
         }
 
-
-        // else {
         if  (expandMenuRecursive (targetMenu, &(*subMenu) ) )
         {
-            // subMenu->collapsed = false;
-            // menu->collapsed = false;
-            // break;
-
             std::list<menuItem>::iterator subMenu2;
             for (subMenu2 = menu->subMenus.begin(); subMenu2 !=  menu->subMenus.end(); ++subMenu2)
             {
-
                 subMenu2->collapsed = false;
             }
-
-
-
             return 1;
         }
-        // }
-
-
-
     }
 
     if ( menu == targetMenu )
     {
-        // foundIt = true;
-        // subMenu->collapsed = false;
         menu->collapsed = false;
-        // break;
         return 1;
     }
-
-
-
-
-    // if (foundIt)
-    // {
-    //     menu->collapsed = false;
-    //     return 1;
-    // }
-
-
-
     return 0;
 }
 
@@ -619,12 +560,10 @@ void searchAndExpandMenuChain(menuItem * targetMenu)
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
-
-        menu->collapsed = false; // top level menus always expand
+        menu->collapsed = false;
         expandMenuRecursive(targetMenu,  &(*menu)  );
     }
 }
-
 
 void collapseMenu (menuItem * menu)
 {
@@ -640,8 +579,6 @@ void collapseMenu (menuItem * menu)
     }
 }
 
-
-
 void collapseAllMenus ()
 {
     std::list<menuItem>::iterator menu;
@@ -650,28 +587,24 @@ void collapseAllMenus ()
         collapseMenu( &(*menu)  );
     }
 
-    // expand root level menus and their scaffolds again.
-    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
+    for (menu = menus.begin(); menu !=  menus.end(); ++menu)   // expand root level menus and their scaffolds again.
     {
         expandMenu( &(*menu) );
     }
 }
 
 void drawMenuText (menuItem * menu) ;
-
 void drawMenuText (menuItem * menu)
 {
     if (!menu->collapsed)
     {
         printText2D( menu->text, menu->x, menu->y, menu->size);
 
-        if (menu->userData != nullptr) {
-
+        if (menu->userData != nullptr)
+        {
             if (menu->userData != editItem || !capturingText)
             {
-
                 uDataWrap * tempDataWrap = (uDataWrap *) menu->userData;
-
                 if (tempDataWrap->dataType == TYPE_UDATA_INT )
                 {
                     printText2D( std::to_string( *((int *)tempDataWrap->uData) ) , menu->x + menu->right, menu->y, menu->size);
@@ -702,58 +635,15 @@ void drawMenuText (menuItem * menu)
     }
 }
 
-void prepareForMenuDraw()
-{
-    // glUseProgram( program );
-    glBindBuffer( GL_ARRAY_BUFFER, vbo );
-
-    // glEnableVertexAttribArray( attrib_position );
-    // glEnableVertexAttribArray( attrib_color );
-
-    // glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
-    // glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
-
-    t_mat4x4 menu_matrix;
-
-    // mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-    mat4x4_ortho(
-        menu_matrix,
-        0,
-        width / viewportScaleFactorX,
-        0,
-        height / viewportScaleFactorY,
-        -10.0f,
-        +10.0f
-    );
-    glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, menu_matrix );
-
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-}
-
-// void cleanupAfterMenuDraw ()
-// {
-//     glDisable(GL_BLEND);
-
-//     glDisableVertexAttribArray(attrib_position);
-//     glDisableVertexAttribArray(attrib_color);
-// }
-
 void drawPanel ( menuItem * menu );
-// , unsigned int * cursor, GLfloat * vertex_buffer_data, unsigned int * index_buffer_cursor, unsigned int * index_buffer_content, unsigned int * index_buffer_data ) ;
 void drawPanel ( menuItem * menu )
 {
-// , unsigned int * cursor, GLfloat * vertex_buffer_data, unsigned int * index_buffer_cursor, unsigned int * index_buffer_content, unsigned int * index_buffer_data ) {
-
     std::list<menuItem>::iterator subMenu;
-
     if ( menu->clicked)
     {
         if (menu->visualDelayCount > 3 || menu->visualDelayCount < 0)
         {
             menu->clicked = false;
-            // menu->alpha = 0.0f;
             menu->visualDelayCount = 0;
         }
         menu->visualDelayCount ++;
@@ -761,63 +651,39 @@ void drawPanel ( menuItem * menu )
 
     if (!menu->collapsed)
     {
-        // float alpha = 1.0f;
-
         vertToBuffer (
-            // vertex_buffer_data, cursor,
             menu->panelColor,
-            // alpha,
             Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
-        // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
         vertToBuffer (
-            // vertex_buffer_data, cursor,
             menu->panelColor,
-            // alpha,
             menu->aabb.lowerBound ) ;
-        // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
         vertToBuffer (
-            // vertex_buffer_data, cursor,
             menu->panelColor,
-            // alpha,
             Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
-        // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
         vertToBuffer (
-            // vertex_buffer_data, cursor,
             menu->panelColor,
-            // alpha,
             menu->aabb.upperBound ) ;
-        // advanceIndexBuffers (index_buffer_data, index_buffer_content, index_buffer_cursor) ;
 
         insertPrimitiveRestart ();
-        // index_buffer_data, index_buffer_content, index_buffer_cursor) ;
-
-        // index_buffer_data[(*index_buffer_cursor)] = 0xffff;
-        // (*index_buffer_cursor)++;
     }
-
 
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
     {
-        drawPanel( &(*subMenu )
-                   // , cursor, vertex_buffer_data, index_buffer_cursor, index_buffer_content, index_buffer_data
-                 );
+        drawPanel( &(*subMenu ));
     }
 }
 
-// void drawPanels(unsigned int * j, GLfloat * vertex_buffer_data, unsigned int * index_buffer_cursor, unsigned int * index_buffer_content, unsigned int * index_buffer_data)
 void drawPanels()
 {
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
         drawPanel( &(*menu ) );
-        // , j, vertex_buffer_data, index_buffer_cursor, index_buffer_content, index_buffer_data );
     }
 }
-
 
 struct polyCounter
 {
@@ -825,22 +691,17 @@ struct polyCounter
     unsigned int indices;
 };
 
-
 polyCounter analyzeMenu ( menuItem * menu) ;
-
-polyCounter analyzeMenu ( menuItem * menu) {
+polyCounter analyzeMenu ( menuItem * menu) 
+{
     polyCounter n;
     n.verts = 0;
     n.indices = 0;
-
-    if (!menu->collapsed) {
-        // if (  menu->clicked) {
+    if (!menu->collapsed) 
+    {
         n.verts += 4;
         n.indices += 5;
-
-        // }
     }
-
     std::list<menuItem>::iterator subMenu;
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
     {
@@ -851,7 +712,8 @@ polyCounter analyzeMenu ( menuItem * menu) {
     return n;
 }
 
-polyCounter analyzeMenus() {
+polyCounter analyzeMenus() 
+{
     polyCounter n;
     n.verts = 0;
     n.indices = 0;
@@ -865,21 +727,10 @@ polyCounter analyzeMenus() {
     return n;
 }
 
-
-
-
-
-
 void drawMenus ()
 {
-
-
-    // polyCounter rocks = analyzeMenus();
-
-
     prepareForMenuDraw();
     drawPanels();
-
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
@@ -887,13 +738,9 @@ void drawMenus ()
     }
 }
 
-
 void resetMenus ()
 {
-
-    // go through menus and DELETE all the udatawraps.
     std::list<menuItem>::iterator menu;
-
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
         if (menu->userData != nullptr)
@@ -901,12 +748,9 @@ void resetMenus ()
             delete ( (uDataWrap*)(menu->userData));
         }
     }
-
     menus.clear();
-
     rebuildMenus();
 }
-
 
 void editUserDataCallback ()
 {
@@ -921,7 +765,8 @@ void editUserDataCallback ()
         {
             *(int *)editItem->uData = std::stoi( capturedString );
         }
-        else {
+        else 
+        {
 
             *(int *)editItem->uData = 0;
         }
@@ -957,7 +802,6 @@ void editUserDataCallback ()
     }
 
     capturingText = false;
-    // resetMenus();
 }
 
 void editUserData (uDataWrap * itemToEdit)
@@ -1011,15 +855,10 @@ int checkMenu (menuItem * menu, float mouseX, float mouseY)
             if (mouseY > menu->aabb.lowerBound.y && mouseY < menu->aabb.upperBound.y)
             {
                 menu->clicked = true;
-
                 collapseAllMenus();
-                // expandMenu(menu);
-
                 searchAndExpandMenuChain(menu);
-
                 lastActiveMenu = &(*menu);
                 uDataWrap * menuUserData = (uDataWrap*)(menu->userData);
-
                 if (menu->onClick != nullptr)
                 {
                     if (menu->editable) // why do you need editable to run the function? editUserData function is also used to display values. but sometimes you want to disable editing.
@@ -1027,10 +866,6 @@ int checkMenu (menuItem * menu, float mouseX, float mouseY)
                         ((void (*)(void*)) menu->onClick)(menu->userData);
                     }
                 }
-
-
-
-
                 return 1;
             }
         }
@@ -1048,233 +883,72 @@ int checkMenu (menuItem * menu, float mouseX, float mouseY)
     return 0;
 }
 
-
-
 void setDraggingMenu ( menuItem * menu )
 {
-
     draggedMenu = menu;
 }
 
-
 void clearDraggingMenu()
 {
-
-
     draggedMenu = nullptr;
-
-
 }
-
 
 void resetAccumulatedSubmenuPositions(menuItem * menu)
 {
-
-
     menu->left = 0;
     menu->right = 0;
     menu->below = 0;
     menu->above = 0;
-
     std::list<menuItem>::iterator subMenu;
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
     {
-
-
         resetAccumulatedSubmenuPositions( &(*subMenu) );
     }
-
 }
-
 
 // move a menu and all its submenus on the screen
 void rebaseMenu (menuItem * menu, int moveByX, int moveByY)
 {
-
-
-
-
     menu->x += moveByX;
     menu->y += moveByY;
-
-
     menu->aabb.upperBound.x += moveByX;
     menu->aabb.upperBound.y += moveByY;
     menu->aabb.lowerBound.x += moveByX;
     menu->aabb.lowerBound.y += moveByY;
-
-
-
-
     std::list<menuItem>::iterator subMenu;
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
     {
         rebaseMenu( &(*subMenu),  moveByX, moveByY);
     }
-
-
 }
-
-
-
 
 // check to see which menu has been clicked on
 int checkMenus (int mouseX, int mouseY)
 {
-
-    // if (capturingText)
-    // {
-    //     editUserDataCallback () ;
-    // }
-
-
-
     mouseX = (mouseX / viewportScaleFactorX);
     mouseY = (((mouseY) * -1) / viewportScaleFactorY) + (1080 / viewportScaleFactorY);
-
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
-
         if (!menu->collapsed)
         {
             if (mouseX > menu->aabb.lowerBound.x && mouseX < menu->aabb.upperBound.x)
             {
                 if (mouseY > menu->aabb.lowerBound.y && mouseY < menu->aabb.upperBound.y)
                 {
-
                     setDraggingMenu( &(*menu) );
                 }
             }
         }
-
-
         if (  checkMenu(&(*menu), mouseX, mouseY) == 1) { return 1;}
-
-
-
-
     }
-
     collapseAllMenus();
-
     return 0;
 }
 
 void setupMenus()
 {
-
     resetMenus();
     initText2D();
-
 }
-t_mat4x4 egg_matrix;
 
-// this function just draws a mark on the screen in world coordinates.
-void drawTestCoordinate (float x, float y)
-{
-
-    // printf( " %f %f\n ", x, y);
-
-    unsigned int nVertsToRenderThisTurn = 0;
-    unsigned int nIndicesToUseThisTurn = 0;
-
-    nVertsToRenderThisTurn = 4 ;
-    nIndicesToUseThisTurn = 5 ;
-    unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
-
-    // Create the buffer.
-    unsigned int g_vertex_buffer_cursor = 0;
-    GLfloat vertex_buffer_data[totalNumberOfFields];
-
-    unsigned int index_buffer_cursor = 0;
-    unsigned int index_buffer_content = 0;
-    unsigned int index_buffer_data[nIndicesToUseThisTurn];
-
-    glUseProgram( program );
-    glBindBuffer( GL_ARRAY_BUFFER, vbo );
-
-    glEnableVertexAttribArray( attrib_position );
-    glEnableVertexAttribArray( attrib_color );
-
-    glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
-    glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
-
-    unsigned int cursor = 0;
-
-    unsigned int bloopSize = 0.1 * viewZoom;
-    Color bloopColor = Color( 1.0f, 1.0f, 1.0f, 1.0f);
-
-    vertex_buffer_data[(cursor) + 0] = bloopColor.r;
-    vertex_buffer_data[(cursor) + 1] = bloopColor.g;
-    vertex_buffer_data[(cursor) + 2] = bloopColor.b;
-    vertex_buffer_data[(cursor) + 3] = 1.0f;
-    vertex_buffer_data[(cursor) + 4] = x - bloopSize;
-    vertex_buffer_data[(cursor) + 5] = y + bloopSize ;
-    cursor += 6;
-
-    index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
-    (index_buffer_cursor)++;
-    (index_buffer_content)++;
-
-    vertex_buffer_data[(cursor) + 0] = bloopColor.r;
-    vertex_buffer_data[(cursor) + 1] = bloopColor.g;
-    vertex_buffer_data[(cursor) + 2] = bloopColor.b;
-    vertex_buffer_data[(cursor) + 3] = 1.0f;
-    vertex_buffer_data[(cursor) + 4] = x - bloopSize;
-    vertex_buffer_data[(cursor) + 5] = y - bloopSize ;
-    cursor += 6;
-
-    index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
-    (index_buffer_cursor)++;
-    (index_buffer_content)++;
-
-    vertex_buffer_data[(cursor) + 0] = bloopColor.r;
-    vertex_buffer_data[(cursor) + 1] = bloopColor.g;
-    vertex_buffer_data[(cursor) + 2] = bloopColor.b;
-    vertex_buffer_data[(cursor) + 3] = 0.5f;
-    vertex_buffer_data[(cursor) + 4] = x + bloopSize;
-    vertex_buffer_data[(cursor) + 5] = y - bloopSize;
-    cursor += 6;
-
-    index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
-    (index_buffer_cursor)++;
-    (index_buffer_content)++;
-
-    vertex_buffer_data[(cursor) + 0] = bloopColor.r;
-    vertex_buffer_data[(cursor) + 1] = bloopColor.g;
-    vertex_buffer_data[(cursor) + 2] = bloopColor.b;
-    vertex_buffer_data[(cursor) + 3] = 0.5f;
-    vertex_buffer_data[(cursor) + 4] = x + bloopSize;
-    vertex_buffer_data[(cursor) + 5] = y + bloopSize;
-
-    index_buffer_data[(index_buffer_cursor)] = (index_buffer_content);
-    (index_buffer_cursor)++;
-    (index_buffer_content)++;
-
-    index_buffer_data[(index_buffer_cursor)] = 0xffff;
-    (index_buffer_cursor)++;
-
-    glBufferData( GL_ARRAY_BUFFER, sizeof( vertex_buffer_data ), vertex_buffer_data, GL_DYNAMIC_DRAW );
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_DYNAMIC_DRAW);
-
-    mat4x4_ortho(
-        egg_matrix,
-        -10   * viewZoom + viewPanX,
-        +10   * viewZoom + viewPanX,
-        +5.625 * viewZoom + viewPanY,
-        -5.625 * viewZoom + viewPanY,
-        -10.0f,
-        +10.0f
-    );
-
-    glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, egg_matrix );
-
-    glDrawElements( GL_TRIANGLE_FAN, nIndicesToUseThisTurn, GL_UNSIGNED_INT, index_buffer_data );
-
-    glDisableVertexAttribArray(attrib_position);
-    glDisableVertexAttribArray(attrib_color);
-
-
-
-}
