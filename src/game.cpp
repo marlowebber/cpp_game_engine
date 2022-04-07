@@ -73,13 +73,13 @@ void threadGraphics()
 	// prepareForWorldDraw();
 	// cleanupAfterWorldDraw();
 
-	prepareForMenuDraw();
+	// prepareForMenuDraw();
 
-	drawMenus ();
+	// drawMenus ();
 
-	drawExamplePanel ( );
+	// drawExamplePanel ( );
 
-	cleanupAfterWorldDraw();
+	// cleanupAfterWorldDraw();
 
 
 	drawCaptureText ();

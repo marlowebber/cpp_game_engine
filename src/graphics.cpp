@@ -1,15 +1,17 @@
-#include "deepgarden.h"
+#include "graphics.h"
 
 float viewZoom = 10.0f;
 float viewPanX = 0.0f;
 float viewPanY = 0.0f;
 
 
-const unsigned int nominalFramerate = 60;
-const unsigned int width = 1920;
-const unsigned int height = 1080;
+// const unsigned int nominalFramerate = 60;
+// const unsigned int width = 1920;
+// const unsigned int height = 1080;
 
-float * colorGrid          = new float[totalSize * numberOfFieldsPerVertex];
+const unsigned int bufferSize = 1000000;
+
+float colorGrid[bufferSize];
 
 
 float viewZoomSetpoint = 1000.0f;
@@ -28,13 +30,13 @@ GLuint IndexBufferId;
 
 
 
-Color::Color(float r, float g, float b, float a)
-{
-	this->r = r;
-	this->g = g;
-	this->b = b;
-	this->a = a;
-}
+// Color::Color(float r, float g, float b, float a)
+// {
+// 	this->r = r;
+// 	this->g = g;
+// 	this->b = b;
+// 	this->a = a;
+// }
 
 
 Color clampColor (Color in)
@@ -163,41 +165,41 @@ static const char * fragment_shader =
     "    o_color = v_color;\n"
     "}\n";
 
-typedef enum t_attrib_id
-{
-	attrib_position,
-	attrib_color
-} t_attrib_id;
+// typedef enum t_attrib_id
+// {
+// 	attrib_position,
+// 	attrib_color
+// } t_attrib_id;
 
 
 
-typedef float t_mat4x4[16];
-static inline void mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-{
-#define T(a, b) (a * 4 + b)
+// typedef float t_mat4x4[16];
+// static inline void mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
+// {
+// #define T(a, b) (a * 4 + b)
 
-	out[T(0, 0)] = 2.0f / (right - left);
-	out[T(0, 1)] = 0.0f;
-	out[T(0, 2)] = 0.0f;
-	out[T(0, 3)] = 0.0f;
+// 	out[T(0, 0)] = 2.0f / (right - left);
+// 	out[T(0, 1)] = 0.0f;
+// 	out[T(0, 2)] = 0.0f;
+// 	out[T(0, 3)] = 0.0f;
 
-	out[T(1, 1)] = 2.0f / (top - bottom);
-	out[T(1, 0)] = 0.0f;
-	out[T(1, 2)] = 0.0f;
-	out[T(1, 3)] = 0.0f;
+// 	out[T(1, 1)] = 2.0f / (top - bottom);
+// 	out[T(1, 0)] = 0.0f;
+// 	out[T(1, 2)] = 0.0f;
+// 	out[T(1, 3)] = 0.0f;
 
-	out[T(2, 2)] = -2.0f / (zfar - znear);
-	out[T(2, 0)] = 0.0f;
-	out[T(2, 1)] = 0.0f;
-	out[T(2, 3)] = 0.0f;
+// 	out[T(2, 2)] = -2.0f / (zfar - znear);
+// 	out[T(2, 0)] = 0.0f;
+// 	out[T(2, 1)] = 0.0f;
+// 	out[T(2, 3)] = 0.0f;
 
-	out[T(3, 0)] = -(right + left) / (right - left);
-	out[T(3, 1)] = -(top + bottom) / (top - bottom);
-	out[T(3, 2)] = -(zfar + znear) / (zfar - znear);
-	out[T(3, 3)] = 1.0f;
+// 	out[T(3, 0)] = -(right + left) / (right - left);
+// 	out[T(3, 1)] = -(top + bottom) / (top - bottom);
+// 	out[T(3, 2)] = -(zfar + znear) / (zfar - znear);
+// 	out[T(3, 3)] = 1.0f;
 
-#undef T
-}
+// #undef T
+// }
 
 // The projection matrix efficiently handles all panning, zooming, and rotation.
 t_mat4x4 projection_matrix;
@@ -381,7 +383,15 @@ void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, Color ve
 }
 
 
+void  vertToBuffer (     Color    color,     Vec_f2 vert )
+{
+	;
+}
 
+void  insertPrimitiveRestart ()
+{
+	;
+}
 
 
 
@@ -420,11 +430,11 @@ void postDraw ()
 
 
 
-	if (firstPerson)
-	{
-		viewPanSetpointX = (playerPosition) % sizeX;
-		viewPanSetpointY = (playerPosition) / sizeX;
-	}
+	// // if (firstPerson)
+	// // {
+	// 	viewPanSetpointX = (playerPosition) % sizeX;
+	// 	viewPanSetpointY = (playerPosition) / sizeX;
+	// }
 
 	float panDifferenceX = (viewPanX - viewPanSetpointX);
 	float panResponseX = (panDifferenceX * -1) / cameraTrackingResponse;
@@ -445,11 +455,11 @@ void thread_graphics()
 
 
 
-	unsigned int nVertsToRenderThisTurn = 1 * totalSize;
-	long unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
+	// unsigned int nVertsToRenderThisTurn = 1 * totalSize;
+	// long unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof( float  ) * totalNumberOfFields, colorGrid, GL_DYNAMIC_DRAW );
-	glDrawArrays(GL_POINTS, 0,  nVertsToRenderThisTurn);
+	glBufferData( GL_ARRAY_BUFFER, sizeof( float  ) * bufferSize, colorGrid, GL_DYNAMIC_DRAW );
+	glDrawArrays(GL_POINTS, 0,  10);
 
 
 	postDraw();
@@ -461,3 +471,4 @@ void thread_graphics()
 	std::cout << "thread_graphics " << elapsed.count() << " microseconds." << std::endl;
 #endif
 }
+

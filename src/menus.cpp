@@ -774,7 +774,7 @@ polyCounter analyzeMenus()
 
 void drawMenus ()
 {
-    prepareForMenuDraw();
+    // prepareForMenuDraw();
     drawPanels();
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
