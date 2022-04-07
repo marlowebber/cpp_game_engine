@@ -1,12 +1,21 @@
-
-#include "graphics.h"
+#include "deepgarden.h"
 
 float viewZoom = 10.0f;
 float viewPanX = 0.0f;
 float viewPanY = 0.0f;
-float viewZoomSetpoint = 10.0f;
+
+
+const unsigned int nominalFramerate = 60;
+const unsigned int width = 1920;
+const unsigned int height = 1080;
+
+float * colorGrid          = new float[totalSize * numberOfFieldsPerVertex];
+
+
+float viewZoomSetpoint = 1000.0f;
 float viewPanSetpointX = 0.0f;
 float viewPanSetpointY = 0.0f;
+
 float cameraTrackingResponse = 10;
 
 SDL_Window * window;
@@ -18,35 +27,121 @@ GLuint IndexBufferId;
 
 
 
-unsigned int nVertsToRenderThisTurn  = 0;//= rocks.verts;
-unsigned int nIndicesToUseThisTurn   = 0;//= rocks.indices;
-unsigned int totalNumberOfFields     = 0;//= nVertsToRenderThisTurn * numberOfFieldsPerVertex;
 
-const unsigned int initialBufferSize = 1000000;
-
-// Create the buffer.
-unsigned int g_vertex_buffer_cursor = 0;
-float vertex_buffer_data[initialBufferSize];
-
-unsigned int index_buffer_cursor  = 0;
-unsigned int index_buffer_content = 0;
-unsigned int index_buffer_data[initialBufferSize];
+Color::Color(float r, float g, float b, float a)
+{
+	this->r = r;
+	this->g = g;
+	this->b = b;
+	this->a = a;
+}
 
 
+Color clampColor (Color in)
+{
 
-// The projection matrix efficiently handles all panning, zooming, and rotation.
-t_mat4x4 projection_matrix;
+	Color out = in;
 
-// the menu matrix displays menu objects which are unaffected by perspective transformations
-t_mat4x4 menu_matrix;
+	if      (out.r > 1.0f) {out.r = 1.0f;}
+	else if (out.r < 0.0f) {out.r = 0.0f;}
+
+	if      (out.g > 1.0f) {out.g = 1.0f;}
+	else if (out.g < 0.0f) {out.g = 0.0f;}
+
+	if      (out.b > 1.0f) {out.b = 1.0f;}
+	else if (out.b < 0.0f) {out.b = 0.0f;}
+
+	if      (out.a > 1.0f) {out.a = 1.0f;}
+	else if (out.a < 0.0f) {out.a = 0.0f;}
+
+	return out;
+
+}
 
 
+Color averageColor (Color a, Color b)
+{
+	Color c;// = Color()
+	c.r = (a.r + b.r) / 2;
+	c.g = (a.g + b.g) / 2;
+	c.b = (a.b + b.b) / 2;
+	c.a = (a.a + b.a) / 2;
+
+	return clampColor(c);
+}
+
+// add both colors together.
+// in life, this is like two lights shining together. the result is a mix of both, depending on their strengths.
+Color addColor (Color a, Color b)
+{
+	Color c ;//= Color(0.0f, 0.0f, 0.0f, 0.0f);
+	c.r = (a.r * a.a) + (b.r * b.a);
+	c.g = (a.g * a.a) + (b.g * b.a);
+	c.b = (a.b * a.a) + (b.b * b.a);
+	c.a = a.a + b.a;
+
+	return clampColor(c);
+}
 
 
+// multiply the amount of color in A by the amount of color in B.
+// in life, this is like colored light falling on a colored object. If they are the same color, the result will be brighter.
+Color multiplyColor (Color a, Color b)
+{
+	Color c ;//= Color(0.0f, 0.0f, 0.0f, 0.0f);
+	c.r = (a.r * a.a) * (b.r * b.a);
+	c.g = (a.g * a.a) * (b.g * b.a);
+	c.b = (a.b * a.a) * (b.b * b.a);
+	c.a = a.a * b.a ;
+	return clampColor(c);
+}
+
+Color multiplyColorByScalar(Color a, float b)
+{
+	Color c;
+	c.r = a.r * b;
+	c.g = a.g * b;
+	c.b = a.b * b;
+	c.a = a.a * b;
+	return clampColor(c);
+}
+
+// allow B to block A.
+// in life, this is like a color image shining through a color window. the image is filtered by the color and opacity of the window.
+Color filterColor( Color a, Color b)
+{
+
+	Color c ;//= Color(0.0f, 0.0f, 0.0f, 0.0f);
+
+	c.r = (b.r ) + ((1.0f - (b.a)) * (a.r));
+	c.g = (b.g ) + ((1.0f - (b.a)) * (a.g));
+	c.b = (b.b ) + ((1.0f - (b.a)) * (a.b));
+	c.a = a.a + b.a;
+
+	return clampColor(c);
+
+}
+
+// mix A and B
+Color mixColor (Color a, Color b, float mix)
+{
+
+	if (mix > 1.0f) {mix = 1.0f;}
+	else if (mix < 0.0f) { mix = 0.0f;}
+
+	Color c;
+
+	c.r = (a.r * mix) + ( b.r * (1.0f - mix) );
+	c.g = (a.g * mix) + ( b.g * (1.0f - mix) );
+	c.b = (a.b * mix) + ( b.b * (1.0f - mix) );
+	c.a = (a.a * mix) + ( b.a * (1.0f - mix) );
+
+	return c;
+}
 
 
 static const char * vertex_shader =
-    "#version 130\n"
+    "#version 330\n"
     "in vec2 i_position;\n"
     "in vec4 i_color;\n"
     "out vec4 v_color;\n"
@@ -56,14 +151,56 @@ static const char * vertex_shader =
     "    gl_Position = u_projection_matrix * vec4( i_position, 0.0, 1.0 );\n"
     "}\n";
 
+// static const char * geometry_shader =
+
+
+
 static const char * fragment_shader =
-    "#version 130\n"
+    "#version 330\n"
     "in vec4 v_color;\n"
     "out vec4 o_color;\n"
     "void main() {\n"
     "    o_color = v_color;\n"
     "}\n";
 
+typedef enum t_attrib_id
+{
+	attrib_position,
+	attrib_color
+} t_attrib_id;
+
+
+
+typedef float t_mat4x4[16];
+static inline void mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
+{
+#define T(a, b) (a * 4 + b)
+
+	out[T(0, 0)] = 2.0f / (right - left);
+	out[T(0, 1)] = 0.0f;
+	out[T(0, 2)] = 0.0f;
+	out[T(0, 3)] = 0.0f;
+
+	out[T(1, 1)] = 2.0f / (top - bottom);
+	out[T(1, 0)] = 0.0f;
+	out[T(1, 2)] = 0.0f;
+	out[T(1, 3)] = 0.0f;
+
+	out[T(2, 2)] = -2.0f / (zfar - znear);
+	out[T(2, 0)] = 0.0f;
+	out[T(2, 1)] = 0.0f;
+	out[T(2, 3)] = 0.0f;
+
+	out[T(3, 0)] = -(right + left) / (right - left);
+	out[T(3, 1)] = -(top + bottom) / (top - bottom);
+	out[T(3, 2)] = -(zfar + znear) / (zfar - znear);
+	out[T(3, 3)] = 1.0f;
+
+#undef T
+}
+
+// The projection matrix efficiently handles all panning, zooming, and rotation.
+t_mat4x4 projection_matrix;
 
 
 void shutdownGraphics()
@@ -72,8 +209,13 @@ void shutdownGraphics()
 	SDL_DestroyWindow( window );
 }
 
+
 void setupGraphics()
 {
+
+
+	// glPointSize(3);
+
 	// Setup the game window with SDL2
 	SDL_Init( SDL_INIT_VIDEO );
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
@@ -87,6 +229,9 @@ void setupGraphics()
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 	window = SDL_CreateWindow( "", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN );
 	context = SDL_GL_CreateContext( window );
+
+
+
 
 	/**
 	You have to bind and unbind the buffer to copy to it from 'C' and draw with it from openGL. Think of it as locking/unlocking between the program and the graphics.
@@ -119,6 +264,22 @@ void setupGraphics()
 		fprintf( stderr, "vertex shader compilation failed\n" );
 	}
 
+
+
+	//  length = strlen( geometry_shader );
+	// glShaderSource( gs, 1, ( const GLchar ** )&geometry_shader, &length );
+	// glCompileShader( gs );
+
+	// GLint status;
+	// glGetShaderiv( gs, GL_COMPILE_STATUS, &status );
+	// if ( status == GL_FALSE )
+	// {
+	// 	fprintf( stderr, "geometry shader compilation failed\n" );
+	// }
+
+
+
+
 	length = strlen( fragment_shader );
 	glShaderSource( fs, 1, ( const GLchar ** )&fragment_shader, &length );
 	glCompileShader( fs );
@@ -131,6 +292,7 @@ void setupGraphics()
 
 	program = glCreateProgram();
 	glAttachShader( program, vs );
+	// glAttachShader( program, gs );
 	glAttachShader( program, fs );
 
 	glBindAttribLocation( program, attrib_position, "i_position" );
@@ -141,7 +303,7 @@ void setupGraphics()
 	glViewport( 0, 0, width, height );
 
 	glEnable(GL_PRIMITIVE_RESTART);
-	glPrimitiveRestartIndex(PRIMITIVE_RESTART);
+	glPrimitiveRestartIndex(0xffff);
 
 	glGenBuffers(1, &IndexBufferId);
 	glGenVertexArrays( 1, &vao );
@@ -159,135 +321,110 @@ void setupGraphics()
 	glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
 	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
 
-	glClearColor( 0.2f, 0.2f, 0.2f, 1.0f );
+	// glClearColor( 0.05f, 0.05f, 0.05f, 1.0f );
+
+
+	glClearColor( 0.00f, 0.00f, 0.00f, 1.0f );
+
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-	glBufferData( GL_ARRAY_BUFFER, initialBufferSize, vertex_buffer_data, GL_DYNAMIC_DRAW );
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, initialBufferSize, index_buffer_data, GL_DYNAMIC_DRAW);
-
-	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar );
-	mat4x4_ortho(
-	    projection_matrix,
-	    -1 * viewZoom + viewPanX,
-	    +1 * viewZoom + viewPanX,
-	    -1 * viewZoom + viewPanY,
-	    +1 * viewZoom + viewPanY,
-	    -10.0f,
-	    +10.0f
-	);
-
-
-
-// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-	mat4x4_ortho(
-	    menu_matrix,
-	    0,
-	    width ,
-	    0,
-	    height ,
-	    -10.0f,
-	    +10.0f
-	);
-
-
-
-
+	glPointSize(3);
 }
 
 void prepareForWorldDraw ()
 {
+	// glUseProgram( program );
+	// glBindBuffer( GL_ARRAY_BUFFER, vbo );
+	// glEnableVertexAttribArray( attrib_position );
+	// glEnableVertexAttribArray( attrib_color );
+	// glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
+	// glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
 
-	glUseProgram( program );
-	glBindBuffer( GL_ARRAY_BUFFER, vbo );
-	glEnableVertexAttribArray( attrib_position );
-	glEnableVertexAttribArray( attrib_color );
-	glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
-	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
+
+// unsigned int zoomInt = viewZoom;
+
 
 	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-	// mat4x4_ortho(
-	//     projection_matrix,
-	//     -1 * 10  * viewZoom + viewPanX,
-	//     +1 * 10  * viewZoom + viewPanX,
-	//     -1 * 5.625 * viewZoom + viewPanY,
-	//     +1 * 5.625 * viewZoom + viewPanY,
-	//     -10.0f,
-	//     +10.0f
-	// );
-
-
-
-
-
+	mat4x4_ortho(
+	    projection_matrix,
+	    (-1 * viewZoom) + viewPanX,
+	    (+1 * viewZoom) + viewPanX,
+	    (-1 * 0.6 * viewZoom) + viewPanY,
+	    (+1 * 0.6 * viewZoom) + viewPanY,
+	    -10.0f,
+	    +10.0f
+	);
 	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
 
-	
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+// void cleanupAfterWorldDraw ()
+// {
+// 	glDisable(GL_BLEND);
+// 	glDisableVertexAttribArray(attrib_position);
+// 	glDisableVertexAttribArray(attrib_color);
+// }
 
-void prepareForMenuDraw()
+const unsigned int floats_per_color = 16;
+void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, Color vert_color, unsigned int x, unsigned int y)
 {
-    glUseProgram( program );
-    glBindBuffer( GL_ARRAY_BUFFER, vbo );
-
-    glEnableVertexAttribArray( attrib_position );
-    glEnableVertexAttribArray( attrib_color );
-
-    glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
-    glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
-
-    // t_mat4x4 menu_matrix;
-
-    // // mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-    // mat4x4_ortho(
-    //     menu_matrix,
-    //     0,
-    //     width / viewportScaleFactorX,
-    //     0,
-    //     height / viewportScaleFactorY,
-    //     -10.0f,
-    //     +10.0f
-    // );
-    glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, menu_matrix );
-
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+	float floatx = x;
+	float floaty = y;
+	unsigned int cursorValue = *(cursor);
+	memcpy((vertex_buffer_data + cursorValue), &vert_color , floats_per_color); // a float is 4 bytes, 4 floats = 16 bytes
+	vertex_buffer_data[cursorValue + 4] = floatx;
+	vertex_buffer_data[cursorValue + 5] = floaty;
+	(*cursor) += 6;
 }
 
 
 
-void cleanupAfterWorldDraw()
+
+
+
+void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor)
 {
-	// glDisable(GL_BLEND);
-
-	glDisableVertexAttribArray(attrib_position);
-	glDisableVertexAttribArray(attrib_color);
+	index_buffer_data[(*index_buffer_cursor)] = (*index_buffer_content);
+	(*index_buffer_cursor)++;
+	(*index_buffer_content)++;
 }
+
+
+
+
 void preDraw()
 {
+
+
+	prepareForWorldDraw ();
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
 }
+
 
 void postDraw ()
 {
-
-	glBufferData( GL_ARRAY_BUFFER, initialBufferSize, vertex_buffer_data, GL_DYNAMIC_DRAW );
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, initialBufferSize, index_buffer_data, GL_DYNAMIC_DRAW);
-
-
-	glDrawElements( GL_TRIANGLE_FAN, index_buffer_content, GL_UNSIGNED_INT, index_buffer_data );
-
+	// cleanupAfterWorldDraw();
 
 	SDL_GL_SwapWindow( window );
 	float zoomDifference = (viewZoom - viewZoomSetpoint);
 	float zoomResponse = (zoomDifference * -1) / cameraTrackingResponse;
 	viewZoom = viewZoom + zoomResponse;
+
+
+
+
+
+	if (firstPerson)
+	{
+		viewPanSetpointX = (playerPosition) % sizeX;
+		viewPanSetpointY = (playerPosition) / sizeX;
+	}
 
 	float panDifferenceX = (viewPanX - viewPanSetpointX);
 	float panResponseX = (panDifferenceX * -1) / cameraTrackingResponse;
@@ -296,37 +433,31 @@ void postDraw ()
 	viewPanX +=  panResponseX ;
 	viewPanY += panResponseY ;
 
-	g_vertex_buffer_cursor = 0;
-	index_buffer_cursor = 0;
-	index_buffer_content = 0;
-
 }
 
-void vertToBuffer (
-    // float * vertex_buffer_data, unsigned int * cursor,
-    Color color,
-    // float alpha,
-    Vec_f2 vert)
+void thread_graphics()
 {
+#ifdef THREAD_TIMING_READOUT
+	auto start = std::chrono::steady_clock::now();
+#endif
 
-	if (g_vertex_buffer_cursor > initialBufferSize) { return; }
-
-	vertex_buffer_data[(g_vertex_buffer_cursor) + 0] = color.r;
-	vertex_buffer_data[(g_vertex_buffer_cursor) + 1] = color.g;
-	vertex_buffer_data[(g_vertex_buffer_cursor) + 2] = color.b;
-	vertex_buffer_data[(g_vertex_buffer_cursor) + 3] = color.a;
-	vertex_buffer_data[(g_vertex_buffer_cursor) + 4] = vert.x;
-	vertex_buffer_data[(g_vertex_buffer_cursor) + 5] = vert.y ;
-	g_vertex_buffer_cursor += 6;
-
-	index_buffer_data[index_buffer_cursor] = index_buffer_content;
-	(index_buffer_cursor)++;
-	(index_buffer_content)++;
-}
+	preDraw();
 
 
-void insertPrimitiveRestart ()
-{
-	index_buffer_data[(index_buffer_cursor)] = 0xffff;
-	(index_buffer_cursor)++;
+
+	unsigned int nVertsToRenderThisTurn = 1 * totalSize;
+	long unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
+
+	glBufferData( GL_ARRAY_BUFFER, sizeof( float  ) * totalNumberOfFields, colorGrid, GL_DYNAMIC_DRAW );
+	glDrawArrays(GL_POINTS, 0,  nVertsToRenderThisTurn);
+
+
+	postDraw();
+
+
+#ifdef THREAD_TIMING_READOUT
+	auto end = std::chrono::steady_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	std::cout << "thread_graphics " << elapsed.count() << " microseconds." << std::endl;
+#endif
 }

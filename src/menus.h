@@ -82,6 +82,7 @@ Vec_f2 transformWorldPositionToScreen( Vec_f2 world );
 
 void drawTestCoordinate (float x, float y) ;
 
+void drawExamplePanel ( );
 
 void setDraggingMenu ( menuItem * menu ) ;
 void clearDraggingMenu() ;

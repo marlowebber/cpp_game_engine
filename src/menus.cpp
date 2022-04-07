@@ -676,6 +676,51 @@ void drawPanel ( menuItem * menu )
     }
 }
 
+
+const Color blue = Color(0.0f, 0.0f, 1.0f, 1.0f);
+
+void drawExamplePanel ( )
+{
+    // std::list<menuItem>::iterator subMenu;
+    // if ( menu->clicked)
+    // {
+    //     if (menu->visualDelayCount > 3 || menu->visualDelayCount < 0)
+    //     {
+    //         menu->clicked = false;
+    //         menu->visualDelayCount = 0;
+    //     }
+    //     menu->visualDelayCount ++;
+    // }
+
+    // if (!menu->collapsed)
+    // {
+        vertToBuffer (
+            blue,
+            Vec_f2(  -1000.0f,   1000.0f ) ) ;
+
+        vertToBuffer (
+            blue,
+            Vec_f2(-1000.0f,-1000.0f)) ;
+
+        vertToBuffer (
+            blue,
+            Vec_f2 ( 1000.0f , -1000.0f)  ) ;
+
+        vertToBuffer (
+            blue,
+           Vec_f2( 1000.0f,1000.0f) ) ;
+
+        insertPrimitiveRestart ();
+    // }
+
+    // for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
+    // {
+    //     drawPanel( &(*subMenu ));
+    // }
+}
+
+
+
 void drawPanels()
 {
     std::list<menuItem>::iterator menu;
