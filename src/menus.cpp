@@ -651,23 +651,28 @@ void drawPanel ( menuItem * menu )
 
     if (!menu->collapsed)
     {
-        vertToBuffer (
-            menu->panelColor,
-            Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
 
-        vertToBuffer (
-            menu->panelColor,
-            menu->aabb.lowerBound ) ;
 
-        vertToBuffer (
-            menu->panelColor,
-            Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
+        // vertToBuffer (
+        //     menu->panelColor,
+        //     Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
 
-        vertToBuffer (
-            menu->panelColor,
-            menu->aabb.upperBound ) ;
+        // vertToBuffer (
+        //     menu->panelColor,
+        //     menu->aabb.lowerBound ) ;
 
-        insertPrimitiveRestart ();
+        // vertToBuffer (
+        //     menu->panelColor,
+        //     Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
+
+        // vertToBuffer (
+        //     menu->panelColor,
+        //     menu->aabb.upperBound ) ;
+
+        // insertPrimitiveRestart ();
+
+
+
     }
 
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
@@ -681,19 +686,7 @@ const Color blue = Color(0.0f, 0.0f, 1.0f, 1.0f);
 
 void drawExamplePanel ( )
 {
-    // std::list<menuItem>::iterator subMenu;
-    // if ( menu->clicked)
-    // {
-    //     if (menu->visualDelayCount > 3 || menu->visualDelayCount < 0)
-    //     {
-    //         menu->clicked = false;
-    //         menu->visualDelayCount = 0;
-    //     }
-    //     menu->visualDelayCount ++;
-    // }
 
-    // if (!menu->collapsed)
-    // {
         vertToBuffer (
             blue,
             Vec_f2(  -1000.0f,   1000.0f ) ) ;
@@ -710,13 +703,7 @@ void drawExamplePanel ( )
             blue,
            Vec_f2( 1000.0f,1000.0f) ) ;
 
-        insertPrimitiveRestart ();
-    // }
-
-    // for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
-    // {
-    //     drawPanel( &(*subMenu ));
-    // }
+        // insertPrimitiveRestart ();
 }
 
 

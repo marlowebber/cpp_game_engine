@@ -62,35 +62,35 @@ void threadGame()
 
 
 
-void threadGraphics()
-{
-#ifdef THREAD_TIMING
-	auto start = std::chrono::steady_clock::now();
-#endif
+// void threadGraphics()
+// {
+// #ifdef THREAD_TIMING
+// 	auto start = std::chrono::steady_clock::now();
+// #endif
 
-	preDraw();
+// 	preDraw();
 
-	// prepareForWorldDraw();
-	// cleanupAfterWorldDraw();
+// 	// prepareForWorldDraw();
+// 	// cleanupAfterWorldDraw();
 
-	// prepareForMenuDraw();
+// 	// prepareForMenuDraw();
 
-	// drawMenus ();
+// 	// drawMenus ();
 
-	// drawExamplePanel ( );
+// 	drawExamplePanel ( );
 
-	// cleanupAfterWorldDraw();
-
-
-	drawCaptureText ();
+// 	// cleanupAfterWorldDraw();
 
 
+// 	// drawCaptureText ();
 
-	postDraw();
 
-#ifdef THREAD_TIMING
-	auto end = std::chrono::steady_clock::now();
-	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	std::cout << "threadGraphics " << elapsed.count() << " microseconds." << std::endl;
-#endif
-}
+
+// 	postDraw();
+
+// #ifdef THREAD_TIMING
+// 	auto end = std::chrono::steady_clock::now();
+// 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+// 	std::cout << "threadGraphics " << elapsed.count() << " microseconds." << std::endl;
+// #endif
+// }

@@ -72,4 +72,6 @@ void vertToBuffer (
 	 Vec_f2 vert) ;
 
 void insertPrimitiveRestart ();
+
+void threadGraphics();
 #endif

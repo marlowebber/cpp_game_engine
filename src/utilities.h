@@ -3,6 +3,8 @@
 
 
 #define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -17,6 +19,8 @@
 using namespace glm;
 
 #include <random>
+
+#include <iostream>
 
 #include <boost/thread.hpp>
 

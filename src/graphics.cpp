@@ -1,5 +1,8 @@
 #include "graphics.h"
 
+
+
+
 float viewZoom = 10.0f;
 float viewPanX = 0.0f;
 float viewPanY = 0.0f;
@@ -11,8 +14,9 @@ float viewPanY = 0.0f;
 
 const unsigned int bufferSize = 1000000;
 
-float colorGrid[bufferSize];
-
+float energyColorGrid[bufferSize];
+// float * energyColorGrid = new float[bufferSize];
+unsigned int colorGridCursor = 0; // keeps track of how many verts to draw this turn.
 
 float viewZoomSetpoint = 1000.0f;
 float viewPanSetpointX = 0.0f;
@@ -334,6 +338,9 @@ void setupGraphics()
 
 
 	glPointSize(3);
+
+
+	glBufferData( GL_ARRAY_BUFFER, bufferSize, energyColorGrid, GL_DYNAMIC_DRAW );
 }
 
 void prepareForWorldDraw ()
@@ -371,28 +378,18 @@ void prepareForWorldDraw ()
 // }
 
 const unsigned int floats_per_color = 16;
-void vertToBuffer (GLfloat * vertex_buffer_data, unsigned int * cursor, Color vert_color, unsigned int x, unsigned int y)
+
+void vertToBuffer ( Color color, Vec_f2 vert )
 {
-	float floatx = x;
-	float floaty = y;
-	unsigned int cursorValue = *(cursor);
-	memcpy((vertex_buffer_data + cursorValue), &vert_color , floats_per_color); // a float is 4 bytes, 4 floats = 16 bytes
-	vertex_buffer_data[cursorValue + 4] = floatx;
-	vertex_buffer_data[cursorValue + 5] = floaty;
-	(*cursor) += 6;
+	if (colorGridCursor < (bufferSize - 8))
+	{
+		float floatx = vert.x;
+		float floaty = vert.y;
+		memcpy( &( energyColorGrid[colorGridCursor] ) , &color , sizeof(Color));
+		memcpy(   (&( energyColorGrid[colorGridCursor] )) + sizeof(Color) , &vert , sizeof(Vec_f2));
+		colorGridCursor += 6;
+	}
 }
-
-
-void  vertToBuffer (     Color    color,     Vec_f2 vert )
-{
-	;
-}
-
-void  insertPrimitiveRestart ()
-{
-	;
-}
-
 
 
 void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor)
@@ -445,30 +442,102 @@ void postDraw ()
 
 }
 
-void thread_graphics()
+
+const Color color_lightblue          = Color( 0.1f, 0.3f, 0.65f, 1.0f );
+
+
+
+void threadGraphics()
 {
-#ifdef THREAD_TIMING_READOUT
-	auto start = std::chrono::steady_clock::now();
-#endif
 
 	preDraw();
 
 
 
-	// unsigned int nVertsToRenderThisTurn = 1 * totalSize;
+	// unsigned int n = 0;
+	// for (int i = -100; i < 100; ++i)
+	// {
+
+
+
+	// 	for (int j = 100; j  < 100; ++j)
+	// 	{
+
+	// 		vertToBuffer (  color_lightblue,  Vec_f2(i, j) );
+	// 	}
+
+
+	// }
+
+
+
+	// 	if (visualizer == VISUALIZE_ENERGY)
+	// {
+	// unsigned int totalSize = height * width;
+	// unsigned int nVertsToRenderThisTurn = totalSize;
 	// long unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
+	// float * energyColorGrid = new float[bufferSize];
+	unsigned int x = 0;
+	unsigned int y = 0;
+	for (unsigned int i = 0; i < (bufferSize/6)-6; ++i)
+	{
+		x = i % width;
+		y = i / width;
+		float fx = x;
+		float fy = y;
+		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
+		energyColorGrid[ (i * 6) + 4 ] = fx;
+		energyColorGrid[ (i * 6) + 5 ] = fy;
+	}
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof( float  ) * bufferSize, colorGrid, GL_DYNAMIC_DRAW );
-	glDrawArrays(GL_POINTS, 0,  10);
+
+// #ifdef THREAD_TIMING_READOUT
+	auto start = std::chrono::steady_clock::now();
+// #endif
+
+	// glBufferData( GL_ARRAY_BUFFER, bufferSize, energyColorGrid, GL_DYNAMIC_DRAW );
 
 
-	postDraw();
+	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
 
-
-#ifdef THREAD_TIMING_READOUT
+// #ifdef THREAD_TIMING_READOUT
 	auto end = std::chrono::steady_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	std::cout << "thread_graphics " << elapsed.count() << " microseconds." << std::endl;
-#endif
+	std::cout << "glBufferData " << elapsed.count() << " microseconds." << std::endl;
+// #endif
+
+	//
+// void glNamedBufferSubData( 	GLuint buffer,
+//   	GLintptr offset,
+//   	GLsizeiptr size,
+//   	const void *data);
+
+
+	// glNamedBufferSubData( GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid );
+
+// glNamedBufferSubData( GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid );
+
+
+
+
+	glDrawArrays(GL_POINTS, 0,  bufferSize);
+	postDraw();
+	// delete [] energyColorGrid;
+	// }
+
+
+
+
+	// glBufferData( GL_ARRAY_BUFFER, sizeof( float  ) * bufferSize, colorGrid, GL_DYNAMIC_DRAW );
+	// glDrawArrays(GL_POINTS, 0,  n);
+
+
+	// postDraw();
+
+
+
 }
 
