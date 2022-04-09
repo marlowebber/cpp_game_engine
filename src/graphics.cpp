@@ -397,9 +397,9 @@ void prepareForMenuDraw ()
 	mat4x4_ortho(
 	    projection_matrix,
 	    0, // (-(fwidth / 2)),
-	    fwidth / 2.0f, // (+(fwidth / 2)),
+	    (fwidth / 2.0f) * 0.835f, // (+(fwidth / 2)),
 	    0,   // (-(fheight / 2) ),
-	    fheight / 2.0f, // (+(fheight / 2) ),
+	    (fheight / 2.0f) * 1.1f, // (+(fheight / 2) ),
 	    -10.0f,
 	    +10.0f
 	);
@@ -572,16 +572,17 @@ void threadGraphics()
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
 	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
 
-	unsigned int next = colorGridCursor;
+	unsigned int endOfWorldVertexRegion = colorGridCursor;
 
 	prepareForMenuDraw();
 	addExamplePanelToBuffer();
 	drawPanels();
-	glBufferSubData(GL_ARRAY_BUFFER, next, (colorGridCursor - next), energyColorGrid);
-	glDrawArrays   (GL_TRIANGLES,    next,  (colorGridCursor - next));
+	glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
+	glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
 
 
 	drawAllMenuText ();
+
 
 	postDraw();
 

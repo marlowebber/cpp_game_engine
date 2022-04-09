@@ -736,58 +736,65 @@ void drawPanels()
     }
 }
 
-struct polyCounter
-{
-    unsigned int verts;
-    unsigned int indices;
-};
+// struct polyCounter
+// {
+//     unsigned int verts;
+//     unsigned int indices;
+// };
 
-polyCounter analyzeMenu ( menuItem * menu) ;
-polyCounter analyzeMenu ( menuItem * menu)
-{
-    polyCounter n;
-    n.verts = 0;
-    n.indices = 0;
-    if (!menu->collapsed)
-    {
-        n.verts += 4;
-        n.indices += 5;
-    }
-    std::list<menuItem>::iterator subMenu;
-    for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
-    {
-        polyCounter m = analyzeMenu(&(*subMenu));
-        n.verts += m.verts;
-        n.indices += m.indices;
-    }
-    return n;
-}
+// polyCounter analyzeMenu ( menuItem * menu) ;
+// polyCounter analyzeMenu ( menuItem * menu)
+// {
+//     polyCounter n;
+//     n.verts = 0;
+//     n.indices = 0;
+//     if (!menu->collapsed)
+//     {
+//         n.verts += 4;
+//         n.indices += 5;
+//     }
+//     std::list<menuItem>::iterator subMenu;
+//     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
+//     {
+//         polyCounter m = analyzeMenu(&(*subMenu));
+//         n.verts += m.verts;
+//         n.indices += m.indices;
+//     }
+//     return n;
+// }
 
-polyCounter analyzeMenus()
+// polyCounter analyzeMenus()
+// {
+//     polyCounter n;
+//     n.verts = 0;
+//     n.indices = 0;
+//     std::list<menuItem>::iterator menu;
+//     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
+//     {
+//         polyCounter m = analyzeMenu(&(*menu));
+//         n.verts += m.verts;
+//         n.indices += m.indices;
+//     }
+//     return n;
+// }
+
+void drawCaptureText ()
 {
-    polyCounter n;
-    n.verts = 0;
-    n.indices = 0;
-    std::list<menuItem>::iterator menu;
-    for (menu = menus.begin(); menu !=  menus.end(); ++menu)
+    if (capturingText)
     {
-        polyCounter m = analyzeMenu(&(*menu));
-        n.verts += m.verts;
-        n.indices += m.indices;
+        printText2D( capturedString, lastActiveMenu->x + lastActiveMenu->right, lastActiveMenu->y, 10);
     }
-    return n;
 }
 
 void drawAllMenuText ()
 {
-    // prepareForMenuDraw();
+    drawCaptureText();
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
         drawMenuText(&(*menu));
     }
 }
-
 
 void resetMenus ()
 {
@@ -886,13 +893,7 @@ void editUserData (uDataWrap * itemToEdit)
     }
 }
 
-void drawCaptureText ()
-{
-    if (capturingText)
-    {
-        printText2D( capturedString, lastActiveMenu->x + lastActiveMenu->right, lastActiveMenu->y, 10);
-    }
-}
+
 
 int checkMenu (menuItem * menu, float mouseX, float mouseY) ;
 

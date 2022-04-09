@@ -20,20 +20,6 @@ menus.h
 game.h
 /home/marlo/Documents/cpp_game_engine/src/game.h
 
-/home/marlo/Documents/cpp_game_engine/src/menus.cpp
-graphics.h
-/home/marlo/Documents/cpp_game_engine/src/graphics.h
-menus.h
-/home/marlo/Documents/cpp_game_engine/src/menus.h
-utilities.h
-/home/marlo/Documents/cpp_game_engine/src/utilities.h
-stdio.h
--
-iostream
--
-fstream
--
-
 /home/marlo/Documents/cpp_game_engine/src/menus.h
 
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
