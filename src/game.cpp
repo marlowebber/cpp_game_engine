@@ -48,7 +48,60 @@ void initializeGame ()
 	setupMenus();
 }
 
-void threadGame()
+
+const unsigned int mapsize = 10;
+const float tileHeight =  1.0f;
+const float tileWidth = 2.0f;
+unsigned int heightmap[mapsize * mapsize];
+
+
+Vec_f2 worldToIsometric( Vec_f2 input )
+{
+	// https://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
+	// screenX = (cellX * tile_width  / 2) + (cellY * tile_width  / 2)
+	// screenY = (cellY * tile_height / 2) - (cellX * tile_height / 2)
+
+	return Vec_f2(
+	           (input.x * tileWidth  / 2) + (input.y * tileWidth  / 2)
+	           ,
+	           (input.y * tileHeight  / 2) + (input.x * tileHeight  / 2)
+	       );
+}
+
+
+void drawIsometricTile( Vec_f2 position , Color finalColor)
+{
+	Vec_f2 isometricPos = worldToIsometric( position );
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + 0.0f,            isometricPos.y +  -(tileHeight / 2)));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + 0.0f,            isometricPos.y +  (tileHeight / 2)));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + -(tileWidth / 2),isometricPos.y +  0.0f));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + 0.0f,            isometricPos.y + -(tileHeight / 2)));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + 0.0f,            isometricPos.y + (tileHeight / 2)));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + (tileWidth / 2), isometricPos.y + 0.0f));
+}
+
+
+
+void drawTile( Vec_f2 position , Color finalColor)
+{
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    tileWidth          , position.y -     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    tileWidth          , position.y +     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    tileWidth          , position.y +     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    tileWidth          , position.y -     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    tileWidth          , position.y +     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    tileWidth          , position.y -     tileWidth            ) );
+}
+
+
+
+void threadGame()   // the main loop for the game, this get run as its own thread.
 {
 
+
+}
+
+void gameGraphics() // process the game visual elements, this gets run inside the graphics thread.
+{
+
+	drawTile( Vec_f2(0.0f, 0.0f) , color_lightblue);
 }

@@ -43,10 +43,12 @@ struct menuItem
     menuItem(  );
 };
 
-
 extern float viewportScaleFactorX;
 extern float viewportScaleFactorY;
-
+extern std::list<menuItem> menus;
+extern bool capturingText;
+extern std::string capturedString;
+extern menuItem * draggedMenu;
 
 void exampleMenuCallback(void * userData);
 void cleanupText2D();
@@ -60,11 +62,6 @@ void drawPanels();
 
 void rebaseMenu (menuItem * menu, int newX, int newY);
 
-extern std::list<menuItem> menus;
-
-
-extern bool capturingText;
-extern std::string capturedString;
 
 
 menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback=nullptr, void * userData=nullptr, Color color=Color(0.1f, 0.1f, 0.1f, 1.0f), Vec_f2 position=Vec_f2(0.0f, 0.0f));
@@ -87,6 +84,5 @@ void drawExamplePanel ( );
 void setDraggingMenu ( menuItem * menu ) ;
 void clearDraggingMenu() ;
 
-extern menuItem * draggedMenu;
 
 #endif // menus_h

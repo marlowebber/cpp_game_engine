@@ -57,6 +57,8 @@ static inline void mat4x4_ortho( t_mat4x4 out, float left, float right, float bo
 
 const unsigned int numberOfFieldsPerVertex = 6; /*  R, G, B, A, X, Y  */
 
+extern const Color color_lightblue;
+
 void setupGraphics() ;
 void shutdownGraphics() ;
 

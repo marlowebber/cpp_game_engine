@@ -350,6 +350,10 @@ void addExamplePanelToBuffer()
 	vertToBuffer(color_lightblue, Vec_f2(0.0f, 0.0f));
 	vertToBuffer(color_lightblue, Vec_f2(100.0f, 100.0f));
 	vertToBuffer(color_lightblue, Vec_f2(0.0f, 100.0f));
+
+	vertToBuffer(color_lightblue, Vec_f2(0.0f, 0.0f));
+	vertToBuffer(color_lightblue, Vec_f2(100.0f, 100.0f));
+	vertToBuffer(color_lightblue, Vec_f2(100.0f, 0.0f));
 }
 
 void threadGraphics()
@@ -357,7 +361,10 @@ void threadGraphics()
 	preDraw();
 
 	prepareForWorldDraw ();
-	addExamplePanelToBuffer();
+
+
+	gameGraphics();
+
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
 	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
 
