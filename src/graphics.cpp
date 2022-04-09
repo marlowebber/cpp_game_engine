@@ -5,9 +5,9 @@ const unsigned int width = 1920;
 const unsigned int height = 1080;
 const float fwidth = 1920;
 const float fheight = 1080;
-const unsigned int bufferSize = 1000000;
+const unsigned int bufferSize = 4 * 6 * 1920 * 1080;
 
-const Color color_lightblue          = Color( 0.1f, 0.3f, 0.65f, 1.0f );
+// const Color color_lightblue          = Color( 0.1f, 0.3f, 0.65f, 1.0f );
 
 
 
@@ -294,7 +294,7 @@ void prepareForMenuDraw ()
 	    projection_matrix,
 	    0,
 	    (fwidth / 2.0f) * 0.835f,
-	    0, 
+	    0,
 	    (fheight / 2.0f) * 1.1f,
 	    -10.0f,
 	    +10.0f
@@ -306,15 +306,18 @@ const unsigned int floats_per_color = 16;
 
 void vertToBuffer ( Color color, Vec_f2 vert )
 {
-	float floatx = vert.x;
-	float floaty = vert.y;
-	energyColorGrid[ (colorGridCursor * 6) + 0 ] = color.r;
-	energyColorGrid[ (colorGridCursor * 6) + 1 ] = color.g;
-	energyColorGrid[ (colorGridCursor * 6) + 2 ] = color.b;
-	energyColorGrid[ (colorGridCursor * 6) + 3 ] = color.a;
-	energyColorGrid[ (colorGridCursor * 6) + 4 ] = vert.x;
-	energyColorGrid[ (colorGridCursor * 6) + 5 ] = vert.y;
-	colorGridCursor ++;
+	if ( ( (colorGridCursor * 6) + 5 ) < bufferSize )
+	{
+		float floatx = vert.x;
+		float floaty = vert.y;
+		energyColorGrid[ (colorGridCursor * 6) + 0 ] = color.r;
+		energyColorGrid[ (colorGridCursor * 6) + 1 ] = color.g;
+		energyColorGrid[ (colorGridCursor * 6) + 2 ] = color.b;
+		energyColorGrid[ (colorGridCursor * 6) + 3 ] = color.a;
+		energyColorGrid[ (colorGridCursor * 6) + 4 ] = vert.x;
+		energyColorGrid[ (colorGridCursor * 6) + 5 ] = vert.y;
+		colorGridCursor ++;
+	}
 }
 
 void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index_buffer_content, unsigned int * index_buffer_cursor)

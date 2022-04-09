@@ -1,6 +1,7 @@
 #include "graphics.h"
 #include "menus.h"
 #include "main.h"
+#include "untitled_marlo_project.h"
 
 int exampleNumberCapture = 15;
 std::string exampleTextCapture = std::string("exampleText");
@@ -41,12 +42,6 @@ void rebuildMenus ()
 	menus.push_back(*exampleMenuRoot);
 }
 
-void initializeGame ()
-{
-	setupExtremelyFastNumberGenerators();
-	srand((unsigned int)time(NULL));
-	setupMenus();
-}
 
 
 const unsigned int mapsize = 10;
@@ -94,14 +89,72 @@ void drawTile( Vec_f2 position , Color finalColor)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void initializeGame ()
+{
+	setupExtremelyFastNumberGenerators();
+	srand((unsigned int)time(NULL));
+	setupMenus();
+
+	startSimulation();
+}
+
 void threadGame()   // the main loop for the game, this get run as its own thread.
 {
-
+model();
 
 }
 
 void gameGraphics() // process the game visual elements, this gets run inside the graphics thread.
 {
 
-	drawTile( Vec_f2(0.0f, 0.0f) , color_lightblue);
+	// drawTile( Vec_f2(0.0f, 0.0f) , color_lightblue);
+
+	camera();
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

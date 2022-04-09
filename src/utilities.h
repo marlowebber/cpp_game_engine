@@ -37,6 +37,25 @@ struct Color
 };
 
 
+
+const Color color_lightblue          = Color( 0.1f, 0.3f, 0.65f, 1.0f );
+const Color color_yellow             = Color( 1.0f, 1.0f, 0.0f, 1.0f );
+const Color color_lightgrey          = Color( 0.75f, 0.75f, 0.75f, 1.0f );
+const Color color_grey               = Color( 0.50f, 0.50f, 0.50f, 1.0f );
+const Color color_darkgrey           = Color( 0.25f, 0.25f, 0.25f, 1.0f );
+const Color color_black              = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+const Color color_white              = Color (1.0f, 1.0f, 1.0f, 1.0f);
+const Color color_purple             = Color( 0.8f, 0.0f, 0.8f, 1.0f );
+const Color color_orange             = Color( 1.0f, 0.8f, 0.0f, 1.0f);
+const Color color_offwhite           = Color( 0.9f, 1.0f, 0.8f, 1.0f );
+const Color color_brightred          = Color( 0.9f, 0.1f, 0.0f, 1.0f);
+const Color color_darkred            = Color( 0.5f, 0.05f, 0.0f, 1.0f);
+const Color color_brown              = Color(  0.25f, 0.1f, 0.0f, 1.0f );
+const Color color_green              = Color(  0.25f, 0.8f, 0.25f, 1.0f );
+const Color color_clear              = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+const Color color_pink              = Color(  1.0f, 0.8f, 0.8f, 1.0f );
+
+
 struct Vec_u2
 {
 	unsigned int x;

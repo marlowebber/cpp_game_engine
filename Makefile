@@ -231,6 +231,33 @@ src/menus.cpp.s:
 	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/menus.cpp.s
 .PHONY : src/menus.cpp.s
 
+src/untitled_marlo_project.o: src/untitled_marlo_project.cpp.o
+
+.PHONY : src/untitled_marlo_project.o
+
+# target to build an object file
+src/untitled_marlo_project.cpp.o:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o
+.PHONY : src/untitled_marlo_project.cpp.o
+
+src/untitled_marlo_project.i: src/untitled_marlo_project.cpp.i
+
+.PHONY : src/untitled_marlo_project.i
+
+# target to preprocess a source file
+src/untitled_marlo_project.cpp.i:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/untitled_marlo_project.cpp.i
+.PHONY : src/untitled_marlo_project.cpp.i
+
+src/untitled_marlo_project.s: src/untitled_marlo_project.cpp.s
+
+.PHONY : src/untitled_marlo_project.s
+
+# target to generate assembly for a file
+src/untitled_marlo_project.cpp.s:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/untitled_marlo_project.cpp.s
+.PHONY : src/untitled_marlo_project.cpp.s
+
 src/utilities.o: src/utilities.cpp.o
 
 .PHONY : src/utilities.o
@@ -279,6 +306,9 @@ help:
 	@echo "... src/menus.o"
 	@echo "... src/menus.i"
 	@echo "... src/menus.s"
+	@echo "... src/untitled_marlo_project.o"
+	@echo "... src/untitled_marlo_project.i"
+	@echo "... src/untitled_marlo_project.s"
 	@echo "... src/utilities.o"
 	@echo "... src/utilities.i"
 	@echo "... src/utilities.s"

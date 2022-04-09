@@ -26,6 +26,8 @@ set(SRCS
 	src/menus.cpp
 	src/utilities.h
 	src/utilities.cpp
+	src/untitled_marlo_project.cpp
+	src/untitled_marlo_project.h
 )
 
 link_directories(
