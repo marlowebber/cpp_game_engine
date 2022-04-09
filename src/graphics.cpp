@@ -344,6 +344,12 @@ void setupGraphics()
 
 
 	glBufferData( GL_ARRAY_BUFFER, bufferSize, energyColorGrid, GL_DYNAMIC_DRAW );
+
+
+	for (int i = 0; i < bufferSize; ++i)
+	{
+		energyColorGrid[i] = 0.0f;
+	}
 }
 
 void prepareForWorldDraw ()
@@ -390,10 +396,10 @@ void prepareForMenuDraw ()
 	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
 	mat4x4_ortho(
 	    projection_matrix,
-	    (-(fwidth / 2)),
-	    (+(fwidth / 2)),
-	    (-(fheight / 2) ),
-	    (+(fheight / 2) ),
+	    0, // (-(fwidth / 2)),
+	    fwidth / 2.0f, // (+(fwidth / 2)),
+	    0,   // (-(fheight / 2) ),
+	    fheight / 2.0f, // (+(fheight / 2) ),
 	    -10.0f,
 	    +10.0f
 	);
@@ -433,8 +439,8 @@ void vertToBuffer ( Color color, Vec_f2 vert )
 	// {
 	float floatx = vert.x;
 	float floaty = vert.y;
-	memcpy( &( energyColorGrid[colorGridCursor] ) , &color , sizeof(Color));
-	memcpy(   (&( energyColorGrid[colorGridCursor] )) + sizeof(Color) , &vert , sizeof(Vec_f2));
+	// memcpy( &( energyColorGrid[colorGridCursor] ) , &color , sizeof(Color));
+	// memcpy(   (&( energyColorGrid[colorGridCursor] )) + sizeof(Color) , &vert , sizeof(Vec_f2));
 	// colorGridCursor += (sizeof(Color) + sizeof(Vec_f2) );
 
 	energyColorGrid[ (colorGridCursor * 6) + 0 ] = color.r;

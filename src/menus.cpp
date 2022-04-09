@@ -657,14 +657,9 @@ void drawPanel ( menuItem * menu )
         vertToBuffer (
             menu->panelColor,
             menu->aabb.upperBound ) ;
-
-
-
         vertToBuffer (
             menu->panelColor,
             Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
-
-
         vertToBuffer (
             menu->panelColor,
             menu->aabb.lowerBound ) ;
