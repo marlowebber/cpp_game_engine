@@ -52,6 +52,8 @@ void initializeGame ()
 	setupExtremelyFastNumberGenerators();
 	srand((unsigned int)time(NULL));
 
+	setupMenus();
+
 }
 
 void threadGame()

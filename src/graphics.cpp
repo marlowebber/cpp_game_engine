@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "menus.h"
 
 
 
@@ -345,12 +346,12 @@ void setupGraphics()
 
 void prepareForWorldDraw ()
 {
-	// glUseProgram( program );
-	// glBindBuffer( GL_ARRAY_BUFFER, vbo );
-	// glEnableVertexAttribArray( attrib_position );
-	// glEnableVertexAttribArray( attrib_color );
-	// glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
-	// glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
+	glUseProgram( program );
+	glBindBuffer( GL_ARRAY_BUFFER, vbo );
+	glEnableVertexAttribArray( attrib_position );
+	glEnableVertexAttribArray( attrib_color );
+	glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
+	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
 
 
 // unsigned int zoomInt = viewZoom;
@@ -406,8 +407,6 @@ void preDraw()
 {
 
 
-	prepareForWorldDraw ();
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -447,6 +446,54 @@ const Color color_lightblue          = Color( 0.1f, 0.3f, 0.65f, 1.0f );
 
 
 
+
+void addExamplePanelToBuffer()
+{
+
+	// unsigned int x = 0;
+	// unsigned int y = 0;
+	// for (
+	unsigned int i = 0;
+	// ; i < (bufferSize / 6) - 6; ++i)
+	// {
+	// 	x = i % width;
+	// 	y = i / width;
+	// 	float fx = x;
+	// 	float fy = y;
+
+
+		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
+		energyColorGrid[ (i * 6) + 4 ] = 0.0f;
+		energyColorGrid[ (i * 6) + 5 ] = 0.0f;
+
+i++;
+		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
+		energyColorGrid[ (i * 6) + 4 ] = 100.0f;
+		energyColorGrid[ (i * 6) + 5 ] = 100.0f;
+
+i++;
+
+		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
+		energyColorGrid[ (i * 6) + 4 ] = 0.0f;
+		energyColorGrid[ (i * 6) + 5 ] = 100.0f;
+
+
+
+	// }
+
+
+}
+
+
 void threadGraphics()
 {
 
@@ -469,6 +516,8 @@ void threadGraphics()
 
 	// }
 
+	prepareForWorldDraw ();
+
 
 
 	// 	if (visualizer == VISUALIZE_ENERGY)
@@ -477,36 +526,23 @@ void threadGraphics()
 	// unsigned int nVertsToRenderThisTurn = totalSize;
 	// long unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
 	// float * energyColorGrid = new float[bufferSize];
-	unsigned int x = 0;
-	unsigned int y = 0;
-	for (unsigned int i = 0; i < (bufferSize/6)-6; ++i)
-	{
-		x = i % width;
-		y = i / width;
-		float fx = x;
-		float fy = y;
-		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
-		energyColorGrid[ (i * 6) + 4 ] = fx;
-		energyColorGrid[ (i * 6) + 5 ] = fy;
-	}
+	
 
 
 // #ifdef THREAD_TIMING_READOUT
-	auto start = std::chrono::steady_clock::now();
+	// auto start = std::chrono::steady_clock::now();
 // #endif
 
 	// glBufferData( GL_ARRAY_BUFFER, bufferSize, energyColorGrid, GL_DYNAMIC_DRAW );
 
 
+ addExamplePanelToBuffer();
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
 
 // #ifdef THREAD_TIMING_READOUT
-	auto end = std::chrono::steady_clock::now();
-	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	std::cout << "glBufferData " << elapsed.count() << " microseconds." << std::endl;
+	// auto end = std::chrono::steady_clock::now();
+	// auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	// std::cout << "glBufferData " << elapsed.count() << " microseconds." << std::endl;
 // #endif
 
 	//
@@ -523,7 +559,15 @@ void threadGraphics()
 
 
 
-	glDrawArrays(GL_POINTS, 0,  bufferSize);
+	glDrawArrays(GL_TRIANGLES, 0,  bufferSize);
+
+
+
+
+// rebuildMenus ();
+
+	drawMenus ();
+
 	postDraw();
 	// delete [] energyColorGrid;
 	// }

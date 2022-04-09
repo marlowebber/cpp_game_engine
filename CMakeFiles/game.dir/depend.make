@@ -61,6 +61,7 @@ CMakeFiles/game.dir/src/game.cpp.o: /usr/local/include/SDL2/close_code.h
 CMakeFiles/game.dir/src/graphics.cpp.o: src/game.h
 CMakeFiles/game.dir/src/graphics.cpp.o: src/graphics.cpp
 CMakeFiles/game.dir/src/graphics.cpp.o: src/graphics.h
+CMakeFiles/game.dir/src/graphics.cpp.o: src/menus.h
 CMakeFiles/game.dir/src/graphics.cpp.o: src/utilities.h
 CMakeFiles/game.dir/src/graphics.cpp.o: /usr/local/include/SDL2/SDL.h
 CMakeFiles/game.dir/src/graphics.cpp.o: /usr/local/include/SDL2/SDL_assert.h
