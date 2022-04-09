@@ -116,10 +116,6 @@ void drawTile( Vec_f2 position , Color finalColor)
 
 
 
-
-
-
-
 void initializeGame ()
 {
 	setupExtremelyFastNumberGenerators();

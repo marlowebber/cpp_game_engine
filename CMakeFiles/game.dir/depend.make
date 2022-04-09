@@ -119,6 +119,7 @@ CMakeFiles/game.dir/src/main.cpp.o: src/game.h
 CMakeFiles/game.dir/src/main.cpp.o: src/graphics.h
 CMakeFiles/game.dir/src/main.cpp.o: src/main.cpp
 CMakeFiles/game.dir/src/main.cpp.o: src/menus.h
+CMakeFiles/game.dir/src/main.cpp.o: src/untitled_marlo_project.h
 CMakeFiles/game.dir/src/main.cpp.o: src/utilities.h
 CMakeFiles/game.dir/src/main.cpp.o: /usr/local/include/SDL2/SDL.h
 CMakeFiles/game.dir/src/main.cpp.o: /usr/local/include/SDL2/SDL_assert.h

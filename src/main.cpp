@@ -4,6 +4,7 @@
 
 #include "graphics.h"
 #include "menus.h"
+#include "untitled_marlo_project.h"
 
 bool paused = false;
 bool flagQuit = false;
@@ -80,6 +81,9 @@ void threadInterface()
 			case SDLK_p:
 				togglePause();
 				break;
+			case SDLK_r:
+				spawnPlayer();
+				break;
 			case SDLK_ESCAPE:
 				quit();
 			}
@@ -151,7 +155,7 @@ void threadInterface()
 		case SDL_MOUSEMOTION:
 		{
 
- // drawTestCoordinate (mouseX, mouseY) ;
+// drawTestCoordinate (mouseX, mouseY) ;
 
 			int prevMouseX = mouseX;
 			int prevMouseY = mouseY;

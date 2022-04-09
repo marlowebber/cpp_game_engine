@@ -72,10 +72,17 @@
 #define GROW_SEQUENCE             22 // [  
 #define GROW_JUMP                 23
 #define GROW_STOP                 24
+#define GROW_COLORA_R
+#define GROW_COLORA_G
+#define GROW_COLORA_B
+#define GROW_COLORB_R
+#define GROW_COLORB_G
+#define GROW_COLORB_B
 #define MATERIAL_FOOD             25 //           
 #define MATERIAL_ROCK             26 //           
 #define MATERIAL_WATER            27 //           
 #define MARKER                    28 //      // numbers above 25 don't correspond to lower-case letters(0..25) so we don't use them in the gene code. But (26..31) are still compatible with our masking scheme.
+
 
 #define WORLD_RANDOM 1
 #define WORLD_EXAMPLECREATURE 2
@@ -91,6 +98,7 @@ const bool tournament            = true;
 const bool taxIsByMass           = true;
 const bool threading             = true;
 const bool cameraFollowsChampion = true;
+const bool cameraFollowsPlayer   = true;
 const bool sexualViolence        = false;
 const bool variedGrowthCost      = false;
 const bool variedUpkeep          = false;
@@ -101,12 +109,12 @@ unsigned int worldToLoad = WORLD_RANDOM;
 // const unsigned int viewFieldY = 55 - 3;  // 203 columns, 55 rows is the max size i can make one on my pc.
 
 
-const unsigned int viewFieldX = 500; //80 columns, 24 rows is the default size of a terminal window
-const unsigned int viewFieldY = 500; //203 columns, 55 rows is the max size i can make one on my pc.
+const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
+const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
 
 
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
-const int animalSize     = 8;
+const int animalSize     = 16;
 const unsigned int animalSquareSize      = animalSize * animalSize;
 const int worldSize      = 512;
 const unsigned int worldSquareSize       = worldSize * worldSize;
@@ -117,17 +125,21 @@ unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;        // a multiplier for how much it costs animals to make new cells.
 const float taxEnergyScale         = 0.01f;        // a multiplier for how much it costs animals just to exist.
-const float lightEnergy            = 0.011f;   // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
+const float lightEnergy            = 0.0101f;   // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
 const float movementEnergyScale    = 0.02f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.85f;                     // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float liverStorage = 10.0f;
-const float musclePower = 0.1f; // the power of one muscle cell
-const unsigned int baseLifespan = 3000;
+const float musclePower = 0.5f; // the power of one muscle cell
+const unsigned int baseLifespan = 30000;
 const unsigned int baseSensorRange = 10;
 const float signalPropagationConstant = 0.1f; // how strongly sensor organs compel the animal.
 float energyScaleIn             = 1.0f;     // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
 // float energyScaleOut           = minimumEntropy;
+
+
+unsigned int playerCreature = -1;
+unsigned int playerDestination = 0;
 
 int neighbourOffsets[] =
 {
@@ -191,6 +203,8 @@ struct Cell
 	int sensorRange;
 	float signalIntensity;
 	unsigned int target;
+	Color outerColor;
+	float damage;
 };
 
 struct Animal
@@ -218,6 +232,8 @@ struct Animal
 	unsigned int uPosY;
 	float fPosX;
 	float fPosY;
+	Color colorA;
+	Color colorB;
 };
 
 float speciesEnergyOuts              [numberOfSpecies];
@@ -316,7 +332,7 @@ Animal animals[numberOfAnimals];
 
 void resetAnimal(unsigned int animalIndex)
 {
-	if (animalIndex >= 0)
+	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
 		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
 		{
@@ -791,7 +807,21 @@ void sensor(int animalIndex, unsigned int cellLocalPositionI)
 		unsigned int targetWorldPositionI =    (( y * worldSize ) + x ); // center the search area on the cell's world position.
 		// world[targetWorldPositionI].material = MATERIAL_ROCK;
 
-		if (organ == ORGAN_SENSOR_RANDOM)   // random sensors just random-walk the creature.
+		if (animalIndex == playerCreature)
+		{
+			if (extremelyFastNumberFromZeroTo(animals[animalIndex].stride) == 0)
+			{
+
+				targetWorldPositionI = animals[animalIndex].position;
+
+
+
+				detected = true;
+
+
+			}
+		}
+		else if (organ == ORGAN_SENSOR_RANDOM)   // random sensors just random-walk the creature.
 		{
 			if (extremelyFastNumberFromZeroTo(animals[animalIndex].stride) == 0)
 			{
@@ -1362,6 +1392,30 @@ void camera()
 	{
 		for ( int vx = 0; vx < viewFieldX; ++vx)
 		{
+
+		if (cameraFollowsPlayer && playerCreature >= 0 )
+			{
+				cameraTargetCreature = playerCreature;
+				viewPanX = 0.0f;
+				viewPanY = 0.0f;
+			}
+			else if (cameraFollowsChampion && champion >= 0)
+			{
+				cameraTargetCreature = champion;
+			}
+			else
+			{
+				for (int i = 0; i < numberOfAnimals; ++i)
+				{
+					if (!animals[i].retired)
+					{
+						cameraTargetCreature = i;
+					}
+				}
+			}
+
+
+
 			if (cameraTargetCreature >= 0)
 			{
 				int creatureX = animals[cameraTargetCreature].position;
@@ -1380,25 +1434,10 @@ void camera()
 					cameraTargetCreature = -1;
 				}
 			}
-			else
-			{
-				for (int i = 0; i < numberOfAnimals; ++i)
-				{
-					if (!animals[i].retired)
-					{
-						cameraTargetCreature = i;
-					}
-				}
-			}
+
+	
 
 
-			if (cameraFollowsChampion)
-			{
-				if (champion >= 0)
-				{
-					cameraTargetCreature = champion;
-				}
-			}
 
 			int worldX = (cameraPositionX + vx) % worldSize; // center the view on the targeted position, instead of having it in the corner
 			int worldY = (cameraPositionY + vy) % worldSize;
@@ -1601,6 +1640,24 @@ void populationController()
 // 		}
 // 	}
 // }
+
+
+
+
+
+void spawnPlayer()
+{
+	unsigned int targetWorldPositionX = cameraPositionX ;
+	unsigned int targetWorldPositionY = cameraPositionY ;
+	unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+	playerCreature = 0;
+	killAnimal(playerCreature);
+	spawnAnimalIntoSlot(playerCreature, exampleAnimal, targetWorldPositionI, false);
+	setupExampleAnimal(playerCreature);
+
+	printf("spawned player creature\n");
+}
+
 
 void setupTournamentAnimals()
 {
