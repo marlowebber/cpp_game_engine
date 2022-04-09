@@ -10,8 +10,10 @@ float viewPanY = 0.0f;
 
 
 // const unsigned int nominalFramerate = 60;
-// const unsigned int width = 1920;
-// const unsigned int height = 1080;
+const unsigned int width = 1920;
+const unsigned int height = 1080;
+const float fwidth = 1920;
+const float fheight = 1080;
 
 const unsigned int bufferSize = 1000000;
 
@@ -362,14 +364,59 @@ void prepareForWorldDraw ()
 	    projection_matrix,
 	    (-1 * viewZoom) + viewPanX,
 	    (+1 * viewZoom) + viewPanX,
-	    (-1 * 0.6 * viewZoom) + viewPanY,
-	    (+1 * 0.6 * viewZoom) + viewPanY,
+	    (-1 * (fheight/fwidth) * viewZoom) + viewPanY,
+	    (+1 * (fheight/fwidth) * viewZoom) + viewPanY,
 	    -10.0f,
 	    +10.0f
 	);
 	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
 
 }
+
+
+void prepareForMenuDraw ()
+{
+	glUseProgram( program );
+	glBindBuffer( GL_ARRAY_BUFFER, vbo );
+	glEnableVertexAttribArray( attrib_position );
+	glEnableVertexAttribArray( attrib_color );
+	glVertexAttribPointer( attrib_color, 4, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, 0 );
+	glVertexAttribPointer( attrib_position, 2, GL_FLOAT, GL_FALSE, sizeof( float ) * 6, ( void * )(4 * sizeof(float)) );
+
+
+// unsigned int zoomInt = viewZoom;
+
+
+	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
+	// mat4x4_ortho(
+	//     projection_matrix,
+	//     (-(fwidth/2)),
+	//     (+(fwidth/2)),
+	//     (-(fheight/2) ),
+	//     (+(fheight/2) ),
+	//     -10.0f,
+	//     +10.0f
+	// );
+
+	mat4x4_ortho(
+	    projection_matrix,
+	    (-1 * viewZoom) ,
+	    (+1 * viewZoom) ,
+	    (-1 * (fheight/fwidth) * viewZoom),
+	    (+1 * (fheight/fwidth) * viewZoom),
+	    -10.0f,
+	    +10.0f
+	);
+
+	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
+
+}
+
+
+
+
+
+
 
 // void cleanupAfterWorldDraw ()
 // {
@@ -386,9 +433,19 @@ void vertToBuffer ( Color color, Vec_f2 vert )
 	{
 		float floatx = vert.x;
 		float floaty = vert.y;
-		memcpy( &( energyColorGrid[colorGridCursor] ) , &color , sizeof(Color));
-		memcpy(   (&( energyColorGrid[colorGridCursor] )) + sizeof(Color) , &vert , sizeof(Vec_f2));
+		// memcpy( &( energyColorGrid[colorGridCursor] ) , &color , sizeof(Color));
+		// memcpy(   (&( energyColorGrid[colorGridCursor] )) + sizeof(Color) , &vert , sizeof(Vec_f2));
+		// colorGridCursor += (sizeof(Color) + sizeof(Vec_f2) );
+
+		energyColorGrid[ (colorGridCursor * 6) + 0 ] = color.r;
+		energyColorGrid[ (colorGridCursor * 6) + 1 ] = color.g;
+		energyColorGrid[ (colorGridCursor * 6) + 2 ] = color.b;
+		energyColorGrid[ (colorGridCursor * 6) + 3 ] = color.a;
+		energyColorGrid[ (colorGridCursor * 6) + 4 ] = vert.x;
+		energyColorGrid[ (colorGridCursor * 6) + 5 ] = vert.y;
 		colorGridCursor += 6;
+
+
 	}
 }
 
@@ -408,7 +465,7 @@ void preDraw()
 
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    colorGridCursor = 0;
 
 }
 
@@ -500,88 +557,22 @@ void threadGraphics()
 	preDraw();
 
 
-
-	// unsigned int n = 0;
-	// for (int i = -100; i < 100; ++i)
-	// {
-
-
-
-	// 	for (int j = 100; j  < 100; ++j)
-	// 	{
-
-	// 		vertToBuffer (  color_lightblue,  Vec_f2(i, j) );
-	// 	}
-
-
-	// }
-
 	prepareForWorldDraw ();
-
-
-
-	// 	if (visualizer == VISUALIZE_ENERGY)
-	// {
-	// unsigned int totalSize = height * width;
-	// unsigned int nVertsToRenderThisTurn = totalSize;
-	// long unsigned int totalNumberOfFields = nVertsToRenderThisTurn * numberOfFieldsPerVertex;
-	// float * energyColorGrid = new float[bufferSize];
-	
-
-
-// #ifdef THREAD_TIMING_READOUT
-	// auto start = std::chrono::steady_clock::now();
-// #endif
-
-	// glBufferData( GL_ARRAY_BUFFER, bufferSize, energyColorGrid, GL_DYNAMIC_DRAW );
-
-
- addExamplePanelToBuffer();
+	addExamplePanelToBuffer();
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
-
-// #ifdef THREAD_TIMING_READOUT
-	// auto end = std::chrono::steady_clock::now();
-	// auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	// std::cout << "glBufferData " << elapsed.count() << " microseconds." << std::endl;
-// #endif
-
-	//
-// void glNamedBufferSubData( 	GLuint buffer,
-//   	GLintptr offset,
-//   	GLsizeiptr size,
-//   	const void *data);
-
-
-	// glNamedBufferSubData( GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid );
-
-// glNamedBufferSubData( GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid );
-
-
-
-
 	glDrawArrays(GL_TRIANGLES, 0,  bufferSize);
 
 
+	prepareForMenuDraw();
+	addExamplePanelToBuffer();
+    drawPanels();
+	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
+	glDrawArrays(GL_TRIANGLES, 0,  bufferSize);
 
 
-// rebuildMenus ();
-
-	drawMenus ();
+	drawAllMenuText ();
 
 	postDraw();
-	// delete [] energyColorGrid;
-	// }
-
-
-
-
-	// glBufferData( GL_ARRAY_BUFFER, sizeof( float  ) * bufferSize, colorGrid, GL_DYNAMIC_DRAW );
-	// glDrawArrays(GL_POINTS, 0,  n);
-
-
-	// postDraw();
-
-
 
 }
 

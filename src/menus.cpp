@@ -654,21 +654,68 @@ void drawPanel ( menuItem * menu )
     {
 
 
+        vertToBuffer (
+            menu->panelColor,
+            menu->aabb.upperBound ) ;
+
+
+
+        vertToBuffer (
+            menu->panelColor,
+            Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
+
+
+        vertToBuffer (
+            menu->panelColor,
+            menu->aabb.lowerBound ) ;
+
+
+
+
+        vertToBuffer (
+            menu->panelColor,
+            menu->aabb.lowerBound ) ;
+
+        vertToBuffer (
+            menu->panelColor,
+            Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
+
+        vertToBuffer (
+            menu->panelColor,
+            menu->aabb.upperBound ) ;
+
+
+
+
+        // vertToBuffer (
+        //     menu->panelColor,
+        //     menu->aabb.upperBound ) ;
+        // vertToBuffer (
+        //     menu->panelColor,
+        //     menu->aabb.lowerBound ) ;
+
+
+
+
+
         // vertToBuffer (
         //     menu->panelColor,
         //     Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
 
-        // vertToBuffer (
-        //     menu->panelColor,
-        //     menu->aabb.lowerBound ) ;
+
+
+
+
 
         // vertToBuffer (
         //     menu->panelColor,
         //     Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
 
+
         // vertToBuffer (
         //     menu->panelColor,
         //     menu->aabb.upperBound ) ;
+
 
         // insertPrimitiveRestart ();
 
@@ -682,30 +729,6 @@ void drawPanel ( menuItem * menu )
     }
 }
 
-
-const Color blue = Color(0.0f, 0.0f, 1.0f, 1.0f);
-
-void drawExamplePanel ( )
-{
-
-        vertToBuffer (
-            blue,
-            Vec_f2(  -1000.0f,   1000.0f ) ) ;
-
-        vertToBuffer (
-            blue,
-            Vec_f2(-1000.0f,-1000.0f)) ;
-
-        vertToBuffer (
-            blue,
-            Vec_f2 ( 1000.0f , -1000.0f)  ) ;
-
-        vertToBuffer (
-            blue,
-           Vec_f2( 1000.0f,1000.0f) ) ;
-
-        // insertPrimitiveRestart ();
-}
 
 
 
@@ -725,12 +748,12 @@ struct polyCounter
 };
 
 polyCounter analyzeMenu ( menuItem * menu) ;
-polyCounter analyzeMenu ( menuItem * menu) 
+polyCounter analyzeMenu ( menuItem * menu)
 {
     polyCounter n;
     n.verts = 0;
     n.indices = 0;
-    if (!menu->collapsed) 
+    if (!menu->collapsed)
     {
         n.verts += 4;
         n.indices += 5;
@@ -745,7 +768,7 @@ polyCounter analyzeMenu ( menuItem * menu)
     return n;
 }
 
-polyCounter analyzeMenus() 
+polyCounter analyzeMenus()
 {
     polyCounter n;
     n.verts = 0;
@@ -760,16 +783,16 @@ polyCounter analyzeMenus()
     return n;
 }
 
-void drawMenus ()
+void drawAllMenuText ()
 {
     // prepareForMenuDraw();
-    drawPanels();
     std::list<menuItem>::iterator menu;
     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
     {
         drawMenuText(&(*menu));
     }
 }
+
 
 void resetMenus ()
 {
@@ -798,7 +821,7 @@ void editUserDataCallback ()
         {
             *(int *)editItem->uData = std::stoi( capturedString );
         }
-        else 
+        else
         {
 
             *(int *)editItem->uData = 0;

@@ -53,10 +53,10 @@ void cleanupText2D();
 
 void setupMenus();
 
-void drawMenus ();
+void drawAllMenuText ();
 int checkMenus (int mouseX, int mouseY);
 void resetMenus () ;
-
+void drawPanels();
 
 void rebaseMenu (menuItem * menu, int newX, int newY);
 

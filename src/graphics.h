@@ -19,9 +19,9 @@ extern float viewZoom;
 extern float viewPanX;
 extern float viewPanY;
 
-const unsigned int nominalFramerate = 60;
-const unsigned int width = 1920;
-const unsigned int height = 1080;
+extern const unsigned int nominalFramerate;
+extern const unsigned int width;
+extern const unsigned int height;
 
 extern GLuint vs, fs, program;
 extern GLuint vao, vbo;
