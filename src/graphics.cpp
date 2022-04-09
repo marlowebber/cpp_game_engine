@@ -388,25 +388,25 @@ void prepareForMenuDraw ()
 
 
 	// mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
-	// mat4x4_ortho(
-	//     projection_matrix,
-	//     (-(fwidth/2)),
-	//     (+(fwidth/2)),
-	//     (-(fheight/2) ),
-	//     (+(fheight/2) ),
-	//     -10.0f,
-	//     +10.0f
-	// );
-
 	mat4x4_ortho(
 	    projection_matrix,
-	    (-1 * viewZoom) ,
-	    (+1 * viewZoom) ,
-	    (-1 * (fheight / fwidth) * viewZoom),
-	    (+1 * (fheight / fwidth) * viewZoom),
+	    (-(fwidth / 2)),
+	    (+(fwidth / 2)),
+	    (-(fheight / 2) ),
+	    (+(fheight / 2) ),
 	    -10.0f,
 	    +10.0f
 	);
+
+	// mat4x4_ortho(
+	//     projection_matrix,
+	//     (-1 * viewZoom) ,
+	//     (+1 * viewZoom) ,
+	//     (-1 * (fheight / fwidth) * viewZoom),
+	//     (+1 * (fheight / fwidth) * viewZoom),
+	//     -10.0f,
+	//     +10.0f
+	// );
 
 	glUniformMatrix4fv( glGetUniformLocation( program, "u_projection_matrix" ), 1, GL_FALSE, projection_matrix );
 
@@ -443,7 +443,7 @@ void vertToBuffer ( Color color, Vec_f2 vert )
 	energyColorGrid[ (colorGridCursor * 6) + 3 ] = color.a;
 	energyColorGrid[ (colorGridCursor * 6) + 4 ] = vert.x;
 	energyColorGrid[ (colorGridCursor * 6) + 5 ] = vert.y;
-	colorGridCursor += 6;
+	colorGridCursor ++;
 
 
 	// }
@@ -463,7 +463,7 @@ void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index
 void preDraw()
 {
 
-colorGridCursor = 0;
+	colorGridCursor = 0;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	colorGridCursor = 0;
 
@@ -564,14 +564,15 @@ void threadGraphics()
 	prepareForWorldDraw ();
 	addExamplePanelToBuffer();
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
-	glDrawArrays(GL_TRIANGLES, 0,  bufferSize);
+	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
 
+	unsigned int next = colorGridCursor;
 
 	prepareForMenuDraw();
 	addExamplePanelToBuffer();
 	drawPanels();
-	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
-	glDrawArrays(GL_TRIANGLES, 0,  bufferSize);
+	glBufferSubData(GL_ARRAY_BUFFER, next, (colorGridCursor - next), energyColorGrid);
+	glDrawArrays   (GL_TRIANGLES,    next,  (colorGridCursor - next));
 
 
 	drawAllMenuText ();
