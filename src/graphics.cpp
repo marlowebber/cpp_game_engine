@@ -364,8 +364,8 @@ void prepareForWorldDraw ()
 	    projection_matrix,
 	    (-1 * viewZoom) + viewPanX,
 	    (+1 * viewZoom) + viewPanX,
-	    (-1 * (fheight/fwidth) * viewZoom) + viewPanY,
-	    (+1 * (fheight/fwidth) * viewZoom) + viewPanY,
+	    (-1 * (fheight / fwidth) * viewZoom) + viewPanY,
+	    (+1 * (fheight / fwidth) * viewZoom) + viewPanY,
 	    -10.0f,
 	    +10.0f
 	);
@@ -402,8 +402,8 @@ void prepareForMenuDraw ()
 	    projection_matrix,
 	    (-1 * viewZoom) ,
 	    (+1 * viewZoom) ,
-	    (-1 * (fheight/fwidth) * viewZoom),
-	    (+1 * (fheight/fwidth) * viewZoom),
+	    (-1 * (fheight / fwidth) * viewZoom),
+	    (+1 * (fheight / fwidth) * viewZoom),
 	    -10.0f,
 	    +10.0f
 	);
@@ -429,24 +429,24 @@ const unsigned int floats_per_color = 16;
 
 void vertToBuffer ( Color color, Vec_f2 vert )
 {
-	if (colorGridCursor < (bufferSize - 8))
-	{
-		float floatx = vert.x;
-		float floaty = vert.y;
-		// memcpy( &( energyColorGrid[colorGridCursor] ) , &color , sizeof(Color));
-		// memcpy(   (&( energyColorGrid[colorGridCursor] )) + sizeof(Color) , &vert , sizeof(Vec_f2));
-		// colorGridCursor += (sizeof(Color) + sizeof(Vec_f2) );
+	// if (colorGridCursor < (bufferSize - 8))
+	// {
+	float floatx = vert.x;
+	float floaty = vert.y;
+	memcpy( &( energyColorGrid[colorGridCursor] ) , &color , sizeof(Color));
+	memcpy(   (&( energyColorGrid[colorGridCursor] )) + sizeof(Color) , &vert , sizeof(Vec_f2));
+	// colorGridCursor += (sizeof(Color) + sizeof(Vec_f2) );
 
-		energyColorGrid[ (colorGridCursor * 6) + 0 ] = color.r;
-		energyColorGrid[ (colorGridCursor * 6) + 1 ] = color.g;
-		energyColorGrid[ (colorGridCursor * 6) + 2 ] = color.b;
-		energyColorGrid[ (colorGridCursor * 6) + 3 ] = color.a;
-		energyColorGrid[ (colorGridCursor * 6) + 4 ] = vert.x;
-		energyColorGrid[ (colorGridCursor * 6) + 5 ] = vert.y;
-		colorGridCursor += 6;
+	energyColorGrid[ (colorGridCursor * 6) + 0 ] = color.r;
+	energyColorGrid[ (colorGridCursor * 6) + 1 ] = color.g;
+	energyColorGrid[ (colorGridCursor * 6) + 2 ] = color.b;
+	energyColorGrid[ (colorGridCursor * 6) + 3 ] = color.a;
+	energyColorGrid[ (colorGridCursor * 6) + 4 ] = vert.x;
+	energyColorGrid[ (colorGridCursor * 6) + 5 ] = vert.y;
+	colorGridCursor += 6;
 
 
-	}
+	// }
 }
 
 
@@ -463,9 +463,9 @@ void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index
 void preDraw()
 {
 
-
+colorGridCursor = 0;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    colorGridCursor = 0;
+	colorGridCursor = 0;
 
 }
 
@@ -510,7 +510,7 @@ void addExamplePanelToBuffer()
 	// unsigned int x = 0;
 	// unsigned int y = 0;
 	// for (
-	unsigned int i = 0;
+	// unsigned int i = 0;
 	// ; i < (bufferSize / 6) - 6; ++i)
 	// {
 	// 	x = i % width;
@@ -519,30 +519,34 @@ void addExamplePanelToBuffer()
 	// 	float fy = y;
 
 
-		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
-		energyColorGrid[ (i * 6) + 4 ] = 0.0f;
-		energyColorGrid[ (i * 6) + 5 ] = 0.0f;
+// 		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
+// 		energyColorGrid[ (i * 6) + 4 ] = 0.0f;
+// 		energyColorGrid[ (i * 6) + 5 ] = 0.0f;
 
-i++;
-		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
-		energyColorGrid[ (i * 6) + 4 ] = 100.0f;
-		energyColorGrid[ (i * 6) + 5 ] = 100.0f;
+// i++;
+// 		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
+// 		energyColorGrid[ (i * 6) + 4 ] = 100.0f;
+// 		energyColorGrid[ (i * 6) + 5 ] = 100.0f;
 
-i++;
+// i++;
 
-		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
-		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
-		energyColorGrid[ (i * 6) + 4 ] = 0.0f;
-		energyColorGrid[ (i * 6) + 5 ] = 100.0f;
+// 		energyColorGrid[ (i * 6) + 0 ] = 1.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 1 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 2 ] = 0.0f;//lifeGrid[i].energy / maximumDisplayEnergy;
+// 		energyColorGrid[ (i * 6) + 3 ] = 1.0f;
+// 		energyColorGrid[ (i * 6) + 4 ] = 0.0f;
+// 		energyColorGrid[ (i * 6) + 5 ] = 100.0f;
 
+
+	vertToBuffer(color_lightblue, Vec_f2(0.0f, 0.0f));
+	vertToBuffer(color_lightblue, Vec_f2(100.0f, 100.0f));
+	vertToBuffer(color_lightblue, Vec_f2(0.0f, 100.0f));
 
 
 	// }
@@ -565,7 +569,7 @@ void threadGraphics()
 
 	prepareForMenuDraw();
 	addExamplePanelToBuffer();
-    drawPanels();
+	drawPanels();
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
 	glDrawArrays(GL_TRIANGLES, 0,  bufferSize);
 
