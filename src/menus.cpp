@@ -25,9 +25,6 @@ bool capitalizing = false;
 
 std::string capturedString;
 
-uDataWrap * editItem;
-menuItem * draggedMenu = nullptr;
-
 menuItem::menuItem( )
 {
     this->scaffold = true;
@@ -46,6 +43,8 @@ menuItem::menuItem( )
     this->editable = true;
 }
 
+uDataWrap * editItem;
+menuItem * draggedMenu = nullptr;
 menuItem * lastActiveMenu;
 std::list<menuItem> menus;
 
@@ -652,8 +651,6 @@ void drawPanel ( menuItem * menu )
 
     if (!menu->collapsed)
     {
-
-
         vertToBuffer (
             menu->panelColor,
             menu->aabb.upperBound ) ;
@@ -664,68 +661,21 @@ void drawPanel ( menuItem * menu )
             menu->panelColor,
             menu->aabb.lowerBound ) ;
 
-
-
-
         vertToBuffer (
             menu->panelColor,
             menu->aabb.lowerBound ) ;
-
         vertToBuffer (
             menu->panelColor,
             Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
-
         vertToBuffer (
             menu->panelColor,
             menu->aabb.upperBound ) ;
-
-
-
-
-        // vertToBuffer (
-        //     menu->panelColor,
-        //     menu->aabb.upperBound ) ;
-        // vertToBuffer (
-        //     menu->panelColor,
-        //     menu->aabb.lowerBound ) ;
-
-
-
-
-
-        // vertToBuffer (
-        //     menu->panelColor,
-        //     Vec_f2(  menu->aabb.lowerBound.x ,   menu->aabb.upperBound.y ) ) ;
-
-
-
-
-
-
-        // vertToBuffer (
-        //     menu->panelColor,
-        //     Vec_f2 ( menu->aabb.upperBound.x , menu->aabb.lowerBound.y  )  ) ;
-
-
-        // vertToBuffer (
-        //     menu->panelColor,
-        //     menu->aabb.upperBound ) ;
-
-
-        // insertPrimitiveRestart ();
-
-
-
     }
-
     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
     {
         drawPanel( &(*subMenu ));
     }
 }
-
-
-
 
 void drawPanels()
 {
@@ -735,48 +685,6 @@ void drawPanels()
         drawPanel( &(*menu ) );
     }
 }
-
-// struct polyCounter
-// {
-//     unsigned int verts;
-//     unsigned int indices;
-// };
-
-// polyCounter analyzeMenu ( menuItem * menu) ;
-// polyCounter analyzeMenu ( menuItem * menu)
-// {
-//     polyCounter n;
-//     n.verts = 0;
-//     n.indices = 0;
-//     if (!menu->collapsed)
-//     {
-//         n.verts += 4;
-//         n.indices += 5;
-//     }
-//     std::list<menuItem>::iterator subMenu;
-//     for (subMenu = menu->subMenus.begin(); subMenu !=  menu->subMenus.end(); ++subMenu)
-//     {
-//         polyCounter m = analyzeMenu(&(*subMenu));
-//         n.verts += m.verts;
-//         n.indices += m.indices;
-//     }
-//     return n;
-// }
-
-// polyCounter analyzeMenus()
-// {
-//     polyCounter n;
-//     n.verts = 0;
-//     n.indices = 0;
-//     std::list<menuItem>::iterator menu;
-//     for (menu = menus.begin(); menu !=  menus.end(); ++menu)
-//     {
-//         polyCounter m = analyzeMenu(&(*menu));
-//         n.verts += m.verts;
-//         n.indices += m.indices;
-//     }
-//     return n;
-// }
 
 void drawCaptureText ()
 {
@@ -825,7 +733,6 @@ void editUserDataCallback ()
         }
         else
         {
-
             *(int *)editItem->uData = 0;
         }
     }
@@ -848,7 +755,6 @@ void editUserDataCallback ()
         }
         else
         {
-
             *(unsigned int *)editItem->uData = 0;
         }
 
@@ -868,32 +774,25 @@ void editUserData (uDataWrap * itemToEdit)
     capturingText  = true;
     if (itemToEdit->dataType == TYPE_UDATA_STRING)
     {
-
         capturedString = *(std::string *)(itemToEdit->uData);
     }
     else  if (itemToEdit->dataType == TYPE_UDATA_INT)
     {
-
         capturedString =  std::to_string(  *(int *)(itemToEdit->uData) );
     }
     else  if (itemToEdit->dataType == TYPE_UDATA_UINT)
     {
-
         capturedString =  std::to_string(  *(unsigned int *)(itemToEdit->uData) );
     }
     else  if (itemToEdit->dataType == TYPE_UDATA_FLOAT)
     {
-
         capturedString =  std::to_string(  *(float *)(itemToEdit->uData) );
     }
     else  if (itemToEdit->dataType == TYPE_UDATA_BOOL)
     {
-
         capturedString =  std::to_string(  *(bool *)(itemToEdit->uData) );
     }
 }
-
-
 
 int checkMenu (menuItem * menu, float mouseX, float mouseY) ;
 

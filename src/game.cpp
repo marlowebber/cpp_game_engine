@@ -5,9 +5,6 @@
 int exampleNumberCapture = 15;
 std::string exampleTextCapture = std::string("exampleText");
 
-
-
-
 void rebuildMenus ()
 {
 	int spacing = 10;
@@ -44,55 +41,14 @@ void rebuildMenus ()
 	menus.push_back(*exampleMenuRoot);
 }
 
-
-
-
 void initializeGame ()
 {
 	setupExtremelyFastNumberGenerators();
 	srand((unsigned int)time(NULL));
-
 	setupMenus();
-
 }
 
 void threadGame()
 {
 
 }
-
-
-
-
-// void threadGraphics()
-// {
-// #ifdef THREAD_TIMING
-// 	auto start = std::chrono::steady_clock::now();
-// #endif
-
-// 	preDraw();
-
-// 	// prepareForWorldDraw();
-// 	// cleanupAfterWorldDraw();
-
-// 	// prepareForMenuDraw();
-
-// 	// drawMenus ();
-
-// 	drawExamplePanel ( );
-
-// 	// cleanupAfterWorldDraw();
-
-
-// 	// drawCaptureText ();
-
-
-
-// 	postDraw();
-
-// #ifdef THREAD_TIMING
-// 	auto end = std::chrono::steady_clock::now();
-// 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-// 	std::cout << "threadGraphics " << elapsed.count() << " microseconds." << std::endl;
-// #endif
-// }
