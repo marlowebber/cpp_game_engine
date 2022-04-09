@@ -131,7 +131,7 @@ void initializeGame ()
 
 void threadGame()   // the main loop for the game, this get run as its own thread.
 {
-model();
+// model();
 
 }
 

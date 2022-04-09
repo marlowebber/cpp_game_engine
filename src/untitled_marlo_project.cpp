@@ -1781,24 +1781,25 @@ void model()
 // 	}
 // }
 
-// void modelSupervisor()
-// {
-// 	while (true)
-// 	{
-// 		if (!lockfps)
-// 		{
-// 			model();
-// 		}
+void modelSupervisor()
+{
+	while (true)
+	{
+		if (!lockfps)
+		{
+			model();
+		}
 
-// #ifdef TRACY_ENABLE//
-// 		FrameMark;
-// #endif
-// 	}
-// }
+#ifdef TRACY_ENABLE//
+		FrameMark;
+#endif
+	}
+}
 
 void startSimulation()
 {
 	setupRandomWorld();
 	// boost::thread t7{ interfaceSupervisor };
+	boost::thread t7{ modelSupervisor };
 	// modelSupervisor();
 }
