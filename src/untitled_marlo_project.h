@@ -6,13 +6,18 @@ void model();
 
 void camera();
 
+ const int worldSize = 512;
 
+extern unsigned int cameraPositionX ;//= (worldSize / 2);
+extern unsigned int cameraPositionY ;//= (worldSize / 2);
+
+
+extern	float fps ;
 void spawnPlayer();
 
 unsigned int getPlayerDestination();
 void setPlayerDestination(unsigned int newDestination);
 
- const int worldSize = 512;
 void rebuildGameMenus();
 
 // extern unsigned int playerDestination;

@@ -121,6 +121,7 @@ void initializeGame ()
 {
 	setupExtremelyFastNumberGenerators();
 	srand((unsigned int)time(NULL));
+	seedExtremelyFastNumberGenerators();
 	setupMenus();
 
 	startSimulation();
