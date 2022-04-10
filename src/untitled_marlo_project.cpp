@@ -1515,8 +1515,12 @@ void camera()
 				int creatureX = animals[cameraTargetCreature].position % worldSize;
 				int creatureY = animals[cameraTargetCreature].position / worldSize;
 
-				int newCameraPositionX = creatureX;// - (viewFieldX / 2) % worldSize; // allow the camera position to wrap around the world edge
-				int newCameraPositionY = creatureY;// - (viewFieldY / 2) % worldSize;
+				int newCameraPositionX = creatureX - (viewFieldX / 2);// % worldSize; // allow the camera position to wrap around the world edge
+				int newCameraPositionY = creatureY - (viewFieldY / 2);// % worldSize;
+
+
+				viewPanSetpointX = creatureX * 0.8f;
+				viewPanSetpointY = creatureY * 0.8f;	
 
 				// if (newCameraPositionX > 0 && newCameraPositionX < worldSize && newCameraPositionY > 0 && newCameraPositionY < worldSize)
 				// {
@@ -1533,10 +1537,10 @@ void camera()
 
 
 
-			int worldX = (cameraPositionX + vx) % worldSize; // center the view on the targeted position, instead of having it in the corner
-			int worldY = (cameraPositionY + vy) % worldSize;
+			int worldX = (cameraPositionX + vx);// % worldSize; // center the view on the targeted position, instead of having it in the corner
+			int worldY = (cameraPositionY + vy);// % worldSize;
 
-			// if (worldX < 0 || worldX > worldSize || worldY < 0 || worldY > worldSize) { continue;} // prevent the view from wrapping around the world edge
+			if (worldX < 0 || worldX > worldSize || worldY < 0 || worldY > worldSize) { continue;} // prevent the view from wrapping around the world edge
 
 			int worldI = (worldY * worldSize) + worldX;
 
