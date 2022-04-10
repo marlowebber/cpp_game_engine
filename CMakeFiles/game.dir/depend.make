@@ -230,6 +230,8 @@ CMakeFiles/game.dir/src/menus.cpp.o: /usr/local/include/SDL2/close_code.h
 
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: src/game.h
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: src/graphics.h
+CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: src/main.h
+CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: src/menus.h
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: src/untitled_marlo_project.cpp
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: src/untitled_marlo_project.h
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: src/utilities.h

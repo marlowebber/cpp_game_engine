@@ -86,7 +86,7 @@ void threadInterface()
 				break;
 
 
-			case SDLK_w:
+			case SDLK_d:
 			{
 				unsigned int destination = getPlayerDestination();
 				destination += 1;
@@ -95,7 +95,7 @@ void threadInterface()
 			}
 
 
-			case SDLK_a:
+			case SDLK_s:
 			{
 				unsigned int destination = getPlayerDestination();
 				destination -= worldSize;
@@ -105,7 +105,7 @@ void threadInterface()
 
 
 
-			case SDLK_s:
+			case SDLK_a:
 			{
 				unsigned int destination = getPlayerDestination();
 				destination -= 1;
@@ -114,7 +114,7 @@ void threadInterface()
 			}
 
 
-			case SDLK_d:
+			case SDLK_w: // w
 			{
 				unsigned int destination = getPlayerDestination();
 				destination += worldSize;

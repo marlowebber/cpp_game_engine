@@ -13,7 +13,7 @@ unsigned int getPlayerDestination();
 void setPlayerDestination(unsigned int newDestination);
 
  const int worldSize = 512;
-
+void rebuildGameMenus();
 
 // extern unsigned int playerDestination;
 
