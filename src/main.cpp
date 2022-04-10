@@ -61,20 +61,20 @@ void threadInterface()
 			switch ( event.key.keysym.sym )
 			{
 			case SDLK_LEFT:
-				// viewPanSetpointX = viewPanSetpointX - (panSpeed * viewZoomSetpoint);
-				cameraPositionX ++;
+				viewPanSetpointX = viewPanSetpointX - (panSpeed * viewZoomSetpoint);
+				// cameraPositionX ++;
 				break;
 			case SDLK_RIGHT:
-				// viewPanSetpointX = viewPanSetpointX + (panSpeed * viewZoomSetpoint);
-				cameraPositionX --;
+				viewPanSetpointX = viewPanSetpointX + (panSpeed * viewZoomSetpoint);
+				// cameraPositionX --;
 				break;
 			case SDLK_UP:
-				// viewPanSetpointY = viewPanSetpointY + (panSpeed * viewZoomSetpoint);
-				cameraPositionY++;
+				viewPanSetpointY = viewPanSetpointY + (panSpeed * viewZoomSetpoint);
+				// cameraPositionY++;
 				break;
 			case SDLK_DOWN:
-				// viewPanSetpointY = viewPanSetpointY - (panSpeed * viewZoomSetpoint);
-				cameraPositionY--;
+				viewPanSetpointY = viewPanSetpointY - (panSpeed * viewZoomSetpoint);
+				// cameraPositionY--;
 				break;
 			case SDLK_EQUALS:
 				viewZoomSetpoint = viewZoomSetpoint * 0.9f;

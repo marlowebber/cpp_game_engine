@@ -97,7 +97,7 @@
 
 #define WORLD_RANDOM 1
 #define WORLD_EXAMPLECREATURE 2
-#define WORLD_ARENA 2
+#define WORLD_ARENA 3
 
 const bool brownianMotion        = false;
 const bool immortality           = false;
@@ -113,9 +113,11 @@ const bool cameraFollowsChampion = false;
 const bool cameraFollowsPlayer   = true;
 const bool variedGrowthCost      = true;
 const bool variedUpkeep          = true;
-const bool respawnLowSpecies     = false;
+const bool respawnLowSpecies     = true;
+const bool entropicController    = false;
 
-unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
+
+unsigned int worldToLoad = WORLD_RANDOM;
 
 // const unsigned int viewFieldX = 203; // 80 columns, 24 rows is the default size of a terminal window
 // const unsigned int viewFieldY = 55 - 3;  // 203 columns, 55 rows is the max size i can make one on my pc.
@@ -869,19 +871,14 @@ void sensor(int animalIndex, unsigned int cellLocalPositionI)
 			if (extremelyFastNumberFromZeroTo(animals[animalIndex].stride) == 0)
 			{
 
-				// world[targetWorldPositionI].material = MATERIAL_ROCK;
+				// x =  (animalWorldPositionX - sensorRange) + extremelyFastNumberFromZeroTo( sensorRange * 2); // re center on the animal so it doesnt tend to one direction
+				// y =  (animalWorldPositionY - sensorRange) + extremelyFastNumberFromZeroTo( sensorRange * 2);
 
-				x =  (animalWorldPositionX - sensorRange) + extremelyFastNumberFromZeroTo( sensorRange * 2); // re center on the animal so it doesnt tend to one direction
-				y =  (animalWorldPositionY - sensorRange) + extremelyFastNumberFromZeroTo( sensorRange * 2);
-
-				// unsigned int adjustedRandomPositionX =  animalWorldPositionX + x   ;// x - cellLocalPositionX;
-				// unsigned int adjustedRandomPositionY =  animalWorldPositionY + y   ;// y - cellLocalPositionY;
-
-				// unsigned int randompos = (animalWorldPositionY + extremelyFastNumberFromZeroTo(animals[animalIndex].stride)) *
+				// targetWorldPositionI	= (y * worldSize) + x      ; // RNG() * worldSquareSize;
+				// detected  = true;
+				animals[animalIndex].destination += ( (extremelyFastNumberFromZeroTo(sensorRange) - (sensorRange / 2))  * worldSize  ) + (extremelyFastNumberFromZeroTo(sensorRange) - (sensorRange / 2));
 
 
-				targetWorldPositionI	= (y * worldSize) + x      ; // RNG() * worldSquareSize;
-				detected  = true;
 			}
 		}
 		else if (organ == ORGAN_SENSOR_PARENT)
@@ -1510,11 +1507,15 @@ void computeAllAnimalsOneTurn()
 
 void camera()
 {
-	for ( int vy = viewFieldY - 1; vy >= 0; --vy) // correct for Y axis inversion
-	{
-		for ( int vx = 0; vx < viewFieldX; ++vx)
-		{
+	// for ( int vy = viewFieldY - 1; vy >= 0; --vy) // correct for Y axis inversion
+	// {
+	// 	for ( int vx = 0; vx < viewFieldX; ++vx)
+	// 	{
 
+	for ( int vy = worldSize - 1; vy >= 0; --vy) // correct for Y axis inversion
+	{
+		for ( int vx = 0; vx < worldSize; ++vx)
+		{
 
 
 			// if (cameraFollowsPlayer && playerCreature >= 0 )
@@ -1572,10 +1573,10 @@ void camera()
 
 
 
-			int worldX = (cameraPositionX + vx);// % worldSize; // center the view on the targeted position, instead of having it in the corner
-			int worldY = (cameraPositionY + vy);// % worldSize;
+			int worldX = vx;//(cameraPositionX + vx);// % worldSize; // center the view on the targeted position, instead of having it in the corner
+			int worldY = vy;//(cameraPositionY + vy);// % worldSize;
 
-			if (worldX < 0 || worldX > worldSize || worldY < 0 || worldY > worldSize) { continue;} // prevent the view from wrapping around the world edge
+			// if (worldX < 0 || worldX > worldSize || worldY < 0 || worldY > worldSize) { continue;} // prevent the view from wrapping around the world edge
 
 			int worldI = (worldY * worldSize) + worldX;
 
@@ -1686,15 +1687,15 @@ void camera()
 				}
 			}
 
-			// print borders (this is useful to see if the image is distorted- if the border is not a clean square)
-			if (vx == 0 || vx == viewFieldX - 1 )
-			{
-				displayChar = '|';
-			}
-			if (vy == 0 || vy == viewFieldY - 1 )
-			{
-				displayChar = '_';
-			}
+			// // print borders (this is useful to see if the image is distorted- if the border is not a clean square)
+			// if (vx == 0 || vx == viewFieldX - 1 )
+			// {
+			// 	displayChar = '|';
+			// }
+			// if (vy == 0 || vy == viewFieldY - 1 )
+			// {
+			// 	displayChar = '_';
+			// }
 
 			// printf("%c", displayChar);
 
@@ -1740,50 +1741,37 @@ void camera()
 void populationController()
 {
 
-	unsigned int newPopulationCount = 0;
-	for (int speciesIndex = 0; speciesIndex < numberOfSpecies; ++speciesIndex)
+	if (entropicController)
 	{
-
-		newPopulationCount += speciesPopulationCounts[speciesIndex] ;
-		float populationDifference = speciesPopulationCounts[speciesIndex] ;
-
-
-		float newEntropy = tan (   ((populationDifference) / numberOfAnimalsPerSpecies ) * 0.5f * 3.1415f   )  ;
-		speciesEnergyOuts[speciesIndex]  += (newEntropy - speciesEnergyOuts[speciesIndex]) * 0.1f;
-
-		if (respawnLowSpecies)
+		unsigned int newPopulationCount = 0;
+		for (int speciesIndex = 0; speciesIndex < numberOfSpecies; ++speciesIndex)
 		{
-			if (speciesPopulationCounts[speciesIndex]  < 2) // the species is empty :/
+			newPopulationCount += speciesPopulationCounts[speciesIndex] ;
+			float populationDifference = speciesPopulationCounts[speciesIndex] ;
+			float newEntropy = tan (   ((populationDifference) / numberOfAnimalsPerSpecies ) * 0.5f * 3.1415f   )  ;
+			speciesEnergyOuts[speciesIndex]  += (newEntropy - speciesEnergyOuts[speciesIndex]) * 0.1f;
+
+			if (respawnLowSpecies)
 			{
-
-				// spawn a random animal from another species
-
-
-				unsigned int randomCreature = -1;
-				for (unsigned int i = extremelyFastNumberFromZeroTo(numberOfAnimals - 1); i < numberOfAnimals; ++i)
+				if (speciesPopulationCounts[speciesIndex]  < 2) // the species is empty :/
 				{
-					if (!animals[i].retired)
+					// spawn a random animal from another species
+					unsigned int randomCreature = -1;
+					for (unsigned int i = extremelyFastNumberFromZeroTo(numberOfAnimals - 1); i < numberOfAnimals; ++i)
 					{
-						randomCreature = i;
-						unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-						spawnAnimal(speciesIndex, animals[randomCreature].genes, randompos, true);
-
-
+						if (!animals[i].retired)
+						{
+							randomCreature = i;
+							unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+							spawnAnimal(speciesIndex, animals[randomCreature].genes, randompos, true);
+						}
 					}
 				}
 			}
-
-
-
-
+			if (speciesEnergyOuts[speciesIndex] < minimumEntropy) { speciesEnergyOuts[speciesIndex] = minimumEntropy;}
 		}
-
-
-		if (speciesEnergyOuts[speciesIndex] < minimumEntropy) { speciesEnergyOuts[speciesIndex] = minimumEntropy;}
+		populationCount = newPopulationCount;
 	}
-
-	populationCount = newPopulationCount;
-
 
 
 
