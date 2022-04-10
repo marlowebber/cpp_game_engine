@@ -84,6 +84,48 @@ void threadInterface()
 			case SDLK_r:
 				spawnPlayer();
 				break;
+
+
+			case SDLK_w:
+			{
+				unsigned int destination = getPlayerDestination();
+				destination += 1;
+				setPlayerDestination(destination);
+				break;
+			}
+
+
+			case SDLK_a:
+			{
+				unsigned int destination = getPlayerDestination();
+				destination -= worldSize;
+				setPlayerDestination(destination);
+				break;
+			}
+
+
+
+			case SDLK_s:
+			{
+				unsigned int destination = getPlayerDestination();
+				destination -= 1;
+				setPlayerDestination(destination);
+				break;
+			}
+
+
+			case SDLK_d:
+			{
+				unsigned int destination = getPlayerDestination();
+				destination += worldSize;
+				setPlayerDestination(destination);
+				break;
+			}
+
+
+
+
+
 			case SDLK_ESCAPE:
 				quit();
 			}

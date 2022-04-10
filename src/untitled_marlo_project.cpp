@@ -19,6 +19,8 @@
 
 #include "utilities.h"
 #include "graphics.h"
+#include "untitled_marlo_project.h"
+
 
 // float RNG()
 // {
@@ -97,11 +99,11 @@ const bool lockfps               = false;
 const bool tournament            = true;
 const bool taxIsByMass           = true;
 const bool threading             = true;
-const bool cameraFollowsChampion = true;
+const bool cameraFollowsChampion = false;
 const bool cameraFollowsPlayer   = true;
 const bool sexualViolence        = false;
-const bool variedGrowthCost      = false;
-const bool variedUpkeep          = false;
+const bool variedGrowthCost      = true;
+const bool variedUpkeep          = true;
 
 unsigned int worldToLoad = WORLD_RANDOM;
 
@@ -116,7 +118,7 @@ const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i ca
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const int animalSize     = 16;
 const unsigned int animalSquareSize      = animalSize * animalSize;
-const int worldSize      = 512;
+// const int worldSize      = 512;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const unsigned int genomeSize      = 16;
 const unsigned int numberOfAnimals = 10000;
@@ -127,9 +129,8 @@ const float growthEnergyScale      = 1.0f;        // a multiplier for how much i
 const float taxEnergyScale         = 0.01f;        // a multiplier for how much it costs animals just to exist.
 const float lightEnergy            = 0.0101f;   // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
 const float movementEnergyScale    = 0.02f;        // a multiplier for how much it costs animals to move.
-const float foodEnergy             = 0.85f;                     // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
+const float foodEnergy             = 0.5f;                     // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float liverStorage = 10.0f;
-const float musclePower = 0.5f; // the power of one muscle cell
 const unsigned int baseLifespan = 30000;
 const unsigned int baseSensorRange = 10;
 const float signalPropagationConstant = 0.1f; // how strongly sensor organs compel the animal.
@@ -138,8 +139,7 @@ float minimumEntropy = 0.1f;
 // float energyScaleOut           = minimumEntropy;
 
 
-unsigned int playerCreature = -1;
-unsigned int playerDestination = 0;
+int playerCreature = -1;
 
 int neighbourOffsets[] =
 {
@@ -787,6 +787,13 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionX, 
 
 void sensor(int animalIndex, unsigned int cellLocalPositionI)
 {
+
+	if (animalIndex == playerCreature)
+	{
+		animals[animalIndex].destination = animals[animalIndex].position;
+		return;
+	}
+
 	unsigned int animalWorldPositionX    = animals[animalIndex].position % worldSize;
 	unsigned int animalWorldPositionY    = animals[animalIndex].position / worldSize;
 	unsigned int cellLocalPositionX = cellLocalPositionI % animalSize;
@@ -1170,7 +1177,7 @@ void organs_all()
 								animals[animalIndex].fPosX += ( muscleX ) / animals[animalIndex].mass;
 								animals[animalIndex].fPosY += ( muscleY ) / animals[animalIndex].mass;
 							}
-							animals[animalIndex].energy -= (muscleX + muscleY) * movementEnergyScale * speciesEnergyOuts[speciesIndex];
+							animals[animalIndex].energy -= ( abs(muscleX) + abs(muscleY)) * movementEnergyScale * speciesEnergyOuts[speciesIndex];
 						}
 						break;
 					}
@@ -1311,33 +1318,54 @@ void energy_all() // perform energies.
 
 			animals[animalIndex].age++;
 			if (animals[animalIndex].energy > animals[animalIndex].maxEnergy) {animals[animalIndex].energy = animals[animalIndex].maxEnergy;}
-			if (!immortality)// die
+
+
+			bool execute = false;
+
+			if (animalIndex == playerCreature)
 			{
 
-				bool execute = false;
-				if (animals[animalIndex].energy < 0.0f)
-				{
-					execute = true;
-				}
-				if (animals[animalIndex].damageReceived > animals[animalIndex].mass)
-				{
-					execute = true;
-				}
-				if (animals[animalIndex].mass <= 0)
-				{
-					execute = true;
-				}
-				if (animals[animalIndex].age > animals[animalIndex].lifespan)
+				if (animals[animalIndex].damageReceived > animals[animalIndex].mass) // player can only be killed by MURDER
 				{
 					execute = true;
 				}
 
-				if (execute)
+			}
+			else
+			{
+				if (!immortality) // reasons an npc can die
 				{
-					killAnimal( animalIndex);
-					// return;
+
+					if (animals[animalIndex].energy < 0.0f)
+					{
+						execute = true;
+					}
+					if (animals[animalIndex].damageReceived > animals[animalIndex].mass)
+					{
+						execute = true;
+					}
+					if (animals[animalIndex].mass <= 0)
+					{
+						execute = true;
+					}
+					if (animals[animalIndex].age > animals[animalIndex].lifespan)
+					{
+						execute = true;
+					}
+
+
 				}
 			}
+
+			if (execute)
+			{
+				killAnimal( animalIndex);
+				// return;
+			}
+
+
+
+
 			if (tournament)
 			{
 				int animalScore = animals[animalIndex].damageDone + animals[animalIndex].damageReceived ;
@@ -1393,26 +1421,33 @@ void camera()
 		for ( int vx = 0; vx < viewFieldX; ++vx)
 		{
 
-		if (cameraFollowsPlayer && playerCreature >= 0 )
+
+
+			if (cameraFollowsPlayer && playerCreature >= 0 )
 			{
 				cameraTargetCreature = playerCreature;
-				viewPanX = 0.0f;
-				viewPanY = 0.0f;
+				// viewPanX = 0.0f;
+				// viewPanY = 0.0f;
+				viewPanSetpointX = 0.0f;
+				viewPanSetpointY = 0.0f;
 			}
 			else if (cameraFollowsChampion && champion >= 0)
 			{
 				cameraTargetCreature = champion;
+
+				viewPanSetpointX = 0.0f;
+				viewPanSetpointY = 0.0f;
 			}
-			else
-			{
-				for (int i = 0; i < numberOfAnimals; ++i)
-				{
-					if (!animals[i].retired)
-					{
-						cameraTargetCreature = i;
-					}
-				}
-			}
+			// else
+			// {
+			// 	for (int i = 0; i < numberOfAnimals; ++i)
+			// 	{
+			// 		if (!animals[i].retired)
+			// 		{
+			// 			cameraTargetCreature = i;
+			// 		}
+			// 	}
+			// }
 
 
 
@@ -1421,26 +1456,29 @@ void camera()
 				int creatureX = animals[cameraTargetCreature].position;
 				int creatureY = animals[cameraTargetCreature].position;
 
-				int newCameraPositionX = creatureX - (viewFieldX / 2);
-				int newCameraPositionY = creatureY - (viewFieldY / 2);
+				int newCameraPositionX = creatureX;// - (viewFieldX / 2) % worldSize; // allow the camera position to wrap around the world edge
+				int newCameraPositionY = creatureY;// - (viewFieldY / 2) % worldSize;
 
-				if (newCameraPositionX > 0 && newCameraPositionX < worldSize && newCameraPositionY > 0 && newCameraPositionY < worldSize)
-				{
-					cameraPositionX = newCameraPositionX;
-					cameraPositionY = newCameraPositionY;
-				}
+				// if (newCameraPositionX > 0 && newCameraPositionX < worldSize && newCameraPositionY > 0 && newCameraPositionY < worldSize)
+				// {
+				cameraPositionX = newCameraPositionX;
+				cameraPositionY = newCameraPositionY;
+				// }
 				if (animals[cameraTargetCreature].retired)
 				{
 					cameraTargetCreature = -1;
 				}
 			}
 
-	
+
 
 
 
 			int worldX = (cameraPositionX + vx) % worldSize; // center the view on the targeted position, instead of having it in the corner
 			int worldY = (cameraPositionY + vy) % worldSize;
+
+			// if (worldX < 0 || worldX > worldSize || worldY < 0 || worldY > worldSize) { continue;} // prevent the view from wrapping around the world edge
+
 			int worldI = (worldY * worldSize) + worldX;
 
 
@@ -1859,4 +1897,23 @@ void startSimulation()
 	// boost::thread t7{ interfaceSupervisor };
 	boost::thread t7{ modelSupervisor };
 	// modelSupervisor();
+}
+
+
+
+
+unsigned int getPlayerDestination()
+{
+	if (playerCreature >= 0 && playerCreature < numberOfAnimals)
+	{
+		return animals[playerCreature].destination;
+	}
+	return 0;
+}
+void setPlayerDestination(unsigned int newDestination)
+{
+	if (playerCreature >= 0 && playerCreature < numberOfAnimals)
+	{
+		 animals[playerCreature].destination = newDestination;
+	}
 }
