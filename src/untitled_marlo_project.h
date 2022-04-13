@@ -6,7 +6,7 @@ void model();
 
 void camera();
 
- const int worldSize = 512;
+ const int worldSize = 8196;
 
 extern unsigned int cameraPositionX ;//= (worldSize / 2);
 extern unsigned int cameraPositionY ;//= (worldSize / 2);
