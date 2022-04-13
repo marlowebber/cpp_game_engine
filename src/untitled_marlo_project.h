@@ -12,6 +12,7 @@ extern unsigned int cameraPositionX ;//= (worldSize / 2);
 extern unsigned int cameraPositionY ;//= (worldSize / 2);
 
 
+     const       int cameraPanSpeed = 10;
 extern	float fps ;
 void spawnPlayer();
 

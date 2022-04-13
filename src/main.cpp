@@ -92,18 +92,22 @@ void threadInterface()
 
 			case SDLK_d:
 			{
-				unsigned int destination = getPlayerDestination();
-				destination += 1;
-				setPlayerDestination(destination);
+
+				cameraPositionX+=cameraPanSpeed;
+				// unsigned int destination = getPlayerDestination();
+				// destination += 1;
+				// setPlayerDestination(destination);
 				break;
 			}
 
 
 			case SDLK_s:
 			{
-				unsigned int destination = getPlayerDestination();
-				destination -= worldSize;
-				setPlayerDestination(destination);
+
+				cameraPositionY-=cameraPanSpeed;
+				// unsigned int destination = getPlayerDestination();
+				// destination -= worldSize;
+				// setPlayerDestination(destination);
 				break;
 			}
 
@@ -111,18 +115,21 @@ void threadInterface()
 
 			case SDLK_a:
 			{
-				unsigned int destination = getPlayerDestination();
-				destination -= 1;
-				setPlayerDestination(destination);
+
+				cameraPositionX-=cameraPanSpeed;
+				// unsigned int destination = getPlayerDestination();
+				// destination -= 1;
+				// setPlayerDestination(destination);
 				break;
 			}
 
 
 			case SDLK_w: // w
 			{
-				unsigned int destination = getPlayerDestination();
-				destination += worldSize;
-				setPlayerDestination(destination);
+				cameraPositionY+=cameraPanSpeed;
+				// unsigned int destination = getPlayerDestination();
+				// destination += worldSize;
+				// setPlayerDestination(destination);
 				break;
 			}
 
