@@ -39,8 +39,9 @@
 #define ORGAN_SENSOR_INVERT       12
 #define ORGAN_SENSOR_PARENT       13
 #define ORGAN_SENSOR_HOME         14
+#define ORGAN_SENSOR_EYE          15
 
-#define numberOfOrganTypes                  15 // the number limit of growable genes
+#define numberOfOrganTypes                  16 // the number limit of growable genes
 #define MATERIAL_FOOD             32 //           
 #define MATERIAL_ROCK             33 //           
 #define MATERIAL_WATER            34 //           
@@ -66,15 +67,15 @@ const bool taxIsByMass           = true;
 const bool threading             = true;
 const bool cameraFollowsChampion = false;
 const bool cameraFollowsPlayer   = true;
-const bool variedGrowthCost      = false;
+const bool variedGrowthCost     = false;
 const bool variedUpkeep          = false;
 const bool respawnLowSpecies     = true;
 const bool entropicController    = false;
 
 unsigned int worldToLoad = WORLD_ARENA;
 
-const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
-const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
+const unsigned int viewFieldX = 1024; //80 columns, 24 rows is the default size of a terminal window
+const unsigned int viewFieldY = 1024; //203 columns, 55 rows is the max size i can make one on my pc.
 
 float fps = 1.0f;
 
@@ -87,9 +88,9 @@ const unsigned int numberOfSpecies = 6;
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
-const float taxEnergyScale         = 0.001f;        // a multiplier for how much it costs animals just to exist.
-const float lightEnergy            = 0.002f;        // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
-const float movementEnergyScale    = 0.001f;        // a multiplier for how much it costs animals to move.
+const float taxEnergyScale         = 0.000f;        // a multiplier for how much it costs animals just to exist.
+const float lightEnergy            = 0.001f;        // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
+const float movementEnergyScale    = 0.000f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float liverStorage = 10.0f;
 const unsigned int baseLifespan = 10000;
@@ -156,6 +157,7 @@ struct Cell
 	float signalIntensity;
 	unsigned int target;
 	Color color;
+	Color eyeColor;
 	float damage;
 };
 
@@ -184,7 +186,7 @@ struct Animal
 	float fPosY;
 };
 
-float speciesEnergyOuts              [numberOfSpecies];
+// float speciesEnergyOuts              [numberOfSpecies];
 unsigned int speciesPopulationCounts [numberOfSpecies];
 unsigned int populationCountUpdates  [numberOfSpecies];
 
@@ -196,7 +198,7 @@ float organGrowthCost(unsigned int organ)
 	float growthCost = 0.0f;
 	if (growingCostsEnergy)
 	{
-		growthCost = 1.0f;
+		growthCost = growthEnergyScale;
 		if (variedGrowthCost)
 		{
 			switch (organ)
@@ -273,6 +275,7 @@ void resetAnimal(unsigned int animalIndex)
 			animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
 			animals[animalIndex].body[cellLocalPositionI].target = 0;
 			animals[animalIndex].body[cellLocalPositionI].color = color_grey;
+			animals[animalIndex].body[cellLocalPositionI].color = color_grey;
 			animals[animalIndex].body[cellLocalPositionI].damage = 0.0f;
 		}
 		animals[animalIndex].mass = 0;
@@ -294,7 +297,7 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].position = 0;
 		animals[animalIndex].uPosX = 0;
 		animals[animalIndex].uPosY = 0;
-		animals[animalIndex].destination =0;
+		animals[animalIndex].destination = 0;
 	}
 }
 
@@ -338,102 +341,36 @@ int getNewIdentity(unsigned int speciesIndex)
 }
 
 // // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
-// void measureAnimalQualities(unsigned int animalIndex)
-// {
-// 	// measure the animals stride, lifespan, and offspring energy.
-// 	if (!animals[animalIndex].retired)
-// 	{
-// 		animals[animalIndex].stride = 1;
-// 		animals[animalIndex].lifespan = baseLifespan;
-// 		animals[animalIndex].offspringEnergy = 1.0f;
-
-// 		int AtotalR = 0;
-// 		int AtotalG = 0;
-// 		int AtotalB = 0;
-// 		int AtotalS = 0;
-
-// 		int BtotalR = 0;
-// 		int BtotalG = 0;
-// 		int BtotalB = 0;
-// 		int BtotalS = 0;
-
-// 		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)                                      // place animalIndex on grid and attack / eat. add captured energy
-// 		{
-// 			unsigned int organ = animals[animalIndex].body[cellLocalPositionI].organ;
-// 			switch (organ)
-// 			{
-// 			case GROW_STRIDE:
-// 			{
-// 				animals[animalIndex].stride += animals[animalIndex].stride ; // grow by doubling
-// 				break;
-// 			}
-// 			case GROW_LIFESPAN:
-// 			{
-// 				animals[animalIndex].lifespan += baseLifespan ; // grow linearly
-// 				break;
-// 			}
-// 			case GROW_ADDOFFSPRINGENERGY:
-// 			{
-// 				animals[animalIndex].offspringEnergy += animals[animalIndex].offspringEnergy ; // grow by doubling
-// 				break;
-// 			}
-
-
-
-// 			case COLORA_RED:
-// 			{
-// 				AtotalR++;
-// 				break;
-// 			}
-// 			case COLORA_GREEN:
-// 			{
-// 				AtotalG++;
-// 				break;
-// 			}
-// 			case COLORA_BLUE:
-// 			{
-// 				AtotalB++;
-// 				break;
-// 			}
-// 			case COLORA_SHADE:
-// 			{
-// 				AtotalS++;
-// 				break;
-// 			}
-
-
-// 			case COLORB_RED:
-// 			{
-// 				BtotalR++;
-// 				break;
-// 			}
-// 			case COLORB_GREEN:
-// 			{
-// 				BtotalG++;
-// 				break;
-// 			}
-// 			case COLORB_BLUE:
-// 			{
-// 				BtotalB++;
-// 				break;
-// 			}
-// 			case COLORB_SHADE:
-// 			{
-// 				BtotalS++;
-// 				break;
-// 			}
-
-
-
-
-// 			}
-// 		}
-
-
-// 		animals[animalIndex].colorA =
-
-// 	}
-// }
+void measureAnimalQualities(unsigned int animalIndex)
+{
+	for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)                                      // place animalIndex on grid and attack / eat. add captured energy
+	{
+		unsigned int organ = animals[animalIndex].body[cellLocalPositionI].organ;
+		if (    organ == ORGAN_SENSOR_FOOD ||
+		        organ == ORGAN_SENSOR_LIGHT ||
+		        organ == ORGAN_SENSOR_CREATURE ||
+		        organ == ORGAN_SENSOR_RANDOM ||
+		        organ == ORGAN_SENSOR_INVERT ||
+		        organ == ORGAN_SENSOR_HOME ||
+		        organ == ORGAN_SENSOR_PARENT
+		   )
+		{
+			unsigned int nSensors = 0;
+			for (unsigned int n = 0; n < nNeighbours; ++n)
+			{
+				unsigned int cellNeighbour = cellLocalPositionI + cellNeighbourOffsets[n];
+				if (cellNeighbour < animalSquareSize)
+				{
+					if (animals[animalIndex].body[cellNeighbour].organ  == organ)
+					{
+						nSensors++;
+					}
+				}
+			}
+			animals[animalIndex].body[cellLocalPositionI].sensorRange = nSensors * baseSensorRange;
+		}
+	}
+}
 
 
 
@@ -452,7 +389,7 @@ void mutateAnimal(unsigned int animalIndex)
 
 
 
-			unsigned int randomnessSum = numberOfOrganTypes + 6; // number of possible things to mutate
+			unsigned int randomnessSum = numberOfOrganTypes + 9; // number of possible things to mutate
 
 			unsigned int chosenMutationType = extremelyFastNumberFromZeroTo(randomnessSum);
 			if (chosenMutationType < numberOfOrganTypes)         // the more types of organs there are, the more often they will be chosen as mutation options.
@@ -488,46 +425,59 @@ void mutateAnimal(unsigned int animalIndex)
 
 
 			// mutate colors of animal
-			if (chosenMutationType == numberOfOrganTypes + 3)         // the more types of organs there are, the more often they will be chosen as mutation options.
+			else if (chosenMutationType == numberOfOrganTypes + 3)         // the more types of organs there are, the more often they will be chosen as mutation options.
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
 				animals[animalIndex].body[mutantCell].color.r += (RNG() - 0.5) * 0.1f;
-				if (animals[animalIndex].body[mutantCell].color.r < 0.0f) { animals[animalIndex].body[mutantCell].color.r = 0.0f;}
+
+				animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
 			}
-			if (chosenMutationType == numberOfOrganTypes + 4)         // the more types of organs there are, the more often they will be chosen as mutation options.
+			else if (chosenMutationType == numberOfOrganTypes + 4)
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
 				animals[animalIndex].body[mutantCell].color.g += (RNG() - 0.5) * 0.1f;
-				if (animals[animalIndex].body[mutantCell].color.g < 0.0f) { animals[animalIndex].body[mutantCell].color.g = 0.0f;}
+
+				animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
 			}
-			if (chosenMutationType == numberOfOrganTypes + 5)         // the more types of organs there are, the more often they will be chosen as mutation options.
+			else if (chosenMutationType == numberOfOrganTypes + 5)
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
 				animals[animalIndex].body[mutantCell].color.b += (RNG() - 0.5) * 0.1f;
-				if (animals[animalIndex].body[mutantCell].color.b < 0.0f) { animals[animalIndex].body[mutantCell].color.b = 0.0f;}
+
+				animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
 			}
 
 
 
-
-
-
+			// mutate eye color
+			else if (chosenMutationType == numberOfOrganTypes + 6)
+			{
+				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+				animals[animalIndex].body[mutantCell].eyeColor.r += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
+			}
+			else if (chosenMutationType == numberOfOrganTypes + 7)
+			{
+				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+				animals[animalIndex].body[mutantCell].eyeColor.g += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
+			}
+			else if (chosenMutationType == numberOfOrganTypes + 8)
+			{
+				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+				animals[animalIndex].body[mutantCell].eyeColor.b += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
+			}
 
 
 
 		}
 		else // 50% chance to erase an organ
 		{
-
 			unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
 			animals[animalIndex].body[mutantCell].organ = MATERIAL_NOTHING;// randomLetter();
-
 		}
-
-
 	}
-
-
 }
 
 
@@ -558,6 +508,7 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 
 
 	mutateAnimal( animalIndex);
+	measureAnimalQualities(animalIndex);
 
 	for (int i = 0; i < animalSquareSize; ++i)
 	{
@@ -641,12 +592,14 @@ void turnAnimal(unsigned int animalIndex, unsigned int direction)
 
 
 // check if an animal is currently occupying a square. return the local index of the occupying cell, otherwise, return -1 if not occupied.
-int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionX,  unsigned int cellWorldPositionY,  unsigned int cellWorldPositionI)
+int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 {
 	if (world[cellWorldPositionI].identity >= 0 )
 	{
 		if (!animals[animalIndex].retired)
 		{
+			unsigned int cellWorldPositionX = cellWorldPositionI % worldSize;
+			unsigned int cellWorldPositionY = cellWorldPositionI / worldSize;
 			unsigned int targetWorldPositionX = animals[animalIndex].position % worldSize;
 			unsigned int targetWorldPositionY = animals[animalIndex].position / worldSize;
 			int targetLocalPositionX = cellWorldPositionX - targetWorldPositionX ;
@@ -668,6 +621,95 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionX, 
 	return -1;
 }
 
+
+Color materialColors(unsigned int material)
+{
+	switch (material)
+	{
+	case MATERIAL_NOTHING:
+		return color_clear;
+	case MATERIAL_FOOD:
+		return color_brown;
+	case MATERIAL_ROCK:
+		return color_grey;
+	case MATERIAL_WATER:
+		return color_lightblue;
+	}
+	return color_yellow;
+}
+
+Color organColors(unsigned int organ)
+{
+	switch (organ)
+	{
+	case ORGAN_MUSCLE:
+		return color_brightred;
+	case ORGAN_GONAD:
+		return color_offwhite;
+	case ORGAN_LEAF:
+		return color_green;
+	case ORGAN_MOUTH:
+		return color_darkgrey;
+	case ORGAN_LIVER:
+		return color_darkred;
+	case ORGAN_BONE:
+		return color_white;
+	case ORGAN_WEAPON:
+		return color_purple;
+	case ORGAN_SENSOR_FOOD:
+		return color_black;
+	case ORGAN_SENSOR_LIGHT:
+		return color_black;
+	case ORGAN_SENSOR_CREATURE:
+		return color_black;
+	case ORGAN_SENSOR_INVERT:
+		return color_pink;
+	case ORGAN_SENSOR_RANDOM:
+		return color_pink;
+	case ORGAN_SENSOR_HOME:
+		return color_pink;
+	case ORGAN_SENSOR_PARENT:
+		return color_pink;
+	}
+	return color_yellow;
+}
+
+
+
+
+Color whatColorIsThisSquare(  unsigned int worldI)
+{
+	Color displayColor = color_black;
+	int viewedAnimal = -1;
+	unsigned int animalIndex = world[worldI].identity;
+	unsigned int occupyingCell = 0;
+	if (animalIndex >= 0)
+	{
+		occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
+		if (occupyingCell != -1)
+		{
+			viewedAnimal = animalIndex;
+		}
+	}
+	if (viewedAnimal != -1)
+	{
+		if ( animals[viewedAnimal].body[occupyingCell].damage > 0.5f )
+		{
+			displayColor = organColors(animals[viewedAnimal].body[occupyingCell].organ );
+		}
+		else
+		{
+			displayColor = animals[viewedAnimal].body[occupyingCell].color;
+		}
+	}
+	else
+	{
+		displayColor = materialColors(world[worldI].material);
+	}
+	return displayColor;
+}
+
+
 void sensor(int animalIndex, unsigned int cellLocalPositionI)
 {
 	if (animalIndex == playerCreature)
@@ -686,7 +728,7 @@ void sensor(int animalIndex, unsigned int cellLocalPositionI)
 	unsigned int organ = animals[animalIndex].body[cellLocalPositionI].organ;
 	int x = (cellWorldPositionX - sensorRange) + extremelyFastNumberFromZeroTo( sensorRange * 2);
 	int y = (cellWorldPositionY - sensorRange) + extremelyFastNumberFromZeroTo( sensorRange * 2);
-	if (x < worldSize && x > 0 && y < worldSize && y > 0)
+	if (x < worldSize && x >= 0 && y < worldSize && y >= 0)
 	{
 		unsigned int targetWorldPositionI =    (( y * worldSize ) + x ); // center the search area on the cell's world position.
 
@@ -743,10 +785,22 @@ void sensor(int animalIndex, unsigned int cellLocalPositionI)
 			        world[targetWorldPositionI].identity < numberOfAnimals &&
 			        world[targetWorldPositionI].identity != animalIndex)
 			{
-				if ( isAnimalInSquare(world[targetWorldPositionI].identity , x, y, targetWorldPositionI) > 0)
+				if ( isAnimalInSquare(world[targetWorldPositionI].identity , targetWorldPositionI) > 0)
 				{
 					detected = true;
 				}
+			}
+		}
+		else if (organ == ORGAN_SENSOR_EYE)
+		{
+			Color receivedColor = whatColorIsThisSquare(targetWorldPositionI);
+			Color perceivedColor = multiplyColor( receivedColor, animals[animalIndex].body[cellLocalPositionI].eyeColor  );
+
+			float stimulus = colorAmplitude(perceivedColor );
+
+			if (stimulus > animals[animalIndex].body[cellLocalPositionI].signalIntensity )
+			{
+				detected = true;
 			}
 		}
 		if (detected)
@@ -939,7 +993,7 @@ void organs_all()
 									animals[animalIndex].fPosX += ( muscleX ) / animals[animalIndex].mass;
 									animals[animalIndex].fPosY += ( muscleY ) / animals[animalIndex].mass;
 								}
-								animals[animalIndex].energy -= ( abs(muscleX) + abs(muscleY)) * movementEnergyScale * speciesEnergyOuts[speciesIndex];
+								animals[animalIndex].energy -= ( abs(muscleX) + abs(muscleY)) * movementEnergyScale ;//* speciesEnergyOuts[speciesIndex];
 							}
 						}
 						break;
@@ -968,14 +1022,17 @@ void move_all()
 					animals[animalIndex].fPosX +=  ((RNG() - 0.5f) * 0.1f) / animals[animalIndex].mass;
 				}
 			}
-			if (animals[animalIndex].fPosX < 0.0f) {animals[animalIndex].fPosX = 1.0f;}
-			if (animals[animalIndex].fPosX > worldSize - 1.0f) { animals[animalIndex].fPosX = worldSize - 2.0f;}
-			if (animals[animalIndex].fPosY < 0.0f) {animals[animalIndex].fPosY = 1.0f;}
-			if (animals[animalIndex].fPosY > worldSize - 1.0f) { animals[animalIndex].fPosY = worldSize - 2.0f;}
+
+			float minimumEdgeDistance = animalSize + 1; // animals are not allowed to go close to the edge, because it makes them act funny.
+
+			if (animals[animalIndex].fPosX < minimumEdgeDistance) {animals[animalIndex].fPosX = minimumEdgeDistance;}
+			if (animals[animalIndex].fPosX > worldSize - minimumEdgeDistance) { animals[animalIndex].fPosX = worldSize - minimumEdgeDistance;}
+			if (animals[animalIndex].fPosY < minimumEdgeDistance) {animals[animalIndex].fPosY = minimumEdgeDistance;}
+			if (animals[animalIndex].fPosY > worldSize - minimumEdgeDistance) { animals[animalIndex].fPosY = worldSize - minimumEdgeDistance;}
+
 			animals[animalIndex].uPosX  = animals[animalIndex].fPosX;
 			animals[animalIndex].uPosY  = animals[animalIndex].fPosY;
-			if (animals[animalIndex].uPosX > worldSize - 1) { animals[animalIndex].uPosX = worldSize - 2;}
-			if (animals[animalIndex].uPosX > worldSize - 1) { animals[animalIndex].uPosX = worldSize - 2;}
+
 			unsigned int newPosition  =  (animals[animalIndex].uPosY * worldSize) + animals[animalIndex].uPosX;  // move
 			if (newPosition < worldSquareSize)
 			{
@@ -990,7 +1047,7 @@ void move_all()
 							cellsDone ++;
 							if (taxIsByMass)
 							{
-								animals[animalIndex].energy -= taxEnergyScale * speciesEnergyOuts[speciesIndex] * organUpkeepCost(animals[animalIndex].body[cellLocalPositionI].organ);
+								animals[animalIndex].energy -= taxEnergyScale *  organUpkeepCost(animals[animalIndex].body[cellLocalPositionI].organ); // * speciesEnergyOuts[speciesIndex] ;
 							}
 							bool okToStep = true;
 							unsigned int animalWorldPositionX    = animals[animalIndex].position % worldSize;
@@ -1002,7 +1059,7 @@ void move_all()
 							unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
 							if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
 							{
-								int targetLocalPositionI = isAnimalInSquare( world[cellWorldPositionI].identity, cellWorldPositionX, cellWorldPositionY, cellWorldPositionI);
+								int targetLocalPositionI = isAnimalInSquare( world[cellWorldPositionI].identity, cellWorldPositionI);
 								if (targetLocalPositionI >= 0)
 								{
 									okToStep = false;
@@ -1161,111 +1218,31 @@ void computeAllAnimalsOneTurn()
 	}
 }
 
-Color materialColors(unsigned int material)
-{
-	switch (material)
-	{
-	case MATERIAL_NOTHING:
-		return color_clear;
-	case MATERIAL_FOOD:
-		return color_brown;
-	case MATERIAL_ROCK:
-		return color_grey;
-	case MATERIAL_WATER:
-		return color_lightblue;
-	}
-	return color_yellow;
-}
 
-Color organColors(unsigned int organ)
-{
-	switch (organ)
-	{
-	case ORGAN_MUSCLE:
-		return color_brightred;
-	case ORGAN_GONAD:
-		return color_offwhite;
-	case ORGAN_LEAF:
-		return color_green;
-	case ORGAN_MOUTH:
-		return color_darkgrey;
-	case ORGAN_LIVER:
-		return color_darkred;
-	case ORGAN_BONE:
-		return color_white;
-	case ORGAN_WEAPON:
-		return color_purple;
-	case ORGAN_SENSOR_FOOD:
-		return color_black;
-	case ORGAN_SENSOR_LIGHT:
-		return color_black;
-	case ORGAN_SENSOR_CREATURE:
-		return color_black;
-	case ORGAN_SENSOR_INVERT:
-		return color_pink;
-	case ORGAN_SENSOR_RANDOM:
-		return color_pink;
-	case ORGAN_SENSOR_HOME:
-		return color_pink;
-	case ORGAN_SENSOR_PARENT:
-		return color_pink;
-	}
-	return color_yellow;
-}
 
 void camera()
 {
-	// unsigned int speciesIndex = cameraTargetCreature / numberOfAnimalsPerSpecies;
 	if (cameraTargetCreature >= 0)
 	{
 		cameraPositionX = animals[cameraTargetCreature].position % worldSize;
 		cameraPositionY = animals[cameraTargetCreature].position / worldSize;
 	}
-	int ymax = cameraPositionY + (viewFieldY / 2);
-	int xmax = cameraPositionX + (viewFieldX / 2);
-	int ymin = cameraPositionY - (viewFieldY / 2);
-	int xmin = cameraPositionX - (viewFieldX / 2);
-	if (ymin < 0) { ymin = 0; }
-	if (xmin < 0) { xmin = 0; }
-	if (ymax > worldSize - 1) { ymin = worldSize - 1; }
-	if (xmax > worldSize - 1) { xmin = worldSize - 1; }
-	for (int y = ymin; y < ymax; ++y)
+	int viewFieldMax = +(viewFieldY / 2);
+	int viewFieldMin = -(viewFieldX / 2);
+	for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
 	{
-		for (int x = xmin; x < xmax; ++x)
+		for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
 		{
-			Color displayColor = color_clear;
-			int worldI = (y * worldSize) + x;
-			int viewedAnimal = -1;
-			unsigned int animalIndex = world[worldI].identity;
-			unsigned int occupyingCell = 0;
-			if (animalIndex >= 0)
+			unsigned int x = (vx + cameraPositionX) % worldSize;
+			unsigned int y = (vy + cameraPositionY) % worldSize;
+			Color displayColor = color_black;
+			unsigned int worldI = (y * worldSize) + x;
+			if (worldI < worldSquareSize)
 			{
-				occupyingCell = isAnimalInSquare(  animalIndex, x, y , worldI    );
-				if (occupyingCell != -1)
-				{
-					viewedAnimal = animalIndex;
-				}
+				displayColor = whatColorIsThisSquare( worldI);
 			}
-			if (viewedAnimal != -1)
-			{
-				if ( animals[viewedAnimal].body[occupyingCell].damage > 0.5f )
-				{
-
-					displayColor = organColors(animals[viewedAnimal].body[occupyingCell].organ );
-				}
-				else
-				{
-
-					displayColor = animals[viewedAnimal].body[occupyingCell].color;
-				}
-
-			}
-			else
-			{
-				displayColor = materialColors(world[worldI].material);
-			}
-			float fx = x - cameraPositionX;
-			float fy = y - cameraPositionY;
+			float fx = vx;
+			float fy = vy;
 			drawTile( Vec_f2( fx, fy ), displayColor);
 		}
 	}
@@ -1365,8 +1342,24 @@ void setupRandomWorld()
 			{
 				world[worldPositionI].material = MATERIAL_FOOD;
 			}
+
+
+			if (x == 0 || x == worldSize - 1 || y == 0 || y == worldSize - 1)
+			{
+
+				world[worldPositionI].material = MATERIAL_ROCK;
+			}
+
 		}
 		printf("growing materials \n");
+
+
+
+
+
+
+
+
 		setupTournamentAnimals();
 	}
 }
@@ -1381,6 +1374,31 @@ void tournamentController()
 	{
 		tournamentCounter++;
 	}
+
+
+	if (respawnLowSpecies)
+	{
+		for (int i = 0; i < numberOfSpecies; ++i)
+		{
+			if (speciesPopulationCounts[i] == 0)
+			{
+
+				int randomAnimal = extremelyFastNumberFromZeroTo(numberOfAnimals);
+				if (randomAnimal >= 0)
+				{
+
+					unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+
+// int spawnAnimal( unsigned int speciesIndex,
+//                  Animal parent,
+//                  unsigned int position, bool mutation)
+					spawnAnimal( i, animals[randomAnimal],  randompos, false) ;
+				}
+
+			}
+		}
+	}
+
 }
 
 void sprinkleFood()
@@ -1473,9 +1491,9 @@ void rebuildGameMenus ()
 		exampleMenuNumber = setupMenu ( std::string ("population:") , BELOW, exampleMenuRoot, (void *)editUserData, (void*)tempDataWrap);
 		exampleMenuNumber->collapsed = false;
 
-		tempDataWrap = new uDataWrap( (void*) & (speciesEnergyOuts[i]), TYPE_UDATA_FLOAT  );
-		exampleMenuNumber = setupMenu ( std::string ("energyout:") , BELOW, exampleMenuRoot, (void *)editUserData, (void*)tempDataWrap);
-		exampleMenuNumber->collapsed = false;
+		// tempDataWrap = new uDataWrap( (void*) & (speciesEnergyOuts[i]), TYPE_UDATA_FLOAT  );
+		// exampleMenuNumber = setupMenu ( std::string ("energyout:") , BELOW, exampleMenuRoot, (void *)editUserData, (void*)tempDataWrap);
+		// exampleMenuNumber->collapsed = false;
 	}
 	menus.push_back(*exampleMenuRoot);
 }

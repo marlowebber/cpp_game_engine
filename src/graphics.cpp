@@ -116,6 +116,18 @@ Color mixColor (Color a, Color b, float mix)
 	return c;
 }
 
+float colorAmplitude(Color a )
+{
+	float c = a.r;
+	c      += a.g;
+	c      += a.b;
+	c      *= a.a;
+
+	c = c/3.0f ; // because there are 3 color components, normalise the result to 1.
+
+	return c;
+}
+
 static const char * vertex_shader =
     "#version 330\n"
     "in vec2 i_position;\n"
@@ -383,4 +395,6 @@ void threadGraphics()
 
 	postDraw();
 }
+
+
 

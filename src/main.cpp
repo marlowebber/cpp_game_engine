@@ -12,7 +12,7 @@ bool flagQuit = false;
 int mouseX;
 int mouseY;
 
-float panSpeed = 0.5f;
+float panSpeed = 0.1f;
 
 void quit ()
 {
@@ -94,6 +94,7 @@ void threadInterface()
 			{
 
 				cameraPositionX+=cameraPanSpeed;
+				cameraPositionX = cameraPositionX%worldSize;
 				// unsigned int destination = getPlayerDestination();
 				// destination += 1;
 				// setPlayerDestination(destination);
@@ -105,6 +106,7 @@ void threadInterface()
 			{
 
 				cameraPositionY-=cameraPanSpeed;
+				cameraPositionY = cameraPositionY%worldSize;
 				// unsigned int destination = getPlayerDestination();
 				// destination -= worldSize;
 				// setPlayerDestination(destination);
@@ -117,6 +119,7 @@ void threadInterface()
 			{
 
 				cameraPositionX-=cameraPanSpeed;
+				cameraPositionX = cameraPositionX%worldSize;
 				// unsigned int destination = getPlayerDestination();
 				// destination -= 1;
 				// setPlayerDestination(destination);
@@ -127,6 +130,7 @@ void threadInterface()
 			case SDLK_w: // w
 			{
 				cameraPositionY+=cameraPanSpeed;
+				cameraPositionY = cameraPositionY%worldSize;
 				// unsigned int destination = getPlayerDestination();
 				// destination += worldSize;
 				// setPlayerDestination(destination);
