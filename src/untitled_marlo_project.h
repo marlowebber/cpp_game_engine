@@ -23,4 +23,7 @@ void rebuildGameMenus();
 
 // extern unsigned int playerDestination;
 
+void save();
+void load();
+
  #endif //MARLO_H
