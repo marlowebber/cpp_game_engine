@@ -110,9 +110,9 @@ const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
 const float taxEnergyScale         = 0.000f;        // a multiplier for how much it costs animals just to exist.
 // const float lightEnergy            = 0.01f;        // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
-const float movementEnergyScale    = 0.001f;        // a multiplier for how much it costs animals to move.
+const float movementEnergyScale    = 0.000f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
-const float grassEnergy            = 0.01f;         // how much you get from eating a square of grass
+const float grassEnergy            = 0.04f;         // how much you get from eating a square of grass
 
 const float liverStorage = 10.0f;
 const unsigned int baseLifespan = 10000;
@@ -210,6 +210,7 @@ struct Animal
 	float fPosX;
 	float fPosY;
 	float prevHighestIntensity;
+	bool parentAmnesty;
 };
 
 // float speciesEnergyOuts              [numberOfSpecies];
@@ -217,6 +218,7 @@ unsigned int speciesPopulationCounts [numberOfSpecies];
 unsigned int populationCountUpdates  [numberOfSpecies];
 
 Animal exampleAnimal2;
+
 
 
 float organGrowthCost(unsigned int organ)
@@ -301,8 +303,8 @@ void resetAnimal(unsigned int animalIndex)
 			animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
 			animals[animalIndex].body[cellLocalPositionI].multiplierFactor = 1.0f;
 			animals[animalIndex].body[cellLocalPositionI].target = 0;
-			animals[animalIndex].body[cellLocalPositionI].color = color_grey;
-			animals[animalIndex].body[cellLocalPositionI].color = color_grey;
+			animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
+			animals[animalIndex].body[cellLocalPositionI].eyeColor = color_grey;
 			animals[animalIndex].body[cellLocalPositionI].damage = 0.0f;
 		}
 		animals[animalIndex].mass = 0;
@@ -326,6 +328,7 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].uPosY = 0;
 		animals[animalIndex].destination = 0;
 		animals[animalIndex].prevHighestIntensity = 0.0f;
+		animals[animalIndex].parentAmnesty = true;
 	}
 }
 
@@ -444,7 +447,7 @@ void measureAnimalQualities(unsigned int animalIndex)
 void mutateAnimal(unsigned int animalIndex)
 {
 
-	if (extremelyFastNumberFromZeroTo(1) == 0) // don't mutate at all 50% of the time, so a population can be maintained against drift
+	if (extremelyFastNumberFromZeroTo(2) == 0) // don't mutate at all 2 out of every 3 times, so that a successful population can increase if conditions are right. If this number is 1, successful populations will inevitably be lost.
 	{
 
 
@@ -755,6 +758,8 @@ Color materialColors(unsigned int material)
 		return color_brown;
 	case MATERIAL_ROCK:
 		return color_grey;
+	case MATERIAL_BONE:
+		return color_white;
 	}
 	return color_yellow;
 }
@@ -852,18 +857,18 @@ void updateMap()
 {
 
 
-	unsigned int mapUpdateFidelity = worldSquareSize / 10000;
+	unsigned int mapUpdateFidelity = worldSquareSize / 100000;
 
 	for (unsigned int i = 0; i < mapUpdateFidelity; ++i)
 	{
-		unsigned int randomX = extremelyFastNumberFromZeroTo(worldSize);
-		unsigned int randomY = extremelyFastNumberFromZeroTo(worldSize);
+		unsigned int randomX = extremelyFastNumberFromZeroTo(worldSize - 1);
+		unsigned int randomY = extremelyFastNumberFromZeroTo(worldSize - 1);
 		unsigned int randomI = (randomY * worldSize) + randomX;
 		if (randomI < worldSquareSize)
 		{
 			if (world[randomI].terrain == TERRAIN_STONE)
 			{
-				world[randomI].terrain == TERRAIN_GRASS;
+				world[randomI].terrain = TERRAIN_GRASS;
 			}
 		}
 
@@ -1252,7 +1257,7 @@ void organs_all()
 									animals[animalIndex].fPosX += ( muscleX ) / animals[animalIndex].mass;
 									animals[animalIndex].fPosY += ( muscleY ) / animals[animalIndex].mass;
 								}
-								animals[animalIndex].energy -= ( abs(muscleX) + abs(muscleY)) * movementEnergyScale ;//* speciesEnergyOuts[speciesIndex];
+								animals[animalIndex].energy -= ( abs(muscleX) + abs(muscleY)) * movementEnergyScale ;
 							}
 						}
 						break;
@@ -1326,6 +1331,15 @@ void move_all()
 									okToStep = false;
 									if (animals[animalIndex].body[cellLocalPositionI].organ == ORGAN_WEAPON)
 									{
+
+										if (animals[animalIndex].parentAmnesty) // don't allow the animal to harm its parent until the amnesty period is over.
+										{
+											if (world[cellWorldPositionI].identity == animals[animalIndex].parentIdentity)
+											{
+												continue;
+											}
+										}
+
 										float defense = defenseAtPoint(world[cellWorldPositionI].identity, targetLocalPositionI);
 
 										if (defense > 0)
@@ -1404,6 +1418,13 @@ void energy_all() // perform energies.
 					float repayment = animals[animalIndex].energy  - (animals[animalIndex].maxEnergy / 2)  ;
 					animals[animalIndex].energyDebt -= repayment;
 					animals[animalIndex].energy -= repayment;
+				}
+			}
+			else
+			{
+				if (animals[animalIndex].parentAmnesty)
+				{
+					animals[animalIndex].parentAmnesty = false;
 				}
 			}
 
@@ -1523,6 +1544,30 @@ void spawnPlayer()
 	printf("spawned player creature\n");
 }
 
+
+void makeRandomAnimal(unsigned int animalIndex, unsigned int targetWorldPositionI)
+{
+	spawnAnimalIntoSlot(animalIndex,
+	                    animals[0],
+	                    targetWorldPositionI, false);
+
+	for (int j = 0; j < animalSquareSize; ++j)
+	{
+		animals[animalIndex].body[j].organ = randomLetter();
+		animals[animalIndex].body[j].color = Color(RNG(), RNG(), RNG(), 1.0f);
+		animals[animalIndex].body[j].eyeColor = Color(RNG(), RNG(), RNG(), 1.0f);
+	}
+
+	unsigned int randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD; // make sure every animal has at least three gonads- two to propagate a winning population, and one to test out mutants.
+	randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD;
+	randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD;
+
+
+}
+
 void setupTournamentAnimals()
 {
 	for (unsigned int i = 0; i < numberOfAnimals;  ++i)	// initial random creatures.
@@ -1530,14 +1575,9 @@ void setupTournamentAnimals()
 		unsigned int targetWorldPositionX = cameraPositionX + extremelyFastNumberFromZeroTo(viewFieldX) - (viewFieldX / 2);
 		unsigned int targetWorldPositionY = cameraPositionY + extremelyFastNumberFromZeroTo(viewFieldY) - (viewFieldY / 2);
 		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-		spawnAnimalIntoSlot(i,
-		                    animals[0],
-		                    targetWorldPositionI, false);
 
-		for (int j = 0; j < animalSquareSize; ++j)
-		{
-			animals[i].body[j].organ = randomLetter();
-		}
+
+		makeRandomAnimal(i, targetWorldPositionI);
 	}
 }
 
@@ -1647,16 +1687,43 @@ void tournamentController()
 			if (speciesPopulationCounts[i] == 0)
 			{
 
-				int randomAnimal = extremelyFastNumberFromZeroTo(numberOfAnimals);
-				if (randomAnimal >= 0)
+				unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+
+				unsigned int randomSpeciesSlot = (i * numberOfAnimalsPerSpecies) + (extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 1));
+
+	
+
+				// if there is another species who is successful, duplicate an animal from them.
+				int foundAnimal = -1;
+				for (unsigned int j = 0; j < numberOfSpecies; ++j)
+				{
+					if (speciesPopulationCounts[j] > 1)
+					{
+
+						for (unsigned int k= 0; k < numberOfAnimalsPerSpecies; ++k)
+						{
+							unsigned int animalToCopy = (j * numberOfAnimalsPerSpecies) + k;
+
+							if (!animals[animalToCopy].retired)
+							{
+								foundAnimal = animalToCopy;
+								// printf("FOUNDANENENENE\n");
+								break;
+							}
+						}
+
+					}
+				}
+
+				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
 				{
 
-					unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+					spawnAnimal(i, animals[foundAnimal], randompos, false);
 
-// int spawnAnimal( unsigned int speciesIndex,
-//                  Animal parent,
-//                  unsigned int position, bool mutation)
-					spawnAnimal( i, animals[randomAnimal],  randompos, false) ;
+				}
+				else
+				{
+					// makeRandomAnimal(randomSpeciesSlot, randompos);
 				}
 
 			}
@@ -1680,6 +1747,7 @@ void sprinkleFood()
 void model()
 {
 	auto start = std::chrono::steady_clock::now();
+	updateMap();
 	computeAllAnimalsOneTurn();
 	if (tournament)
 	{
