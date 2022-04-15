@@ -28,7 +28,7 @@
 #include "main.h"
 
 #define MATERIAL_NOTHING          0
-#define ORGAN_LEAF                1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
+// #define ORGAN_LEAF                1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
 #define ORGAN_MOUTH               2
 #define ORGAN_GONAD               3
 #define ORGAN_MUSCLE              4
@@ -54,8 +54,17 @@
 #define numberOfOrganTypes        20 // the number limit of growable genes
 
 #define MATERIAL_FOOD             32 //           
-#define MATERIAL_ROCK             33 //           
-#define MATERIAL_WATER            34 //           
+#define MATERIAL_ROCK             33 //    
+#define MATERIAL_MEAT             34
+#define MATERIAL_BONE             35
+
+#define TERRAIN_STONE             50
+#define TERRAIN_GRASS             51
+#define TERRAIN_WATER             52 //           
+
+
+
+
 #define MARKER                    35 //      // numbers above 25 don't correspond to lower-case letters(0..25) so we don't use them in the gene code. But (26..31) are still compatible with our masking scheme.
 
 #define CONDITION_GREATER         41
@@ -94,13 +103,13 @@ const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const int animalSize     = 8;
 const unsigned int animalSquareSize      = animalSize * animalSize;
 const unsigned int worldSquareSize       = worldSize * worldSize;
-const unsigned int numberOfAnimals = 1000;
+const unsigned int numberOfAnimals = 10000;
 const unsigned int numberOfSpecies = 6;
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
 const float taxEnergyScale         = 0.000f;        // a multiplier for how much it costs animals just to exist.
-const float lightEnergy            = 0.01f;        // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
+// const float lightEnergy            = 0.01f;        // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
 const float movementEnergyScale    = 0.001f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float liverStorage = 10.0f;
@@ -217,9 +226,9 @@ float organGrowthCost(unsigned int organ)
 		{
 			switch (organ)
 			{
-			case ORGAN_LEAF:
-				growthCost *= 1.0f;
-				break;
+			// case ORGAN_LEAF:
+			// 	growthCost *= 1.0f;
+			// 	break;
 			case ORGAN_MUSCLE:
 				growthCost *= 1.0f;
 				break;
@@ -374,6 +383,18 @@ bool organIsASensor(unsigned int organ)
 }
 
 
+bool organIsAModifier(unsigned int organ)
+{
+	if (    organ == ORGAN_MODIFIER_HURT ||
+	        organ == ORGAN_MODIFIER_HUNGRY ||
+	        organ == ORGAN_MODIFIER_DEBTPAID ||
+	        organ == ORGAN_MODIFIER_NOVALIDTARGET
+	   )
+	{
+		return true;
+	}
+	return false;
+}
 
 // // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
 void measureAnimalQualities(unsigned int animalIndex)
@@ -425,7 +446,7 @@ void mutateAnimal(unsigned int animalIndex)
 
 
 
-		if (extremelyFastNumberFromZeroTo(1) == 0) // don't mutate at all 50% of the time, so a population can be maintained against drift
+		if (extremelyFastNumberFromZeroTo(1) == 0) // 50% chance to erase an organ instead of changing or adding one
 		{
 
 
@@ -512,13 +533,50 @@ void mutateAnimal(unsigned int animalIndex)
 			else if (chosenMutationType == numberOfOrganTypes + 9)
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[mutantCell].multiplierFactor += (RNG() - 0.5);
+
+				if (animals[animalIndex].body[mutantCell].organ == ORGAN_MULTIPLIER)
+				{
+					// if it is actually a multiplier, it can mutate between about -10 and +10
+					animals[animalIndex].body[mutantCell].multiplierFactor += (RNG() - 0.5);
+					if (animals[animalIndex].body[mutantCell].multiplierFactor > 10.0f)
+					{
+						animals[animalIndex].body[mutantCell].multiplierFactor = 10.0f;
+					}
+					else if (animals[animalIndex].body[mutantCell].multiplierFactor < -10.0f)
+					{
+						animals[animalIndex].body[mutantCell].multiplierFactor = -10.0f;
+					}
+				}
+
+				if ( organIsAModifier(animals[animalIndex].body[mutantCell].organ))
+				{
+					// if it is actually a modifier, it can really only be positive or negative.
+					if (	animals[animalIndex].body[mutantCell].multiplierFactor  == -1 || animals[animalIndex].body[mutantCell].multiplierFactor  == 1)
+					{
+						animals[animalIndex].body[mutantCell].multiplierFactor  = animals[animalIndex].body[mutantCell].multiplierFactor   * -1;
+					}
+					else
+					{
+						if (animals[animalIndex].body[mutantCell].multiplierFactor  < 0)
+						{
+							animals[animalIndex].body[mutantCell].multiplierFactor   = -1;
+						}
+						else
+						{
+							animals[animalIndex].body[mutantCell].multiplierFactor  = 1;
+						}
+					}
+
+
+				}
 			}
 
 
 
+
+
 		}
-		else // 50% chance to erase an organ
+		else
 		{
 			unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
 			animals[animalIndex].body[mutantCell].organ = MATERIAL_NOTHING;// randomLetter();
@@ -598,6 +656,13 @@ void killAnimal(int animalIndex)
 				{
 					world[cellWorldPositionI].material = MATERIAL_FOOD;
 				}
+
+				if (animals[animalIndex].body[cellLocalPositionI].organ == ORGAN_BONE)
+				{
+					world[cellWorldPositionI].material = MATERIAL_BONE;
+				}
+
+
 			}
 		}
 	}
@@ -661,6 +726,22 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 }
 
 
+
+Color terrainColors(unsigned int terrain)
+{
+	switch (terrain)
+	{
+	case TERRAIN_GRASS:
+		return color_green;
+	case TERRAIN_STONE:
+		return color_grey;
+	case TERRAIN_WATER:
+		return color_lightblue;
+	}
+	return color_yellow;
+}
+
+
 Color materialColors(unsigned int material)
 {
 	switch (material)
@@ -671,8 +752,6 @@ Color materialColors(unsigned int material)
 		return color_brown;
 	case MATERIAL_ROCK:
 		return color_grey;
-	case MATERIAL_WATER:
-		return color_lightblue;
 	}
 	return color_yellow;
 }
@@ -685,8 +764,8 @@ Color organColors(unsigned int organ)
 		return color_brightred;
 	case ORGAN_GONAD:
 		return color_offwhite;
-	case ORGAN_LEAF:
-		return color_green;
+	// case ORGAN_LEAF:
+	// 	return color_green;
 	case ORGAN_MOUTH:
 		return color_darkgrey;
 	case ORGAN_LIVER:
@@ -703,16 +782,12 @@ Color organColors(unsigned int organ)
 		return color_black;
 	case ORGAN_MULTIPLIER:
 		return color_pink;
-
 	case ORGAN_MODIFIER_HURT:
 		return color_pink;
-
 	case ORGAN_MODIFIER_HUNGRY:
 		return color_pink;
-
 	case ORGAN_MODIFIER_DEBTPAID:
 		return color_pink;
-
 	case ORGAN_MODIFIER_NOVALIDTARGET:
 		return color_pink;
 	case ORGAN_SENSOR_RANDOM:
@@ -760,6 +835,11 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	return displayColor;
 }
 
+
+void updateMap()
+{
+
+}
 
 void sensor(int animalIndex, unsigned int cellLocalPositionI)
 {
@@ -1085,17 +1165,17 @@ void organs_all()
 						totalLiver += 1.0f;
 						break;
 					}
-					case ORGAN_LEAF:
-					{
-						if (doPhotosynth)
-						{
-							if (world[cellWorldPositionI].identity == animalIndex)
-							{
-								animals[animalIndex].energy += world[cellWorldPositionI].light * lightEnergy * energyScaleIn;
-							}
-						}
-						break;
-					}
+					// case ORGAN_LEAF:
+					// {
+					// 	if (doPhotosynth)
+					// 	{
+					// 		if (world[cellWorldPositionI].identity == animalIndex)
+					// 		{
+					// 			animals[animalIndex].energy += world[cellWorldPositionI].light * lightEnergy * energyScaleIn;
+					// 		}
+					// 	}
+					// 	break;
+					// }
 					case ORGAN_MOUTH :
 					{
 						if (world[cellWorldPositionI].material == MATERIAL_FOOD)
@@ -1104,6 +1184,8 @@ void organs_all()
 							world[cellWorldPositionI].material = MATERIAL_NOTHING;
 						}
 						break;
+
+
 					}
 					case ORGAN_MUSCLE :
 					{
@@ -1664,7 +1746,7 @@ void load()
 	in6.close();
 
 	std::ifstream in7(std::string("save/animals").c_str());
-	in7.read( (char *)(&(animals)),sizeof(Animal) *  numberOfAnimals);
+	in7.read( (char *)(&(animals)), sizeof(Animal) *  numberOfAnimals);
 	in7.close();
 
 
