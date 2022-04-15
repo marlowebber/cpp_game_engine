@@ -112,6 +112,8 @@ const float taxEnergyScale         = 0.000f;        // a multiplier for how much
 // const float lightEnergy            = 0.01f;        // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
 const float movementEnergyScale    = 0.001f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
+const float grassEnergy            = 0.01f;         // how much you get from eating a square of grass
+
 const float liverStorage = 10.0f;
 const unsigned int baseLifespan = 10000;
 const unsigned int baseSensorRange = 20;
@@ -163,6 +165,7 @@ unsigned int cameraFrameCount = 0;
 struct Square
 {
 	unsigned int material;
+	unsigned int terrain;
 	int identity;
 	int height;
 	float light;
@@ -830,7 +833,16 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	}
 	else
 	{
-		displayColor = materialColors(world[worldI].material);
+		if (world[worldI].material == MATERIAL_NOTHING)
+		{
+
+			displayColor =  terrainColors(world[worldI].terrain);
+		}
+		else
+		{
+
+			displayColor = materialColors(world[worldI].material);
+		}
 	}
 	return displayColor;
 }
@@ -838,6 +850,25 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 
 void updateMap()
 {
+
+
+	unsigned int mapUpdateFidelity = worldSquareSize / 10000;
+
+	for (unsigned int i = 0; i < mapUpdateFidelity; ++i)
+	{
+		unsigned int randomX = extremelyFastNumberFromZeroTo(worldSize);
+		unsigned int randomY = extremelyFastNumberFromZeroTo(worldSize);
+		unsigned int randomI = (randomY * worldSize) + randomX;
+		if (randomI < worldSquareSize)
+		{
+			if (world[randomI].terrain == TERRAIN_STONE)
+			{
+				world[randomI].terrain == TERRAIN_GRASS;
+			}
+		}
+
+	}
+
 
 }
 
@@ -1182,6 +1213,12 @@ void organs_all()
 						{
 							animals[animalIndex].energy += foodEnergy * energyScaleIn;
 							world[cellWorldPositionI].material = MATERIAL_NOTHING;
+						}
+
+						if (world[cellWorldPositionI].terrain == TERRAIN_GRASS)
+						{
+							animals[animalIndex].energy += grassEnergy * energyScaleIn;
+							world[cellWorldPositionI].terrain = TERRAIN_STONE;
 						}
 						break;
 
@@ -1573,6 +1610,9 @@ void setupRandomWorld()
 
 				world[worldPositionI].material = MATERIAL_ROCK;
 			}
+
+
+			world[worldPositionI].terrain = TERRAIN_GRASS;
 
 		}
 		printf("growing materials \n");
