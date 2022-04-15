@@ -45,7 +45,7 @@
 
 #define ORGAN_MULTIPLIER   15
 
-#define ORGAN_MODIFIER_HUNGRY 16
+#define ORGAN_MODIFIER_HUNGRY        16
 #define ORGAN_MODIFIER_HURT          17
 #define ORGAN_MODIFIER_DEBTPAID      18
 #define ORGAN_MODIFIER_NOVALIDTARGET 19
@@ -79,7 +79,7 @@ const bool brownianMotion        = false;
 const bool immortality           = false;
 const bool doReproduction        = true;
 const bool doMuscles             = true;
-const bool doPhotosynth          = true;
+// const bool doPhotosynth          = true;
 const bool growingCostsEnergy    = true;
 const bool lockfps               = false;
 const bool tournament            = true;
@@ -87,10 +87,11 @@ const bool taxIsByMass           = true;
 const bool threading             = true;
 const bool cameraFollowsChampion = false;
 const bool cameraFollowsPlayer   = true;
-const bool variedGrowthCost     = false;
+const bool variedGrowthCost      = false;
 const bool variedUpkeep          = false;
 const bool respawnLowSpecies     = true;
-const bool entropicController    = false;
+// const bool entropicController    = false;
+const bool doMutation            = true;
 
 unsigned int worldToLoad = WORLD_ARENA;
 
@@ -120,7 +121,7 @@ const unsigned int baseSensorRange = 20;
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
-const float musclePower = 20.0f;
+const float musclePower = 40.0f;
 const float thresholdOfBoredom = 0.1f;
 
 int playerCreature = -1;
@@ -446,6 +447,7 @@ void measureAnimalQualities(unsigned int animalIndex)
 //
 void mutateAnimal(unsigned int animalIndex)
 {
+	if (!doMutation) {return;}
 
 	if (extremelyFastNumberFromZeroTo(2) == 0) // don't mutate at all 2 out of every 3 times, so that a successful population can increase if conditions are right. If this number is 1, successful populations will inevitably be lost.
 	{
@@ -601,6 +603,34 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 
 	animals[animalIndex] = parent;
 
+
+	// reset the SHITTTT . but only the stuff that should change.
+
+	animals[animalIndex].mass = 0;
+	// animals[animalIndex].stride = 1;
+	animals[animalIndex].numberOfTimesReproduced = 0;
+	animals[animalIndex].damageDone = 0;
+	animals[animalIndex].damageReceived = 0;
+	animals[animalIndex].birthLocation = 0;
+	animals[animalIndex].age = 0;
+	// animals[animalIndex].lifespan = baseLifespan;
+	animals[animalIndex].parentIdentity = -1;
+	animals[animalIndex].retired = true;
+	// animals[animalIndex].offspringEnergy = 1.0f;
+	animals[animalIndex].energy   = 0.0f;
+	animals[animalIndex].energyDebt   = 0.0f;
+	animals[animalIndex].maxEnergy   = 0.0f;
+	animals[animalIndex].fPosX = 0.0f;
+	animals[animalIndex].fPosY = 0.0f;
+	animals[animalIndex].position = 0;
+	animals[animalIndex].uPosX = 0;
+	animals[animalIndex].uPosY = 0;
+	animals[animalIndex].destination = 0;
+	animals[animalIndex].prevHighestIntensity = 0.0f;
+	animals[animalIndex].parentAmnesty = true;
+
+
+
 	animals[animalIndex].retired = false;
 	animals[animalIndex].mass = 0;
 	animals[animalIndex].age = 0;
@@ -611,10 +641,10 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 
 
 	animals[animalIndex].position = position;
-	animals[animalIndex].fPosX = animals[animalIndex].position % worldSize; // set the new creature to the desired position
-	animals[animalIndex].fPosY = animals[animalIndex].position / worldSize;
-	animals[animalIndex].destination = animals[animalIndex].position;
-	animals[animalIndex].birthLocation = animals[animalIndex].position;
+	animals[animalIndex].fPosX = position % worldSize; // set the new creature to the desired position
+	animals[animalIndex].fPosY = position / worldSize;
+	animals[animalIndex].destination = position;
+	animals[animalIndex].birthLocation = position;
 
 
 	mutateAnimal( animalIndex);
@@ -1118,6 +1148,7 @@ void organs_all()
 		{
 			unsigned int cellsDone = 0;
 			float totalLiver = 0;
+			unsigned int totalGonads = 0;
 			unsigned int destinationThisTurn = animals[animalIndex].destination;
 			float highestIntensity = 0.0f;
 
@@ -1169,6 +1200,7 @@ void organs_all()
 					{
 					case ORGAN_GONAD:
 					{
+						totalGonads++;
 						if (doReproduction && animals[animalIndex].energyDebt <= 0.0f )
 						{
 							if (animals[animalIndex].energy > ((animals[animalIndex].mass / 2 ) + animals[animalIndex].offspringEnergy ))
@@ -1266,6 +1298,8 @@ void organs_all()
 				}
 				if (cellsDone >= animals[animalIndex].mass) {break;}
 			}
+
+			if (totalGonads == 0) { killAnimal (animalIndex); } // no point in infertile mature animals existing
 
 			animals[animalIndex].prevHighestIntensity = highestIntensity;
 			animals[animalIndex].maxEnergy = animals[animalIndex].mass + (totalLiver * liverStorage);
@@ -1691,7 +1725,7 @@ void tournamentController()
 
 				unsigned int randomSpeciesSlot = (i * numberOfAnimalsPerSpecies) + (extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 1));
 
-	
+
 
 				// if there is another species who is successful, duplicate an animal from them.
 				int foundAnimal = -1;
@@ -1700,7 +1734,7 @@ void tournamentController()
 					if (speciesPopulationCounts[j] > 1)
 					{
 
-						for (unsigned int k= 0; k < numberOfAnimalsPerSpecies; ++k)
+						for (unsigned int k = 0; k < numberOfAnimalsPerSpecies; ++k)
 						{
 							unsigned int animalToCopy = (j * numberOfAnimalsPerSpecies) + k;
 
