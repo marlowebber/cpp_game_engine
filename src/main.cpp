@@ -88,6 +88,11 @@ void threadInterface()
 			case SDLK_r:
 				spawnPlayer();
 				break;
+			case SDLK_l:
+				// spawnPlayer();
+				lockfps = !lockfps;
+				break;
+
 
 
 			case SDLK_d:

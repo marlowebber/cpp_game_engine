@@ -140,7 +140,10 @@ void gameGraphics() // process the game visual elements, this gets run inside th
 
 	camera();
 
-
+	if (lockfps)
+	{
+		model();
+	}
 }
 
 
