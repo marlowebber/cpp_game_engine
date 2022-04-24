@@ -99,8 +99,8 @@ const bool doMutation            = true;
 
 unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
-const unsigned int viewFieldX = 1024; //80 columns, 24 rows is the default size of a terminal window
-const unsigned int viewFieldY = 1024; //203 columns, 55 rows is the max size i can make one on my pc.
+const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
+const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
 
 float fps = 1.0f;
 
@@ -687,6 +687,11 @@ int spawnAnimal( unsigned int speciesIndex,
 
 void killAnimal(int animalIndex)
 {
+	if (animalIndex == playerCreature)
+	{
+		playerCreature = -1;
+	}
+
 	animals[animalIndex].retired = true;
 	unsigned int animalWorldPositionX    = animals[animalIndex].position % worldSize;
 	unsigned int animalWorldPositionY    = animals[animalIndex].position / worldSize;
@@ -1630,12 +1635,43 @@ void camera()
 			{
 				float fx = vx;
 				float fy = vy;
-
+				displayColor = whatColorIsThisSquare(worldI);
 				drawTile( Vec_f2( fx, fy ), displayColor);
 			}
 		}
 	}
+
+
+
+
+
 }
+
+
+
+void drawGameInterfaceText()
+{
+
+
+	int menuX = 50;
+	int menuY = 500;
+	int textSize = 10;
+	int spacing = 20;
+
+
+	for (int i = 0; i < numberOfSpecies; ++i)
+	{
+
+		printText2D(   std::string("Species ") + std::to_string(i) +   std::string(" pop. " + std::to_string(speciesPopulationCounts[i])), menuX, menuY, textSize);
+		menuY -= spacing;
+	}
+	menuY -= spacing;
+
+	printText2D(   std::string("Player ") + std::to_string(playerCreature) , menuX, menuY, textSize);
+	menuY -= spacing;
+
+}
+
 
 void setupExampleAnimal2()
 {
@@ -1644,16 +1680,27 @@ void setupExampleAnimal2()
 
 void spawnPlayer()
 {
-	unsigned int targetWorldPositionX = cameraPositionX ;
-	unsigned int targetWorldPositionY = cameraPositionY ;
-	unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-	playerCreature = 0;
-	killAnimal(playerCreature);
-	spawnAnimalIntoSlot(playerCreature,
-	                    exampleAnimal2,
-	                    targetWorldPositionI, false);
-	cameraTargetCreature = playerCreature;
-	printf("spawned player creature\n");
+
+	if (playerCreature == -1)
+	{
+
+
+		unsigned int targetWorldPositionX = cameraPositionX ;
+		unsigned int targetWorldPositionY = cameraPositionY ;
+		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+		playerCreature = 0;
+		spawnAnimalIntoSlot(playerCreature,
+		                    exampleAnimal2,
+		                    targetWorldPositionI, false);
+		cameraTargetCreature = playerCreature;
+		printf("spawned player creature\n");
+	}
+	else 
+	{
+
+		killAnimal(playerCreature);
+		printf("suicided player creature\n");
+	}
 }
 
 

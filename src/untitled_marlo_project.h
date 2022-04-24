@@ -30,4 +30,6 @@ void load();
 
 void model();
 
+void drawGameInterfaceText();
+
  #endif //MARLO_H

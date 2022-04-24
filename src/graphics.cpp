@@ -1,5 +1,6 @@
 #include "graphics.h"
 #include "menus.h"
+#include "untitled_marlo_project.h"
 
 const unsigned int width = 1920;
 const unsigned int height = 1080;
@@ -390,6 +391,8 @@ void threadGraphics()
 	drawPanels();
 	glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
 	glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
+
+	drawGameInterfaceText();
 
 	drawAllMenuText ();
 

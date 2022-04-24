@@ -55,6 +55,8 @@ void cleanupText2D();
 
 void setupMenus();
 
+void printText2D(std::string m_text, int x, int y, int size);
+
 void drawAllMenuText ();
 int checkMenus (int mouseX, int mouseY);
 void resetMenus () ;
