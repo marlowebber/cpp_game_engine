@@ -1322,8 +1322,10 @@ void organs_all()
 						{
 							int destinationX = animals[animalIndex].destination % worldSize;
 							int destinationY = animals[animalIndex].destination / worldSize;
-							int diffX = (destinationX - animalWorldPositionX);
-							int diffY = (destinationY - animalWorldPositionY);
+							int uposx = animals[animalIndex].fPosX;
+							int uposy = animals[animalIndex].fPosY;
+							int diffX = (destinationX - uposx );
+							int diffY = (destinationY - uposy );
 							float muscleX = diffX;
 							float muscleY = diffY;
 							float muscleSignX = 1.0f;
@@ -1677,6 +1679,9 @@ void drawGameInterfaceText()
 	if (playerCreature >= 0)
 	{
 		printText2D(   std::string("Energy ") + std::to_string(animals[playerCreature].energy ) , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("Destination ") + std::to_string(animals[playerCreature].destination ) , menuX, menuY, textSize);
 		menuY -= spacing;
 
 	}
