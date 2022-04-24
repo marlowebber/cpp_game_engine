@@ -98,11 +98,19 @@ void threadInterface()
 			case SDLK_d:
 			{
 
-				cameraPositionX += cameraPanSpeed;
-				cameraPositionX = cameraPositionX % worldSize;
-				// unsigned int destination = getPlayerDestination();
-				// destination += 1;
-				// setPlayerDestination(destination);
+
+				if (playerCreature >= 0)
+				{
+					unsigned int destination = getPlayerDestination();
+					destination += 1;
+					setPlayerDestination(destination);
+				}
+				else
+				{
+					cameraPositionX += cameraPanSpeed;
+					cameraPositionX = cameraPositionX % worldSize;
+				}
+
 				break;
 			}
 
@@ -110,11 +118,21 @@ void threadInterface()
 			case SDLK_s:
 			{
 
-				cameraPositionY -= cameraPanSpeed;
-				cameraPositionY = cameraPositionY % worldSize;
-				// unsigned int destination = getPlayerDestination();
-				// destination -= worldSize;
-				// setPlayerDestination(destination);
+
+				if (playerCreature >= 0)
+				{
+					unsigned int destination = getPlayerDestination();
+					destination -= worldSize;
+					setPlayerDestination(destination);
+				}
+				else
+				{
+
+					cameraPositionY -= cameraPanSpeed;
+					cameraPositionY = cameraPositionY % worldSize;
+				}
+
+
 				break;
 			}
 
@@ -123,26 +141,48 @@ void threadInterface()
 			case SDLK_a:
 			{
 
-				cameraPositionX -= cameraPanSpeed;
-				cameraPositionX = cameraPositionX % worldSize;
-				// unsigned int destination = getPlayerDestination();
-				// destination -= 1;
-				// setPlayerDestination(destination);
+
+
+				if (playerCreature >= 0)
+				{
+					unsigned int destination = getPlayerDestination();
+					destination -= 1;
+					setPlayerDestination(destination);
+				}
+				else
+				{
+					cameraPositionX -= cameraPanSpeed;
+					cameraPositionX = cameraPositionX % worldSize;
+				}
+
+
 				break;
 			}
 
 
 			case SDLK_w: // w
 			{
-				cameraPositionY += cameraPanSpeed;
-				cameraPositionY = cameraPositionY % worldSize;
-				// unsigned int destination = getPlayerDestination();
-				// destination += worldSize;
-				// setPlayerDestination(destination);
+				if (playerCreature >= 0)
+				{
+					unsigned int destination = getPlayerDestination();
+					destination += worldSize;
+					setPlayerDestination(destination);
+				}
+				else
+				{
+
+					cameraPositionY += cameraPanSpeed;
+					cameraPositionY = cameraPositionY % worldSize;
+
+				}
 				break;
 			}
 
-
+case SDLK_c: // w
+			{
+				playerInControl = !playerInControl;
+				break;
+			}
 			case SDLK_i: // w
 			{
 				load();

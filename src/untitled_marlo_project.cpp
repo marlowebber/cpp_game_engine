@@ -96,6 +96,7 @@ const bool variedUpkeep          = false;
 const bool respawnLowSpecies     = true;
 // const bool entropicController    = false;
 const bool doMutation            = true;
+const bool sensorJiggles         = false;
 
 unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
@@ -127,7 +128,7 @@ float energyScaleIn             = 1.0f;            // a multiplier for how much 
 float minimumEntropy = 0.1f;
 const float musclePower = 40.0f;
 const float thresholdOfBoredom = 0.1f;
-
+bool playerInControl = false;
 int playerCreature = -1;
 
 int neighbourOffsets[] =
@@ -946,9 +947,12 @@ void updateMap()
 
 void sensor(int animalIndex, unsigned int cellLocalPositionI)
 {
-	if (animalIndex == playerCreature)
+	if (playerInControl)
 	{
-		return;
+		if (animalIndex == playerCreature)
+		{
+			return;
+		}
 	}
 
 
@@ -1670,12 +1674,60 @@ void drawGameInterfaceText()
 	printText2D(   std::string("Player ") + std::to_string(playerCreature) , menuX, menuY, textSize);
 	menuY -= spacing;
 
+	if (playerCreature >= 0)
+	{
+		printText2D(   std::string("Energy ") + std::to_string(animals[playerCreature].energy ) , menuX, menuY, textSize);
+		menuY -= spacing;
+
+	}
+		menuY -= spacing;
+
+		printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
+		menuY -= spacing;
+
+
+
 }
 
 
 void setupExampleAnimal2()
 {
 
+
+	for (int i = 0; i < animalSquareSize; ++i)
+	{
+
+		int x = i % animalSize;
+		int y = i / animalSize;
+
+		if (y == 1)
+		{
+			exampleAnimal2.body[i].organ = ORGAN_MOUTH_VEG;
+		}
+
+
+		if (y == 2 && x == 0)
+		{
+			// exampleAnimal2.body[i].organ = ORGAN_MODIFIER_HUNGRY;
+			// exampleAnimal2.body[i].eyeColor = color_green;
+		}
+		if (y == 2 && x == 1)
+		{
+			exampleAnimal2.body[i].organ = ORGAN_SENSOR_FOOD;
+			// exampleAnimal2.body[i].eyeColor = color_green;
+		}
+		if (y == 3)
+		{
+			exampleAnimal2.body[i].organ = ORGAN_MUSCLE;
+		}
+		if (y == 4)
+		{
+			exampleAnimal2.body[i].organ = ORGAN_GONAD;
+		}
+
+
+
+	}
 }
 
 void spawnPlayer()
@@ -1695,7 +1747,7 @@ void spawnPlayer()
 		cameraTargetCreature = playerCreature;
 		printf("spawned player creature\n");
 	}
-	else 
+	else
 	{
 
 		killAnimal(playerCreature);
@@ -1744,7 +1796,7 @@ void setupRandomWorld()
 {
 	resetAnimals();
 	resetGrid();
-	// setupExampleAnimal2();
+	setupExampleAnimal2();
 
 	// spawn the example creature in the center field of view in an empty world.
 	if (worldToLoad == WORLD_EXAMPLECREATURE)
@@ -1882,6 +1934,7 @@ void model()
 	{
 		fps = (1000000.0f / usPerFrame) ;
 	}
+	if (lockfps) { fps = 1.0f;}
 }
 
 void modelSupervisor()
