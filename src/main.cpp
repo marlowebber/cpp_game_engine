@@ -101,9 +101,12 @@ void threadInterface()
 
 				if (playerCreature >= 0)
 				{
-					unsigned int destination = getPlayerDestination();
-					destination += 1;
-					setPlayerDestination(destination);
+					if (playerInControl)
+					{
+						unsigned int destination = getPlayerDestination();
+						destination += 1;
+						setPlayerDestination(destination);
+					}
 				}
 				else
 				{
@@ -121,9 +124,12 @@ void threadInterface()
 
 				if (playerCreature >= 0)
 				{
-					unsigned int destination = getPlayerDestination();
-					destination -= worldSize;
-					setPlayerDestination(destination);
+					if (playerInControl)
+					{
+						unsigned int destination = getPlayerDestination();
+						destination -= worldSize;
+						setPlayerDestination(destination);
+					}
 				}
 				else
 				{
@@ -145,9 +151,12 @@ void threadInterface()
 
 				if (playerCreature >= 0)
 				{
-					unsigned int destination = getPlayerDestination();
-					destination -= 1;
-					setPlayerDestination(destination);
+					if (playerInControl)
+					{
+						unsigned int destination = getPlayerDestination();
+						destination -= 1;
+						setPlayerDestination(destination);
+					}
 				}
 				else
 				{
@@ -163,10 +172,12 @@ void threadInterface()
 			case SDLK_w: // w
 			{
 				if (playerCreature >= 0)
-				{
-					unsigned int destination = getPlayerDestination();
-					destination += worldSize;
-					setPlayerDestination(destination);
+				{	if (playerInControl)
+					{
+						unsigned int destination = getPlayerDestination();
+						destination += worldSize;
+						setPlayerDestination(destination);
+					}
 				}
 				else
 				{
@@ -178,7 +189,7 @@ void threadInterface()
 				break;
 			}
 
-case SDLK_c: // w
+			case SDLK_c: // w
 			{
 				playerInControl = !playerInControl;
 				break;

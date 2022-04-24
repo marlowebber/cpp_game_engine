@@ -693,6 +693,12 @@ void killAnimal(int animalIndex)
 		playerCreature = -1;
 	}
 
+	if (animalIndex == cameraTargetCreature)
+	{
+		cameraTargetCreature = -1;
+	}
+
+
 	animals[animalIndex].retired = true;
 	unsigned int animalWorldPositionX    = animals[animalIndex].position % worldSize;
 	unsigned int animalWorldPositionY    = animals[animalIndex].position / worldSize;
@@ -1382,10 +1388,10 @@ void move_all()
 
 			float minimumEdgeDistance = animalSize + 1; // animals are not allowed to go close to the edge, because it makes them act funny.
 
-			if (animals[animalIndex].fPosX < minimumEdgeDistance) {animals[animalIndex].fPosX = minimumEdgeDistance;}
-			if (animals[animalIndex].fPosX > worldSize - minimumEdgeDistance) { animals[animalIndex].fPosX = worldSize - minimumEdgeDistance;}
-			if (animals[animalIndex].fPosY < minimumEdgeDistance) {animals[animalIndex].fPosY = minimumEdgeDistance;}
-			if (animals[animalIndex].fPosY > worldSize - minimumEdgeDistance) { animals[animalIndex].fPosY = worldSize - minimumEdgeDistance;}
+			// if (animals[animalIndex].fPosX < minimumEdgeDistance) {animals[animalIndex].fPosX = minimumEdgeDistance;}
+			// if (animals[animalIndex].fPosX > worldSize - minimumEdgeDistance) { animals[animalIndex].fPosX = worldSize - minimumEdgeDistance;}
+			// if (animals[animalIndex].fPosY < minimumEdgeDistance) {animals[animalIndex].fPosY = minimumEdgeDistance;}
+			// if (animals[animalIndex].fPosY > worldSize - minimumEdgeDistance) { animals[animalIndex].fPosY = worldSize - minimumEdgeDistance;}
 
 			animals[animalIndex].uPosX  = animals[animalIndex].fPosX;
 			animals[animalIndex].uPosY  = animals[animalIndex].fPosY;
