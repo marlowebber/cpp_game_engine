@@ -101,7 +101,7 @@ const bool respawnLowSpecies     = true;
 // const bool entropicController    = false;
 const bool doMutation            = true;
 const bool sensorJiggles         = false;
-const bool doModifiers = false;
+const bool doModifiers = true;
 
 unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
@@ -1022,7 +1022,7 @@ void sensor(int animalIndex, unsigned int cellLocalPositionI)
 	int y = (cellWorldPositionY - sensorRange) + extremelyFastNumberFromZeroTo( sensorRange * 2);
 
 
-	printf("x: %i y: %i \n", x, y);
+	// printf("x: %i y: %i \n", x, y);
 
 	if (x < worldSize && x >= 0 && y < worldSize && y >= 0)
 	{
@@ -1096,15 +1096,15 @@ void sensor(int animalIndex, unsigned int cellLocalPositionI)
 
 
 
-			printf("scanning cell  %u\n", targetWorldPositionI );
+			// printf("scanning cell  %u\n", targetWorldPositionI );
 
 
-			printf("stimulus %f\n", stimulus );
-			printf("this cell intensity: %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity  );
+			// printf("stimulus %f\n", stimulus );
+			// printf("this cell intensity: %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity  );
 			if (stimulus > animals[animalIndex].body[cellLocalPositionI].signalIntensity )
 			{
 
-				printf("eye made a detection %u\n", targetWorldPositionI );
+				// printf("eye made a detection %u\n", targetWorldPositionI );
 
 				detected = true;
 			}
@@ -1221,7 +1221,7 @@ void sensor(int animalIndex, unsigned int cellLocalPositionI)
 				animals[animalIndex].body[cellLocalPositionI].target = finalTarget;
 				animals[animalIndex].body[cellLocalPositionI].signalIntensity  =  animals[animalIndex].body[cellLocalPositionI].sign;
 
-				printf("Applying Mapplying. Sigrel moo %f . signe %f . socal %u \n", animals[animalIndex].body[cellLocalPositionI].signalIntensity , animals[animalIndex].body[cellLocalPositionI].sign, cellLocalPositionI	);
+				// printf("Applying Mapplying. Sigrel moo %f . signe %f . socal %u \n", animals[animalIndex].body[cellLocalPositionI].signalIntensity , animals[animalIndex].body[cellLocalPositionI].sign, cellLocalPositionI	);
 
 			}
 		}
@@ -1299,7 +1299,7 @@ void organs_all()
 						animals[animalIndex].destination = animals[animalIndex].body[cellLocalPositionI].target;
 					}
 
-					printf("signalIntensity %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
+					// printf("signalIntensity %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
 
 					animals[animalIndex].body[cellLocalPositionI].signalIntensity *= (1.0f - ( 0.1f / (animals[animalIndex].stride + 1) ));
 
@@ -1829,11 +1829,12 @@ void setupExampleAnimal2()
 		}
 
 
-		if (y == 2 && x == 0)
-		{
-			// exampleAnimal2.body[i].organ = ORGAN_MODIFIER_HUNGRY;
-			// exampleAnimal2.body[i].eyeColor = color_green;
-		}
+		// if (y == 2 && x == 0)
+		// {
+		// 	exampleAnimal2.body[i].organ = ORGAN_MULTIPLIER;
+		// 	exampleAnimal2.body[i].multiplierFactor =
+		// 	// exampleAnimal2.body[i].eyeColor = color_green;
+		// }
 		if (y == 2 && x == 1)
 		{
 			exampleAnimal2.body[i].organ = ORGAN_SENSOR_EYE;
