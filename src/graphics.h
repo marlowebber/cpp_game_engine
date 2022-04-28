@@ -79,7 +79,7 @@ void threadGraphics();
 
 
 
-
+Vec_f2 GetOGLPos(int x, int y);
 
 Color multiplyColor (Color a, Color b);
 Color multiplyColorByScalar(Color a, float b);

@@ -2,6 +2,7 @@
 #include "menus.h"
 #include "untitled_marlo_project.h"
 
+
 const unsigned int width = 1920;
 const unsigned int height = 1080;
 const float fwidth = 1920;
@@ -401,3 +402,23 @@ void threadGraphics()
 
 
 
+Vec_f2 GetOGLPos(int x, int y)
+{
+    GLint viewport[4];
+    GLdouble modelview[16];
+    GLdouble projection[16];
+    GLfloat winX, winY, winZ;
+    GLdouble posX, posY, posZ;
+ 
+    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
+    glGetDoublev( GL_PROJECTION_MATRIX, projection );
+    glGetIntegerv( GL_VIEWPORT, viewport );
+ 
+    winX = (float)x;
+    winY = (float)viewport[3] - (float)y;
+    glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+ 
+    gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+ 
+    return Vec_f2(posX, posY);
+}

@@ -27,6 +27,7 @@
 #include "menus.h"
 #include "main.h"
 
+
 #define MATERIAL_NOTHING          0
 #define ORGAN_MOUTH_VEG                1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
 #define ORGAN_MOUTH_SCAVENGE               2
@@ -103,6 +104,10 @@ const bool doMutation            = true;
 const bool sensorJiggles         = false;
 const bool doModifiers = true;
 
+
+int mousePositionX = 0;
+int mousePositionY = 0;
+
 unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
@@ -115,18 +120,18 @@ const int animalSize     = 8;
 const unsigned int animalSquareSize      = animalSize * animalSize;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const unsigned int numberOfAnimals = 100000;
-const unsigned int numberOfSpecies = 4;
+const unsigned int numberOfSpecies = 12;
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
 const float taxEnergyScale         = 0.001f;        // a multiplier for how much it costs animals just to exist.
 // const float lightEnergy            = 0.01f;        // how much energy an animal gains each turn from having a leaf. if tax is by mass, must be higher than taxEnergyScale to be worth having leaves at all.
-const float movementEnergyScale    = 0.001f;        // a multiplier for how much it costs animals to move.
+const float movementEnergyScale    = 0.000f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
-const float grassEnergy            = 0.1f;         // how much you get from eating a square of grass
+const float grassEnergy            = 0.2f;         // how much you get from eating a square of grass
 
-const float liverStorage = 10.0f;
-const unsigned int baseLifespan = 2000;
+const float liverStorage = 20.0f;
+const unsigned int baseLifespan = 10000;
 const unsigned int baseSensorRange = 50;
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
@@ -228,6 +233,8 @@ struct Animal
 // float speciesEnergyOuts              [numberOfSpecies];
 unsigned int speciesPopulationCounts [numberOfSpecies];
 unsigned int populationCountUpdates  [numberOfSpecies];
+
+unsigned int speciesAttacksPerTurn[numberOfSpecies];
 
 Animal exampleAnimal2;
 
@@ -502,7 +509,10 @@ void mutateAnimal(unsigned int animalIndex)
 {
 	if (!doMutation) {return;}
 
-	if (extremelyFastNumberFromZeroTo(2) == 0) // don't mutate at all 2 out of every 3 times, so that a successful population can increase if conditions are right. If this number is 1, successful populations will inevitably be lost.
+	if (
+
+	    extremelyFastNumberFromZeroTo(1) == 0
+	) // don't mutate at all 2 out of every 3 times, so that a successful population can increase if conditions are right. If this number is 1, successful populations will inevitably be lost.
 	{
 
 
@@ -550,20 +560,21 @@ void mutateAnimal(unsigned int animalIndex)
 			// mutate colors of animal
 			else if (chosenMutationType == numberOfOrganTypes + 3)         // the more types of organs there are, the more often they will be chosen as mutation options.
 			{
+				// printf("MON VOYAGE!\n");
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[mutantCell].color.r += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].color.r  += (RNG() - 0.5f) ;
 				animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
 			}
 			else if (chosenMutationType == numberOfOrganTypes + 4)
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[mutantCell].color.g += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].color.g += (RNG() - 0.5f);
 				animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
 			}
 			else if (chosenMutationType == numberOfOrganTypes + 5)
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[mutantCell].color.b += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].color.b += (RNG() - 0.5f) ;
 				animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
 			}
 
@@ -573,19 +584,19 @@ void mutateAnimal(unsigned int animalIndex)
 			else if (chosenMutationType == numberOfOrganTypes + 6)
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[mutantCell].eyeColor.r += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].eyeColor.r += (RNG() - 0.5f);
 				animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
 			}
 			else if (chosenMutationType == numberOfOrganTypes + 7)
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[mutantCell].eyeColor.g += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].eyeColor.g += (RNG() - 0.5f);
 				animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
 			}
 			else if (chosenMutationType == numberOfOrganTypes + 8)
 			{
 				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[mutantCell].eyeColor.b += (RNG() - 0.5) * 0.1f;
+				animals[animalIndex].body[mutantCell].eyeColor.b += (RNG() - 0.5f);
 				animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
 			}
 
@@ -1426,7 +1437,11 @@ void organs_all()
 				if (cellsDone >= animals[animalIndex].mass) {break;}
 			}
 
-			if (totalGonads == 0) { killAnimal (animalIndex); } // no point in infertile mature animals existing
+			if (totalGonads == 0)
+			{
+				// printf("gonads exploded after fucking too much\n");
+				killAnimal (animalIndex);
+			} // no point in infertile mature animals existing
 
 			animals[animalIndex].prevHighestIntensity = highestIntensity;
 			animals[animalIndex].maxEnergy = animals[animalIndex].mass + (totalLiver * liverStorage);
@@ -1572,8 +1587,19 @@ void move_all()
 												world[cellWorldPositionI].material = MATERIAL_BLOOD;
 											}
 
+											if (world[cellWorldPositionI].identity == animals[animalIndex].parentIdentity)
+											{
+												printf("an animal attacked its parent!\n");
+											}
+
+											speciesAttacksPerTurn[speciesIndex] ++;
+
 											if (animals[world[cellWorldPositionI].identity].energyDebt <= 0.0f) // if the animal can lose the limb, and create energetic food, before the debt is paid, infinite energy can be produced.
 											{
+
+
+
+
 
 												if (animals[animalIndex].body[cellLocalPositionI].organ == ORGAN_WEAPON)
 												{
@@ -1679,17 +1705,21 @@ void energy_all() // perform energies.
 						if (animals[animalIndex].energy < 0.0f)
 						{
 							execute = true;
+							// printf("died of low energy!\n");
 						}
 					if (animals[animalIndex].age > animals[animalIndex].lifespan)
 					{
+						// printf("died of old age!\n");
 						execute = true;
 					}
 					if (animals[animalIndex].damageReceived > animals[animalIndex].mass)
 					{
+						// printf("killed to death!\n");
 						execute = true;
 					}
 					if (animals[animalIndex].mass <= 0)
 					{
+						// printf("banished for being massless!\n");
 						execute = true;
 					}
 				}
@@ -1712,6 +1742,7 @@ void energy_all() // perform energies.
 	for (int i = 0; i < numberOfSpecies; ++i)
 	{
 		speciesPopulationCounts[i] = populationCountUpdates[i];
+		speciesAttacksPerTurn[i] = 0;
 	}
 }
 
@@ -1761,13 +1792,30 @@ void camera()
 				drawTile( Vec_f2( fx, fy ), displayColor);
 			}
 		}
+
+
 	}
 
+
+	float fmx = mousePositionX;
+	float fmy = mousePositionY;
+	Color displayColor = color_white; //whatColorIsThisSquare(worldI);
+
+	Vec_f2 worldMousePos = Vec_f2( fmx, fmy);
+
+	drawTile( worldMousePos, displayColor);
 
 
 
 
 }
+
+
+
+
+
+
+
 
 
 
@@ -1784,7 +1832,7 @@ void drawGameInterfaceText()
 	for (int i = 0; i < numberOfSpecies; ++i)
 	{
 
-		printText2D(   std::string("Species ") + std::to_string(i) +   std::string(" pop. " + std::to_string(speciesPopulationCounts[i])), menuX, menuY, textSize);
+		printText2D(   std::string("Species ") + std::to_string(i) +   std::string(" pop. " + std::to_string(speciesPopulationCounts[i])) + " hits " + std::to_string(speciesAttacksPerTurn[i]) , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	menuY -= spacing;
@@ -1797,14 +1845,33 @@ void drawGameInterfaceText()
 		printText2D(   std::string("Energy ") + std::to_string(animals[playerCreature].energy ) , menuX, menuY, textSize);
 		menuY -= spacing;
 
+		printText2D(   std::string("Energy debt ") + std::to_string(animals[playerCreature].energyDebt ) , menuX, menuY, textSize);
+		menuY -= spacing;
+
+
+		printText2D(   std::string("Max energy ") + std::to_string(animals[playerCreature].maxEnergy ) , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("Offspring energy ") + std::to_string(animals[playerCreature].offspringEnergy ) , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("Reproduces at ") + std::to_string( ((animals[playerCreature].maxEnergy / 2) + (animals[playerCreature].offspringEnergy )) ) , menuX, menuY, textSize);
+		menuY -= spacing;
+
+
 		printText2D(   std::string("Destination ") + std::to_string(animals[playerCreature].destination ) , menuX, menuY, textSize);
 		menuY -= spacing;
+
+
 
 	}
 	menuY -= spacing;
 
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
 	menuY -= spacing;
+
+
+
 
 
 
@@ -1822,6 +1889,10 @@ void setupExampleAnimal2()
 
 		int x = i % animalSize;
 		int y = i / animalSize;
+
+
+		exampleAnimal2.body[i].color = color_lightblue;
+
 
 		if (y == 1)
 		{
@@ -1846,8 +1917,17 @@ void setupExampleAnimal2()
 		}
 		if (y == 3)
 		{
+			exampleAnimal2.body[i].organ = ORGAN_LIVER;
+		}
+		if (y == 4 && x < 6)
+		{
+			exampleAnimal2.body[i].organ = ORGAN_ADDOFFSPRINGENERGY;
+		}
+		if (y == 5)
+		{
 			exampleAnimal2.body[i].organ = ORGAN_GONAD;
 		}
+
 
 
 

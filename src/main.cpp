@@ -27,6 +27,8 @@ void togglePause ()
 	paused = !paused;
 }
 
+
+
 void threadInterface()
 {
 
@@ -289,6 +291,8 @@ void threadInterface()
 			int deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) ;
 
 
+			mousePositionX += deltaMouseX;
+			mousePositionY += deltaMouseY;
 
 
 			if ( draggedMenu != nullptr)

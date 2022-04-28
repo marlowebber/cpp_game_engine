@@ -12,6 +12,10 @@ extern unsigned int cameraPositionX ;//= (worldSize / 2);
 extern unsigned int cameraPositionY ;//= (worldSize / 2);
 extern bool playerInControl;
 
+
+extern int mousePositionX;
+extern int mousePositionY;
+
 extern bool lockfps;
 
      const       int cameraPanSpeed = 10;

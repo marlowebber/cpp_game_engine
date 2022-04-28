@@ -4,7 +4,7 @@
 
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
-
+#include <GL/glu.h>
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -37,6 +37,7 @@ struct Color
 };
 
 
+const Color color_darkblue         = Color( 0.0f, 0.05f, 0.35f, 1.0f );
 
 const Color color_lightblue          = Color( 0.1f, 0.3f, 0.65f, 1.0f );
 const Color color_yellow             = Color( 1.0f, 1.0f, 0.0f, 1.0f );
