@@ -105,8 +105,8 @@ const bool sensorJiggles         = false;
 const bool doModifiers = true;
 
 
-int mousePositionX = 0;
-int mousePositionY = 0;
+int mousePositionX =  -430;//-width/2;
+int mousePositionY =  330;//-height/2;
 
 unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
@@ -1868,6 +1868,9 @@ void drawGameInterfaceText()
 	menuY -= spacing;
 
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
+	menuY -= spacing;
+
+	printText2D(   std::string("Mouse X ") + std::to_string(mousePositionX ) + std::string(" Y ") + std::to_string(mousePositionY) , menuX, menuY, textSize);
 	menuY -= spacing;
 
 
