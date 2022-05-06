@@ -59,6 +59,8 @@
 #define ORGAN_ADDLIFESPAN 23
 #define ORGAN_ADDSTRIDE 24
 
+
+
 #define numberOfOrganTypes        25 // the number limit of growable genes
 
 #define MATERIAL_FOOD             32 //           
