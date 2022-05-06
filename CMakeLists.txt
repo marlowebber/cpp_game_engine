@@ -26,17 +26,21 @@ set(SRCS
 	src/menus.cpp
 	src/utilities.h
 	src/utilities.cpp
+	src/neuro.cpp
+	src/neuro.h
 	src/untitled_marlo_project.cpp
 	src/untitled_marlo_project.h
 )
 
 link_directories(
 	${Boost_LIBRARY_DIRS}
+	${CMAKE_SOURCE_DIR}/fann/src/
 )
 
 include_directories (
 	${SDL2_INCLUDE_DIRS}
 	${Boost_INCLUDE_DIRS}
+	${CMAKE_SOURCE_DIR}/fann/src/include/
 )
 
 add_executable(game ${SRCS} )
@@ -44,6 +48,7 @@ add_executable(game ${SRCS} )
 target_link_libraries (
 	game
 	OpenMP::OpenMP_CXX
+	${CMAKE_SOURCE_DIR}/fann/src/libfann.a
 	${SDL2_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${Boost_LIBRARIES}

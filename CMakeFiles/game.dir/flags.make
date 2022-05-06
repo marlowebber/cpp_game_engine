@@ -6,5 +6,5 @@ CXX_FLAGS = -g   -fopenmp
 
 CXX_DEFINES = -DBOOST_ALL_NO_LIB -DBOOST_ATOMIC_DYN_LINK -DBOOST_FILESYSTEM_DYN_LINK -DBOOST_THREAD_DYN_LINK
 
-CXX_INCLUDES = -I/usr/local/include/SDL2 
+CXX_INCLUDES = -I/usr/local/include/SDL2 -I/home/marlo/Documents/cpp_game_engine/fann/src/include 
 

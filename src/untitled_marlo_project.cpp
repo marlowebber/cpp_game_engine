@@ -27,6 +27,7 @@
 #include "menus.h"
 #include "main.h"
 
+#include "fann.h"
 
 #define MATERIAL_NOTHING          0
 #define ORGAN_MOUTH_VEG                1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
@@ -44,12 +45,12 @@
 #define ORGAN_SENSOR_HOME         13
 #define ORGAN_SENSOR_EYE          14
 
-#define ORGAN_MULTIPLIER   15
+// #define ORGAN_MULTIPLIER   15
 
-#define ORGAN_MODIFIER_HUNGRY        16
-#define ORGAN_MODIFIER_HURT          17
-#define ORGAN_MODIFIER_DEBTPAID      18
-#define ORGAN_MODIFIER_NOVALIDTARGET 19
+// #define ORGAN_MODIFIER_HUNGRY        16
+// #define ORGAN_MODIFIER_HURT          17
+// #define ORGAN_MODIFIER_DEBTPAID      18
+// #define ORGAN_MODIFIER_NOVALIDTARGET 19
 
 #define ORGAN_MOUTH_CARNIVORE     20
 #define ORGAN_MOUTH_PARASITE      21
@@ -104,7 +105,7 @@ const bool respawnLowSpecies     = true;
 // const bool entropicController    = false;
 const bool doMutation            = true;
 const bool sensorJiggles         = false;
-const bool doModifiers = true;
+// const bool doModifiers = true;
 
 
 int mousePositionX =  -430;//-width/2;
@@ -200,7 +201,7 @@ struct Cell
 	unsigned int target;
 	Color color;
 	Color eyeColor;
-	float multiplierFactor;
+	// float multiplierFactor;
 	float damage;
 };
 
@@ -331,7 +332,7 @@ void resetAnimal(unsigned int animalIndex)
 			animals[animalIndex].body[cellLocalPositionI].sign = 1.0f;
 			animals[animalIndex].body[cellLocalPositionI].sensorRange = baseSensorRange;
 			animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
-			animals[animalIndex].body[cellLocalPositionI].multiplierFactor = 1.0f;
+			// animals[animalIndex].body[cellLocalPositionI].multiplierFactor = 1.0f;
 			animals[animalIndex].body[cellLocalPositionI].target = 0;
 			animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
 			animals[animalIndex].body[cellLocalPositionI].eyeColor = color_grey;
@@ -420,18 +421,18 @@ bool organIsASensor(unsigned int organ)
 }
 
 
-bool organIsAModifier(unsigned int organ)
-{
-	if (    organ == ORGAN_MODIFIER_HURT ||
-	        organ == ORGAN_MODIFIER_HUNGRY ||
-	        organ == ORGAN_MODIFIER_DEBTPAID ||
-	        organ == ORGAN_MODIFIER_NOVALIDTARGET
-	   )
-	{
-		return true;
-	}
-	return false;
-}
+// bool organIsAModifier(unsigned int organ)
+// {
+// 	if (    organ == ORGAN_MODIFIER_HURT ||
+// 	        organ == ORGAN_MODIFIER_HUNGRY ||
+// 	        organ == ORGAN_MODIFIER_DEBTPAID ||
+// 	        organ == ORGAN_MODIFIER_NOVALIDTARGET
+// 	   )
+// 	{
+// 		return true;
+// 	}
+// 	return false;
+// }
 
 // // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
 void measureAnimalQualities(unsigned int animalIndex)
@@ -603,47 +604,47 @@ void mutateAnimal(unsigned int animalIndex)
 			}
 
 
-			// mutate multiplier factor
-			else if (chosenMutationType == numberOfOrganTypes + 9)
-			{
-				unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+			// // mutate multiplier factor
+			// else if (chosenMutationType == numberOfOrganTypes + 9)
+			// {
+			// 	unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
 
-				if (animals[animalIndex].body[mutantCell].organ == ORGAN_MULTIPLIER)
-				{
-					// if it is actually a multiplier, it can mutate between about -10 and +10
-					animals[animalIndex].body[mutantCell].multiplierFactor += (RNG() - 0.5);
-					if (animals[animalIndex].body[mutantCell].multiplierFactor > 10.0f)
-					{
-						animals[animalIndex].body[mutantCell].multiplierFactor = 10.0f;
-					}
-					else if (animals[animalIndex].body[mutantCell].multiplierFactor < -10.0f)
-					{
-						animals[animalIndex].body[mutantCell].multiplierFactor = -10.0f;
-					}
-				}
+			// 	if (animals[animalIndex].body[mutantCell].organ == ORGAN_MULTIPLIER)
+			// 	{
+			// 		// if it is actually a multiplier, it can mutate between about -10 and +10
+			// 		animals[animalIndex].body[mutantCell].multiplierFactor += (RNG() - 0.5);
+			// 		if (animals[animalIndex].body[mutantCell].multiplierFactor > 10.0f)
+			// 		{
+			// 			animals[animalIndex].body[mutantCell].multiplierFactor = 10.0f;
+			// 		}
+			// 		else if (animals[animalIndex].body[mutantCell].multiplierFactor < -10.0f)
+			// 		{
+			// 			animals[animalIndex].body[mutantCell].multiplierFactor = -10.0f;
+			// 		}
+			// 	}
 
-				if ( organIsAModifier(animals[animalIndex].body[mutantCell].organ))
-				{
-					// if it is actually a modifier, it can really only be positive or negative.
-					if (	animals[animalIndex].body[mutantCell].multiplierFactor  == -1 || animals[animalIndex].body[mutantCell].multiplierFactor  == 1)
-					{
-						animals[animalIndex].body[mutantCell].multiplierFactor  = animals[animalIndex].body[mutantCell].multiplierFactor   * -1;
-					}
-					else
-					{
-						if (animals[animalIndex].body[mutantCell].multiplierFactor  < 0)
-						{
-							animals[animalIndex].body[mutantCell].multiplierFactor   = -1;
-						}
-						else
-						{
-							animals[animalIndex].body[mutantCell].multiplierFactor  = 1;
-						}
-					}
+			// 	if ( organIsAModifier(animals[animalIndex].body[mutantCell].organ))
+			// 	{
+			// 		// if it is actually a modifier, it can really only be positive or negative.
+			// 		if (	animals[animalIndex].body[mutantCell].multiplierFactor  == -1 || animals[animalIndex].body[mutantCell].multiplierFactor  == 1)
+			// 		{
+			// 			animals[animalIndex].body[mutantCell].multiplierFactor  = animals[animalIndex].body[mutantCell].multiplierFactor   * -1;
+			// 		}
+			// 		else
+			// 		{
+			// 			if (animals[animalIndex].body[mutantCell].multiplierFactor  < 0)
+			// 			{
+			// 				animals[animalIndex].body[mutantCell].multiplierFactor   = -1;
+			// 			}
+			// 			else
+			// 			{
+			// 				animals[animalIndex].body[mutantCell].multiplierFactor  = 1;
+			// 			}
+			// 		}
 
 
-				}
-			}
+			// 	}
+			// }
 
 
 
@@ -903,16 +904,16 @@ Color organColors(unsigned int organ)
 		return color_black;
 	case ORGAN_SENSOR_CREATURE:
 		return color_black;
-	case ORGAN_MULTIPLIER:
-		return color_pink;
-	case ORGAN_MODIFIER_HURT:
-		return color_pink;
-	case ORGAN_MODIFIER_HUNGRY:
-		return color_pink;
-	case ORGAN_MODIFIER_DEBTPAID:
-		return color_pink;
-	case ORGAN_MODIFIER_NOVALIDTARGET:
-		return color_pink;
+	// case ORGAN_MULTIPLIER:
+	// 	return color_pink;
+	// case ORGAN_MODIFIER_HURT:
+	// 	return color_pink;
+	// case ORGAN_MODIFIER_HUNGRY:
+	// 	return color_pink;
+	// case ORGAN_MODIFIER_DEBTPAID:
+	// 	return color_pink;
+	// case ORGAN_MODIFIER_NOVALIDTARGET:
+	// 	return color_pink;
 	case ORGAN_SENSOR_RANDOM:
 		return color_pink;
 	case ORGAN_SENSOR_HOME:
@@ -1136,79 +1137,79 @@ void sensor(int animalIndex, unsigned int cellLocalPositionI)
 
 
 
-			if (doModifiers)
-			{
-				// check if nearby modifiers are blocking the sensor, and determine the cell's sign.
-				float newSign = 1.0f;
-				for (unsigned int n = 0; n < nNeighbours; ++n)
-				{
-					unsigned int cellNeighbour = cellLocalPositionI + cellNeighbourOffsets[n];
-					if (cellNeighbour < animalSquareSize)
-					{
-						if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MULTIPLIER)
-						{
-							newSign *= animals[animalIndex].body[cellNeighbour].multiplierFactor;
-						}
+			// if (doModifiers)
+			// {
+			// 	// check if nearby modifiers are blocking the sensor, and determine the cell's sign.
+			// 	float newSign = 1.0f;
+			// 	for (unsigned int n = 0; n < nNeighbours; ++n)
+			// 	{
+			// 		unsigned int cellNeighbour = cellLocalPositionI + cellNeighbourOffsets[n];
+			// 		if (cellNeighbour < animalSquareSize)
+			// 		{
+			// 			if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MULTIPLIER)
+			// 			{
+			// 				newSign *= animals[animalIndex].body[cellNeighbour].multiplierFactor;
+			// 			}
 
-						if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MODIFIER_HURT)
-						{
-							bool valid = false;
-							if (animals[animalIndex].damageReceived > (animals[animalIndex].mass / 2))
-							{
-								valid = true;
-							}
-							if (animals[animalIndex].body[cellNeighbour].multiplierFactor < 0)
-							{
-								valid = !valid;
-							}
-							if (!valid) { newSign = 0.0f; }
-						}
+			// 			if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MODIFIER_HURT)
+			// 			{
+			// 				bool valid = false;
+			// 				if (animals[animalIndex].damageReceived > (animals[animalIndex].mass / 2))
+			// 				{
+			// 					valid = true;
+			// 				}
+			// 				if (animals[animalIndex].body[cellNeighbour].multiplierFactor < 0)
+			// 				{
+			// 					valid = !valid;
+			// 				}
+			// 				if (!valid) { newSign = 0.0f; }
+			// 			}
 
-						if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MODIFIER_HUNGRY)
-						{
-							bool valid = false;
-							if (animals[animalIndex].energy < (animals[animalIndex].mass / 2))
-							{
-								valid = true;
-							}
-							if (animals[animalIndex].body[cellNeighbour].multiplierFactor < 0)
-							{
-								valid = !valid;
-							}
-							if (!valid) { newSign = 0.0f;}
-						}
+			// 			if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MODIFIER_HUNGRY)
+			// 			{
+			// 				bool valid = false;
+			// 				if (animals[animalIndex].energy < (animals[animalIndex].mass / 2))
+			// 				{
+			// 					valid = true;
+			// 				}
+			// 				if (animals[animalIndex].body[cellNeighbour].multiplierFactor < 0)
+			// 				{
+			// 					valid = !valid;
+			// 				}
+			// 				if (!valid) { newSign = 0.0f;}
+			// 			}
 
-						if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MODIFIER_DEBTPAID)
-						{
-							bool valid = false;
-							if (animals[animalIndex].energyDebt <= 0.0f)
-							{
-								valid = true;
-							}
-							if (animals[animalIndex].body[cellNeighbour].multiplierFactor < 0)
-							{
-								valid = !valid;
-							}
-							if (!valid) { newSign = 0.0f;}
-						}
+			// 			if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MODIFIER_DEBTPAID)
+			// 			{
+			// 				bool valid = false;
+			// 				if (animals[animalIndex].energyDebt <= 0.0f)
+			// 				{
+			// 					valid = true;
+			// 				}
+			// 				if (animals[animalIndex].body[cellNeighbour].multiplierFactor < 0)
+			// 				{
+			// 					valid = !valid;
+			// 				}
+			// 				if (!valid) { newSign = 0.0f;}
+			// 			}
 
-						if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MODIFIER_NOVALIDTARGET)
-						{
-							bool valid = false;
-							if (animals[animalIndex].prevHighestIntensity < thresholdOfBoredom)
-							{
-								valid = true;
-							}
-							if (animals[animalIndex].body[cellNeighbour].multiplierFactor < 0)
-							{
-								valid = !valid;
-							}
-							if (!valid) { newSign = 0.0f; }
-						}
-					}
-				}
-				animals[animalIndex].body[cellLocalPositionI].sign = newSign;
-			}
+			// 			if (animals[animalIndex].body[cellNeighbour].organ == ORGAN_MODIFIER_NOVALIDTARGET)
+			// 			{
+			// 				bool valid = false;
+			// 				if (animals[animalIndex].prevHighestIntensity < thresholdOfBoredom)
+			// 				{
+			// 					valid = true;
+			// 				}
+			// 				if (animals[animalIndex].body[cellNeighbour].multiplierFactor < 0)
+			// 				{
+			// 					valid = !valid;
+			// 				}
+			// 				if (!valid) { newSign = 0.0f; }
+			// 			}
+			// 		}
+			// 	}
+			// 	animals[animalIndex].body[cellLocalPositionI].sign = newSign;
+			// }
 
 
 

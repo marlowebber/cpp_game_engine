@@ -1,16 +1,54 @@
 
 #include "fann.h"
 
+// #include "fann.h"
+// #include "box2d.h"
+// #include "b2_contact.h"
+// #include "deepsea_types.h"
+// #include "deepsea_utilities.h"
+
+// #include "deepsea_animals.h"
+
+#include <iostream>
+#include <fstream>
+
+#include <string>
+#include <limits>
+#include <stdio.h>
+#include <chrono>
+#include <thread>
+#include <math.h>
+#include <cmath>
+#include <ctime>
+#include <list>
+#include <string.h>
+
+
+#include "utilities.h"
+
+// #include "deepsea.h"
+
+
+// #define GL_GLEXT_PROTOTYPES
+
+// #include <SDL.h>
+// #include <SDL_opengl.h>
+
+// #include "main.h"
+
+// #include "deepsea_maps.h"
+
+// #include "deepsea_usertools.h"
+
+
 // these FANN parameters should be common to all networks.
 const float desired_error = (const float) 0.01;
 const unsigned int max_epochs = 50000;
 const unsigned int epochs_between_reports = 100;
 
-networkDescriptor * createEmptyNetworkOfCorrectSize (fann * temp_ann) {
-	return new networkDescriptor(temp_ann);
-}
 
-
+#define SENSECONNECTOR_BUFFERSIZE 512
+ 
 
 struct senseConnector 
 {
@@ -24,7 +62,7 @@ struct senseConnector
 	float recursorBuffer[SENSECONNECTOR_BUFFERSIZE];
 	unsigned int recursorCursor;
 
-	b2Color senseConnectorPermutedColor;
+	// b2Color senseConnectorPermutedColor;
 
 	senseConnector();
 };
@@ -53,8 +91,8 @@ struct neuronDescriptor
 	float activation_steepness;
 	std::list<connectionDescriptor> connections;
 
-	b2Vec2 position;
-	b2AABB aabb;
+	// b2Vec2 position;
+	// b2AABB aabb;
 
 	unsigned int index; 			// the fann file index of this neuron. handy to refer to
 
@@ -63,7 +101,7 @@ struct neuronDescriptor
 	bool selected;
 	bool locked;
 
-	b2Color biasNeuronColor;
+	// b2Color biasNeuronColor;
 
 	neuronDescriptor();
 };
@@ -96,11 +134,15 @@ struct networkDescriptor
 
 	std::list<layerDescriptor> layers;
 
-	b2AABB networkWindow;
+	// b2AABB networkWindow;
 
 	networkDescriptor(fann* pann);
 };
 
+
+networkDescriptor * createEmptyNetworkOfCorrectSize (fann * temp_ann) {
+	return new networkDescriptor(temp_ann);
+}
 
 
 
@@ -194,6 +236,66 @@ void deleteNeuronByIndex (networkDescriptor * network, unsigned int windex) {
 }
 
 
+connectionDescriptor::connectionDescriptor (unsigned int toNeuron)
+{
+	isUsed = false;
+	connectedTo = toNeuron;
+	connectionWeight = 0.0f;
+}
+
+neuronDescriptor::neuronDescriptor()
+{
+
+
+	activation_function = 0;
+	activation_steepness = 1.0f;
+	connections = std::list<connectionDescriptor>();
+	// position = b2Vec2(0.0f, 0.0f);
+	index = 0; 			// the fann file index of this neuron. handy to refer to
+	biasNeuron = false;
+	locked = false;
+
+	isUsed = false;
+	// aabb.upperBound = b2Vec2(0.0f, 0.0f);
+	// aabb.lowerBound = b2Vec2(0.0f, 0.0f);
+	selected = false;
+
+	// biasNeuronColor =  permuteColor( connectorColorBias , 0.35f);
+}
+
+layerDescriptor::layerDescriptor ()
+{
+	neurons = std::list<neuronDescriptor>();
+
+	isUsed = false;
+	selected = false;
+}
+
+senseConnector::senseConnector ()
+{
+
+	connectedToLimb = 0;							// what limb the sense is coming from, or motor signal is going to.
+	connectedToNeuron = 0;							// neuron index. The position of this neuron's layer will determine how the program uses it.
+	sensorType =  0; 			// what kind of sense it is (touch, smell, etc.how the number will be treated)
+	timerFreq = 0;									// if a timer, the frequency.
+	timerPhase = 0.0f;
+	recursorChannel = 0; 		//
+	recursorDelay = 0;
+	recursorCursor = 0;
+
+	// eyeRays = 1;
+	// eyerayDistance = 10.0f;
+
+	for (int i = 0; i < SENSECONNECTOR_BUFFERSIZE; ++i)
+	{
+		recursorBuffer[i] = 0.0f;
+	}
+
+
+	// senseConnectorPermutedColor = b2Color(0.0f, 0.0f, 0.0f);
+}
+
+
 
 // method to create a network descriptor in memory
 networkDescriptor::networkDescriptor (fann * pann)
@@ -216,10 +318,10 @@ networkDescriptor::networkDescriptor (fann * pann)
 
 		fann_get_layer_array(pann, layerCake);
 
-		b2AABB partywaist;
-		networkWindow = partywaist;
-		partywaist.lowerBound = b2Vec2(0.0f, 0.0f);
-		partywaist.upperBound = b2Vec2(0.0f, 0.0f);
+		// b2AABB partywaist;
+		// networkWindow = partywaist;
+		// partywaist.lowerBound = b2Vec2(0.0f, 0.0f);
+		// partywaist.upperBound = b2Vec2(0.0f, 0.0f);
 
 		unsigned int rollingIndexCounter = 0;
 
@@ -409,27 +511,25 @@ void flagBiasNeurons( networkDescriptor * network) {
 
 void init_fishie()
 {
-	if (nann == NULL) {
-		for (int i = 0; i < N_FINGERS; ++i) {
-			driedFish.bones[i].color = b2Color(RNG() * 255, RNG() * 255, RNG() * 255);
-		}
+	// if (nann == NULL) 
+	// {
 
-		unsigned int innerLayerSmall = (senseInputsUsedSoFar + motorOutputsUsed + motorOutputsUsed) / 3;
-		unsigned int innerLayerBig = (senseInputsUsedSoFar + senseInputsUsedSoFar + motorOutputsUsed) / 3;
+		// unsigned int innerLayerSmall = (senseInputsUsedSoFar + motorOutputsUsed + motorOutputsUsed) / 3;
+		// unsigned int innerLayerBig = (senseInputsUsedSoFar + senseInputsUsedSoFar + motorOutputsUsed) / 3;
 
 		//this is what your basic bob fish will start with.
 		unsigned int creationLayerCake[] = {
-			senseInputsUsedSoFar,
-			innerLayerBig,
-			innerLayerSmall,
-			motorOutputsUsed
+			4,
+			3,
+			3,
+			4
 		};
-		ann = fann_create_standard_array(4, creationLayerCake);
+		fann * ann = fann_create_standard_array(4, creationLayerCake);
 		fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
 		fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
 
-		brain = createEmptyNetworkOfCorrectSize (ann) ;
-	}
+		networkDescriptor * brain = createEmptyNetworkOfCorrectSize (ann) ;
+	// }
 }
 
 
@@ -438,7 +538,7 @@ void addNeuronIntoLivingBrain (networkDescriptor * network, unsigned int targetL
 	newNeuron->isUsed = true;
 	newNeuron->biasNeuron = false;
 	newNeuron->index = 0;
-	newNeuron->position = b2Vec2(0.0f, 0.0f);
+	// newNeuron->position = b2Vec2(0.0f, 0.0f);
 
 	std::list<layerDescriptor>::iterator layer;
 	std::list<layerDescriptor>::iterator targetLayerIterator;
@@ -861,195 +961,195 @@ networkDescriptor * combineTwoNetworks2 (networkDescriptor * partnerA, networkDe
 
 
 
-// this function takes sensory input, transforms it across the brain, and applies the output to the body
-void performNeuralActivity (BonyFish * fish, Species * currentSpecies, bool alreadyDrawnThisTurn) {
+// // this function takes sensory input, transforms it across the brain, and applies the output to the body
+// void performNeuralActivity (BonyFish * fish, Species * currentSpecies, bool alreadyDrawnThisTurn) {
 
 
-	// sensorium size is based on the size of the ANN. Whether or not it is populated with numbers depends on the size of the input connector matrix.
-	unsigned long sizeOfInputLayer = 0;
-	unsigned long sizeOfOutputLayer = 0;
-	unsigned long num_layers =  (unsigned long)(fish->brain->layers.size());
+// 	// sensorium size is based on the size of the ANN. Whether or not it is populated with numbers depends on the size of the input connector matrix.
+// 	unsigned long sizeOfInputLayer = 0;
+// 	unsigned long sizeOfOutputLayer = 0;
+// 	unsigned long num_layers =  (unsigned long)(fish->brain->layers.size());
 
-	std::list<layerDescriptor>::iterator layer;
-	layer = fish->brain->layers.begin();
-	sizeOfInputLayer = layer->neurons.size();
-	std::advance(layer, num_layers - 1);
-	sizeOfOutputLayer = layer->neurons.size();
+// 	std::list<layerDescriptor>::iterator layer;
+// 	layer = fish->brain->layers.begin();
+// 	sizeOfInputLayer = layer->neurons.size();
+// 	std::advance(layer, num_layers - 1);
+// 	sizeOfOutputLayer = layer->neurons.size();
 
-	float sensorium[ sizeOfInputLayer ];
+// 	float sensorium[ sizeOfInputLayer ];
 
-	for (unsigned int j = 0; j < sizeOfInputLayer; ++j)
-	{
-		if (j >= N_SENSECONNECTORS) {
-			continue;	// if the sensorium array is bigger than the array of input connectors, you can just leave the rest blank.
-		}
+// 	for (unsigned int j = 0; j < sizeOfInputLayer; ++j)
+// 	{
+// 		if (j >= N_SENSECONNECTORS) {
+// 			continue;	// if the sensorium array is bigger than the array of input connectors, you can just leave the rest blank.
+// 		}
 
-		switch (fish->inputMatrix[j].sensorType) {
-		case SENSOR_FOODRADAR:
-			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_radar;
-			break;
+// 		switch (fish->inputMatrix[j].sensorType) {
+// 		case SENSOR_FOODRADAR:
+// 			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_radar;
+// 			break;
 
-		case SENSOR_ALTRADAR:
-			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_altradar;
-			break;
+// 		case SENSOR_ALTRADAR:
+// 			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_altradar;
+// 			break;
 
-		case SENSOR_TOUCH:
-			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_touch;
-			break;
+// 		case SENSOR_TOUCH:
+// 			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_touch;
+// 			break;
 
-		case SENSOR_JOINTANGLE:
-			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_jointangle;
-			break;
-
-
-		case SENSOR_ABSOLUTEANGLE:
-			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_absoluteAngle;
-			break;
-
-		case SENSOR_EYE:
-
-			// performEyeRays( &fish->inputMatrix[j], fish );
+// 		case SENSOR_JOINTANGLE:
+// 			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_jointangle;
+// 			break;
 
 
+// 		case SENSOR_ABSOLUTEANGLE:
+// 			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_absoluteAngle;
+// 			break;
 
-			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_eye;
+// 		case SENSOR_EYE:
 
-
-			break;
-
-		case SENSOR_TIMER:
-			sensorium[j] = sin(2 * M_PI * fish->inputMatrix[j].timerFreq * 	fish->inputMatrix[j].timerPhase);
-			fish->inputMatrix[j].timerPhase += 0.001;
-			if (fish->inputMatrix[j].timerPhase > 1) {
-				fish->inputMatrix[j].timerPhase = 0;
-			}
-
-			break;
-
-		case SENSECONNECTOR_UNUSED:
-			sensorium[j] = 0.0f;
-			break;
-
-		case SENSECONNECTOR_RECURSORRECEIVER:
-			// how this works.
-			// the transmitters just set their buffer first place to the sample. that's it
-
-			// the receivers trawl the transmitter list and look for one on the same channel
-			float receivedSample = 0.0f;
-			for (unsigned int k = 0; k < sizeOfOutputLayer; ++k)
-			{
-				if (k >= N_SENSECONNECTORS) {
-					continue;	// if the sensorium array is bigger than the array of input connectors, you can just leave the rest blank.
-				}
-
-				if (fish->outputMatrix[k].sensorType == SENSECONNECTOR_RECURSORTRANSMITTER && fish->outputMatrix[k].recursorChannel == fish->inputMatrix[j].recursorChannel ) {
-					receivedSample = fish->outputMatrix[k].recursorBuffer[0];// = motorSignals[j];
-					break;
-				}
-			}
-
-			// they set their own sample, at the scrolling cursor, to it
-			fish->inputMatrix[j].recursorBuffer[ fish->inputMatrix[j].recursorCursor ] = receivedSample;
-
-			// then they take a sample from [delay] samples ago and apply it
-			int cursorMinusDelay = fish->inputMatrix[j].recursorCursor - fish->inputMatrix[j].recursorDelay ; // this is signed because the operation can cause it to be negative. In this case it should be wrapped around the end of the buffer.
-			if (cursorMinusDelay < 0) {
-				cursorMinusDelay = SENSECONNECTOR_BUFFERSIZE + cursorMinusDelay; // cursorMinusDelay is always negative here, so this is a subtraction.
-			}
-
-			sensorium[j] = fish->inputMatrix[j].recursorBuffer[cursorMinusDelay];
-			fish->inputMatrix[j].recursorCursor ++;
-
-			// the buffer loops around the max size, but there is no performance downside to doing this because you're not rolling the entire buffer
-			if (fish->inputMatrix[j].recursorCursor >= SENSECONNECTOR_BUFFERSIZE) {
-				fish->inputMatrix[j].recursorCursor = 0;
-			}
-
-			break;
-		}
-
-		// add noise to every input neuron regardless of what it's connected to. Helps to 'start' from zero, as well as making everything more robust and natural-feeling.
-		sensorium[j] += (RNG() - 0.5 ) * m_deepSeaSettings.noise;
-
-		// add neurostimulator noise
-		if (fish->flagStim)
-		{
-			sensorium[j] += (RNG() - 0.5 ) * neurostimulatorAmplitude;
-
-		}
-
-		if (fish == primarilySelectedFish) {primaryFishInputSensorium[j] = sensorium[j];}
-
-	}
-
-	// feed information into brain
-	float * motorSignals = fann_run(fish->ann, sensorium);
-
-	for (unsigned int j = 0; j < sizeOfOutputLayer; ++j)
-	{
-		if (j >= N_SENSECONNECTORS) {
-			continue;	// if the sensorium array is bigger than the array of input connectors, you can just leave the rest blank.
-		}
-
-		switch (fish->outputMatrix[j].sensorType) {
-
-		case SENSECONNECTOR_RECURSORTRANSMITTER:
-			fish->outputMatrix[j].recursorBuffer[0] = motorSignals[j];
-			break;
-
-		case SENSECONNECTOR_COLORSPOT:
-			fish->bones[fish->outputMatrix[j].connectedToLimb] ->colorspotCurrentBrightness = motorSignals[j];
+// 			// performEyeRays( &fish->inputMatrix[j], fish );
 
 
-		case SENSECONNECTOR_MOTOR:
 
-			if ( limbUsed(fish->bones[fish->outputMatrix[j].connectedToLimb] ) ) {
-
-				if (fish->bones[fish->outputMatrix[j].connectedToLimb]->isRoot) {
-					continue;
-				}
-
-				if ( limbAttached( fish->bones[fish->outputMatrix[j].connectedToLimb]  ) ) {
-
-					if (fish->bones[fish->outputMatrix[j].connectedToLimb]->p_joint != nullptr) {
-
-						float motorSpeed = motorSignals[j] * 10; // this is just a constant which is used because the brain signals are pretty small. i've never needed to change it.
-
-						if (true) {
-							float speedLimit = 10.0f;
-
-							if (motorSpeed > speedLimit) {
-								motorSpeed = speedLimit;
-							}
-							else if (motorSpeed < -speedLimit) {
-								motorSpeed = -speedLimit;
-							}
-						}
-
-						if (fish->energy > 0)
-						{
-							float energyUsedThisTurn = abs( motorSpeed * fish->bones[fish->outputMatrix[j].connectedToLimb]->area * fish->bones[fish->outputMatrix[j].connectedToLimb]->density * currentSpecies->muscularEfficiency  ); // Moving a limb costs energy according to the limb mass times the speed
-							fish->energy -= energyUsedThisTurn;
-							fish->bones[fish->outputMatrix[j].connectedToLimb]->p_joint->SetMotorSpeed(motorSpeed);
-
-						}
-
-					}
-				}
-			}
-			break;
-		}
+// 			sensorium[j] = fish->bones[ fish->inputMatrix[j].connectedToLimb  ]->sensation_eye;
 
 
-		if (fish == primarilySelectedFish) {primaryFishOutputSensorium[j] = motorSignals[j];}
-	}
+// 			break;
 
-	// now is a good time to draw the brain, while you have access to the sensorium.
-	// if ( false /* TestMain::getBrainWindowStatus() */ ) {
-	// 	if (fish->selected && !alreadyDrawnThisTurn) {
-	// 		alreadyDrawnThisTurn = true;
-	// 		unsigned int spacesUsedSoFar = 0;
-	// 		drawNeuralNetworkFromDescriptor(motorSignals, sensorium, &spacesUsedSoFar, &(*fish));
-	// 	}
-	// }
-}
+// 		case SENSOR_TIMER:
+// 			sensorium[j] = sin(2 * M_PI * fish->inputMatrix[j].timerFreq * 	fish->inputMatrix[j].timerPhase);
+// 			fish->inputMatrix[j].timerPhase += 0.001;
+// 			if (fish->inputMatrix[j].timerPhase > 1) {
+// 				fish->inputMatrix[j].timerPhase = 0;
+// 			}
+
+// 			break;
+
+// 		case SENSECONNECTOR_UNUSED:
+// 			sensorium[j] = 0.0f;
+// 			break;
+
+// 		case SENSECONNECTOR_RECURSORRECEIVER:
+// 			// how this works.
+// 			// the transmitters just set their buffer first place to the sample. that's it
+
+// 			// the receivers trawl the transmitter list and look for one on the same channel
+// 			float receivedSample = 0.0f;
+// 			for (unsigned int k = 0; k < sizeOfOutputLayer; ++k)
+// 			{
+// 				if (k >= N_SENSECONNECTORS) {
+// 					continue;	// if the sensorium array is bigger than the array of input connectors, you can just leave the rest blank.
+// 				}
+
+// 				if (fish->outputMatrix[k].sensorType == SENSECONNECTOR_RECURSORTRANSMITTER && fish->outputMatrix[k].recursorChannel == fish->inputMatrix[j].recursorChannel ) {
+// 					receivedSample = fish->outputMatrix[k].recursorBuffer[0];// = motorSignals[j];
+// 					break;
+// 				}
+// 			}
+
+// 			// they set their own sample, at the scrolling cursor, to it
+// 			fish->inputMatrix[j].recursorBuffer[ fish->inputMatrix[j].recursorCursor ] = receivedSample;
+
+// 			// then they take a sample from [delay] samples ago and apply it
+// 			int cursorMinusDelay = fish->inputMatrix[j].recursorCursor - fish->inputMatrix[j].recursorDelay ; // this is signed because the operation can cause it to be negative. In this case it should be wrapped around the end of the buffer.
+// 			if (cursorMinusDelay < 0) {
+// 				cursorMinusDelay = SENSECONNECTOR_BUFFERSIZE + cursorMinusDelay; // cursorMinusDelay is always negative here, so this is a subtraction.
+// 			}
+
+// 			sensorium[j] = fish->inputMatrix[j].recursorBuffer[cursorMinusDelay];
+// 			fish->inputMatrix[j].recursorCursor ++;
+
+// 			// the buffer loops around the max size, but there is no performance downside to doing this because you're not rolling the entire buffer
+// 			if (fish->inputMatrix[j].recursorCursor >= SENSECONNECTOR_BUFFERSIZE) {
+// 				fish->inputMatrix[j].recursorCursor = 0;
+// 			}
+
+// 			break;
+// 		}
+
+// 		// add noise to every input neuron regardless of what it's connected to. Helps to 'start' from zero, as well as making everything more robust and natural-feeling.
+// 		sensorium[j] += (RNG() - 0.5 ) * m_deepSeaSettings.noise;
+
+// 		// add neurostimulator noise
+// 		if (fish->flagStim)
+// 		{
+// 			sensorium[j] += (RNG() - 0.5 ) * neurostimulatorAmplitude;
+
+// 		}
+
+// 		if (fish == primarilySelectedFish) {primaryFishInputSensorium[j] = sensorium[j];}
+
+// 	}
+
+// 	// feed information into brain
+// 	float * motorSignals = fann_run(fish->ann, sensorium);
+
+// 	for (unsigned int j = 0; j < sizeOfOutputLayer; ++j)
+// 	{
+// 		if (j >= N_SENSECONNECTORS) {
+// 			continue;	// if the sensorium array is bigger than the array of input connectors, you can just leave the rest blank.
+// 		}
+
+// 		switch (fish->outputMatrix[j].sensorType) {
+
+// 		case SENSECONNECTOR_RECURSORTRANSMITTER:
+// 			fish->outputMatrix[j].recursorBuffer[0] = motorSignals[j];
+// 			break;
+
+// 		case SENSECONNECTOR_COLORSPOT:
+// 			fish->bones[fish->outputMatrix[j].connectedToLimb] ->colorspotCurrentBrightness = motorSignals[j];
+
+
+// 		case SENSECONNECTOR_MOTOR:
+
+// 			if ( limbUsed(fish->bones[fish->outputMatrix[j].connectedToLimb] ) ) {
+
+// 				if (fish->bones[fish->outputMatrix[j].connectedToLimb]->isRoot) {
+// 					continue;
+// 				}
+
+// 				if ( limbAttached( fish->bones[fish->outputMatrix[j].connectedToLimb]  ) ) {
+
+// 					if (fish->bones[fish->outputMatrix[j].connectedToLimb]->p_joint != nullptr) {
+
+// 						float motorSpeed = motorSignals[j] * 10; // this is just a constant which is used because the brain signals are pretty small. i've never needed to change it.
+
+// 						if (true) {
+// 							float speedLimit = 10.0f;
+
+// 							if (motorSpeed > speedLimit) {
+// 								motorSpeed = speedLimit;
+// 							}
+// 							else if (motorSpeed < -speedLimit) {
+// 								motorSpeed = -speedLimit;
+// 							}
+// 						}
+
+// 						if (fish->energy > 0)
+// 						{
+// 							float energyUsedThisTurn = abs( motorSpeed * fish->bones[fish->outputMatrix[j].connectedToLimb]->area * fish->bones[fish->outputMatrix[j].connectedToLimb]->density * currentSpecies->muscularEfficiency  ); // Moving a limb costs energy according to the limb mass times the speed
+// 							fish->energy -= energyUsedThisTurn;
+// 							fish->bones[fish->outputMatrix[j].connectedToLimb]->p_joint->SetMotorSpeed(motorSpeed);
+
+// 						}
+
+// 					}
+// 				}
+// 			}
+// 			break;
+// 		}
+
+
+// 		if (fish == primarilySelectedFish) {primaryFishOutputSensorium[j] = motorSignals[j];}
+// 	}
+
+// 	// now is a good time to draw the brain, while you have access to the sensorium.
+// 	// if ( false /* TestMain::getBrainWindowStatus() */ ) {
+// 	// 	if (fish->selected && !alreadyDrawnThisTurn) {
+// 	// 		alreadyDrawnThisTurn = true;
+// 	// 		unsigned int spacesUsedSoFar = 0;
+// 	// 		drawNeuralNetworkFromDescriptor(motorSignals, sensorium, &spacesUsedSoFar, &(*fish));
+// 	// 	}
+// 	// }
+// }
