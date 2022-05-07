@@ -241,8 +241,11 @@ struct Animal
 	// unsigned int destination;
 	unsigned int uPosX;
 	unsigned int uPosY;
+
 	float fPosX;
 	float fPosY;
+	float fAngle;
+
 	float prevHighestIntensity;
 	bool parentAmnesty;
 	int totalMuscle;
@@ -1503,10 +1506,10 @@ void organs_all()
 
 
 
-						// case ORGAN_MUSCLE :
-						// {
-						// 	if (doMuscles)
-						// 	{
+						case ORGAN_MUSCLE :
+						{
+							if (doMuscles)
+							{
 						// 		int destinationX = animals[animalIndex].destination % worldSize;
 						// 		int destinationY = animals[animalIndex].destination / worldSize;
 						// 		int uposx = animals[animalIndex].fPosX;
@@ -1535,9 +1538,62 @@ void organs_all()
 						// 			}
 						// 			animals[animalIndex].energy -= ( abs(muscleX) + abs(muscleY)) * movementEnergyScale ;
 						// 		}
-						// 	}
-						// 	break;
-						// }
+
+
+
+								// what is a good scheme for directional steering?
+
+								if (false)
+								{
+								// the muscle pulls the animal in a direction that is away from the geometric center.
+								// to steer this way, the animal must have sensors and muscle systems spaced around it radially.
+								// steering trends over time will drag the animal in a constant direction.
+								float zeroX = (animalSize/2);
+								float zeroY = (animalSize/2);
+
+								float muscleX = (cellLocalPositionX - zeroX) * animals[animalIndex].body[cellLocalPositionI].signalIntensity;
+								float muscleY = (cellLocalPositionY - zeroY) * animals[animalIndex].body[cellLocalPositionI].signalIntensity;
+								
+								if (animals[animalIndex].mass != 0.0f )
+								{
+									animals[animalIndex].fPosX += ( muscleX ) / animals[animalIndex].mass;
+									animals[animalIndex].fPosY += ( muscleY ) / animals[animalIndex].mass;
+								}
+								}
+
+
+
+								if (true)
+								{
+									// there is a skid steer system where left and right halves push and pull the animal, causing a combination of rotation and movement.
+									// to steer this way, the directions are 'local' instead of 'global', so the animal can be a lot simpler and more sensible. more left signal = turn more left. You only need left and right controls.
+									// steering trends over time will drag the animal in spirals or have it spin around.
+
+									const float forwardCoeff = 1.0f;
+									const float turningCoeff = 1.0f;
+
+									float zeroX = (animalSize/2);
+									float turningComponent = (cellLocalPositionX - zeroX);
+									float forwardComponent = zeroX - ( turningComponent) ;
+
+									if (animals[animalIndex].mass != 0.0f)
+									{
+										turningComponent *= musclePower/animals[animalIndex].mass;
+										forwardComponent *= musclePower/animals[animalIndex].mass;	
+									}
+
+									animals[animalIndex].fAngle += turningComponent * turningCoeff;
+									animals[animalIndex].fPosX += forwardComponent * forwardCoeff * cos(animals[animalIndex].fAngle);
+									animals[animalIndex].fPosY += forwardComponent * forwardCoeff * cos(animals[animalIndex].fAngle);
+
+
+								}
+
+
+
+							}
+							break;
+						}
 					}
 				}
 				if (cellsDone >= animals[animalIndex].mass) {break;}
