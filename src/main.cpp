@@ -105,9 +105,9 @@ void threadInterface()
 				{
 					if (playerInControl)
 					{
-						unsigned int destination = getPlayerDestination();
-						destination += 1;
-						setPlayerDestination(destination);
+						// unsigned int destination = getPlayerDestination();
+						// destination += 1;
+						// setPlayerDestination(destination);
 					}
 				}
 				else
@@ -128,9 +128,9 @@ void threadInterface()
 				{
 					if (playerInControl)
 					{
-						unsigned int destination = getPlayerDestination();
-						destination -= worldSize;
-						setPlayerDestination(destination);
+						// unsigned int destination = getPlayerDestination();
+						// destination -= worldSize;
+						// setPlayerDestination(destination);
 					}
 				}
 				else
@@ -155,9 +155,9 @@ void threadInterface()
 				{
 					if (playerInControl)
 					{
-						unsigned int destination = getPlayerDestination();
-						destination -= 1;
-						setPlayerDestination(destination);
+						// unsigned int destination = getPlayerDestination();
+						// destination -= 1;
+						// setPlayerDestination(destination);
 					}
 				}
 				else
@@ -176,9 +176,9 @@ void threadInterface()
 				if (playerCreature >= 0)
 				{	if (playerInControl)
 					{
-						unsigned int destination = getPlayerDestination();
-						destination += worldSize;
-						setPlayerDestination(destination);
+						// unsigned int destination = getPlayerDestination();
+						// destination += worldSize;
+						// setPlayerDestination(destination);
 					}
 				}
 				else

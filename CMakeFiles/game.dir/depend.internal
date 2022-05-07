@@ -231,6 +231,7 @@ CMakeFiles/game.dir/src/menus.cpp.o
  /usr/local/include/SDL2/close_code.h
 CMakeFiles/game.dir/src/neuro.cpp.o
  /home/marlo/Documents/cpp_game_engine/src/neuro.cpp
+ /home/marlo/Documents/cpp_game_engine/src/neuro.h
  /home/marlo/Documents/cpp_game_engine/src/utilities.h
  /usr/local/include/SDL2/SDL.h
  /usr/local/include/SDL2/SDL_assert.h
@@ -350,16 +351,6 @@ CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o
  /usr/local/include/SDL2/SDL_video.h
  /usr/local/include/SDL2/begin_code.h
  /usr/local/include/SDL2/close_code.h
- fann/src/include/fann.h
- fann/src/include/fann_activation.h
- fann/src/include/fann_cascade.h
- fann/src/include/fann_data.h
- fann/src/include/fann_error.h
- fann/src/include/fann_internal.h
- fann/src/include/fann_io.h
- fann/src/include/fann_train.h
- fann/src/include/fixedfann.h
- fann/src/include/floatfann.h
 CMakeFiles/game.dir/src/utilities.cpp.o
  /home/marlo/Documents/cpp_game_engine/src/utilities.cpp
  /home/marlo/Documents/cpp_game_engine/src/utilities.h

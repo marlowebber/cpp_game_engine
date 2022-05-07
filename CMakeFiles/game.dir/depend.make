@@ -230,6 +230,7 @@ CMakeFiles/game.dir/src/menus.cpp.o: /usr/local/include/SDL2/begin_code.h
 CMakeFiles/game.dir/src/menus.cpp.o: /usr/local/include/SDL2/close_code.h
 
 CMakeFiles/game.dir/src/neuro.cpp.o: src/neuro.cpp
+CMakeFiles/game.dir/src/neuro.cpp.o: src/neuro.h
 CMakeFiles/game.dir/src/neuro.cpp.o: src/utilities.h
 CMakeFiles/game.dir/src/neuro.cpp.o: /usr/local/include/SDL2/SDL.h
 CMakeFiles/game.dir/src/neuro.cpp.o: /usr/local/include/SDL2/SDL_assert.h
@@ -349,16 +350,6 @@ CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: /usr/local/include/SDL2/SD
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: /usr/local/include/SDL2/SDL_video.h
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: /usr/local/include/SDL2/begin_code.h
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: /usr/local/include/SDL2/close_code.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fann.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fann_activation.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fann_cascade.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fann_data.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fann_error.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fann_internal.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fann_io.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fann_train.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/fixedfann.h
-CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: fann/src/include/floatfann.h
 
 CMakeFiles/game.dir/src/utilities.cpp.o: src/utilities.cpp
 CMakeFiles/game.dir/src/utilities.cpp.o: src/utilities.h
