@@ -24,13 +24,6 @@ extern	float fps ;
 extern  int playerCreature ;
 void spawnPlayer();
 
-// unsigned int getPlayerDestination();
-// void setPlayerDestination(unsigned int newDestination);
-
-void rebuildGameMenus();
-
-// extern unsigned int playerDestination;
-
 void save();
 void load();
 

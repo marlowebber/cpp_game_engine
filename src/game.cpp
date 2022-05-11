@@ -40,7 +40,7 @@ void rebuildMenus ()
 	// exampleMenu6->collapsed = true;
 
 	// menus.push_back(*exampleMenuRoot);
-	rebuildGameMenus();
+	// rebuildGameMenus();
 }
 
 
