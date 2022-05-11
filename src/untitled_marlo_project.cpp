@@ -304,9 +304,9 @@ void resetAnimal(unsigned int animalIndex)
 		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
 		{
 			animals[animalIndex].body[cellLocalPositionI].organ  = MATERIAL_NOTHING;
-			animals[animalIndex].body[cellLocalPositionI].sign = 1.0f;
+			// animals[animalIndex].body[cellLocalPositionI].sign = 1.0f;
 			animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
-			animals[animalIndex].body[cellLocalPositionI].target = 0;
+			// animals[animalIndex].body[cellLocalPositionI].target = 0;
 			animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
 			animals[animalIndex].body[cellLocalPositionI].eyeColor = color_grey;
 			animals[animalIndex].body[cellLocalPositionI].damage = 0.0f;
@@ -409,7 +409,7 @@ bool organIsANeuron(unsigned int organ)
 bool organIsASensor(unsigned int organ)
 {
 	if (
-	    organ == ORGAN_SENSOR_EYE
+	    organ == ORGAN_SENSOR_EYE ||
 	    organ == ORGAN_SENSOR_TIMER
 	)
 	{
@@ -725,7 +725,7 @@ void mutateAnimal(unsigned int animalIndex)
 			{
 
 
-				int mutatedCell = getRandomPopulatedCell(animalIndex);
+				int mutantCell = getRandomPopulatedCell(animalIndex);
 				if (mutantCell >= 0)
 				{
 					animals[animalIndex].body[mutantCell].color = mutateColor(	animals[animalIndex].body[mutantCell].color);
@@ -737,7 +737,7 @@ void mutateAnimal(unsigned int animalIndex)
 			{
 
 
-				int mutatedCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
+				int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
 				if (mutantCell >= 0)
 				{
 					animals[animalIndex].body[mutantCell].color = mutateColor(	animals[animalIndex].body[mutantCell].color);
@@ -748,7 +748,7 @@ void mutateAnimal(unsigned int animalIndex)
 			{
 
 				// mutate a timers freq
-				int mutatedCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_TIMER);
+				int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_TIMER);
 				if (mutantCell >= 0)
 				{
 					animals[animalIndex].body[mutantCell].timerFreq += RNG() - 0.5f * 0.1;
@@ -1007,6 +1007,16 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		{
 			displayColor = animals[viewedAnimal].body[occupyingCell].color;
 		}
+
+
+		if (isCellConnectable(animals[viewedAnimal].body[occupyingCell].organ ) )
+		{
+			float amount = animals[viewedAnimal].body[occupyingCell].signalIntensity * 2.0f;	
+			displayColor.r *= amount ;
+			displayColor.g *= amount;
+			displayColor.b *= amount;
+		}
+
 	}
 	else
 	{
@@ -1276,8 +1286,8 @@ void organs_all()
 							}
 						}
 						printf("forward muscle value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
-						animals[animalIndex].fPosX += animals[animalIndex].body[cellLocalPositionI].signalIntensity * cos(animals[animalIndex].fAngle);
-						animals[animalIndex].fPosY += animals[animalIndex].body[cellLocalPositionI].signalIntensity * sin(animals[animalIndex].fAngle);
+						animals[animalIndex].fPosX += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 10 * cos(animals[animalIndex].fAngle);
+						animals[animalIndex].fPosY += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 10 * sin(animals[animalIndex].fAngle);
 					}
 					break;
 				}
@@ -1298,7 +1308,7 @@ void organs_all()
 
 							}
 						}
-						animals[animalIndex].fAngle += (animals[animalIndex].body[cellLocalPositionI].signalIntensity * 0.005f);
+						animals[animalIndex].fAngle += (animals[animalIndex].body[cellLocalPositionI].signalIntensity * 0.05f);
 						printf("turning muscle value %f, fangle %f \n", animals[animalIndex].body[cellLocalPositionI].signalIntensity, animals[animalIndex].fAngle );
 					}
 				}
@@ -1818,24 +1828,26 @@ void setupExampleAnimal2()
 	animalAppendCell( 0, 1, ORGAN_MOUTH_VEG );
 	animalAppendCell( 0, 2, ORGAN_SENSOR_EYE );
 	animalAppendCell( 0, 3, ORGAN_SENSOR_EYE );
-	animalAppendCell( 0, 4, ORGAN_NEURON );
-	animalAppendCell( 0, 5, ORGAN_NEURON );
-	animalAppendCell( 0, 6, ORGAN_BIASNEURON );
-	animalAppendCell( 0, 7, ORGAN_BIASNEURON );
-	animalAppendCell( 0, 8, ORGAN_MUSCLE );
-	animalAppendCell( 0, 9, ORGAN_MUSCLE );
-	animalAppendCell( 0, 10, ORGAN_MUSCLE_TURN );
-	animalAppendCell( 0, 11, ORGAN_MUSCLE_TURN );
-	animalAppendCell( 0, 12, ORGAN_LIVER );
-	animalAppendCell( 0, 13, ORGAN_LIVER );
+	animalAppendCell( 0, 4, ORGAN_SENSOR_TIMER );
+	animalAppendCell( 0, 5, ORGAN_SENSOR_TIMER );
+	animalAppendCell( 0, 6, ORGAN_NEURON );
+	animalAppendCell( 0, 7, ORGAN_NEURON );
+	animalAppendCell( 0, 8, ORGAN_BIASNEURON );
+	animalAppendCell( 0, 9, ORGAN_BIASNEURON );
+	animalAppendCell( 0, 10, ORGAN_MUSCLE );
+	animalAppendCell( 0, 11, ORGAN_MUSCLE );
+	animalAppendCell( 0, 12, ORGAN_MUSCLE_TURN );
+	animalAppendCell( 0, 13, ORGAN_MUSCLE_TURN );
 	animalAppendCell( 0, 14, ORGAN_LIVER );
-	animalAppendCell( 0, 15, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( 0, 16, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( 0, 15, ORGAN_LIVER );
+	animalAppendCell( 0, 16, ORGAN_LIVER );
 	animalAppendCell( 0, 17, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( 0, 18, ORGAN_GONAD );
-	animalAppendCell( 0, 19, ORGAN_GONAD );
+	animalAppendCell( 0, 18, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( 0, 19, ORGAN_ADDOFFSPRINGENERGY );
 	animalAppendCell( 0, 20, ORGAN_GONAD );
 	animalAppendCell( 0, 21, ORGAN_GONAD );
+	animalAppendCell( 0, 22, ORGAN_GONAD );
+	animalAppendCell( 0, 23, ORGAN_GONAD );
 
 
 
