@@ -42,7 +42,8 @@
 #define ORGAN_ADDSTRIDE           14
 #define ORGAN_NEURON              15
 #define ORGAN_BIASNEURON          16    // can be thought of as ORGAN_SENSOR_CONSTANTVALUE
-#define numberOfOrganTypes        17 // the number limit of growable genes
+#define ORGAN_SENSOR_TIMER        17
+#define numberOfOrganTypes        18 // the number limit of growable genes
 #define MATERIAL_FOOD             32 //           
 #define MATERIAL_ROCK             33 //    
 #define MATERIAL_MEAT             34
@@ -177,9 +178,10 @@ struct Connection
 struct Cell
 {
 	unsigned int organ;
-	float sign;
+	// float sign;
 	float signalIntensity;
-	unsigned int target;
+	float timerFreq;
+	float timerPhase;
 	Color color;
 	Color eyeColor;
 	unsigned int eyeLook; // this is a positional offset indicating which square the eye is looking at. It is constant for a particular eye (i.e. one eye cannot look around unless the animal moves).
@@ -380,6 +382,18 @@ int getNewIdentity(unsigned int speciesIndex)
 }
 
 
+bool organIsAnActuator(unsigned int organ)
+{
+	if (    organ == ORGAN_MUSCLE ||
+	        organ == ORGAN_MUSCLE_TURN
+	   )
+	{
+		return true;
+	}
+	return false;
+}
+
+
 bool organIsANeuron(unsigned int organ)
 {
 	if (    organ == ORGAN_NEURON ||
@@ -396,6 +410,7 @@ bool organIsASensor(unsigned int organ)
 {
 	if (
 	    organ == ORGAN_SENSOR_EYE
+	    organ == ORGAN_SENSOR_TIMER
 	)
 	{
 		return true;
@@ -472,9 +487,12 @@ void measureAnimalQualities(unsigned int animalIndex)
 bool isCellConnectable(unsigned int organ)
 {
 	if (
-	    organ == ORGAN_NEURON ||
-	    organ == ORGAN_BIASNEURON ||
-	    organ == ORGAN_SENSOR_EYE
+	    // organ == ORGAN_NEURON ||
+	    // organ == ORGAN_BIASNEURON ||
+	    // organ == ORGAN_SENSOR_EYE ||
+	    // organ == ORGAN_SENSOR_TIMER
+	    organIsASensor(organ) ||
+	    organIsANeuron(organ)
 	)
 	{
 		return true;
@@ -483,8 +501,27 @@ bool isCellConnectable(unsigned int organ)
 	return false;
 }
 
+
+bool isCellConnecting(unsigned int organ)
+{
+	if (
+	    // organ == ORGAN_NEURON ||
+	    // organ == ORGAN_BIASNEURON ||
+	    // organ == ORGAN_SENSOR_EYE ||
+	    // organ == ORGAN_SENSOR_TIMER
+	    organIsAnActuator(organ) ||
+	    organIsANeuron(organ)
+	)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+
 // choose a random cell of any type that can be connected to, which includes all neurons and all sensors.
-unsigned int getRandomConnectableCell( unsigned int animalIndex)
+int getRandomConnectableCell( unsigned int animalIndex)
 {
 	std::list<unsigned int> cellsOfType;
 	unsigned int found = 0;
@@ -503,12 +540,36 @@ unsigned int getRandomConnectableCell( unsigned int animalIndex)
 		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
 		return *iterator;
 	}
-	return MATERIAL_NOTHING;
+	return -1;
+}
+
+// choose a random cell of any type that can put forth a connection, which includes all neurons and actuators.
+int getRandomConnectingCell( unsigned int animalIndex)
+{
+	std::list<unsigned int> cellsOfType;
+	unsigned int found = 0;
+	for (int i = 0; i < animalSquareSize; ++i)
+	{
+		if (isCellConnecting(  animals[animalIndex].body[i].organ ))
+		{
+			cellsOfType.push_back(i);
+			found++;
+		}
+	}
+
+	if (found > 0)
+	{
+		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
+		return *iterator;
+	}
+	return -1;
 }
 
 
+
 // choose a random cell of a particular organ type in a given animal, or MATERIAL_NOTHING if the organ doesn't exist.
-unsigned int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
+int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
 {
 	std::list<unsigned int> cellsOfType;
 	unsigned int found = 0;
@@ -527,11 +588,11 @@ unsigned int getRandomCellOfType(unsigned int animalIndex, unsigned int organTyp
 		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
 		return *iterator;
 	}
-	return MATERIAL_NOTHING;
+	return -1;
 }
 
 // choose any random populated cell.
-unsigned int getRandomOrgan(unsigned int animalIndex)
+int getRandomPopulatedCell(unsigned int animalIndex)
 {
 	std::list<unsigned int> cellsOfType;
 	unsigned int found = 0;
@@ -550,8 +611,20 @@ unsigned int getRandomOrgan(unsigned int animalIndex)
 		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
 		return *iterator;
 	}
-	return MATERIAL_NOTHING;
+	return -1;
 }
+
+
+
+Color mutateColor(Color in)
+{
+	Color out = in;
+	out.r += (RNG() - 0.5) * 0.1f;
+	out.g += (RNG() - 0.5) * 0.1f;
+	out.b += (RNG() - 0.5) * 0.1f;
+	return clampColor(out);
+}
+
 
 void mutateAnimal(unsigned int animalIndex)
 {
@@ -570,49 +643,71 @@ void mutateAnimal(unsigned int animalIndex)
 		if (whatToMutate == 0)
 		{
 			// erase an organ
-			unsigned int mutantCell = getRandomOrgan( animalIndex);
-			animals[animalIndex].body[mutantCell].organ = MATERIAL_NOTHING;// randomLetter();
+			int mutantCell = getRandomPopulatedCell( animalIndex);
+			if (mutantCell >= 0)
+			{
+
+				animals[animalIndex].body[mutantCell].organ = MATERIAL_NOTHING;// randomLetter();
+			}
 		}
 
 		else if (whatToMutate == 1)
 		{
 
 			// add an organ
-			unsigned int mutantCell = getRandomCellOfType(animalIndex, MATERIAL_NOTHING);
-			animals[animalIndex].body[mutantCell].organ = randomLetter();
+			int mutantCell = getRandomCellOfType(animalIndex, MATERIAL_NOTHING);
+			if (mutantCell >= 0)
+			{
+				animals[animalIndex].body[mutantCell].organ = randomLetter();
+			}
 		}
 
 		else if (whatToMutate == 2)
 		{
 			// turn a connection on or off.
-			unsigned int mutantCell =  getRandomOrgan(animalIndex);
-			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-			animals[animalIndex].body[mutantCell].connections[mutantConnection].used = !(animals[animalIndex].body[mutantCell].connections[mutantConnection].used );
+			int mutantCell =  getRandomConnectingCell(animalIndex);
+			if (mutantCell >= 0)
+			{
+
+				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+				animals[animalIndex].body[mutantCell].connections[mutantConnection].used = !(animals[animalIndex].body[mutantCell].connections[mutantConnection].used );
+			}
 		}
 
 		else if (whatToMutate == 3)
 		{
 			// randomise a connection partner.
-			unsigned int mutantCell =  getRandomOrgan( animalIndex);
-			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-			unsigned int mutantPartner =  getRandomOrgan( animalIndex);
-			animals[animalIndex].body[mutantCell].connections[mutantConnection].connectedTo = mutantPartner;
+			int mutantCell =  getRandomConnectingCell( animalIndex);
+			if (mutantCell >= 0)
+			{
+				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+				int mutantPartner =  getRandomConnectableCell( animalIndex);
+				if (mutantPartner >= 0)
+				{
+					animals[animalIndex].body[mutantCell].connections[mutantConnection].connectedTo = mutantPartner;
+				}
+			}
 		}
 		else if (whatToMutate == 4)
 		{
 			// randomise a connection weight.
-			unsigned int mutantCell =  getRandomOrgan(animalIndex);
-			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-			unsigned int mutationAmount  = RNG() - 0.5;
-			animals[animalIndex].body[mutantCell].connections[mutantConnection].weight += mutationAmount;
+			int mutantCell =  getRandomConnectingCell(animalIndex);
+			if (mutantCell >= 0)
+			{
+				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+				animals[animalIndex].body[mutantCell].connections[mutantConnection].weight += RNG() - 0.5;
+			}
 
 		}
 		else if (whatToMutate == 6)
 		{
 			// randomise a bias neuron.
-			unsigned int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
-			unsigned int mutationAmount  = RNG() - 0.5;
-			animals[animalIndex].body[mutantCell].signalIntensity += mutationAmount;
+			int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
+			if (mutantCell >= 0)
+			{
+				// unsigned int mutationAmount  = RNG() - 0.5;
+				animals[animalIndex].body[mutantCell].signalIntensity += RNG() - 0.5;
+			}
 
 		}
 
@@ -623,32 +718,17 @@ void mutateAnimal(unsigned int animalIndex)
 
 			// other stuff.
 
-			unsigned int auxMutation = extremelyFastNumberFromZeroTo(8);
+			unsigned int auxMutation = extremelyFastNumberFromZeroTo(3);
 
 
 			if (auxMutation == 0)
 			{
 
-				unsigned int mutateColor = extremelyFastNumberFromZeroTo(2);
-				// mutate colors of animal
-				if (mutateColor == 0)         // the more types of organs there are, the more often they will be chosen as mutation options.
+
+				int mutatedCell = getRandomPopulatedCell(animalIndex);
+				if (mutantCell >= 0)
 				{
-					// printf("MON VOYAGE!\n");
-					unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-					animals[animalIndex].body[mutantCell].color.r  += (RNG() - 0.5f) ;
-					animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
-				}
-				else if (mutateColor == 1)
-				{
-					unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-					animals[animalIndex].body[mutantCell].color.g += (RNG() - 0.5f);
-					animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
-				}
-				else if (mutateColor == 2)
-				{
-					unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-					animals[animalIndex].body[mutantCell].color.b += (RNG() - 0.5f) ;
-					animals[animalIndex].body[mutantCell].color = clampColor(animals[animalIndex].body[mutantCell].color);
+					animals[animalIndex].body[mutantCell].color = mutateColor(	animals[animalIndex].body[mutantCell].color);
 				}
 
 			}
@@ -656,27 +736,24 @@ void mutateAnimal(unsigned int animalIndex)
 			else if (auxMutation == 1)
 			{
 
-				unsigned int mutateColor = extremelyFastNumberFromZeroTo(2);
 
-				// mutate eye color
-				if (mutateColor == 0)         // the more types of organs there are, the more often they will be chosen as mutation options.
+				int mutatedCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
+				if (mutantCell >= 0)
 				{
-					unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-					animals[animalIndex].body[mutantCell].eyeColor.r += (RNG() - 0.5f);
-					animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
+					animals[animalIndex].body[mutantCell].color = mutateColor(	animals[animalIndex].body[mutantCell].color);
 				}
-				else	 if (mutateColor == 1)         // the more types of organs there are, the more often they will be chosen as mutation options.
+			}
+
+			else if (auxMutation == 2)
+			{
+
+				// mutate a timers freq
+				int mutatedCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_TIMER);
+				if (mutantCell >= 0)
 				{
-					unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-					animals[animalIndex].body[mutantCell].eyeColor.g += (RNG() - 0.5f);
-					animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
+					animals[animalIndex].body[mutantCell].timerFreq += RNG() - 0.5f * 0.1;
 				}
-				else 	 if (mutateColor == 2)         // the more types of organs there are, the more often they will be chosen as mutation options.
-				{
-					unsigned int mutantCell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-					animals[animalIndex].body[mutantCell].eyeColor.b += (RNG() - 0.5f);
-					animals[animalIndex].body[mutantCell].eyeColor = clampColor(animals[animalIndex].body[mutantCell].eyeColor);
-				}
+
 			}
 		}
 	}
@@ -1071,6 +1148,13 @@ void organs_all()
 					printf("eye value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
 
 					break;
+				}
+
+
+				case ORGAN_SENSOR_TIMER:
+				{
+					animals[animalIndex].body[cellLocalPositionI].timerPhase += animals[animalIndex].body[cellLocalPositionI].timerFreq;
+					animals[animalIndex].body[cellLocalPositionI].signalIntensity = sin(animals[animalIndex].body[cellLocalPositionI].timerPhase);
 				}
 
 
@@ -1647,11 +1731,9 @@ void animalAppendCell(unsigned int animalIndex, unsigned int cellLocalPositionI,
 
 
 	if (
-	isCellConnectable(organType) ||
-	organType == ORGAN_MUSCLE ||organType == ORGAN_MUSCLE_TURN    // muscles connect to other things, but other things cannot connect to them.
+	    isCellConnecting(organType)
 
-
-	) // if the cell is connectable, connect it
+	) // if the cell is supposed to have connections, go hook it up
 	{
 
 		unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
@@ -1670,8 +1752,8 @@ void animalAppendCell(unsigned int animalIndex, unsigned int cellLocalPositionI,
 			for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
 			{
 				if (  animals[animalIndex].body[cellLocalPositionI].connections[j].connectedTo == connectableCell &&
-					animals[animalIndex].body[cellLocalPositionI].connections[j] .used
-					)
+				        animals[animalIndex].body[cellLocalPositionI].connections[j] .used
+				   )
 				{
 					alreadyConnected = true;
 				}
