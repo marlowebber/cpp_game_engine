@@ -31,4 +31,6 @@ void model();
 
 void drawGameInterfaceText();
 
+void spawnTournamentAnimals();
+
  #endif //MARLO_H

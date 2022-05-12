@@ -97,6 +97,10 @@ void threadInterface()
 
 
 
+			case SDLK_y:
+				spawnTournamentAnimals();
+				break;
+
 			case SDLK_d:
 			{
 

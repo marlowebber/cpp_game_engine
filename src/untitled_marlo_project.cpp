@@ -35,6 +35,8 @@
 #define ORGAN_LIVER               7
 #define ORGAN_MUSCLE_TURN         8
 #define ORGAN_SENSOR_EYE          9
+#define ORGAN_SENSOR_TOUCH        10
+
 #define ORGAN_MOUTH_CARNIVORE     10
 #define ORGAN_MOUTH_PARASITE      11
 #define ORGAN_ADDOFFSPRINGENERGY  12
@@ -98,8 +100,8 @@ const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const int animalSize     = 8;
 const unsigned int animalSquareSize      = animalSize * animalSize;
 const unsigned int worldSquareSize       = worldSize * worldSize;
-const unsigned int numberOfAnimals = 100000;
-const unsigned int numberOfSpecies = 12;
+const unsigned int numberOfAnimals = 25000;
+const unsigned int numberOfSpecies = 3;
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
@@ -183,8 +185,8 @@ struct Cell
 	float timerFreq;
 	float timerPhase;
 	Color color;
-	Color eyeColor;
-	unsigned int eyeLook; // this is a positional offset indicating which square the eye is looking at. It is constant for a particular eye (i.e. one eye cannot look around unless the animal moves).
+	// Color eyeColor;
+	// unsigned int eyeLook; // this is a positional offset indicating which square the eye is looking at. It is constant for a particular eye (i.e. one eye cannot look around unless the animal moves).
 	float damage;
 	Connection connections[NUMBER_OF_CONNECTIONS];
 };
@@ -308,7 +310,7 @@ void resetAnimal(unsigned int animalIndex)
 			animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
 			// animals[animalIndex].body[cellLocalPositionI].target = 0;
 			animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
-			animals[animalIndex].body[cellLocalPositionI].eyeColor = color_grey;
+			// animals[animalIndex].body[cellLocalPositionI].eyeColor = color_grey;
 			animals[animalIndex].body[cellLocalPositionI].damage = 0.0f;
 			for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 			{
@@ -710,8 +712,37 @@ void mutateAnimal(unsigned int animalIndex)
 			}
 
 		}
+		else if (whatToMutate == 6)
+		{
 
 
+			// swap an existing cell location without messing up the connections. adjust every incoming connection to point at the new cell.
+			int mutantCell = getRandomPopulatedCell(animalIndex);
+			if (mutantCell >= 0)
+			{
+
+
+				int destination =  getRandomCellOfType( animalIndex, MATERIAL_NOTHING );
+
+				Cell temp = animals[animalIndex].body[mutantCell];
+
+				for (int i = 0; i < animalSquareSize; ++i)
+				{
+					for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
+					{
+						if (animals[animalIndex].body[i].connections[j].connectedTo == mutantCell)
+						{
+							animals[animalIndex].body[i].connections[j].connectedTo = destination;
+						}
+					}
+				}
+
+				animals[animalIndex].body[destination] = temp;
+
+
+			}
+
+		}
 		else if (whatToMutate == 7)
 		{
 
@@ -1011,7 +1042,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 
 		if (isCellConnectable(animals[viewedAnimal].body[occupyingCell].organ ) )
 		{
-			float amount = animals[viewedAnimal].body[occupyingCell].signalIntensity * 2.0f;	
+			float amount = animals[viewedAnimal].body[occupyingCell].signalIntensity * 2.0f;
 			displayColor.r *= amount ;
 			displayColor.g *= amount;
 			displayColor.b *= amount;
@@ -1144,20 +1175,65 @@ void organs_all()
 
 				case ORGAN_SENSOR_EYE:
 				{
-					unsigned int eyeLookX = animals[animalIndex].body[cellLocalPositionI].eyeLook % worldSize;
-					unsigned int eyeLookY = animals[animalIndex].body[cellLocalPositionI].eyeLook / worldSize;
-					unsigned int targetWorldPositionX = cellWorldPositionX + eyeLookX;
-					unsigned int targetWorldPositionY = cellLocalPositionY + eyeLookY;
-					unsigned int targetWorldPositionI = (targetWorldPositionY * worldSize) + targetWorldPositionX;
+					// unsigned int eyeLookX = animals[animalIndex].body[cellLocalPositionI].eyeLook % worldSize;
+					// unsigned int eyeLookY = animals[animalIndex].body[cellLocalPositionI].eyeLook / worldSize;
+					// unsigned int targetWorldPositionX = cellWorldPositionX + eyeLookX;
+					// unsigned int targetWorldPositionY = cellLocalPositionY + eyeLookY;
+					// unsigned int targetWorldPositionI = (targetWorldPositionY * worldSize) + targetWorldPositionX;
 
-					Color receivedColor = whatColorIsThisSquare(targetWorldPositionI);
-					Color perceivedColor = multiplyColor( receivedColor, animals[animalIndex].body[cellLocalPositionI].eyeColor  );
+					Color receivedColor = whatColorIsThisSquare(cellWorldPositionI);
+					Color perceivedColor = multiplyColor( receivedColor, animals[animalIndex].body[cellLocalPositionI].color  );
 					animals[animalIndex].body[cellLocalPositionI].signalIntensity = colorAmplitude(perceivedColor );
 
 
-					printf("eye value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
+					// printf("eye value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
 
 					break;
+				}
+
+				case ORGAN_SENSOR_TOUCH:
+				{
+
+
+					animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0;
+
+					unsigned int animalWorldPositionX    = animals[animalIndex].position % worldSize;
+					unsigned int animalWorldPositionY    = animals[animalIndex].position / worldSize;
+					unsigned int cellLocalPositionX = cellLocalPositionI % animalSize;
+					unsigned int cellLocalPositionY = cellLocalPositionI / animalSize;
+					unsigned int cellWorldPositionX = cellLocalPositionX + animalWorldPositionX;
+					unsigned int cellWorldPositionY = cellLocalPositionY + animalWorldPositionY;
+					unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+
+
+					for (int i = 0; i < nNeighbours; ++i)
+					{
+
+						unsigned int neighbour = cellWorldPositionI + cellNeighbourOffsets[i];
+
+						if (world[neighbour].identity >= 0)
+						{
+							if (isAnimalInSquare( world[neighbour].identity , neighbour ))
+							{
+								animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.1f;
+							}
+						}
+
+					}
+
+
+					if (world[cellWorldPositionI].identity >= 0)
+					{
+						if (world[cellWorldPositionI].identity != animalIndex)
+						{
+							if (isAnimalInSquare( world[cellWorldPositionI].identity , cellWorldPositionI ))
+							{
+								animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.5f;
+							}
+						}
+					}
+
+
 				}
 
 
@@ -1185,14 +1261,14 @@ void organs_all()
 
 							float connected_signal = animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellLocalPositionI].connections[i] .weight;
 							sum += connected_signal;
-							printf("connected_signal %f \n", connected_signal);
+							// printf("connected_signal %f \n", connected_signal);
 
 						}
 					}
 
 					animals[animalIndex].body[cellLocalPositionI].signalIntensity = fast_sigmoid(sum);
 
-					printf("neuron value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
+					// printf("neuron value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
 
 					break;
 				}
@@ -1285,9 +1361,9 @@ void organs_all()
 
 							}
 						}
-						printf("forward muscle value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
-						animals[animalIndex].fPosX += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 10 * cos(animals[animalIndex].fAngle);
-						animals[animalIndex].fPosY += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 10 * sin(animals[animalIndex].fAngle);
+						// printf("forward muscle value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
+						animals[animalIndex].fPosX += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 100 * cos(animals[animalIndex].fAngle);
+						animals[animalIndex].fPosY += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 100 * sin(animals[animalIndex].fAngle);
 					}
 					break;
 				}
@@ -1308,8 +1384,8 @@ void organs_all()
 
 							}
 						}
-						animals[animalIndex].fAngle += (animals[animalIndex].body[cellLocalPositionI].signalIntensity * 0.05f);
-						printf("turning muscle value %f, fangle %f \n", animals[animalIndex].body[cellLocalPositionI].signalIntensity, animals[animalIndex].fAngle );
+						animals[animalIndex].fAngle += (animals[animalIndex].body[cellLocalPositionI].signalIntensity * 0.5f);
+						// printf("turning muscle value %f, fangle %f \n", animals[animalIndex].body[cellLocalPositionI].signalIntensity, animals[animalIndex].fAngle );
 					}
 				}
 
@@ -1613,43 +1689,43 @@ void camera()
 	}
 
 	// highlight the player's eye look squares, for debug purposes
-	if (playerCreature >= 0)
-	{
-		if (!animals[playerCreature].retired)
-		{
-			for (int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
-			{
+	// if (playerCreature >= 0)
+	// {
+	// 	if (!animals[playerCreature].retired)
+	// 	{
+	// 		for (int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
+	// 		{
 
-				if (animals[playerCreature].body[cellLocalPositionI].organ == ORGAN_SENSOR_EYE)
-				{
+	// 			if (animals[playerCreature].body[cellLocalPositionI].organ == ORGAN_SENSOR_EYE)
+	// 			{
 
-					int eyeLookX = animals[playerCreature].body[cellLocalPositionI].eyeLook / worldSize;
-					int eyeLookY = animals[playerCreature].body[cellLocalPositionI].eyeLook / worldSize;
+	// 				// int eyeLookX = animals[playerCreature].body[cellLocalPositionI].eyeLook / worldSize;
+	// 				// int eyeLookY = animals[playerCreature].body[cellLocalPositionI].eyeLook / worldSize;
 
 
-					unsigned int animalWorldPositionX    = animals[playerCreature].position % worldSize;
-					unsigned int animalWorldPositionY    = animals[playerCreature].position / worldSize;
-					unsigned int cellLocalPositionX = cellLocalPositionI % animalSize;
-					unsigned int cellLocalPositionY = cellLocalPositionI / animalSize;
-					unsigned int cellWorldPositionX = cellLocalPositionX + animalWorldPositionX + eyeLookX;
-					unsigned int cellWorldPositionY = cellLocalPositionY + animalWorldPositionY + eyeLookY;
-					unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
-					float fx = cellWorldPositionX;
-					float fy = cellWorldPositionY;
+	// 				unsigned int animalWorldPositionX    = animals[playerCreature].position % worldSize;
+	// 				unsigned int animalWorldPositionY    = animals[playerCreature].position / worldSize;
+	// 				unsigned int cellLocalPositionX = cellLocalPositionI % animalSize;
+	// 				unsigned int cellLocalPositionY = cellLocalPositionI / animalSize;
+	// 				unsigned int cellWorldPositionX = cellLocalPositionX + animalWorldPositionX + eyeLookX;
+	// 				unsigned int cellWorldPositionY = cellLocalPositionY + animalWorldPositionY + eyeLookY;
+	// 				unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+	// 				float fx = cellWorldPositionX;
+	// 				float fy = cellWorldPositionY;
 
-					Color displayColor = whatColorIsThisSquare(cellWorldPositionI);
-					displayColor.r += 0.2f;
-					displayColor.g += 0.2f;
-					displayColor.b += 0.2f;
-					displayColor = clampColor(displayColor);
-					drawTile( Vec_f2( fx, fy ), displayColor);
+	// 				Color displayColor = whatColorIsThisSquare(cellWorldPositionI);
+	// 				displayColor.r += 0.2f;
+	// 				displayColor.g += 0.2f;
+	// 				displayColor.b += 0.2f;
+	// 				displayColor = clampColor(displayColor);
+	// 				drawTile( Vec_f2( fx, fy ), displayColor);
 
-				}
+	// 			}
 
-			}
-		}
+	// 		}
+	// 	}
 
-	}
+	// }
 
 
 	float fmx = mousePositionX;
@@ -1824,30 +1900,34 @@ void setupExampleAnimal2()
 	// }
 	// if (i > animalSize && i < (animalSize + 3))
 	// {
-
-	animalAppendCell( 0, 1, ORGAN_MOUTH_VEG );
-	animalAppendCell( 0, 2, ORGAN_SENSOR_EYE );
-	animalAppendCell( 0, 3, ORGAN_SENSOR_EYE );
-	animalAppendCell( 0, 4, ORGAN_SENSOR_TIMER );
-	animalAppendCell( 0, 5, ORGAN_SENSOR_TIMER );
-	animalAppendCell( 0, 6, ORGAN_NEURON );
-	animalAppendCell( 0, 7, ORGAN_NEURON );
-	animalAppendCell( 0, 8, ORGAN_BIASNEURON );
-	animalAppendCell( 0, 9, ORGAN_BIASNEURON );
-	animalAppendCell( 0, 10, ORGAN_MUSCLE );
-	animalAppendCell( 0, 11, ORGAN_MUSCLE );
-	animalAppendCell( 0, 12, ORGAN_MUSCLE_TURN );
-	animalAppendCell( 0, 13, ORGAN_MUSCLE_TURN );
-	animalAppendCell( 0, 14, ORGAN_LIVER );
-	animalAppendCell( 0, 15, ORGAN_LIVER );
-	animalAppendCell( 0, 16, ORGAN_LIVER );
-	animalAppendCell( 0, 17, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( 0, 18, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( 0, 19, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( 0, 20, ORGAN_GONAD );
-	animalAppendCell( 0, 21, ORGAN_GONAD );
-	animalAppendCell( 0, 22, ORGAN_GONAD );
-	animalAppendCell( 0, 23, ORGAN_GONAD );
+	unsigned int i = 0;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );                            i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );                            i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );                            i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );                            i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_TIMER );                          i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_TIMER );                          i++;
+	animalAppendCell( 0, i, ORGAN_NEURON );                          i++;
+	animalAppendCell( 0, i, ORGAN_NEURON );                          i++;
+	animalAppendCell( 0, i, ORGAN_BIASNEURON );                     i++;
+	animalAppendCell( 0, i, ORGAN_BIASNEURON );                     i++;
+	animalAppendCell( 0, i, ORGAN_MUSCLE );                    i++;
+	animalAppendCell( 0, i, ORGAN_MUSCLE_TURN );               i++;
+	animalAppendCell( 0, i, ORGAN_LIVER );              i++;
+	animalAppendCell( 0, i, ORGAN_LIVER );              i++;
+	animalAppendCell( 0, i, ORGAN_LIVER );              i++;
+	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY ); i++;
+	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY ); i++;
+	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY ); i++;
+	animalAppendCell( 0, i, ORGAN_GONAD ); i++;
+	animalAppendCell( 0, i, ORGAN_GONAD ); i++;
+	animalAppendCell( 0, i, ORGAN_GONAD ); i++;
+	animalAppendCell( 0, i, ORGAN_GONAD ); i++;
 
 
 
@@ -1929,41 +2009,61 @@ void spawnPlayer()
 }
 
 
-void makeRandomAnimal(unsigned int animalIndex, unsigned int targetWorldPositionI)
+void spawnTournamentAnimals()
 {
-	spawnAnimalIntoSlot(animalIndex,
-	                    animals[0],
-	                    targetWorldPositionI, false);
 
-	for (int j = 0; j < animalSquareSize; ++j)
+	for (int i = 0; i < numberOfAnimals; ++i)
 	{
-		animals[animalIndex].body[j].organ = randomLetter();
-		animals[animalIndex].body[j].color = Color(RNG(), RNG(), RNG(), 1.0f);
-		animals[animalIndex].body[j].eyeColor = Color(RNG(), RNG(), RNG(), 1.0f);
+		// unsigned int targetWorldPositionX = cameraPositionX ;
+		// unsigned int targetWorldPositionY = cameraPositionY ;
+		unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+		// playerCreature = 0;
+
+		setupExampleAnimal2();
+
+		spawnAnimalIntoSlot(i,
+		                    exampleAnimal2,
+		                    targetWorldPositionI, true);
+		// cameraTargetCreature = playerCreature;
 	}
-
-	unsigned int randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD; // make sure every animal has at least three gonads- two to propagate a winning population, and one to test out mutants.
-	randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD;
-	randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD;
-
 
 }
 
-void setupTournamentAnimals()
-{
-	for (unsigned int i = 0; i < numberOfAnimals;  ++i)	// initial random creatures.
-	{
-		unsigned int targetWorldPositionX = cameraPositionX + extremelyFastNumberFromZeroTo(viewFieldX) - (viewFieldX / 2);
-		unsigned int targetWorldPositionY = cameraPositionY + extremelyFastNumberFromZeroTo(viewFieldY) - (viewFieldY / 2);
-		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+// void makeRandomAnimal(unsigned int animalIndex, unsigned int targetWorldPositionI)
+// {
+// 	spawnAnimalIntoSlot(animalIndex,
+// 	                    animals[0],
+// 	                    targetWorldPositionI, false);
+
+// 	for (int j = 0; j < animalSquareSize; ++j)
+// 	{
+// 		animals[animalIndex].body[j].organ = randomLetter();
+// 		animals[animalIndex].body[j].color = Color(RNG(), RNG(), RNG(), 1.0f);
+// 		// animals[animalIndex].body[j].eyeColor = Color(RNG(), RNG(), RNG(), 1.0f);
+// 	}
+
+// 	unsigned int randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+// 	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD; // make sure every animal has at least three gonads- two to propagate a winning population, and one to test out mutants.
+// 	randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+// 	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD;
+// 	randomcell = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+// 	animals[animalIndex].body[randomcell].organ = ORGAN_GONAD;
 
 
-		makeRandomAnimal(i, targetWorldPositionI);
-	}
-}
+// }
+
+// void setupTournamentAnimals()
+// {
+// 	for (unsigned int i = 0; i < numberOfAnimals;  ++i)	// initial random creatures.
+// 	{
+// 		unsigned int targetWorldPositionX = cameraPositionX + extremelyFastNumberFromZeroTo(viewFieldX) - (viewFieldX / 2);
+// 		unsigned int targetWorldPositionY = cameraPositionY + extremelyFastNumberFromZeroTo(viewFieldY) - (viewFieldY / 2);
+// 		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+
+// 		makeRandomAnimal(i, targetWorldPositionI);
+// 	}
+// }
 
 void setupRandomWorld()
 {
@@ -2004,7 +2104,7 @@ void setupRandomWorld()
 
 
 
-		setupTournamentAnimals();
+		// setupTournamentAnimals();
 	}
 }
 
