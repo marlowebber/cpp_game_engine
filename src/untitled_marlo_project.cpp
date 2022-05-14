@@ -118,12 +118,12 @@ const float growthEnergyScale      = 1.0f;         // a multiplier for how much 
 const float taxEnergyScale         = 0.0000f;        // a multiplier for how much it costs animals just to exist.
 const float movementEnergyScale    = 0.000f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
-const float grassEnergy            = 0.2f;         // how much you get from eating a square of grass
+const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
 
-const float neuralNoise = 0.01f;
+const float neuralNoise = 0.1f;
 
 const float liverStorage = 20.0f;
-const unsigned int baseLifespan = 500;
+const unsigned int baseLifespan = 1000;
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
@@ -134,7 +134,7 @@ int playerCreature = -1;
 
 
 
-const int numberOfSpeakerChannels = 256;
+const unsigned int numberOfSpeakerChannels = 256;
 float speakerChannels[numberOfSpeakerChannels];
 float speakerChannelsLastTurn[numberOfSpeakerChannels];
 
@@ -784,7 +784,7 @@ void mutateAnimal(unsigned int animalIndex)
 
 			// other stuff.
 
-			unsigned int auxMutation = extremelyFastNumberFromZeroTo(3);
+			unsigned int auxMutation = extremelyFastNumberFromZeroTo(5);
 
 
 			if (auxMutation == 0)
@@ -825,8 +825,8 @@ void mutateAnimal(unsigned int animalIndex)
 			else if (auxMutation == 3)
 			{
 				// mutate a speaker channel
-				int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SPEAKER);
-				int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EAR);
+				unsigned int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SPEAKER);
+				unsigned int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EAR);
 				unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
 
 				if (mutantCellA >= 0)
@@ -845,8 +845,8 @@ void mutateAnimal(unsigned int animalIndex)
 
 
 				// mutate a pheromone channel
-				int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PHEROMONE);
-				int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_EMITTER_PHEROMONE);
+				unsigned int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PHEROMONE);
+				unsigned int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_EMITTER_PHEROMONE);
 				unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
 
 				if (mutantCellA >= 0)
@@ -861,13 +861,13 @@ void mutateAnimal(unsigned int animalIndex)
 
 
 			}
-			else if (auxMutation == 4)
+			else if (auxMutation == 5)
 			{
 
 
 				// mutate a memory channel
-				int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_MEMORY_RX);
-				int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_MEMORY_TX);
+				unsigned int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_MEMORY_RX);
+				unsigned int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_MEMORY_TX);
 				unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
 
 				if (mutantCellA >= 0)
@@ -1117,7 +1117,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	int viewedAnimal = -1;
 	unsigned int animalIndex = world[worldI].identity;
 	unsigned int occupyingCell = 0;
-	if (animalIndex >= 0)
+	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
 		occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
 		if (occupyingCell != -1)
@@ -1422,32 +1422,42 @@ void organs_all()
 				{
 
 
-					// go through the list of connections and sum their values.
-					animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
-					for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+					if ( animals[animalIndex].body[cellLocalPositionI].speakerChannel < numberOfSpeakerChannels)
 					{
-						if (animals[animalIndex].body[cellLocalPositionI].connections[i] .used)
+
+						// go through the list of connections and sum their values.
+						animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
+						for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 						{
-							unsigned int connected_to_cell = animals[animalIndex].body[cellLocalPositionI].connections[i] .connectedTo;
-							if (connected_to_cell < animalSquareSize)
+							if (animals[animalIndex].body[cellLocalPositionI].connections[i] .used)
 							{
-								animals[animalIndex].body[cellLocalPositionI].signalIntensity  += animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellLocalPositionI].connections[i] .weight;
+								unsigned int connected_to_cell = animals[animalIndex].body[cellLocalPositionI].connections[i] .connectedTo;
+								if (connected_to_cell < animalSquareSize)
+								{
+									animals[animalIndex].body[cellLocalPositionI].signalIntensity  += animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellLocalPositionI].connections[i] .weight;
+								}
 							}
 						}
-					}
 
-					if (animals[animalIndex].body[cellLocalPositionI].signalIntensity > 1.0f)
+						if (animals[animalIndex].body[cellLocalPositionI].signalIntensity > 1.0f)
+						{
+							animals[animalIndex].body[cellLocalPositionI].signalIntensity = 1.0f;
+						}
+						else if (animals[animalIndex].body[cellLocalPositionI].signalIntensity < -1.0f)
+						{
+							animals[animalIndex].body[cellLocalPositionI].signalIntensity = -1.0f;
+						}
+
+
+
+						speakerChannels[  animals[animalIndex].body[cellLocalPositionI].speakerChannel ] += animals[animalIndex].body[cellLocalPositionI].signalIntensity ;
+					}
+					else
 					{
-						animals[animalIndex].body[cellLocalPositionI].signalIntensity = 1.0f;
-					}
-					else if (animals[animalIndex].body[cellLocalPositionI].signalIntensity < -1.0f)
-					{
-						animals[animalIndex].body[cellLocalPositionI].signalIntensity = -1.0f;
+						animals[animalIndex].body[cellLocalPositionI].speakerChannel = 0;
 					}
 
 
-
-					speakerChannels[  animals[animalIndex].body[cellLocalPositionI].speakerChannel ] += animals[animalIndex].body[cellLocalPositionI].signalIntensity ;
 					break;
 
 
@@ -1457,7 +1467,16 @@ void organs_all()
 				case ORGAN_SENSOR_EAR:
 				{
 
-					animals[animalIndex].body[cellLocalPositionI].signalIntensity = speakerChannelsLastTurn[  animals[animalIndex].body[cellLocalPositionI].speakerChannel ];
+					if (animals[animalIndex].body[cellLocalPositionI].speakerChannel < numberOfSpeakerChannels)
+					{
+
+						animals[animalIndex].body[cellLocalPositionI].signalIntensity = speakerChannelsLastTurn[ animals[animalIndex].body[cellLocalPositionI].speakerChannel ];
+
+					}
+					else
+					{
+						animals[animalIndex].body[cellLocalPositionI].speakerChannel = 0;
+					}
 					break;
 				}
 
@@ -1526,7 +1545,12 @@ void organs_all()
 							{
 								if (isAnimalInSquare( world[neighbour].identity , neighbour ))
 								{
-									animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.1f;
+									animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.5f;
+								}
+
+								else if (world[neighbour].material != MATERIAL_NOTHING)
+								{
+									animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.5f;
 								}
 							}
 						}
@@ -1539,6 +1563,11 @@ void organs_all()
 						if (world[cellWorldPositionI].identity != animalIndex)
 						{
 							if (isAnimalInSquare( world[cellWorldPositionI].identity , cellWorldPositionI ))
+							{
+								animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.5f;
+							}
+
+							else if (world[cellWorldPositionI].material != MATERIAL_NOTHING)
 							{
 								animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.5f;
 							}
@@ -1689,8 +1718,8 @@ void organs_all()
 						}
 
 						// printf("forward muscle value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
-						animals[animalIndex].fPosX += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 100 * cos(animals[animalIndex].fAngle);
-						animals[animalIndex].fPosY += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 100 * sin(animals[animalIndex].fAngle);
+						animals[animalIndex].fPosX += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 10 * cos(animals[animalIndex].fAngle);
+						animals[animalIndex].fPosY += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 10 * sin(animals[animalIndex].fAngle);
 					}
 					break;
 				}
@@ -1709,8 +1738,11 @@ void organs_all()
 							if (animals[animalIndex].body[cellLocalPositionI].connections[i] .used)
 							{
 								unsigned int connected_to_cell = animals[animalIndex].body[cellLocalPositionI].connections[i] .connectedTo;
+								if (connected_to_cell < animalSquareSize)
+								{
+									animals[animalIndex].body[cellLocalPositionI].signalIntensity  += animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellLocalPositionI].connections[i] .weight;
 
-								animals[animalIndex].body[cellLocalPositionI].signalIntensity  += animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellLocalPositionI].connections[i] .weight;
+								}
 
 							}
 						}
@@ -1727,8 +1759,8 @@ void organs_all()
 						// printf("forward muscle value %f\n", animals[animalIndex].body[cellLocalPositionI].signalIntensity );
 
 						// on the strafe muscle the sin and cos are reversed, that's all.
-						animals[animalIndex].fPosX += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 100 * sin(animals[animalIndex].fAngle);
-						animals[animalIndex].fPosY += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 100 * cos(animals[animalIndex].fAngle);
+						animals[animalIndex].fPosX += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 10 * sin(animals[animalIndex].fAngle);
+						animals[animalIndex].fPosY += animals[animalIndex].body[cellLocalPositionI].signalIntensity * 10 * cos(animals[animalIndex].fAngle);
 					}
 					break;
 				}
@@ -1799,7 +1831,7 @@ void organs_all()
 
 
 
-	for (int i = 0; i < numberOfSpeakerChannels; ++i)
+	for (unsigned int i = 0; i < numberOfSpeakerChannels; ++i)
 	{
 		speakerChannelsLastTurn [i] = speakerChannels[i];
 		speakerChannels[i] = 0.0f;
