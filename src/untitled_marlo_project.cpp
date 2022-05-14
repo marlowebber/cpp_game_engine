@@ -52,8 +52,10 @@
 #define ORGAN_MUSCLE_STRAFE       22
 #define ORGAN_SENSOR_PHEROMONE    23
 #define ORGAN_EMITTER_PHEROMONE   24
+#define ORGAN_MEMORY_RX           25
+#define ORGAN_MEMORY_TX           26
 
-#define numberOfOrganTypes        24 // the number limit of growable genes
+#define numberOfOrganTypes        26 // the number limit of growable genes
 #define MATERIAL_FOOD             32 //           
 #define MATERIAL_ROCK             33 //    
 #define MATERIAL_MEAT             34
@@ -200,7 +202,7 @@ struct Cell
 	// float sign;
 	float signalIntensity;
 	float timerFreq;
-	float timerPhase;
+	float timerPhase;  // also used as memory state
 	Color color;
 	int speakerChannel;
 	// Color eyeColor;
@@ -409,7 +411,8 @@ bool organIsAnActuator(unsigned int organ)
 	        organ == ORGAN_MUSCLE_TURN ||
 	        organ == ORGAN_MUSCLE_STRAFE ||
 	        organ == ORGAN_SPEAKER  ||
-	        organ == ORGAN_EMITTER_PHEROMONE
+	        organ == ORGAN_EMITTER_PHEROMONE ||
+	        organ == ORGAN_MEMORY_TX
 	   )
 	{
 		return true;
@@ -439,7 +442,8 @@ bool organIsASensor(unsigned int organ)
 	    organ == ORGAN_SENSOR_BODYANGLE ||
 	    organ == ORGAN_SENSOR_NOSE      ||
 	    organ == ORGAN_SENSOR_EAR        ||
-	    organ == ORGAN_SENSOR_PHEROMONE
+	    organ == ORGAN_SENSOR_PHEROMONE ||
+	    organ == ORGAN_MEMORY_RX
 	)
 	{
 		return true;
@@ -836,7 +840,7 @@ void mutateAnimal(unsigned int animalIndex)
 
 			}
 
-			else if (auxMutation == 3)
+			else if (auxMutation == 4)
 			{
 
 
@@ -854,6 +858,26 @@ void mutateAnimal(unsigned int animalIndex)
 					animals[animalIndex].body[mutantCellB].speakerChannel = mutantChannel  ; //mutateColor(	animals[animalIndex].body[mutantCell].color);
 				}
 
+
+
+			}
+			else if (auxMutation == 4)
+			{
+
+
+				// mutate a memory channel
+				int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_MEMORY_RX);
+				int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_MEMORY_TX);
+				unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
+
+				if (mutantCellA >= 0)
+				{
+					animals[animalIndex].body[mutantCellA].speakerChannel = mutantChannel; //mutateColor(	animals[animalIndex].body[mutantCell].color);
+				}
+				if (mutantCellB >= 0)
+				{
+					animals[animalIndex].body[mutantCellB].speakerChannel = mutantChannel  ; //mutateColor(	animals[animalIndex].body[mutantCell].color);
+				}
 
 
 			}
@@ -1262,7 +1286,97 @@ void organs_all()
 				{
 
 
+				case ORGAN_MEMORY_RX:
+				{
 
+					// don't need to do anything, the tx part does all the work.
+
+				}
+
+
+				case ORGAN_MEMORY_TX:
+				{
+
+
+
+					// sum inputs. if exceeding a threshold, find a corresponding memory RX cell and copy it the input sum.
+
+
+					animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
+					for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+					{
+						if (animals[animalIndex].body[cellLocalPositionI].connections[i] .used)
+						{
+							unsigned int connected_to_cell = animals[animalIndex].body[cellLocalPositionI].connections[i] .connectedTo;
+							if (connected_to_cell < animalSquareSize)
+							{
+								animals[animalIndex].body[cellLocalPositionI].signalIntensity  += animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellLocalPositionI].connections[i] .weight;
+							}
+						}
+					}
+
+
+
+
+					if (animals[animalIndex].body[cellLocalPositionI].signalIntensity > 1.0f || animals[animalIndex].body[cellLocalPositionI].signalIntensity  < -1.0f)
+					{
+
+						std::list<unsigned int> cellsOfType;
+						unsigned int found = 0;
+						for (int i = 0; i < animalSquareSize; ++i)
+						{
+							if (animals[animalIndex].body[i].organ == ORGAN_MEMORY_RX)
+							{
+								cellsOfType.push_back(i);
+								found++;
+							}
+						}
+
+						int correspondingCellRX = -1;
+						if (found > 0)
+						{
+							std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+							// std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
+							// return *iterator;
+
+
+
+							for (iterator = cellsOfType.begin(); iterator != cellsOfType.end(); ++iterator)
+							{
+								if ( animals[animalIndex].body[(*iterator)].speakerChannel == animals[animalIndex].body[cellLocalPositionI].speakerChannel  )
+								{
+									correspondingCellRX = (*iterator);
+								}
+							}
+
+						}
+
+						if (correspondingCellRX >= 0 && correspondingCellRX < animalSquareSize)
+						{
+
+							animals[animalIndex].body[correspondingCellRX].signalIntensity = animals[animalIndex].body[cellLocalPositionI].signalIntensity ;
+
+						}
+
+
+					}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				}
 
 				case ORGAN_SENSOR_PHEROMONE:
 				{
