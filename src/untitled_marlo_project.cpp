@@ -50,8 +50,10 @@
 #define ORGAN_SPEAKER             20
 #define ORGAN_SENSOR_EAR          21
 #define ORGAN_MUSCLE_STRAFE       22
+#define ORGAN_SENSOR_PHEROMONE    23
+#define ORGAN_EMITTER_PHEROMONE   24
 
-#define numberOfOrganTypes        20 // the number limit of growable genes
+#define numberOfOrganTypes        24 // the number limit of growable genes
 #define MATERIAL_FOOD             32 //           
 #define MATERIAL_ROCK             33 //    
 #define MATERIAL_MEAT             34
@@ -119,7 +121,7 @@ const float grassEnergy            = 0.2f;         // how much you get from eati
 const float neuralNoise = 0.01f;
 
 const float liverStorage = 20.0f;
-const unsigned int baseLifespan = 1000;
+const unsigned int baseLifespan = 500;
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
@@ -175,10 +177,12 @@ struct Square
 {
 	unsigned int material;
 	unsigned int terrain;
-	int identity;
-	float trail;
+	int identity; // id of the last animal to cross the tile
+	float trail;  // movement direction of the last animal to cross the tile
 	int height;
 	float light;
+	float pheromoneIntensity;    //
+	int pheromoneChannel; //
 };
 
 struct Square world[worldSquareSize];
@@ -404,7 +408,8 @@ bool organIsAnActuator(unsigned int organ)
 	if (    organ == ORGAN_MUSCLE ||
 	        organ == ORGAN_MUSCLE_TURN ||
 	        organ == ORGAN_MUSCLE_STRAFE ||
-	        organ == ORGAN_SPEAKER
+	        organ == ORGAN_SPEAKER  ||
+	        organ == ORGAN_EMITTER_PHEROMONE
 	   )
 	{
 		return true;
@@ -433,7 +438,8 @@ bool organIsASensor(unsigned int organ)
 	    organ == ORGAN_SENSOR_TIMER ||
 	    organ == ORGAN_SENSOR_BODYANGLE ||
 	    organ == ORGAN_SENSOR_NOSE      ||
-	    organ == ORGAN_SENSOR_EAR
+	    organ == ORGAN_SENSOR_EAR        ||
+	    organ == ORGAN_SENSOR_PHEROMONE
 	)
 	{
 		return true;
@@ -486,7 +492,11 @@ void measureAnimalQualities(unsigned int animalIndex)
 
 	for (int i = 0; i < animalSquareSize; ++i)
 	{
-		if (animals[animalIndex].body[i].organ == ORGAN_MUSCLE)
+		if (animals[animalIndex].body[i].organ == ORGAN_MUSCLE ||
+		        animals[animalIndex].body[i].organ == ORGAN_MUSCLE_TURN ||
+		        animals[animalIndex].body[i].organ == ORGAN_MUSCLE_STRAFE
+
+		   )
 		{
 			animals[animalIndex].totalMuscle ++;
 		}
@@ -826,7 +836,27 @@ void mutateAnimal(unsigned int animalIndex)
 
 			}
 
+			else if (auxMutation == 3)
+			{
 
+
+				// mutate a pheromone channel
+				int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PHEROMONE);
+				int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_EMITTER_PHEROMONE);
+				unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
+
+				if (mutantCellA >= 0)
+				{
+					animals[animalIndex].body[mutantCellA].speakerChannel = mutantChannel; //mutateColor(	animals[animalIndex].body[mutantCell].color);
+				}
+				if (mutantCellB >= 0)
+				{
+					animals[animalIndex].body[mutantCellB].speakerChannel = mutantChannel  ; //mutateColor(	animals[animalIndex].body[mutantCell].color);
+				}
+
+
+
+			}
 
 
 		}
@@ -1232,6 +1262,48 @@ void organs_all()
 				{
 
 
+
+
+				case ORGAN_SENSOR_PHEROMONE:
+				{
+
+					animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0;
+					if (animals[animalIndex].body[cellLocalPositionI]. speakerChannel ==   world[cellWorldPositionI].pheromoneChannel)
+					{
+
+						animals[animalIndex].body[cellLocalPositionI].signalIntensity  = world[cellWorldPositionI].pheromoneIntensity;
+					}
+
+					break;
+				}
+
+				case ORGAN_EMITTER_PHEROMONE:
+				{
+
+					animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
+					for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+					{
+						if (animals[animalIndex].body[cellLocalPositionI].connections[i] .used)
+						{
+							unsigned int connected_to_cell = animals[animalIndex].body[cellLocalPositionI].connections[i] .connectedTo;
+							if (connected_to_cell < animalSquareSize)
+							{
+								animals[animalIndex].body[cellLocalPositionI].signalIntensity  += animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellLocalPositionI].connections[i] .weight;
+							}
+						}
+					}
+
+					world[cellWorldPositionI].pheromoneChannel = animals[animalIndex].body[cellLocalPositionI]. speakerChannel ;
+					world[cellWorldPositionI].pheromoneIntensity = animals[animalIndex].body[cellLocalPositionI].signalIntensity;
+
+
+
+				}
+
+
+
+
+
 				case ORGAN_SPEAKER:
 				{
 
@@ -1334,12 +1406,14 @@ void organs_all()
 					{
 
 						unsigned int neighbour = cellWorldPositionI + cellNeighbourOffsets[i];
-
-						if (world[neighbour].identity >= 0)
+						if (neighbour < worldSquareSize)
 						{
-							if (isAnimalInSquare( world[neighbour].identity , neighbour ))
+							if (world[neighbour].identity >= 0)
 							{
-								animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.1f;
+								if (isAnimalInSquare( world[neighbour].identity , neighbour ))
+								{
+									animals[animalIndex].body[cellLocalPositionI].signalIntensity += 0.1f;
+								}
 							}
 						}
 
@@ -1565,17 +1639,17 @@ void organs_all()
 						}
 
 
-						if (animals[animalIndex].body[cellLocalPositionI].signalIntensity > 1.0f)
-						{
-							animals[animalIndex].body[cellLocalPositionI].signalIntensity = 1.0f;
-						}
-						else if (animals[animalIndex].body[cellLocalPositionI].signalIntensity < -1.0f)
-						{
-							animals[animalIndex].body[cellLocalPositionI].signalIntensity = -1.0f;
-						}
+						// if (animals[animalIndex].body[cellLocalPositionI].signalIntensity > 1.0f)
+						// {
+						// 	animals[animalIndex].body[cellLocalPositionI].signalIntensity = 1.0f;
+						// }
+						// else if (animals[animalIndex].body[cellLocalPositionI].signalIntensity < -1.0f)
+						// {
+						// 	animals[animalIndex].body[cellLocalPositionI].signalIntensity = -1.0f;
+						// }
 
 
-						animals[animalIndex].fAngle += (animals[animalIndex].body[cellLocalPositionI].signalIntensity * 0.5f);
+						animals[animalIndex].fAngle = (animals[animalIndex].body[cellLocalPositionI].signalIntensity );
 
 						const float pi = 3.1415f;
 						if (animals[animalIndex].fAngle > pi)
