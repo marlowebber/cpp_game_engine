@@ -78,6 +78,8 @@
 // #define TERRAIN_GRASS             51
 #define TERRAIN_WATER             52 //
 // #define TERRAIN_SEAWEED           53
+#define TERRAIN_LAVA              54
+
 #define MARKER                    35 //      // numbers above 25 don't correspond to lower-case letters(0..25) so we don't use them in the gene code. But (26..31) are still compatible with our masking scheme.
 
 #define CONDITION_GREATER         41
@@ -109,6 +111,7 @@ const bool variedUpkeep          = false;
 const bool respawnLowSpecies     = true;
 const bool doMutation            = true;
 const bool sensorJiggles         = false;
+const bool useTimers             = false;
 
 int mousePositionX =  -430;
 int mousePositionY =  330;
@@ -512,9 +515,24 @@ void resetGrid()
 {
 	for (int i = 0; i < worldSquareSize; ++i)
 	{
+
+		world[i].terrain = MATERIAL_NOTHING;
 		world[i].material = MATERIAL_NOTHING;
 		world[i].identity = -1;
+		world[i].trail = 0.0f;
+		world[i].height = 0;
 		world[i].light = 1.0f;
+		world[i].pheromoneIntensity = 0.0f;
+		world[i].pheromoneChannel = 0;
+
+		// unsigned int material;
+		// unsigned int terrain;
+		// int identity; // id of the last animal to cross the tile
+		// float trail;  // movement direction of the last animal to cross the tile
+		// int height;
+		// float light;
+		// float pheromoneIntensity;    //
+		// int pheromoneChannel; //
 	}
 }
 
@@ -1237,6 +1255,8 @@ Color terrainColors(unsigned int terrain)
 		return color_grey;
 	case TERRAIN_WATER:
 		return color_lightblue;
+	case TERRAIN_LAVA:
+		return color_orange;
 	}
 	return color_yellow;
 }
@@ -1337,23 +1357,23 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		// if (world[worldI].material == MATERIAL_NOTHING)
 		// {
 
-			// displayColorA=  terrainColors(world[worldI].terrain);
+		// displayColorA=  terrainColors(world[worldI].terrain);
 		// }
 		// else
 		// {
 
-			// displayColor = materialColors(world[worldI].material);
+		// displayColor = materialColors(world[worldI].material);
 
 
-			// Color terrainColor 
-			// displayColorB = materialColors(world[worldI].material);;
-			// if (world[worldI].terrain == TERRAIN_WATER)
-			// {
+		// Color terrainColor
+		// displayColorB = materialColors(world[worldI].material);;
+		// if (world[worldI].terrain == TERRAIN_WATER)
+		// {
 
-			// displayColor = multiplyColor( materialColors(world[worldI].material), terrainColors(world[worldI].terrain) );	
-			// }
+		// displayColor = multiplyColor( materialColors(world[worldI].material), terrainColors(world[worldI].terrain) );
+		// }
 
-			displayColor = filterColor( terrainColors(world[worldI].terrain),  materialColors(world[worldI].material) ); 
+		displayColor = filterColor( terrainColors(world[worldI].terrain),  materialColors(world[worldI].material) );
 
 		// }
 	}
@@ -1376,11 +1396,16 @@ void updateMap()
 		{
 			// if (world[randomI].terrain == TERRAIN_STONE)
 			// {
-				// world[randomI].terrain = TERRAIN_GRASS;
-				if (world[randomI].material == MATERIAL_NOTHING)
+			// world[randomI].terrain = TERRAIN_GRASS;
+			if (world[randomI].material == MATERIAL_NOTHING)
+			{
+				if (world[randomI].terrain == TERRAIN_STONE ||
+				        world[randomI].terrain == TERRAIN_WATER )
 				{
+
 					world[randomI].material = MATERIAL_GRASS;
 				}
+			}
 
 			// }
 
@@ -1800,8 +1825,12 @@ void organs_all()
 
 				case ORGAN_SENSOR_TIMER:
 				{
-					animals[animalIndex].body[cellLocalPositionI].timerPhase += animals[animalIndex].body[cellLocalPositionI].timerFreq;
-					animals[animalIndex].body[cellLocalPositionI].signalIntensity = sin(animals[animalIndex].body[cellLocalPositionI].timerPhase);
+					animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0;
+					if (useTimers)
+					{
+						animals[animalIndex].body[cellLocalPositionI].timerPhase += animals[animalIndex].body[cellLocalPositionI].timerFreq;
+						animals[animalIndex].body[cellLocalPositionI].signalIntensity = sin(animals[animalIndex].body[cellLocalPositionI].timerPhase);
+					}
 					break;
 				}
 
@@ -2143,6 +2172,11 @@ void move_all()
 					{
 						animals[animalIndex].damageReceived ++;
 					}
+				}
+
+				if (world[newPosition].terrain == TERRAIN_LAVA)
+				{
+					animals[animalIndex].damageReceived ++;
 				}
 
 
@@ -2801,25 +2835,35 @@ void setupRandomWorld()
 	if (worldToLoad == WORLD_EXAMPLECREATURE)
 	{
 		unsigned int wallthickness = 8;
+
+
+
 		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; ++worldPositionI)
 		{
+
+			world[worldPositionI].terrain = TERRAIN_STONE;
+
+
 			unsigned int x = worldPositionI % worldSize;
 			unsigned int y = worldPositionI / worldSize;
+			// walls around the world edge
 			if (x < wallthickness || x > worldSize - wallthickness || y < wallthickness  || y > worldSize - wallthickness)
 			{
 				world[worldPositionI].material = MATERIAL_ROCK;
 			}
-			else 
+			else
 			{
 
-				world[worldPositionI].material = MATERIAL_GRASS;
+				// world[worldPositionI].material = MATERIAL_GRASS;
 			}
 		}
 
 
+
+
+		// rock
 		for (int i = 0; i < 100; ++i)
 		{
-
 			unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
 			unsigned int x = randompos % worldSize;
 			unsigned int y = randompos / worldSize;
@@ -2828,16 +2872,28 @@ void setupRandomWorld()
 			{
 				for (int k = 0; k < rocksize; ++k)
 				{
-
-
 					unsigned int square = ( (y + j) * worldSize ) + ( x + k );
 					world[square].material = MATERIAL_ROCK;
-
 				}
-
 			}
+		}
 
-			// printf(".\n");
+
+		// lava
+		for (int i = 0; i < 100; ++i)
+		{
+			unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+			unsigned int x = randompos % worldSize;
+			unsigned int y = randompos / worldSize;
+			int rocksize = 250;
+			for (int j = 0; j < rocksize; ++j)
+			{
+				for (int k = 0; k < rocksize; ++k)
+				{
+					unsigned int square = ( (y + j) * worldSize ) + ( x + k );
+					world[square].terrain = TERRAIN_LAVA;
+				}
+			}
 		}
 
 
@@ -2857,11 +2913,18 @@ void setupRandomWorld()
 				unsigned int square = ( (y + j) * worldSize ) + ( x + k );
 				world[square].terrain = TERRAIN_WATER;
 
-				world[square].material = MATERIAL_NOTHING;
+				// world[square].material = MATERIAL_NOTHING;
 
 			}
 
 		}
+
+
+
+
+
+
+
 
 	}
 
