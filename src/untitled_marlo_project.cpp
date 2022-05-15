@@ -91,7 +91,7 @@
 
 #define NUMBER_OF_CONNECTIONS 8
 
-const int ioMatrixSize = 32;
+// const int ioMatrixSize = 32;
 
 const bool brownianMotion        = false;
 const bool immortality           = false;
@@ -130,7 +130,7 @@ unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
 const float taxEnergyScale         = 0.001f;        // a multiplier for how much it costs animals just to exist.
-const float movementEnergyScale    = 0.000f;        // a multiplier for how much it costs animals to move.
+const float movementEnergyScale    = 0.001f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
 
@@ -377,7 +377,7 @@ bool speciesVacancies [numberOfSpecies];
 unsigned int speciesPopulationCounts [numberOfSpecies];
 unsigned int populationCountUpdates  [numberOfSpecies];
 unsigned int speciesAttacksPerTurn[numberOfSpecies];
-Animal exampleAnimal2;
+// Animal exampleAnimal2;
 
 float organGrowthCost(unsigned int organ)
 {
@@ -437,22 +437,22 @@ float organUpkeepCost(unsigned int organ)
 
 Animal animals[numberOfAnimals];
 
-void scrambleConnections(unsigned int animalIndex)
-{
-	if (animalIndex < numberOfAnimals)
-	{
-		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
-		{
-			for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-			{
-				animals[animalIndex].body[cellLocalPositionI].connections[i].used = false;
-				if (RNG() < 0.5f) { animals[animalIndex].body[cellLocalPositionI].connections[i].used = true; }
-				animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[cellLocalPositionI].connections[i].weight = (RNG() - 0.5f * 2.0f);
-			}
-		}
-	}
-}
+// void scrambleConnections(unsigned int animalIndex)
+// {
+// 	if (animalIndex < numberOfAnimals)
+// 	{
+// 		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
+// 		{
+// 			for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+// 			{
+// 				animals[animalIndex].body[cellLocalPositionI].connections[i].used = false;
+// 				if (RNG() < 0.5f) { animals[animalIndex].body[cellLocalPositionI].connections[i].used = true; }
+// 				animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+// 				animals[animalIndex].body[cellLocalPositionI].connections[i].weight = (RNG() - 0.5f * 2.0f);
+// 			}
+// 		}
+// 	}
+// }
 
 void resetAnimal(unsigned int animalIndex)
 {
@@ -461,11 +461,8 @@ void resetAnimal(unsigned int animalIndex)
 		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
 		{
 			animals[animalIndex].body[cellLocalPositionI].organ  = MATERIAL_NOTHING;
-			// animals[animalIndex].body[cellLocalPositionI].sign = 1.0f;
 			animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
-			// animals[animalIndex].body[cellLocalPositionI].target = 0;
 			animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
-			// animals[animalIndex].body[cellLocalPositionI].eyeColor = color_grey;
 			animals[animalIndex].body[cellLocalPositionI].damage = 0.0f;
 			for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 			{
@@ -474,6 +471,9 @@ void resetAnimal(unsigned int animalIndex)
 				animals[animalIndex].body[cellLocalPositionI].connections[i].weight = RNG() - 0.5f;
 
 			}
+
+
+			animals[animalIndex].genes[cellLocalPositionI] = animals[animalIndex].body[cellLocalPositionI];
 		}
 		animals[animalIndex].mass = 0;
 		// animals[animalIndex].stride = 1;
@@ -1085,7 +1085,7 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	// animals[animalIndex].uPosY = 0;
 	// // animals[animalIndex].prevHighestIntensity = 0.0f;
 	// animals[animalIndex].parentAmnesty = true;
-	// animals[animalIndex].retired = false;
+	animals[animalIndex].retired = false;
 	// animals[animalIndex].mass = 0;
 	// animals[animalIndex].age = 0;
 	// animals[animalIndex].energyDebt = 0.0f;
@@ -1334,22 +1334,28 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	}
 	else
 	{
-		if (world[worldI].material == MATERIAL_NOTHING)
-		{
+		// if (world[worldI].material == MATERIAL_NOTHING)
+		// {
 
-			displayColor =  terrainColors(world[worldI].terrain);
-		}
-		else
-		{
+			// displayColorA=  terrainColors(world[worldI].terrain);
+		// }
+		// else
+		// {
 
 			// displayColor = materialColors(world[worldI].material);
 
 
-			// Color terrainColor = terrainColors(world[worldI].terrain);;
+			// Color terrainColor 
+			// displayColorB = materialColors(world[worldI].material);;
+			// if (world[worldI].terrain == TERRAIN_WATER)
+			// {
 
-			displayColor = multiplyColor( materialColors(world[worldI].material), terrainColors(world[worldI].terrain) );
+			// displayColor = multiplyColor( materialColors(world[worldI].material), terrainColors(world[worldI].terrain) );	
+			// }
 
-		}
+			displayColor = filterColor( terrainColors(world[worldI].terrain),  materialColors(world[worldI].material) ); 
+
+		// }
 	}
 	return displayColor;
 }
@@ -1359,7 +1365,7 @@ void updateMap()
 {
 
 
-	unsigned int mapUpdateFidelity = worldSquareSize / 100000;
+	unsigned int mapUpdateFidelity = worldSquareSize / 50000;
 
 	for (unsigned int i = 0; i < mapUpdateFidelity; ++i)
 	{
@@ -1368,15 +1374,15 @@ void updateMap()
 		unsigned int randomI = (randomY * worldSize) + randomX;
 		if (randomI < worldSquareSize)
 		{
-			if (world[randomI].terrain == TERRAIN_STONE)
-			{
+			// if (world[randomI].terrain == TERRAIN_STONE)
+			// {
 				// world[randomI].terrain = TERRAIN_GRASS;
 				if (world[randomI].material == MATERIAL_NOTHING)
 				{
 					world[randomI].material = MATERIAL_GRASS;
 				}
 
-			}
+			// }
 
 
 
@@ -1878,7 +1884,7 @@ void organs_all()
 					if (world[cellWorldPositionI].material == MATERIAL_GRASS)
 					{
 						animals[animalIndex].energy += grassEnergy * energyScaleIn;
-						world[cellWorldPositionI].terrain = TERRAIN_STONE;
+						world[cellWorldPositionI].material = MATERIAL_NOTHING;
 					}
 					break;
 
@@ -2614,39 +2620,39 @@ void setupExampleAnimal2()
 	// if (i > animalSize && i < (animalSize + 3))
 	// {
 	unsigned int i = 0;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );                              i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );                            i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );                            i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );                            i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );                            i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_TIMER );                          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_TIMER );                          i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );                          i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );                          i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );                          i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );                          i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );                     i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );                     i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );                          i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );                          i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );                     i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );                     i++;
-	animalAppendCell( 0, i, ORGAN_MUSCLE );                    i++;
-	animalAppendCell( 0, i, ORGAN_MUSCLE_TURN );               i++;
-	animalAppendCell( 0, i, ORGAN_LIVER );              i++;
-	animalAppendCell( 0, i, ORGAN_LIVER );              i++;
-	animalAppendCell( 0, i, ORGAN_LIVER );              i++;
-	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY ); i++;
-	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY ); i++;
-	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY ); i++;
-	animalAppendCell( 0, i, ORGAN_GONAD ); i++;
-	animalAppendCell( 0, i, ORGAN_GONAD ); i++;
-	animalAppendCell( 0, i, ORGAN_GONAD ); i++;
-	animalAppendCell( 0, i, ORGAN_GONAD ); i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
+	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );          i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );          i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );          i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );          i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_TIMER );        i++;
+	animalAppendCell( 0, i, ORGAN_SENSOR_TIMER );        i++;
+	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
+	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
+	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
+	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
+	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
+	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
+	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
+	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
+	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
+	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
+	animalAppendCell( 0, i, ORGAN_MUSCLE );              i++;
+	animalAppendCell( 0, i, ORGAN_MUSCLE_TURN );         i++;
+	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
+	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
+	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
+	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY );  i++;
+	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY );  i++;
+	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY );  i++;
+	animalAppendCell( 0, i, ORGAN_GONAD );               i++;
+	animalAppendCell( 0, i, ORGAN_GONAD );               i++;
+	animalAppendCell( 0, i, ORGAN_GONAD );               i++;
+	animalAppendCell( 0, i, ORGAN_GONAD );               i++;
 
 
 
@@ -2698,7 +2704,7 @@ void setupExampleAnimal2()
 
 	// scrambleConnections(playerCreature);
 
-	exampleAnimal2 = animals[0];
+	// exampleAnimal2 = animals[0];
 }
 
 void spawnPlayer()
@@ -2711,9 +2717,10 @@ void spawnPlayer()
 		unsigned int targetWorldPositionX = cameraPositionX ;
 		unsigned int targetWorldPositionY = cameraPositionY ;
 		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+		setupExampleAnimal2();
 		playerCreature = 0;
 		spawnAnimalIntoSlot(playerCreature,
-		                    exampleAnimal2,
+		                    animals[0],
 		                    targetWorldPositionI, false);
 		cameraTargetCreature = playerCreature;
 
@@ -2741,7 +2748,7 @@ void spawnTournamentAnimals()
 		setupExampleAnimal2();
 
 		spawnAnimalIntoSlot(i,
-		                    exampleAnimal2,
+		                    animals[0],
 		                    targetWorldPositionI, true);
 		// cameraTargetCreature = playerCreature;
 	}
@@ -2802,7 +2809,8 @@ void setupRandomWorld()
 			{
 				world[worldPositionI].material = MATERIAL_ROCK;
 			}
-			else {
+			else 
+			{
 
 				world[worldPositionI].material = MATERIAL_GRASS;
 			}
@@ -2848,6 +2856,8 @@ void setupRandomWorld()
 
 				unsigned int square = ( (y + j) * worldSize ) + ( x + k );
 				world[square].terrain = TERRAIN_WATER;
+
+				world[square].material = MATERIAL_NOTHING;
 
 			}
 
