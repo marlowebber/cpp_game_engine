@@ -53,6 +53,7 @@ const Color color_brightred          = Color( 0.9f, 0.1f, 0.0f, 1.0f);
 const Color color_darkred            = Color( 0.5f, 0.05f, 0.0f, 1.0f);
 const Color color_brown              = Color(  0.25f, 0.1f, 0.0f, 1.0f );
 const Color color_green              = Color(  0.25f, 0.8f, 0.25f, 1.0f );
+const Color color_darkgreen              = Color(  0.1f, 0.35f, 0.15f, 1.0f );
 const Color color_clear              = Color( 0.0f, 0.0f, 0.0f, 0.0f );
 const Color color_pink              = Color(  1.0f, 0.8f, 0.8f, 1.0f );
 
