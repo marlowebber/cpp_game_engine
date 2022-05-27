@@ -3,15 +3,15 @@
 #include "untitled_marlo_project.h"
 
 
+#include <SDL.h> // The SDL library
+#include <math.h> // sin, fmod
+
+#include <stdio.h> // printf
 const unsigned int width = 1920;
 const unsigned int height = 1080;
 const float fwidth = 1920;
 const float fheight = 1080;
 const unsigned int bufferSize = 4 * 6 * 1920 * 1080;
-
-// const Color color_lightblue          = Color( 0.1f, 0.3f, 0.65f, 1.0f );
-
-
 
 float viewZoom = 10.0f;
 float viewPanX = 0.0f;
@@ -157,78 +157,112 @@ void shutdownGraphics()
 }
 
 
+#define BUFFER_DURATION 1 // Length of the buffer in seconds
+#define FREQUENCY 48000 // Samples per second
+#define BUFFER_LEN (BUFFER_DURATION*FREQUENCY) // Samples in the buffer
 
-void audio_callback(void* userdata, uint8_t* stream, int len)
-{
-    uint64_t* samples_played = (uint64_t*)userdata;
-    float* fstream = (float*)(stream);
+int buffer_pos = 0;
 
-    static const float volume = 0.2;
-    static const float frequency = 200.0;
+void play_buffer(void* userdata, unsigned char* stream, int len) ;
 
-    for(int sid = 0; sid < (len / 8); ++sid)
-    {
-        double time = (*samples_played + sid) / 44100.0;
-        double x = 2.0 * M_PI * time * frequency;
-        fstream[2 * sid + 0] = volume * sin(x); /* L */
-        fstream[2 * sid + 1] = volume * sin(x); /* R */
-    }
+// // Global audio format variable
+// // If the sound card doesn't support this format, SDL handles the
+// // conversions seemlessly for us
+SDL_AudioSpec spec = {
+	.freq = FREQUENCY, 
+	.format = AUDIO_S16SYS, // Signed 16 bit integer format
+	.channels = 1,
+	.samples = 4096, // The size of each "chunk"
+	.callback = play_buffer, // user-defined function that provides the audio data
+	.userdata = NULL // an argument to the callback function (we dont need any)
+};
 
-    *samples_played += (len / 8);
+
+// // Buffer that gets filled with the audio samples
+int16_t buffer[BUFFER_LEN];
+
+void play_buffer(void* userdata, unsigned char* stream, int len) {
+	// Silence the whole stream in case we don't touch some parts of it
+	// This fills the stream with the silence value (almost always just 0)
+	// SDL implements the standard library (SDL_memset, SDL_memcpy etc.) to support more platforms
+	SDL_memset(stream, spec.silence, len);
+	
+	// Dividing the stream size by 2 gives us the real length of the buffer (our format is 2 bytes per sample)
+	len /= 2;
+	// Prevent overflows (if we get to the end of the sound buffer, we don't want to read beyond it)
+	len = (buffer_pos+len < BUFFER_LEN ? len : BUFFER_LEN-buffer_pos);
+
+	// If we are at the end of the buffer, keep the silence and return
+	if (len == 0) return;
+
+	// // Copy the samples from the current position in the buffer to the stream
+	// // Notice that the length gets multiplied back by 2 because we need to specify the length IN BYTES
+	SDL_memcpy(stream, buffer+buffer_pos, len*2);
+
+	// // Move the buffer position
+	buffer_pos += len;
+
+
+	printf("play buffer callback\n");
 }
 
+
+// // This maps our [0, 1] value to the sound card format we chose (signed 16 bit integer)
+// // Amplitude is the height of the wave, hence the volume
+// Sint16 format(double sample, double amplitude) {
+// 	// 32567 is the maximum value of a 16 bit signed integer (2^15-1)
+// 	return (Sint16)(sample*32567*amplitude);
+// }
+
+// // Generate a sine wave
+// double tone(double hz, unsigned long time) {
+// 	return sin(time * hz * M_PI * 2 / FREQUENCY);
+// }
+
+// // Generate a sawtooth wave
+// double saw(double hz, unsigned long time) {
+// 	return fmod(time*hz/FREQUENCY, 1)*2-1;
+// }
+
+// // Generate a square wave
+// double square(double hz, unsigned long time) {
+// 	double sine = tone(hz, time);
+// 	return sine > 0.0 ? 1.0 : -1.0;
+// }
 
 
 
 void setupGraphics()
 {
-	// Setup the game window with SDL2
-	SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+	int sdl_error_code = SDL_Init( SDL_INIT_VIDEO );
+		// | SDL_INIT_AUDIO);
+
+	// std::cout << SDL_GetError() << '\n';
 
 
 
 
+	// SDL_AudioDeviceID dev = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
 
 
-
-	// int main(int argc, char* argv[])
-// {
-	uint64_t samples_played = 0;
-
-	// if (SDL_Init(SDL_INIT_AUDIO) < 0)
+	// for (int i = 0; i < BUFFER_LEN; i++) 
 	// {
-	// 	fprintf(stderr,
-	// 	        "Error initializing SDL. SDL_Error: %s\n",
-	// 	        SDL_GetError()
-	// 	       );
-	// 	// return -1;
+ //        buffer[i] = sin(i * 440 * 3.1415 * 2 / FREQUENCY);
+
 	// }
 
-	SDL_AudioSpec audio_spec_want, audio_spec;
-	SDL_memset(&audio_spec_want, 0, sizeof(audio_spec_want));
 
-	audio_spec_want.freq     = 44100;
-	audio_spec_want.format   = AUDIO_F32;
-	audio_spec_want.channels = 2;
-	audio_spec_want.samples  = 512;
-	audio_spec_want.callback = audio_callback;
-	audio_spec_want.userdata = (void*)&samples_played;
+	// SDL_PauseAudioDevice(dev, 0);
 
-	SDL_AudioDeviceID audio_device_id = SDL_OpenAudioDevice(
-	                                        NULL, 0,
-	                                        &audio_spec_want, &audio_spec,
-	                                        SDL_AUDIO_ALLOW_FORMAT_CHANGE
-	                                    );
 
-	if (!audio_device_id)
-	{
-		fprintf(stderr,
-		        "Error creating SDL audio device. SDL_Error: %s\n",
-		        SDL_GetError()
-		       );
-		// SDL_Quit();
-		// return -1;
-	}
+	
+
+
+
+
+
+
+
 
 
 

@@ -43,7 +43,6 @@
 #define ORGAN_LIVER               7
 #define ORGAN_MUSCLE_TURN         8
 #define ORGAN_SENSOR_EYE          9
-#define ORGAN_SENSOR_TOUCH        10
 
 #define ORGAN_MOUTH_CARNIVORE     10
 #define ORGAN_MOUTH_PARASITE      11
@@ -64,13 +63,24 @@
 #define ORGAN_MEMORY_TX           26
 #define ORGAN_GILL                27
 
-#define numberOfOrganTypes        28 // the number limit of growable genes
-#define MATERIAL_FOOD             32 //           
-#define MATERIAL_ROCK             33 //    
-#define MATERIAL_MEAT             34
-#define MATERIAL_BONE             35
-#define MATERIAL_BLOOD            36
-#define MATERIAL_GRASS            37
+
+#define ORGAN_LUNG                28
+#define ORGAN_SENSOR_HUNGER       29
+#define ORGAN_SENSOR_AGE          30
+#define ORGAN_SENSOR_LAST_STRANGER 31
+#define ORGAN_SENSOR_LAST_KIN       32
+#define ORGAN_SENSOR_PARENT        33
+#define ORGAN_SENSOR_BIRTHPLACE      34
+#define ORGAN_SENSOR_TOUCH        35
+
+
+#define numberOfOrganTypes        36 // the number limit of growable genes
+#define MATERIAL_FOOD             60 //           
+#define MATERIAL_ROCK             61 //    
+#define MATERIAL_MEAT             62
+#define MATERIAL_BONE             63
+#define MATERIAL_BLOOD            64
+#define MATERIAL_GRASS            65
 // #define MATERIAL_SEAWEED          38
 
 
@@ -113,6 +123,7 @@ const bool doMutation            = true;
 const bool sensorJiggles         = false;
 const bool useTimers             = false;
 const bool setOrSteerAngle       = true;
+const bool useLava               = true;
 
 int mousePositionX =  -430;
 int mousePositionY =  330;
@@ -134,7 +145,7 @@ unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
 const float taxEnergyScale         = 0.001f;        // a multiplier for how much it costs animals just to exist.
-const float movementEnergyScale    = 0.01f;        // a multiplier for how much it costs animals to move.
+const float movementEnergyScale    = 0.001f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
 
@@ -377,6 +388,9 @@ struct Animal
 	bool parentAmnesty;
 	int totalMuscle;
 	bool canBreatheUnderwater;
+	bool canBreatheAir;
+	unsigned int lastTouchedStranger;
+	unsigned int lastTouchedKin;
 };
 
 
@@ -509,6 +523,7 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].parentAmnesty = true;
 		animals[animalIndex].retired = true;
 		animals[animalIndex].canBreatheUnderwater = false;
+		animals[animalIndex].canBreatheAir = false;
 	}
 }
 
@@ -616,7 +631,13 @@ bool organIsASensor(unsigned int organ)
 	    organ == ORGAN_SENSOR_NOSE      ||
 	    organ == ORGAN_SENSOR_EAR        ||
 	    organ == ORGAN_SENSOR_PHEROMONE ||
-	    organ == ORGAN_MEMORY_RX
+	    organ == ORGAN_MEMORY_RX ||
+	    organ == ORGAN_SENSOR_LAST_STRANGER ||
+	    organ == ORGAN_SENSOR_LAST_KIN ||
+	    organ == ORGAN_SENSOR_HUNGER ||
+	    organ == ORGAN_SENSOR_AGE ||
+	    organ == ORGAN_SENSOR_BIRTHPLACE ||
+	    organ == ORGAN_SENSOR_PARENT
 	)
 	{
 		return true;
@@ -628,26 +649,26 @@ bool organIsASensor(unsigned int organ)
 // // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
 void measureAnimalQualities(unsigned int animalIndex)
 {
-	// update sensor ranges
-	for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)                                      // place animalIndex on grid and attack / eat. add captured energy
-	{
-		unsigned int organ = animals[animalIndex].body[cellLocalPositionI].organ;
-		if (    organIsASensor(organ))
-		{
-			unsigned int nSensors = 1; // starts from 1 coz the organ itself is a sensor
-			for (unsigned int n = 0; n < nNeighbours; ++n)
-			{
-				unsigned int cellNeighbour = cellLocalPositionI + cellNeighbourOffsets[n];
-				if (cellNeighbour < animalSquareSize)
-				{
-					if (animals[animalIndex].body[cellNeighbour].organ  == organ)
-					{
-						nSensors++;
-					}
-				}
-			}
-		}
-	}
+	// // update sensor ranges
+	// for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)                                      // place animalIndex on grid and attack / eat. add captured energy
+	// {
+	// 	unsigned int organ = animals[animalIndex].body[cellLocalPositionI].organ;
+	// 	if (    organIsASensor(organ))
+	// 	{
+	// 		unsigned int nSensors = 1; // starts from 1 coz the organ itself is a sensor
+	// 		for (unsigned int n = 0; n < nNeighbours; ++n)
+	// 		{
+	// 			unsigned int cellNeighbour = cellLocalPositionI + cellNeighbourOffsets[n];
+	// 			if (cellNeighbour < animalSquareSize)
+	// 			{
+	// 				if (animals[animalIndex].body[cellNeighbour].organ  == organ)
+	// 				{
+	// 					nSensors++;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	// update mass and debt
 	animals[animalIndex].mass = 0;
@@ -693,10 +714,14 @@ void measureAnimalQualities(unsigned int animalIndex)
 			animals[animalIndex].lifespan += baseLifespan;
 		}
 
-		if (animals[animalIndex].body[i].organ == ORGAN_GILL)
-		{
-			animals[animalIndex].canBreatheUnderwater = true;
-		}
+		// if (animals[animalIndex].body[i].organ == ORGAN_GILL)
+		// {
+		// 	animals[animalIndex].canBreatheUnderwater = true;
+		// }
+		// if (animals[animalIndex].body[i].organ == ORGAN_LUNG)
+		// {
+		// 	animals[animalIndex].canBreatheAir = true;
+		// }
 	}
 }
 
@@ -1176,6 +1201,7 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	animals[animalIndex].fPosX = position % worldSize; // set the new creature to the desired position
 	animals[animalIndex].fPosY = position / worldSize;
 	animals[animalIndex].birthLocation = position;
+	animals[animalIndex].fAngle = ( (RNG()-0.5f) * 2 * 3.141f  );
 
 	mutateAnimal( animalIndex);
 	measureAnimalQualities(animalIndex);
@@ -1552,6 +1578,8 @@ void organs_all()
 			// unsigned int destinationThisTurn = animals[animalIndex].destination;
 			float highestIntensity = 0.0f;
 
+			animals[animalIndex].canBreatheUnderwater = false;
+			animals[animalIndex].canBreatheAir        = false;
 			for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)                                      // place animalIndex on grid and attack / eat. add captured energy
 			{
 				if (animals[animalIndex].body[cellLocalPositionI].organ == MATERIAL_NOTHING)
@@ -1600,8 +1628,122 @@ void organs_all()
 
 				unsigned int organ = animals[animalIndex].body[cellLocalPositionI].organ;
 
+
+
 				switch (organ)
 				{
+
+
+
+
+				case ORGAN_SENSOR_AGE:
+				{
+
+					if (animals[animalIndex].lifespan != 0.0f)
+					{
+
+						animals[animalIndex].body[cellLocalPositionI].signalIntensity = animals[animalIndex].age / animals[animalIndex].lifespan;
+					}
+
+				}
+
+
+				case ORGAN_SENSOR_HUNGER:
+				{
+					if (animals[animalIndex].maxEnergy != 0.0f)
+					{
+
+						animals[animalIndex].body[cellLocalPositionI].signalIntensity = animals[animalIndex].energy / animals[animalIndex].maxEnergy;
+					}
+				}
+
+
+
+				case ORGAN_SENSOR_BIRTHPLACE:
+				{
+					if (animals[animalIndex].birthLocation > 0 && animals[animalIndex].birthLocation < worldSquareSize)
+					{
+						// if (!( animals[  animals[animalIndex].parent   ]  .retired  )   )
+						// {
+						float targetWorldPositionX =   animals[animalIndex]. birthLocation % worldSize;  ;//animals[  animals[animalIndex].parent   ]  .fPosX;
+						float targetWorldPositionY =   animals[animalIndex]. birthLocation / worldSize;  ;//animals[  animals[animalIndex].parent   ]  .fPosY;
+						float fdiffx = targetWorldPositionX - animals[animalIndex].fPosX;
+						float fdiffy = targetWorldPositionY - animals[animalIndex].fPosY;
+						float targetAngle = atan2( fdiffy, fdiffx );
+						animals[animalIndex].body[cellLocalPositionI].signalIntensity = targetAngle;
+						// }
+					}
+				}
+
+
+				case ORGAN_SENSOR_PARENT:
+				{
+					if (animals[animalIndex].parentIdentity >= 0 && animals[animalIndex].parentIdentity < numberOfAnimals)
+					{
+						if (!( animals[  animals[animalIndex].parentIdentity   ]  .retired  )   )
+						{
+							float targetWorldPositionX = animals[  animals[animalIndex].parentIdentity   ]  .fPosX;
+							float targetWorldPositionY = animals[  animals[animalIndex].parentIdentity   ]  .fPosY;
+							float fdiffx = targetWorldPositionX - animals[animalIndex].fPosX;
+							float fdiffy = targetWorldPositionY - animals[animalIndex].fPosY;
+							float targetAngle = atan2( fdiffy, fdiffx );
+							animals[animalIndex].body[cellLocalPositionI].signalIntensity = targetAngle;
+						}
+					}
+				}
+
+
+				case ORGAN_SENSOR_LAST_STRANGER:
+				{
+					if (animals[animalIndex].lastTouchedStranger >= 0 && animals[animalIndex].lastTouchedStranger < numberOfAnimals)
+					{
+						if (!( animals[  animals[animalIndex].lastTouchedStranger   ]  .retired  )   )
+						{
+							float targetWorldPositionX = animals[  animals[animalIndex].lastTouchedStranger   ]  .fPosX;
+							float targetWorldPositionY = animals[  animals[animalIndex].lastTouchedStranger   ]  .fPosY;
+							float fdiffx = targetWorldPositionX - animals[animalIndex].fPosX;
+							float fdiffy = targetWorldPositionY - animals[animalIndex].fPosY;
+							float targetAngle = atan2( fdiffy, fdiffx );
+							animals[animalIndex].body[cellLocalPositionI].signalIntensity = targetAngle;
+						}
+					}
+				}
+
+
+				case ORGAN_SENSOR_LAST_KIN:
+				{
+					if (animals[animalIndex].lastTouchedKin >= 0 && animals[animalIndex].lastTouchedKin < numberOfAnimals)
+					{
+						if (!( animals[  animals[animalIndex].lastTouchedKin   ]  .retired  )   )
+						{
+							float targetWorldPositionX = animals[  animals[animalIndex].lastTouchedKin   ]  .fPosX;
+							float targetWorldPositionY = animals[  animals[animalIndex].lastTouchedKin   ]  .fPosY;
+							float fdiffx = targetWorldPositionX - animals[animalIndex].fPosX;
+							float fdiffy = targetWorldPositionY - animals[animalIndex].fPosY;
+							float targetAngle = atan2( fdiffy, fdiffx );
+							animals[animalIndex].body[cellLocalPositionI].signalIntensity = targetAngle;
+						}
+					}
+				}
+
+
+				case ORGAN_LUNG:
+				{
+					animals[animalIndex].canBreatheAir = true;
+
+				}
+				case ORGAN_GILL:
+				{
+					animals[animalIndex].canBreatheUnderwater = true;
+
+				}
+
+
+
+
+
+
+
 
 
 				case ORGAN_MEMORY_RX:
@@ -2255,6 +2397,16 @@ void move_all()
 					}
 				}
 
+
+				if (world[newPosition].terrain == TERRAIN_STONE )
+				{
+					if (! animals[animalIndex].canBreatheAir)
+					{
+						animals[animalIndex].damageReceived ++;
+					}
+
+				}
+
 				if (world[newPosition].terrain == TERRAIN_LAVA)
 				{
 					animals[animalIndex].damageReceived += 10;
@@ -2285,6 +2437,21 @@ void move_all()
 							if (targetLocalPositionI >= 0)
 							{
 								okToStep = false;
+
+
+								// unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+								unsigned int fellowSpeciesIndex = (world[cellWorldPositionI].identity) / numberOfAnimalsPerSpecies;
+								if (fellowSpeciesIndex == speciesIndex)
+								{
+									animals[animalIndex].lastTouchedKin = world[cellWorldPositionI].identity;
+
+								}
+								else
+								{
+									animals[animalIndex].lastTouchedStranger = world[cellWorldPositionI].identity;
+
+								}
+
 								if (animals[animalIndex].body[cellLocalPositionI].organ == ORGAN_WEAPON ||
 								        animals[animalIndex].body[cellLocalPositionI].organ == ORGAN_MOUTH_CARNIVORE )
 								{
@@ -2794,6 +2961,9 @@ void setupExampleAnimal2()
 
 	animalAppendCell( 0, i, ORGAN_MUSCLE );              i++;
 	animalAppendCell( 0, i, ORGAN_MUSCLE_TURN );         i++;
+
+	animalAppendCell( 0, i, ORGAN_LUNG );               i++;
+
 	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
 	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
 	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
@@ -2997,18 +3167,23 @@ void setupRandomWorld()
 
 
 		// lava
-		for (int i = 0; i < 35; ++i)
+		if (useLava)
 		{
-			unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-			unsigned int x = randompos % worldSize;
-			unsigned int y = randompos / worldSize;
-			int rocksize = 250;
-			for (int j = 0; j < rocksize; ++j)
+
+
+			for (int i = 0; i < 35; ++i)
 			{
-				for (int k = 0; k < rocksize; ++k)
+				unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+				unsigned int x = randompos % worldSize;
+				unsigned int y = randompos / worldSize;
+				int rocksize = 250;
+				for (int j = 0; j < rocksize; ++j)
 				{
-					unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-					world[square].terrain = TERRAIN_LAVA;
+					for (int k = 0; k < rocksize; ++k)
+					{
+						unsigned int square = ( (y + j) * worldSize ) + ( x + k );
+						world[square].terrain = TERRAIN_LAVA;
+					}
 				}
 			}
 		}
