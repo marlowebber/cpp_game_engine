@@ -106,15 +106,13 @@ const bool setOrSteerAngle       = true;
 const bool useLava               = true;
 
 
-const float pi = 3.1415f;
-
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
 
 
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
-const int animalSize     = 8;
-const unsigned int animalSquareSize      = animalSize * animalSize;
+// const int animalSize     = 8;
+const unsigned int animalSquareSize      = 64;// animalSize * animalSize;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const unsigned int numberOfAnimals = 10000;
 const unsigned int numberOfSpecies = 20;
@@ -168,17 +166,17 @@ int neighbourOffsets[] =
 	+worldSize,
 	+worldSize - 1
 };
-int cellNeighbourOffsets[] =
-{
-	- 1,
-	- animalSize - 1,
-	- animalSize ,
-	- animalSize  + 1,
-	+ 1,
-	+animalSize + 1,
-	+animalSize,
-	+animalSize - 1
-};
+// int cellNeighbourOffsets[] =
+// {
+// 	- 1,
+// 	- animalSize - 1,
+// 	- animalSize ,
+// 	- animalSize  + 1,
+// 	+ 1,
+// 	+animalSize + 1,
+// 	+animalSize,
+// 	+animalSize - 1
+// };
 
 unsigned int cameraPositionX = 0 ;
 unsigned int cameraPositionY = 0 ;
@@ -552,9 +550,9 @@ int getRandomConnectableCell( unsigned int animalIndex)
 	unsigned int found = 0;
 	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
 	{
-		if (isCellConnectable(  animals[animalIndex].genes[i].organ ))
+		if (isCellConnectable(  animals[animalIndex].genes[cellIndex].organ ))
 		{
-			cellsOfType.push_back(i);
+			cellsOfType.push_back(cellIndex);
 			found++;
 		}
 	}
@@ -613,6 +611,98 @@ int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
 	}
 	return -1;
 }
+
+
+bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)
+{
+
+// collect the indexes of the eight neighbours
+	bool neighboursEmpty[nNeighbours];
+	// unsigned int neighbourIndexes[nNeighbours];
+
+	for (int i = 0; i < nNeighbours; ++i)
+	{
+		neighboursEmpty[i] = true;
+	}
+
+
+
+	// go through the list of other cells and see if any of neighbour indexes fail to match any of them. you can return as soon as one does.
+	unsigned int neighbourNumber = 0;
+	for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
+	{
+		if (i != cellIndex) // self is not a neighbour
+		{
+
+			if ((animals[animalIndex].body[i].localPosX == animals[animalIndex].body[cellIndex].localPosX - 1 ||
+			        animals[animalIndex].body[i].localPosX == animals[animalIndex].body[cellIndex].localPosX  ||
+			        animals[animalIndex].body[i].localPosX == animals[animalIndex].body[cellIndex].localPosX + 1 ||
+			   )
+
+				&&
+			(animals[animalIndex].body[i].localPosY == animals[animalIndex].body[cellIndex].localPosY - 1 ||
+			        animals[animalIndex].body[i].localPosY == animals[animalIndex].body[cellIndex].localPosY  ||
+			        animals[animalIndex].body[i].localPosY == animals[animalIndex].body[cellIndex].localPosY + 1 ||
+			   ))
+
+			{
+
+
+
+neighbourNumber++;
+
+				neighboursEmpty[neighbourNumber] = false;
+				// neighbourIndexes[neighbourNumber] = i;
+
+			}
+		}
+	}
+
+
+
+	for (int i = 0; i < nNeighbours; ++i)
+	{
+
+		if (neighboursEmpty[i]) 
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+
+int getRandomEdgeCell(unsigned int animalIndex)
+{
+	std::list<unsigned int> cellsOfType;
+	unsigned int found = 0;
+	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+
+
+		for (int i = 0; i < nNeighbours; ++i)
+		{
+			unsigned
+		}
+
+
+		if (animals[animalIndex].genes[cellIndex].organ != MATERIAL_NOTHING)
+		{
+			cellsOfType.push_back(cellIndex);
+			found++;
+		}
+	}
+
+	if (found > 0)
+	{
+		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
+		return *iterator;
+	}
+	return -1;
+}
+
+
 
 // choose any random populated cell.
 int getRandomPopulatedCell(unsigned int animalIndex)
@@ -960,7 +1050,7 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 
 			unsigned int actualWorldPosition = (cellWorldPositionY * worldSize) + (cellWorldPositionX);
 
-			if (actualWorldPosition == cellLocalPositionI)
+			if (actualWorldPosition == cellWorldPositionI)
 			{
 				return cellIndex;
 			}
@@ -1229,8 +1319,8 @@ void organs_all()
 
 				// rotate the animals cells when they interact with the world. This step is critical because their directions are relative to the animal direction.
 				// place the center of the sprite at zero
-				cellLocalPositionX -= (animalSize / 2);
-				cellLocalPositionY -= (animalSize / 2);
+				// cellLocalPositionX -= (animalSize / 2);
+				// cellLocalPositionY -= (animalSize / 2);
 
 				// add the eyelook
 				cellLocalPositionX += animals[animalIndex].body[cellIndex].eyeLookX;
@@ -1241,8 +1331,8 @@ void organs_all()
 				cellLocalPositionY *= sin(animals[animalIndex].fAngle);
 
 				// move the center back to bottom left
-				cellLocalPositionX += (animalSize / 2);
-				cellLocalPositionY += (animalSize / 2);
+				// cellLocalPositionX += (animalSize / 2);
+				// cellLocalPositionY += (animalSize / 2);
 
 				// world position now takes animal rotation into account (the drawings will not show that it is rotating, but it affects what the animal perceives.).
 				unsigned int cellWorldPositionX = cellLocalPositionX + animalWorldPositionX;
@@ -1505,7 +1595,7 @@ void organs_all()
 					animals[animalIndex].body[cellIndex].signalIntensity = 0;
 					for (int i = 0; i < nNeighbours; ++i)
 					{
-						unsigned int neighbour = cellWorldPositionI + cellNeighbourOffsets[i];
+						unsigned int neighbour = cellWorldPositionI + neighbourOffsets[i];
 						if (neighbour < worldSquareSize)
 						{
 							if (world[neighbour].identity >= 0)
@@ -1580,22 +1670,22 @@ void organs_all()
 						{
 							if (cellWorldPositionI < worldSquareSize)
 							{
-								unsigned int adjustedPos = cellWorldPositionI - (    ( (animalSize / 2) * worldSize)   + animalSize / 2           ) ;
-								if (adjustedPos < worldSquareSize)
+								// unsigned int adjustedPos = cellWorldPositionI - (    ( (animalSize / 2) * worldSize)   + animalSize / 2           ) ;
+								// if (adjustedPos < worldSquareSize)
+								// {
+								unsigned int speciesIndex  = animalIndex / numberOfAnimalsPerSpecies;
+								int result = spawnAnimal( speciesIndex,
+								                          animals[animalIndex],
+								                          animals[animalIndex].position, true );
+								if (result >= 0)
 								{
-									unsigned int speciesIndex  = animalIndex / numberOfAnimalsPerSpecies;
-									int result = spawnAnimal( speciesIndex,
-									                          animals[animalIndex],
-									                          adjustedPos, true );
-									if (result >= 0)
-									{
-										animals[animalIndex].body[cellIndex].organ = MATERIAL_NOTHING;
-										animals[animalIndex].numberOfTimesReproduced++;
-										animals[animalIndex].energy -= animals[animalIndex].offspringEnergy;
-										animals[result].energy       =  animals[animalIndex].offspringEnergy;
-										animals[result].parentIdentity       = animalIndex;
-									}
+									animals[animalIndex].body[cellIndex].organ = MATERIAL_NOTHING;
+									animals[animalIndex].numberOfTimesReproduced++;
+									animals[animalIndex].energy -= animals[animalIndex].offspringEnergy;
+									animals[result].energy       =  animals[animalIndex].offspringEnergy;
+									animals[result].parentIdentity       = animalIndex;
 								}
+								// }
 							}
 						}
 					}
@@ -1720,6 +1810,8 @@ void organs_all()
 							animals[animalIndex].fAngle += (animals[animalIndex].body[cellIndex].signalIntensity ) * 0.1f;
 						}
 
+
+						const float pi = 3.1415f;
 						if (animals[animalIndex].fAngle > pi)
 						{
 							animals[animalIndex].fAngle -= 2 * pi;
@@ -2124,8 +2216,37 @@ void drawGameInterfaceText()
 	menuY -= spacing;
 }
 
-void animalAppendCell(unsigned int animalIndex, unsigned int cellLocalPositionI, unsigned int organType)
+// add a cell to an animal in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
+void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 {
+
+
+
+	// pick a random location for the new cell which is adjacent to a normal cell.
+	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
+
+	int newCellLocalPosX = 0;
+	int newCellLocalPosY = 0;
+
+	int anchorCell = getRandomPopulatedCell( animalIndex);
+
+	if (anchorCell >= 0)
+	{
+		// choose a neighbour
+		for (int i = 0; i < count; ++i)
+		{
+			/* code */
+		}
+
+
+	}
+
+
+
+
+
+
+
 	// puts a cell into an animal 'properly', connecting it up to existing neurons if applicable.
 	animals[animalIndex].genes[cellLocalPositionI].organ = organType;
 
@@ -2172,64 +2293,64 @@ void setupExampleAnimal2()
 	resetAnimal(0);
 
 	unsigned int i = 0;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
-	animalAppendCell( 0, i, ORGAN_MOUTH_VEG );           i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EYE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EAR );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_EAR );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_PHEROMONE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_PHEROMONE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_NOSE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_NOSE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_TOUCH );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_TOUCH );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_BODYANGLE );          i++;
-	animalAppendCell( 0, i, ORGAN_SENSOR_BODYANGLE );          i++;
-	animalAppendCell( 0, i, ORGAN_MEMORY_RX );              i++;
-	animalAppendCell( 0, i, ORGAN_MEMORY_RX );              i++;
-	animalAppendCell( 0, i, ORGAN_MEMORY_RX );              i++;
-	animalAppendCell( 0, i, ORGAN_MEMORY_RX );              i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
-	animalAppendCell( 0, i, ORGAN_BIASNEURON );          i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_NEURON );              i++;
-	animalAppendCell( 0, i, ORGAN_MEMORY_TX );              i++;
-	animalAppendCell( 0, i, ORGAN_MEMORY_TX );              i++;
-	animalAppendCell( 0, i, ORGAN_MEMORY_TX );              i++;
-	animalAppendCell( 0, i, ORGAN_MEMORY_TX );              i++;
-	animalAppendCell( 0, i, ORGAN_MUSCLE );              i++;
-	animalAppendCell( 0, i, ORGAN_MUSCLE_TURN );         i++;
-	animalAppendCell( 0, i, ORGAN_LUNG );               i++;
-	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
-	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
-	animalAppendCell( 0, i, ORGAN_LIVER );               i++;
-	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY );  i++;
-	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY );  i++;
-	animalAppendCell( 0, i, ORGAN_ADDOFFSPRINGENERGY );  i++;
-	animalAppendCell( 0, i, ORGAN_GONAD );               i++;
-	animalAppendCell( 0, i, ORGAN_GONAD );               i++;
-	animalAppendCell( 0, i, ORGAN_GONAD );               i++;
-	animalAppendCell( 0, i, ORGAN_GONAD );               i++;
+	animalAppendCell( 0, ORGAN_MOUTH_VEG );
+	animalAppendCell( 0, ORGAN_MOUTH_VEG );
+	animalAppendCell( 0, ORGAN_MOUTH_VEG );
+	animalAppendCell( 0, ORGAN_MOUTH_VEG );
+	animalAppendCell( 0, ORGAN_MOUTH_VEG );
+	animalAppendCell( 0, ORGAN_SENSOR_EYE );
+	animalAppendCell( 0, ORGAN_SENSOR_EYE );
+	animalAppendCell( 0, ORGAN_SENSOR_EYE );
+	animalAppendCell( 0, ORGAN_SENSOR_EYE );
+	animalAppendCell( 0, ORGAN_SENSOR_EAR );
+	animalAppendCell( 0, ORGAN_SENSOR_EAR );
+	animalAppendCell( 0, ORGAN_SENSOR_PHEROMONE );
+	animalAppendCell( 0, ORGAN_SENSOR_PHEROMONE );
+	animalAppendCell( 0, ORGAN_SENSOR_NOSE );
+	animalAppendCell( 0, ORGAN_SENSOR_NOSE );
+	animalAppendCell( 0, ORGAN_SENSOR_TOUCH );
+	animalAppendCell( 0, ORGAN_SENSOR_TOUCH );
+	animalAppendCell( 0, ORGAN_SENSOR_BODYANGLE );
+	animalAppendCell( 0, ORGAN_SENSOR_BODYANGLE );
+	animalAppendCell( 0, ORGAN_MEMORY_RX );
+	animalAppendCell( 0, ORGAN_MEMORY_RX );
+	animalAppendCell( 0, ORGAN_MEMORY_RX );
+	animalAppendCell( 0, ORGAN_MEMORY_RX );
+	animalAppendCell( 0, ORGAN_BIASNEURON );
+	animalAppendCell( 0, ORGAN_BIASNEURON );
+	animalAppendCell( 0, ORGAN_BIASNEURON );
+	animalAppendCell( 0, ORGAN_BIASNEURON );
+	animalAppendCell( 0, ORGAN_BIASNEURON );
+	animalAppendCell( 0, ORGAN_BIASNEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_NEURON );
+	animalAppendCell( 0, ORGAN_MEMORY_TX );
+	animalAppendCell( 0, ORGAN_MEMORY_TX );
+	animalAppendCell( 0, ORGAN_MEMORY_TX );
+	animalAppendCell( 0, ORGAN_MEMORY_TX );
+	animalAppendCell( 0, ORGAN_MUSCLE );
+	animalAppendCell( 0, ORGAN_MUSCLE_TURN );
+	animalAppendCell( 0, ORGAN_LUNG );
+	animalAppendCell( 0, ORGAN_LIVER );
+	animalAppendCell( 0, ORGAN_LIVER );
+	animalAppendCell( 0, ORGAN_LIVER );
+	animalAppendCell( 0, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( 0, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( 0, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( 0, ORGAN_GONAD );
+	animalAppendCell( 0, ORGAN_GONAD );
+	animalAppendCell( 0, ORGAN_GONAD );
+	animalAppendCell( 0, ORGAN_GONAD );
 }
 
 void spawnPlayer()
