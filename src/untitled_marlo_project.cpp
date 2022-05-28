@@ -64,6 +64,7 @@
 #define ORGAN_SENSOR_BIRTHPLACE      34
 #define ORGAN_SENSOR_TOUCH        35
 
+
 #define numberOfOrganTypes        36 // the number limit of growable genes
 #define MATERIAL_FOOD             60
 #define MATERIAL_ROCK             61
@@ -617,94 +618,92 @@ int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
 	return -1;
 }
 
-
+// check if a cell has an empty neighbour.
 bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)
 {
+	// go through the list of other cells and see if any of neighbour indexes match any of them. if so, mark the square as not an edge.
+	unsigned int neighbourtally = 0;
 
-// collect the indexes of the eight neighbours
-	bool neighboursEmpty[nNeighbours];
-	// unsigned int neighbourIndexes[nNeighbours];
-
-	for (int i = 0; i < nNeighbours; ++i)
+	Vec_i2 locations_to_check[nNeighbours] =
 	{
-		neighboursEmpty[i] = true;
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY - 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY - 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY - 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY   );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY   );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY + 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY + 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY + 1  );
 	}
 
-
-
-	// go through the list of other cells and see if any of neighbour indexes fail to match any of them. you can return as soon as one does.
-	unsigned int neighbourNumber = 0;
-	for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
+	for (int potentialNeighbour = 0; potentialNeighbour < animals[animalIndex].cellsUsed; ++potentialNeighbour)
 	{
-		if (i != cellIndex) // self is not a neighbour
+		for (int i = 0; i < nNeighbours; ++i)
 		{
-
-			if ((   animals[animalIndex].body[i].localPosX == animals[animalIndex].body[cellIndex].localPosX - 1 ||
-			        animals[animalIndex].body[i].localPosX == animals[animalIndex].body[cellIndex].localPosX  ||
-			        animals[animalIndex].body[i].localPosX == animals[animalIndex].body[cellIndex].localPosX + 1
-			    )
-
-			        &&
-			        (animals[animalIndex].body[i].localPosY == animals[animalIndex].body[cellIndex].localPosY - 1 ||
-			         animals[animalIndex].body[i].localPosY == animals[animalIndex].body[cellIndex].localPosY  ||
-			         animals[animalIndex].body[i].localPosY == animals[animalIndex].body[cellIndex].localPosY + 1
-			        ))
-
+			if (animals[animalIndex].body[potentialNeighbour].localPosX == locations_to_check[i].x  &&
+			        animals[animalIndex].body[potentialNeighbour].localPosY == locations_to_check[i].y  )
 			{
-
-
-
-				neighbourNumber++;
-
-				neighboursEmpty[neighbourNumber] = false;
-				// neighbourIndexes[neighbourNumber] = i;
-
+				neighbourtally++;
 			}
 		}
 	}
 
-
-
-	for (int i = 0; i < nNeighbours; ++i)
+	if (neighbourtally < nNeighbours)
 	{
-
-		if (neighboursEmpty[i])
-		{
-			return true;
-		}
+		return true;
 	}
 	return false;
 }
 
-
-int getRandomEdgeCell(unsigned int animalIndex)
+unsigned int getRandomEdgeCell(animalIndex);
 {
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	while (true)
 	{
+		int i = extremelyFastNumberFromZeroTo(animals[animalIndex].cellsUsed);
 
-
-		for (int i = 0; i < nNeighbours; ++i)
+		if (isCellAnEdge(animalIndex, i))
 		{
-			unsigned
+			return i;
 		}
-
-
-		// if (animals[animalIndex].genes[cellIndex].organ != MATERIAL_NOTHING)
-		// {
-		cellsOfType.push_back(cellIndex);
-		found++;
-		// }
 	}
+}
 
-	if (found > 0)
+
+Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
+{
+	unsigned int cellIndex = getRandomEdgeCell(animalIndex);
+	Vec_i2 result = Vec_i2(0, 0);
+
+	// get an edge cell at random then search its neighbours to find the empty one. return the position of the empty neighbour.
+	Vec_i2 locations_to_check[nNeighbours] =
 	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
-		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
-		return *iterator;
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY - 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY - 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY - 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY   );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY   );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY + 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY + 1  );
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY + 1  );
 	}
-	return -1;
+
+	for (int i = 0; i < nNeighbours; ++i)
+	{
+		bool empty = true;
+		for (int potentialNeighbour = 0; potentialNeighbour < animals[animalIndex].cellsUsed; ++potentialNeighbour)
+		{
+			if (animals[animalIndex].body[potentialNeighbour].localPosX == locations_to_check[i].x  &&
+			        animals[animalIndex].body[potentialNeighbour].localPosY == locations_to_check[i].y  )
+			{
+				empty = false;
+			}
+		}
+		if (empty)
+		{
+			return locations_to_check[i];
+		}
+	}
+	return result;
 }
 
 
@@ -760,14 +759,15 @@ void mutateAnimal(unsigned int animalIndex)
 			int mutantCell = getRandomPopulatedCell( animalIndex);
 			if (mutantCell >= 0)
 			{
-				animals[animalIndex].genes[mutantCell].organ = MATERIAL_NOTHING;// randomLetter();
+				// animals[animalIndex].genes[mutantCell].organ = MATERIAL_NOTHING;// randomLetter();
+				eliminateCell(animalIndex, mutantCell);
 			}
 		}
 
 		else if (whatToMutate == 1)
 		{
 			// add an organ
-			int mutantCell = getRandomCellOfType(animalIndex, MATERIAL_NOTHING);
+			int mutantCell =    ;//getRandomCellOfType(animalIndex, MATERIAL_NOTHING);
 			if (mutantCell >= 0)
 			{
 				animals[animalIndex].genes[mutantCell].organ = randomLetter();
@@ -1963,7 +1963,9 @@ void move_all()
 
 									if (defense == 0 || animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage > 1.0f )
 									{
-										animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].organ = MATERIAL_NOTHING;
+										// animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].organ = MATERIAL_NOTHING;
+										animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].dead = true;
+
 										if (animals[world[cellWorldPositionI].identity].mass >= 1)
 										{
 											animals[world[cellWorldPositionI].identity].mass--;
@@ -2267,18 +2269,8 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 	int newCellLocalPosX = 0;
 	int newCellLocalPosY = 0;
 
-	int anchorCell = getRandomPopulatedCell( animalIndex);
+	    = getRandomPopulatedCell( animalIndex);
 
-	if (anchorCell >= 0)
-	{
-		// choose a neighbour
-		for (int i = 0; i < count; ++i)
-		{
-			/* code */
-		}
-
-
-	}
 
 
 
