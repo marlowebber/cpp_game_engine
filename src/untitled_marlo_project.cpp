@@ -327,29 +327,41 @@ float organUpkeepCost(unsigned int organ)
 
 Animal animals[numberOfAnimals];
 
+
+
+void resetConnection(unsigned int animalIndex, unsigned int cellLocalPositionI, unsigned int i)
+{
+	animals[animalIndex].body[cellLocalPositionI].connections[i].used = true;
+	animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+	animals[animalIndex].body[cellLocalPositionI].connections[i].weight = RNG() - 0.5f;
+}
+
+void resetCell(unsigned int animalIndex, unsigned int cellLocalPositionI)
+{
+
+	animals[animalIndex].body[cellLocalPositionI].organ  = MATERIAL_NOTHING;
+	animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
+	animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
+	animals[animalIndex].body[cellLocalPositionI].damage = 0.0f;
+	animals[animalIndex].body[cellLocalPositionI].eyeLookX = 0;
+	animals[animalIndex].body[cellLocalPositionI].eyeLookY = 0;
+	animals[animalIndex].body[cellLocalPositionI].localPosX = 0;
+	animals[animalIndex].body[cellLocalPositionI].localPosY = 0;
+	animals[animalIndex].body[cellLocalPositionI].dead = false;
+	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+	{
+		resetConnection(animalIndex, cellLocalPositionI, i);
+	}
+	animals[animalIndex].genes[cellLocalPositionI] = animals[animalIndex].body[cellLocalPositionI];
+
+}
+
+
 void resetAnimal(unsigned int animalIndex)
 {
 	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
-		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
-		{
-			animals[animalIndex].body[cellLocalPositionI].organ  = MATERIAL_NOTHING;
-			animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
-			animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
-			animals[animalIndex].body[cellLocalPositionI].damage = 0.0f;
-			animals[animalIndex].body[cellLocalPositionI].eyeLookX = 0;
-			animals[animalIndex].body[cellLocalPositionI].eyeLookY = 0;
-			animals[animalIndex].body[cellLocalPositionI].localPosX = 0;
-			animals[animalIndex].body[cellLocalPositionI].localPosY = 0;
-			animals[animalIndex].body[cellLocalPositionI].dead = false;
-			for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-			{
-				animals[animalIndex].body[cellLocalPositionI].connections[i].used = true;
-				animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-				animals[animalIndex].body[cellLocalPositionI].connections[i].weight = RNG() - 0.5f;
-			}
-			animals[animalIndex].genes[cellLocalPositionI] = animals[animalIndex].body[cellLocalPositionI];
-		}
+
 		animals[animalIndex].mass = 0;
 		animals[animalIndex].numberOfTimesReproduced = 0;
 		animals[animalIndex].damageDone = 0;
@@ -372,6 +384,12 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].canBreatheUnderwater = false;
 		animals[animalIndex].canBreatheAir = false;
 		animals[animalIndex].cellsUsed = 0;
+
+		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
+		{
+
+			resetCell(animalIndex, cellLocalPositionI );
+		}
 	}
 }
 
@@ -626,15 +644,15 @@ bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)
 
 	Vec_i2 locations_to_check[nNeighbours] =
 	{
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY - 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY - 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY - 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY   );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY   );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY + 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY + 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY + 1  );
-	}
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY   ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY   ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY + 1  ),
+	};
 
 	for (int potentialNeighbour = 0; potentialNeighbour < animals[animalIndex].cellsUsed; ++potentialNeighbour)
 	{
@@ -655,7 +673,7 @@ bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)
 	return false;
 }
 
-unsigned int getRandomEdgeCell(animalIndex);
+unsigned int getRandomEdgeCell(unsigned int animalIndex)
 {
 	while (true)
 	{
@@ -677,15 +695,15 @@ Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
 	// get an edge cell at random then search its neighbours to find the empty one. return the position of the empty neighbour.
 	Vec_i2 locations_to_check[nNeighbours] =
 	{
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY - 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY - 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY - 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY   );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY   );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY + 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY + 1  );
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY + 1  );
-	}
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY   ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY   ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY + 1  ),
+	};
 
 	for (int i = 0; i < nNeighbours; ++i)
 	{
@@ -740,6 +758,102 @@ Color mutateColor(Color in)
 	return clampColor(out);
 }
 
+
+// the opposite of append cell- remove a cell from the genes and body, shifting all other cells backwards and updating all connections.
+void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
+{
+	// shift array of cells down 1, overwriting the lowest modified cell (the cell to delete)
+	for (int cellIndex = cellToDelete + 1; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		animals[animalIndex].body[cellIndex - 1] = animals[animalIndex].body[cellIndex];
+	}
+
+	// clear the end cell which would have been duplicated
+	animals[animalIndex].cellsUsed--;
+
+	// go through all cells and update connections
+	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		for (int connectionIndex = 0; connectionIndex < NUMBER_OF_CONNECTIONS; ++connectionIndex)
+		{
+			if (animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo == cellToDelete	)
+			{
+				animals[animalIndex].body[cellIndex].connections[connectionIndex].used = false;
+			}
+			else if (animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo > cellToDelete)
+			{
+				animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo --;
+			}
+		}
+	}
+}
+
+
+// add a cell to an animal germline in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
+void animalAppendCell(unsigned int animalIndex, unsigned int organType)
+{
+
+
+
+	// pick a random location for the new cell which is adjacent to a normal cell.
+	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
+
+
+
+	// figure out the lowest index in the animal array and put the new cell there
+	unsigned int cellIndex = animals[animalIndex].cellsUsed;
+	animals[animalIndex].cellsUsed ++;
+
+
+
+	// figure out a new position anywhere on the animal edge
+	int newCellLocalPosX = 0;
+	int newCellLocalPosY = 0;
+
+	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
+
+
+
+
+
+	if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
+	{
+		unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
+		for (int i = 0; i < randomNumberOfConnections; ++i)
+		{
+			// pick a random connectable cell to connect to.
+			unsigned int connectableCell = getRandomConnectableCell( animalIndex);
+
+			// check if you are already connected to it.
+			bool alreadyConnected =  false;
+			for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
+			{
+				if (  animals[animalIndex].genes[cellIndex].connections[j].connectedTo == connectableCell &&
+				        animals[animalIndex].genes[cellIndex].connections[j] .used)
+				{
+					alreadyConnected = true;
+				}
+			}
+
+			// make the new connection if appropriate.
+			if (!alreadyConnected)
+			{
+				for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
+				{
+					if ( ! (animals[animalIndex].genes[cellIndex].connections[j].used))
+					{
+						animals[animalIndex].genes[cellIndex].connections[j].used = true;
+						animals[animalIndex].genes[cellIndex].connections[j].connectedTo = connectableCell;
+						animals[animalIndex].genes[cellIndex].connections[j].weight = (RNG() - 0.5f ) * 2;
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+
 void mutateAnimal(unsigned int animalIndex)
 {
 	if (!doMutation) {return;}
@@ -767,11 +881,13 @@ void mutateAnimal(unsigned int animalIndex)
 		else if (whatToMutate == 1)
 		{
 			// add an organ
-			int mutantCell =    ;//getRandomCellOfType(animalIndex, MATERIAL_NOTHING);
-			if (mutantCell >= 0)
-			{
-				animals[animalIndex].genes[mutantCell].organ = randomLetter();
-			}
+			// int mutantCell =    ;//getRandomCellOfType(animalIndex, MATERIAL_NOTHING);
+			// if (mutantCell >= 0)
+			// {
+			// 	animals[animalIndex].genes[mutantCell].organ = randomLetter();
+			// }
+			unsigned int newOrgan = randomLetter();
+			animalAppendCell(animalIndex, newOrgan);
 		}
 
 		else if (whatToMutate == 2)
@@ -835,27 +951,14 @@ void mutateAnimal(unsigned int animalIndex)
 		}
 		else if (whatToMutate == 7)
 		{
-			// swap an existing cell location without messing up the connections. adjust every incoming connection to point at the new cell.
+			// swap an existing cell location without messing up the connections.
 			int mutantCell = getRandomPopulatedCell(animalIndex);
 			if (mutantCell >= 0)
 			{
-				unsigned int destination =  getRandomCellOfType( animalIndex, MATERIAL_NOTHING );
-				Cell temp = animals[animalIndex].genes[mutantCell];
-				for (int i = 0; i < animalSquareSize; ++i)
-				{
-					for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
-					{
-						if (animals[animalIndex].genes[i].connections[j].connectedTo == mutantCell)
-						{
-							animals[animalIndex].genes[i].connections[j].connectedTo = destination;
-						}
-					}
-				}
+				Vec_i2 destination  = getRandomEmptyEdgeLocation(animalIndex);
 
-				if (destination < animalSquareSize)
-				{
-					animals[animalIndex].genes[destination] = temp;
-				}
+				animals[animalIndex].body[mutantCell].localPosX = destination.x;
+				animals[animalIndex].body[mutantCell].localPosY = destination.y;
 			}
 		}
 		else if (whatToMutate == 8)
@@ -2227,96 +2330,6 @@ void drawGameInterfaceText()
 
 
 
-// the opposite of append cell- remove a cell from the genes and body, shifting all other cells backwards and updating all connections.
-void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
-{
-	// shift array of cells down 1, overwriting the lowest modified cell (the cell to delete)
-	for (int cellIndex = cellToDelete + 1; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		animals[animalIndex].body[cellIndex - 1] = animals[animalIndex].body[cellIndex];
-	}
-
-	// clear the end cell which would have been duplicated
-	animals[animalIndex].cellsUsed--;
-
-	// go through all cells and update connections
-	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		for (int connectionIndex = 0; connectionIndex < NUMBER_OF_CONNECTIONS; ++connectionIndex)
-		{
-			if (animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo == cellToDelete	)
-			{
-				animals[animalIndex].body[cellIndex].connections[connectionIndex].used = false;
-			}
-			else if (animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo > cellToDelete)
-			{
-				animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo --;
-			}
-		}
-	}
-}
-
-
-// add a cell to an animal in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
-void animalAppendCell(unsigned int animalIndex, unsigned int organType)
-{
-
-
-
-	// pick a random location for the new cell which is adjacent to a normal cell.
-	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
-
-	int newCellLocalPosX = 0;
-	int newCellLocalPosY = 0;
-
-	    = getRandomPopulatedCell( animalIndex);
-
-
-
-
-
-
-
-
-	// puts a cell into an animal 'properly', connecting it up to existing neurons if applicable.
-	animals[animalIndex].genes[cellLocalPositionI].organ = organType;
-
-	if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
-	{
-		unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
-		for (int i = 0; i < randomNumberOfConnections; ++i)
-		{
-			// pick a random connectable cell to connect to.
-			unsigned int connectableCell = getRandomConnectableCell( animalIndex);
-
-			// check if you are already connected to it.
-			bool alreadyConnected =  false;
-			for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
-			{
-				if (  animals[animalIndex].genes[cellLocalPositionI].connections[j].connectedTo == connectableCell &&
-				        animals[animalIndex].genes[cellLocalPositionI].connections[j] .used)
-				{
-					alreadyConnected = true;
-				}
-			}
-
-			// make the new connection if appropriate.
-			if (!alreadyConnected)
-			{
-				for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
-				{
-					if ( ! (animals[animalIndex].genes[cellLocalPositionI].connections[j].used))
-					{
-						animals[animalIndex].genes[cellLocalPositionI].connections[j].used = true;
-						animals[animalIndex].genes[cellLocalPositionI].connections[j].connectedTo = connectableCell;
-						animals[animalIndex].genes[cellLocalPositionI].connections[j].weight = (RNG() - 0.5f ) * 2;
-						break;
-					}
-				}
-			}
-		}
-	}
-}
 
 void setupExampleAnimal2()
 {
