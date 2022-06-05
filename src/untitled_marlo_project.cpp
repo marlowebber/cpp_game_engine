@@ -55,14 +55,14 @@
 #define ORGAN_MEMORY_TX           26
 #define ORGAN_GILL                27
 
-#define ORGAN_LUNG                28
-#define ORGAN_SENSOR_HUNGER       29
-#define ORGAN_SENSOR_AGE          30
+#define ORGAN_LUNG                 28
+#define ORGAN_SENSOR_HUNGER        29
+#define ORGAN_SENSOR_AGE           30
 #define ORGAN_SENSOR_LAST_STRANGER 31
-#define ORGAN_SENSOR_LAST_KIN       32
+#define ORGAN_SENSOR_LAST_KIN      32
 #define ORGAN_SENSOR_PARENT        33
-#define ORGAN_SENSOR_BIRTHPLACE      34
-#define ORGAN_SENSOR_TOUCH        35
+#define ORGAN_SENSOR_BIRTHPLACE    34
+#define ORGAN_SENSOR_TOUCH         35
 
 
 #define numberOfOrganTypes        36 // the number limit of growable genes
@@ -106,14 +106,11 @@ const bool useTimers             = false;
 const bool setOrSteerAngle       = true;
 const bool useLava               = true;
 
-
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
 
-
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
-// const int animalSize     = 8;
-const unsigned int animalSquareSize      = 128;// animalSize * animalSize;
+const unsigned int animalSquareSize      = 128;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const unsigned int numberOfAnimals = 10000;
 const unsigned int numberOfSpecies = 20;
@@ -136,7 +133,6 @@ const unsigned int numberOfSpeakerChannels = 256;
 
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
-
 bool lockfps               = false;
 
 int mousePositionX =  -430;
@@ -148,7 +144,6 @@ float fps = 1.0f;
 
 bool playerInControl = false;
 int playerCreature = -1;
-
 
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
@@ -167,17 +162,6 @@ int neighbourOffsets[] =
 	+worldSize,
 	+worldSize - 1
 };
-// int cellNeighbourOffsets[] =
-// {
-// 	- 1,
-// 	- animalSize - 1,
-// 	- animalSize ,
-// 	- animalSize  + 1,
-// 	+ 1,
-// 	+animalSize + 1,
-// 	+animalSize,
-// 	+animalSize - 1
-// };
 
 unsigned int cameraPositionX = 0 ;
 unsigned int cameraPositionY = 0 ;
@@ -328,8 +312,6 @@ float organUpkeepCost(unsigned int organ)
 
 Animal animals[numberOfAnimals];
 
-
-
 void resetConnection(unsigned int animalIndex, unsigned int cellLocalPositionI, unsigned int i)
 {
 	animals[animalIndex].body[cellLocalPositionI].connections[i].used = true;
@@ -356,7 +338,6 @@ void resetCell(unsigned int animalIndex, unsigned int cellLocalPositionI)
 	animals[animalIndex].genes[cellLocalPositionI] = animals[animalIndex].body[cellLocalPositionI];
 
 }
-
 
 void resetAnimal(unsigned int animalIndex)
 {
@@ -519,7 +500,6 @@ bool measureAnimalQualities(unsigned int animalIndex)
 		if (animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE ||
 		        animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE_TURN ||
 		        animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE_STRAFE
-
 		   )
 		{
 
@@ -577,10 +557,6 @@ bool isCellConnecting(unsigned int organ)
 
 	return false;
 }
-
-
-
-
 
 // choose a random cell of any type that can be connected to, which includes all neurons and all sensors.
 int getRandomConnectableCell( unsigned int animalIndex)
@@ -681,8 +657,6 @@ bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)
 		}
 	}
 
-	// printf("Cell %u has %u neighbours.\n", cellIndex, neighbourtally);
-
 	if (neighbourtally < nNeighbours)
 	{
 		return true;
@@ -695,10 +669,8 @@ unsigned int getRandomEdgeCell(unsigned int animalIndex)
 	while (true)
 	{
 		int i = extremelyFastNumberFromZeroTo(animals[animalIndex].cellsUsed);
-		// printf("getRandomEdgeCell checking at %i\n", i);
 		if (isCellAnEdge(animalIndex, i))
 		{
-			// printf("Cell %i is an edge.\n", i);
 			return i;
 		}
 	}
@@ -736,14 +708,11 @@ Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
 		}
 		if (empty)
 		{
-			// printf("There is an available edge location at %i, %i\n", locations_to_check[i].x , locations_to_check[i].y);
 			return locations_to_check[i];
 		}
 	}
 	return result;
 }
-
-
 
 // choose any random populated cell.
 int getRandomPopulatedCell(unsigned int animalIndex)
@@ -752,11 +721,8 @@ int getRandomPopulatedCell(unsigned int animalIndex)
 	unsigned int found = 0;
 	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
 	{
-		// if (animals[animalIndex].genes[cellIndex].organ != MATERIAL_NOTHING)
-		// {
 		cellsOfType.push_back(cellIndex);
 		found++;
-		// }
 	}
 
 	if (found > 0)
@@ -776,7 +742,6 @@ Color mutateColor(Color in)
 	out.b += (RNG() - 0.5) * 0.1f;
 	return clampColor(out);
 }
-
 
 // the opposite of append cell- remove a cell from the genes and body, shifting all other cells backwards and updating all connections.
 void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
@@ -811,35 +776,19 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 // add a cell to an animal germline in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
 void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 {
-
-
-
 	// pick a random location for the new cell which is adjacent to a normal cell.
 	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
-
-
-
 	// figure out the lowest index in the animal array and put the new cell there
 	unsigned int cellIndex = animals[animalIndex].cellsUsed;
 	animals[animalIndex].cellsUsed ++;
 
-	// printf("cells used %u\n", animals[animalIndex].cellsUsed);
-
 	// figure out a new position anywhere on the animal edge
-
-
 	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
-	// printf("got new empty edge position at x%i, y%i\n", newPosition.x, newPosition.y);
 
 	animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
 	animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
 
 	animals[animalIndex].genes[cellIndex].organ = organType;
-
-	if (organType == ORGAN_LUNG)
-	{
-		printf("appending a lung! %u \n", cellIndex);
-	}
 
 
 	if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
@@ -907,11 +856,6 @@ void mutateAnimal(unsigned int animalIndex)
 		else if (whatToMutate == 1)
 		{
 			// add an organ
-			// int mutantCell =    ;//getRandomCellOfType(animalIndex, MATERIAL_NOTHING);
-			// if (mutantCell >= 0)
-			// {
-			// 	animals[animalIndex].genes[mutantCell].organ = randomLetter();
-			// }
 			unsigned int newOrgan = randomLetter();
 			animalAppendCell(animalIndex, newOrgan);
 		}
@@ -964,7 +908,6 @@ void mutateAnimal(unsigned int animalIndex)
 			int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
 			if (mutantCell >= 0)
 			{
-				// unsigned int mutationAmount  = RNG() - 0.5;
 				if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
 				{
 					animals[animalIndex].genes[mutantCell].signalIntensity *= ((RNG() - 0.5 ) * 4);;
@@ -1167,51 +1110,17 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 	{
 		if (!animals[animalIndex].retired)
 		{
-
-
 			unsigned int cellIndex = world[cellWorldPositionI].occupyingCell;
 
-
 			// calculate the world position of the cell based on the animals position, and see if it matches the given position.
-
-
-
-
 			unsigned int cellWorldPositionX = animals[animalIndex].uPosX + animals[animalIndex].body[cellIndex].localPosX;
 			unsigned int cellWorldPositionY = animals[animalIndex].uPosY + animals[animalIndex].body[cellIndex].localPosY;
-
 			unsigned int actualWorldPosition = (cellWorldPositionY * worldSize) + (cellWorldPositionX);
 
 			if (actualWorldPosition == cellWorldPositionI)
 			{
-
-
 				return cellIndex;
 			}
-
-
-			// unsigned int targetWorldPositionX = animals[animalIndex].position % worldSize;
-			// unsigned int targetWorldPositionY = animals[animalIndex].position / worldSize;
-			// int targetLocalPositionX = cellWorldPositionX - targetWorldPositionX ;
-			// int targetLocalPositionY = cellWorldPositionY - targetWorldPositionY  ;
-			// if ( abs(targetLocalPositionX) < animalSize && abs(targetLocalPositionY) < animalSize
-			//         && targetLocalPositionX >= 0 && targetLocalPositionY >= 0)
-			// {
-			// 	unsigned int targetLocalPositionI = (targetLocalPositionY * animalSize) + targetLocalPositionX;
-			// 	if (targetLocalPositionI < animalSquareSize)
-			// 	{
-			// 		if (animals[animalIndex].body[targetLocalPositionI].organ != MATERIAL_NOTHING  )
-			// 		{
-			// 			return targetLocalPositionI;
-			// 		}
-			// 	}
-			// }
-
-
-
-
-
-
 		}
 	}
 	return -1;
@@ -1288,7 +1197,6 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
 		if (occupyingCell != -1)
 		{
-			// printf("animal %u cell %u occupies this square\n", animalIndex, occupyingCell);
 			viewedAnimal = animalIndex;
 		}
 	}
@@ -1341,7 +1249,6 @@ void updateMap()
 				{
 					world[randomI].material = MATERIAL_NOTHING;
 				}
-
 			}
 
 			if (world[randomI].material == MATERIAL_BLOOD)
@@ -1357,47 +1264,13 @@ void updateMap()
 	}
 }
 
-// int defenseAtPoint(unsigned int animalIndex, unsigned int cellLocalPositionI)
-// {
-// 	// int nBones = 0;
-// 	// for (unsigned int n = 0; n < nNeighbours; ++n)
-// 	// {
-// 	// 	unsigned int cellNeighbour = cellLocalPositionI + cellNeighbourOffsets[n];
-// 	// 	if (cellNeighbour < animalSquareSize)
-// 	// 	{
-// 	// 		if (animals[animalIndex].body[cellNeighbour].organ  == ORGAN_BONE)
-// 	// 		{
-// 	// 			nBones++;
-// 	// 		}
-// 	// 	}
-// 	// }
-// 	// return nBones * nBones;
-
-
-
-// }
-
 int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPositionI)
 {
 	int nBones = 0;
 	for (unsigned int n = 0; n < nNeighbours; ++n)
 	{
-		// 	unsigned int cellNeighbour = cellLocalPositionI + cellNeighbourOffsets[n];
-		// 	if (cellNeighbour < animalSquareSize)
-		// 	{
-		// 		if (animals[animalIndex].body[cellNeighbour].organ  == ORGAN_BONE)
-		// 		{
-		// 			nBones++;
-		// 		}
-		// 	}
-
-
 		unsigned int worldNeighbour = cellWorldPositionI + neighbourOffsets[n];
-
-
 		int occupyingCell = isAnimalInSquare(animalIndex, worldNeighbour) ;
-
-
 
 		if ( occupyingCell >= 0)
 		{
@@ -1405,14 +1278,9 @@ int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPosition
 			{
 				nBones++;
 			}
-
 		}
-
 	}
 	return nBones * nBones;
-
-
-
 }
 
 float fast_sigmoid(float in)
@@ -1437,21 +1305,8 @@ void organs_all()
 			bool canBreatheUnderwater = false;
 			bool canBreatheAir        = false;
 
-			printf("doing organs. cells used: %u \n", animals[animalIndex].cellsUsed);
-
 			for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; cellIndex++)                                      // place animalIndex on grid and attack / eat. add captured energy
 			{
-
-
-				// if (animals[animalIndex].body[cellLocalPositionI].organ == MATERIAL_NOTHING)
-				// {
-				// 	continue;
-				// }
-
-				// else
-				// {
-				// 	cellsDone++;
-				// }
 				unsigned int animalWorldPositionX    = animals[animalIndex].position % worldSize;
 				unsigned int animalWorldPositionY    = animals[animalIndex].position / worldSize;
 				int cellLocalPositionX =  animals[animalIndex].body[cellIndex].localPosX ;//cellLocalPositionI % animalSize;
@@ -1478,14 +1333,10 @@ void organs_all()
 				unsigned int cellWorldPositionX = cellLocalPositionX + animalWorldPositionX;
 				unsigned int cellWorldPositionY = cellLocalPositionY + animalWorldPositionY;
 				unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
-				// if (cellWorldPositionI >= worldSquareSize)
-				// {
-				// 	continue;
-				// }
+
+				if (cellWorldPositionI >= worldSquareSize) {continue;}
+
 				unsigned int organ = animals[animalIndex].body[cellIndex].organ;
-
-
-					printf("CELL %u \n", organ);
 
 				switch (organ)
 				{
@@ -1577,7 +1428,6 @@ void organs_all()
 				case ORGAN_LUNG:
 				{
 					canBreatheAir = true;
-					printf("hi its me a lung\n");
 					break;
 
 				}
@@ -1767,20 +1617,30 @@ void organs_all()
 						}
 					}
 
-					if (world[cellWorldPositionI].identity >= 0)
+					unsigned int touchedAnimal = world[cellWorldPositionI].identity;
+
+					if (touchedAnimal < numberOfAnimals)
 					{
-						if (world[cellWorldPositionI].identity != animalIndex)
+						if (touchedAnimal >= 0)
 						{
-							if (isAnimalInSquare( world[cellWorldPositionI].identity , cellWorldPositionI ))
+							if (touchedAnimal != animalIndex)
 							{
-								animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
-							}
-							else if (world[cellWorldPositionI].material != MATERIAL_NOTHING)
-							{
-								animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
+
+
+
+								if (isAnimalInSquare( touchedAnimal , cellWorldPositionI ))
+								{
+									animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
+								}
+								else if (world[cellWorldPositionI].material != MATERIAL_NOTHING)
+								{
+									animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
+								}
 							}
 						}
 					}
+
+
 					break;
 				}
 
@@ -1797,7 +1657,6 @@ void organs_all()
 
 				case ORGAN_NEURON:
 				{
-					printf("BLEEEEEEE\n");
 					// go through the list of connections and sum their values.
 					float sum = 0.0f;
 					sum += neuralNoise * ((RNG() - 0.5f) * 2); // add noise all throughout the brain, this makes everything more robust and lifelike
@@ -1820,16 +1679,12 @@ void organs_all()
 				case ORGAN_GONAD:
 				{
 					totalGonads++;
-					// printf("found a gonad\n");
 					if (doReproduction && animals[animalIndex].energyDebt <= 0.0f )
 					{
 						if (animals[animalIndex].energy > ((animals[animalIndex].mass / 2 ) + animals[animalIndex].offspringEnergy ))
 						{
 							if (cellWorldPositionI < worldSquareSize)
 							{
-								// unsigned int adjustedPos = cellWorldPositionI - (    ( (animalSize / 2) * worldSize)   + animalSize / 2           ) ;
-								// if (adjustedPos < worldSquareSize)
-								// {
 								unsigned int speciesIndex  = animalIndex / numberOfAnimalsPerSpecies;
 								int result = spawnAnimal( speciesIndex,
 								                          animals[animalIndex],
@@ -1842,7 +1697,6 @@ void organs_all()
 									animals[result].energy       =  animals[animalIndex].offspringEnergy;
 									animals[result].parentIdentity       = animalIndex;
 								}
-								// }
 							}
 						}
 					}
@@ -1967,7 +1821,6 @@ void organs_all()
 							animals[animalIndex].fAngle += (animals[animalIndex].body[cellIndex].signalIntensity ) * 0.1f;
 						}
 
-
 						const float pi = 3.1415f;
 						if (animals[animalIndex].fAngle > pi)
 						{
@@ -1983,15 +1836,12 @@ void organs_all()
 				}
 
 				}
-
-				// if (cellsDone >= animals[animalIndex].mass) {break;}
 			}
 
 			animals[animalIndex].totalGonads = totalGonads;
 			animals[animalIndex].maxEnergy = animals[animalIndex].mass + (totalLiver * liverStorage);
 			animals[animalIndex].canBreatheAir = canBreatheAir;
 			animals[animalIndex].canBreatheUnderwater = canBreatheUnderwater;
-
 		}
 	}
 
@@ -2008,7 +1858,6 @@ void move_all()
 	{
 		unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 
-		// printf("ggeeeeeebb\n");
 		if (!animals[animalIndex].retired)
 		{
 			// calculate direction of movement.
@@ -2023,9 +1872,7 @@ void move_all()
 
 			unsigned int newPosX  = animals[animalIndex].fPosX;
 			unsigned int newPosY  = animals[animalIndex].fPosY;
-			unsigned int newPosition  =  (newPosY * worldSize) + newPosX; // move
-
-					// printf("attempting to move \n");
+			unsigned int newPosition  =  (newPosY * worldSize) + newPosX;
 
 			if (newPosition < worldSquareSize)
 			{
@@ -2047,7 +1894,6 @@ void move_all()
 					if (! animals[animalIndex].canBreatheUnderwater)
 					{
 						animals[animalIndex].damageReceived ++;
-						printf("animal is drowning!\n");
 					}
 				}
 
@@ -2056,24 +1902,16 @@ void move_all()
 					if (! animals[animalIndex].canBreatheAir)
 					{
 						animals[animalIndex].damageReceived ++;
-
-						printf("animal is suffocating!\n");
 					}
 				}
 
 				if (world[newPosition].terrain == TERRAIN_LAVA)
 				{
 					animals[animalIndex].damageReceived += 10;
-
-						printf("animal is burning!\n");
 				}
 
-				// unsigned int cellsDone = 0;
 				for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
 				{
-					// if ( (animals[animalIndex].body[cellIndex].organ != MATERIAL_NOTHING) )
-					// {
-					// cellsDone ++;
 					if (taxIsByMass)
 					{
 						animals[animalIndex].energy -= taxEnergyScale *  organUpkeepCost(animals[animalIndex].body[cellIndex].organ); // * speciesEnergyOuts[speciesIndex] ;
@@ -2090,8 +1928,6 @@ void move_all()
 					unsigned int cellWorldPositionX = (cellLocalPositionX + animalWorldPositionX) % worldSize;
 					unsigned int cellWorldPositionY = (cellLocalPositionY + animalWorldPositionY) % worldSize;
 					unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
-
-					// printf(" moving into cellWorldPositionX %u cellWorldPositionY %u\n", cellWorldPositionX, cellWorldPositionY);
 
 					if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
 					{
@@ -2121,7 +1957,6 @@ void move_all()
 									}
 								}
 
-								// float defense = defenseAtPoint(world[cellWorldPositionI].identity, targetLocalPositionI);
 								float defense = defenseAtWorldPoint(world[cellWorldPositionI].identity, cellWorldPositionI);
 
 								if (defense > 0)
@@ -2131,7 +1966,6 @@ void move_all()
 
 								if (defense == 0 || animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage > 1.0f )
 								{
-									// animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].organ = MATERIAL_NOTHING;
 									animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].dead = true;
 
 									if (animals[world[cellWorldPositionI].identity].mass >= 1)
@@ -2145,11 +1979,6 @@ void move_all()
 									if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
 									{
 										world[cellWorldPositionI].material = MATERIAL_BLOOD;
-									}
-
-									if (world[cellWorldPositionI].identity == animals[animalIndex].parentIdentity)
-									{
-										printf("an animal attacked its parent!\n");
 									}
 
 									speciesAttacksPerTurn[speciesIndex] ++;
@@ -2171,7 +2000,7 @@ void move_all()
 									}
 								}
 							}
-							else	if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_PARASITE )
+							else if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_PARASITE )
 							{
 								float amount = (animals[world[cellWorldPositionI].identity].energy) / animalSquareSize;
 								animals[animalIndex].energy += amount;
@@ -2188,15 +2017,7 @@ void move_all()
 						world[cellWorldPositionI].identity = animalIndex;
 						world[cellWorldPositionI].occupyingCell = cellIndex;
 						world[cellWorldPositionI].trail    = dAngle;
-
-						// printf("Animal %u cell %u lpx %i lpy %i placed at x %u y %u\n" , animalIndex, cellIndex, animals[animalIndex].body[cellIndex].localPosX, animals[animalIndex].body[cellIndex].localPosY, cellWorldPositionX, cellWorldPositionY);
 					}
-					else
-					{
-						// printf("failed to place\n");
-					}
-					// }
-					// if (cellsDone >= animals[animalIndex].mass) { break;}
 				}
 			}
 			else
@@ -2248,7 +2069,7 @@ void energy_all() // perform energies.
 			{
 				if (animals[animalIndex].damageReceived > animals[animalIndex].mass) // player can only be killed by MURDER
 				{
-					printf("The player was harmed until death! dmg %u mass %u\n", animals[animalIndex].damageReceived, animals[animalIndex].mass);
+					// printf("The player was harmed until death! dmg %u mass %u\n", animals[animalIndex].damageReceived, animals[animalIndex].mass);
 					execute = true;
 				}
 			}
@@ -2260,33 +2081,33 @@ void energy_all() // perform energies.
 						if (animals[animalIndex].energy < 0.0f)
 						{
 							execute = true;
-							printf("died of low energy!\n");
+							// printf("died of low energy!\n");
 						}
 					if (animals[animalIndex].age > animals[animalIndex].lifespan)
 					{
-						printf("died of old age!\n");
+						// printf("died of old age!\n");
 						execute = true;
 					}
 					if (animals[animalIndex].totalGonads == 0)
 					{
-						printf("genitals exploded and died!\n");
+						// printf("genitals exploded and died!\n");
 						execute = true;
 					}
 					if (animals[animalIndex].damageReceived > animals[animalIndex].mass)
 					{
-						printf("murdered to death (or drowned)!\n");
+						// printf("murdered to death (or drowned)!\n");
 						execute = true;
 					}
 					if (animals[animalIndex].mass <= 0)
 					{
-						printf("banished for being massless!\n");
+						// printf("banished for being massless!\n");
 						execute = true;
 					}
 				}
 			}
 			if (execute)
 			{
-				printf("execute animal %u \n", animalIndex);
+				// printf("execute animal %u \n", animalIndex);
 				killAnimal( animalIndex);
 			}
 			if (tournament)
@@ -2411,12 +2232,9 @@ void drawGameInterfaceText()
 
 void setupExampleAnimal2(int i)
 {
-	// unsigned int i  = 1;
-
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
 
-	// unsigned int i = 0;
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
@@ -2477,24 +2295,6 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_GONAD );
 }
 
-
-// void printcells(unsigned int animalIndex)
-// {
-
-// 	// for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
-// 	// {
-// 	for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
-// 	{
-// 		printf("eegy beegy at x%i, y%i\n", animals[animalIndex].body[cellIndex].localPosX , animals[animalIndex].body[cellIndex].localPosY );
-
-
-
-// 	}
-
-// 	// }
-
-// }
-
 void spawnPlayer()
 {
 	if (playerCreature == -1)
@@ -2505,15 +2305,11 @@ void spawnPlayer()
 		int i = 1;
 		setupExampleAnimal2(i);
 
-
-
 		playerCreature = 0;
 		spawnAnimalIntoSlot(playerCreature,
 		                    animals[i],
 		                    targetWorldPositionI, false);
 
-
-		// printcells(playerCreature);
 		cameraTargetCreature = playerCreature;
 
 		printf("spawned player creature\n");
@@ -2529,11 +2325,10 @@ void spawnTournamentAnimals()
 {
 	for (int i = 0; i < numberOfAnimals; ++i)
 	{
-		printf("setting up animal %i\n", i);
+		// printf("setting up animal %i\n", i);
 		unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 		int j = 1;
 		setupExampleAnimal2(j);
-// printcells()
 		spawnAnimalIntoSlot(i,
 		                    animals[j],
 		                    targetWorldPositionI, true);
@@ -2544,7 +2339,6 @@ void setupRandomWorld()
 {
 	resetAnimals();
 	resetGrid();
-	// setupExampleAnimal2();
 
 	// spawn the example creature in the center field of view in an empty world.
 	if (worldToLoad == WORLD_EXAMPLECREATURE)
@@ -2656,7 +2450,7 @@ void tournamentController()
 
 				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
 				{
-					printf("repopulated an endangered species\n");
+					// printf("repopulated an endangered species\n");
 					spawnAnimal(i, animals[foundAnimal], randompos, false);
 				}
 			}
