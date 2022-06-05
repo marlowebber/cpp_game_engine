@@ -641,22 +641,22 @@ bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)
 
 	Vec_i2 locations_to_check[nNeighbours] =
 	{
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY - 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY - 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY - 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY   ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY   ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY + 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY + 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX - 1 , animals[animalIndex].genes[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX     , animals[animalIndex].genes[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX + 1 , animals[animalIndex].genes[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX - 1 , animals[animalIndex].genes[cellIndex].localPosY   ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX + 1 , animals[animalIndex].genes[cellIndex].localPosY   ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX - 1 , animals[animalIndex].genes[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX     , animals[animalIndex].genes[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX + 1 , animals[animalIndex].genes[cellIndex].localPosY + 1  ),
 	};
 
 	for (int potentialNeighbour = 0; potentialNeighbour < animals[animalIndex].cellsUsed; ++potentialNeighbour)
 	{
 		for (int i = 0; i < nNeighbours; ++i)
 		{
-			if (animals[animalIndex].body[potentialNeighbour].localPosX == locations_to_check[i].x  &&
-			        animals[animalIndex].body[potentialNeighbour].localPosY == locations_to_check[i].y  )
+			if (animals[animalIndex].genes[potentialNeighbour].localPosX == locations_to_check[i].x  &&
+			        animals[animalIndex].genes[potentialNeighbour].localPosY == locations_to_check[i].y  )
 			{
 				neighbourtally++;
 			}
@@ -695,14 +695,14 @@ Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
 	// get an edge cell at random then search its neighbours to find the empty one. return the position of the empty neighbour.
 	Vec_i2 locations_to_check[nNeighbours] =
 	{
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY - 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY - 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY - 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY   ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY   ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX - 1 , animals[animalIndex].body[cellIndex].localPosY + 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX  , animals[animalIndex].body[cellIndex].localPosY + 1  ),
-		Vec_i2(  animals[animalIndex].body[cellIndex].localPosX + 1 , animals[animalIndex].body[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX - 1 , animals[animalIndex].genes[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX     , animals[animalIndex].genes[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX + 1 , animals[animalIndex].genes[cellIndex].localPosY - 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX - 1 , animals[animalIndex].genes[cellIndex].localPosY   ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX + 1 , animals[animalIndex].genes[cellIndex].localPosY   ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX - 1 , animals[animalIndex].genes[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX     , animals[animalIndex].genes[cellIndex].localPosY + 1  ),
+		Vec_i2(  animals[animalIndex].genes[cellIndex].localPosX + 1 , animals[animalIndex].genes[cellIndex].localPosY + 1  ),
 	};
 
 	for (int i = 0; i < nNeighbours; ++i)
@@ -710,8 +710,8 @@ Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
 		bool empty = true;
 		for (int potentialNeighbour = 0; potentialNeighbour < animals[animalIndex].cellsUsed; ++potentialNeighbour)
 		{
-			if (animals[animalIndex].body[potentialNeighbour].localPosX == locations_to_check[i].x  &&
-			        animals[animalIndex].body[potentialNeighbour].localPosY == locations_to_check[i].y  )
+			if (animals[animalIndex].genes[potentialNeighbour].localPosX == locations_to_check[i].x  &&
+			        animals[animalIndex].genes[potentialNeighbour].localPosY == locations_to_check[i].y  )
 			{
 				empty = false;
 			}
@@ -805,16 +805,19 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 	unsigned int cellIndex = animals[animalIndex].cellsUsed;
 	animals[animalIndex].cellsUsed ++;
 
-	printf("cellsused %u\n", animals[animalIndex].cellsUsed);
+	printf("cells used %u\n", animals[animalIndex].cellsUsed);
 
 	// figure out a new position anywhere on the animal edge
 
 
 	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
+	printf("got new empty edge position at x%i, y%i\n", newPosition.x, newPosition.y);
+
+	animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
+	animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
 
 
-	animals[animalIndex].body[cellIndex].localPosX = newPosition.x;
-	animals[animalIndex].body[cellIndex].localPosY = newPosition.y;
+	printf("animal cell placed locally at x%i, y%i\n", animals[animalIndex].body[cellIndex].localPosX , animals[animalIndex].body[cellIndex].localPosY );
 
 
 	if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
@@ -1069,7 +1072,7 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	}
 	for (int i = 0; i < animalSquareSize; ++i)
 	{
-		animals[animalIndex].body[i] = animals[animalIndex].genes[i];
+		animals[animalIndex].body[i] = parent.genes[i];
 	}
 	animals[animalIndex].cellsUsed = parent.cellsUsed;
 	animals[animalIndex].retired = false;
@@ -2034,13 +2037,13 @@ void move_all()
 					// but world positions are indexes in an array and can never be negative.
 					unsigned int animalWorldPositionX    = animals[animalIndex].position % worldSize;
 					unsigned int animalWorldPositionY    = animals[animalIndex].position / worldSize;
-					int cellLocalPositionX = animals[animalIndex].body[cellIndex].localPosX; //cellIndex % animalSize;
-					int cellLocalPositionY = animals[animalIndex].body[cellIndex].localPosY; //cellIndex / animalSize;
-					unsigned int cellWorldPositionX = cellLocalPositionX + animalWorldPositionX;
-					unsigned int cellWorldPositionY = cellLocalPositionY + animalWorldPositionY;
+					unsigned int cellLocalPositionX = animals[animalIndex].body[cellIndex].localPosX; //cellIndex % animalSize;
+					unsigned int cellLocalPositionY = animals[animalIndex].body[cellIndex].localPosY; //cellIndex / animalSize;
+					unsigned int cellWorldPositionX = (cellLocalPositionX + animalWorldPositionX) % worldSize;
+					unsigned int cellWorldPositionY = (cellLocalPositionY + animalWorldPositionY) % worldSize;
 					unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
 
-					printf("uuuuuuuhhhh \n");
+					// printf("uuuuuuuhhhh \n");
 
 					if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
 					{
@@ -2138,7 +2141,7 @@ void move_all()
 						world[cellWorldPositionI].occupyingCell = cellIndex;
 						world[cellWorldPositionI].trail    = dAngle;
 
-						printf("Animal %u cell %u placed at x %u y %u\n" , animalIndex, cellIndex, cellWorldPositionX, cellWorldPositionI);
+						printf("Animal %u cell %u lpx %i lpy %i placed at x %u y %u\n" , animalIndex, cellIndex, animals[animalIndex].body[cellIndex].localPosX, animals[animalIndex].body[cellIndex].localPosY, cellWorldPositionX, cellWorldPositionI);
 					}
 					// }
 					// if (cellsDone >= animals[animalIndex].mass) { break;}
@@ -2415,6 +2418,24 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_GONAD );
 }
 
+
+void printcells(unsigned int animalIndex)
+{
+
+	// for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+	// {
+	for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
+	{
+		printf("eegy beegy at x%i, y%i\n", animals[animalIndex].body[cellIndex].localPosX , animals[animalIndex].body[cellIndex].localPosY );
+
+
+
+	}
+
+	// }
+
+}
+
 void spawnPlayer()
 {
 	if (playerCreature == -1)
@@ -2424,10 +2445,16 @@ void spawnPlayer()
 		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 		int i = 1;
 		setupExampleAnimal2(i);
+
+
+
 		playerCreature = 0;
 		spawnAnimalIntoSlot(playerCreature,
 		                    animals[i],
 		                    targetWorldPositionI, false);
+
+
+		printcells(playerCreature);
 		cameraTargetCreature = playerCreature;
 
 		printf("spawned player creature\n");
@@ -2445,9 +2472,9 @@ void spawnTournamentAnimals()
 	{
 		printf("setting up animal %i\n", i);
 		unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-	int j = 1;
+		int j = 1;
 		setupExampleAnimal2(j);
-
+// printcells()
 		spawnAnimalIntoSlot(i,
 		                    animals[j],
 		                    targetWorldPositionI, true);
