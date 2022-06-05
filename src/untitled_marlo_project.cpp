@@ -834,6 +834,12 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 	animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
 	animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
 
+	animals[animalIndex].genes[cellIndex].organ = organType;
+
+	if (organType == ORGAN_LUNG)
+	{
+		printf("appending a lung! %u \n", cellIndex);
+	}
 
 
 	if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
@@ -1282,7 +1288,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
 		if (occupyingCell != -1)
 		{
-			printf("animal %u cell %u occupies this square\n", animalIndex, occupyingCell);
+			// printf("animal %u cell %u occupies this square\n", animalIndex, occupyingCell);
 			viewedAnimal = animalIndex;
 		}
 	}
@@ -1428,11 +1434,15 @@ void organs_all()
 			float totalLiver = 0;
 			unsigned int totalGonads = 0;
 			float highestIntensity = 0.0f;
-			animals[animalIndex].canBreatheUnderwater = false;
-			animals[animalIndex].canBreatheAir        = false;
+			bool canBreatheUnderwater = false;
+			bool canBreatheAir        = false;
 
-			for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
+			printf("doing organs. cells used: %u \n", animals[animalIndex].cellsUsed);
+
+			for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; cellIndex++)                                      // place animalIndex on grid and attack / eat. add captured energy
 			{
+
+
 				// if (animals[animalIndex].body[cellLocalPositionI].organ == MATERIAL_NOTHING)
 				// {
 				// 	continue;
@@ -1473,6 +1483,9 @@ void organs_all()
 				// 	continue;
 				// }
 				unsigned int organ = animals[animalIndex].body[cellIndex].organ;
+
+
+					printf("CELL %u \n", organ);
 
 				switch (organ)
 				{
@@ -1563,13 +1576,14 @@ void organs_all()
 
 				case ORGAN_LUNG:
 				{
-					animals[animalIndex].canBreatheAir = true;
+					canBreatheAir = true;
+					printf("hi its me a lung\n");
 					break;
 
 				}
 				case ORGAN_GILL:
 				{
-					animals[animalIndex].canBreatheUnderwater = true;
+					canBreatheUnderwater = true;
 					break;
 
 				}
@@ -1975,6 +1989,9 @@ void organs_all()
 
 			animals[animalIndex].totalGonads = totalGonads;
 			animals[animalIndex].maxEnergy = animals[animalIndex].mass + (totalLiver * liverStorage);
+			animals[animalIndex].canBreatheAir = canBreatheAir;
+			animals[animalIndex].canBreatheUnderwater = canBreatheUnderwater;
+
 		}
 	}
 
@@ -2030,6 +2047,7 @@ void move_all()
 					if (! animals[animalIndex].canBreatheUnderwater)
 					{
 						animals[animalIndex].damageReceived ++;
+						printf("animal is drowning!\n");
 					}
 				}
 
@@ -2038,12 +2056,16 @@ void move_all()
 					if (! animals[animalIndex].canBreatheAir)
 					{
 						animals[animalIndex].damageReceived ++;
+
+						printf("animal is suffocating!\n");
 					}
 				}
 
 				if (world[newPosition].terrain == TERRAIN_LAVA)
 				{
 					animals[animalIndex].damageReceived += 10;
+
+						printf("animal is burning!\n");
 				}
 
 				// unsigned int cellsDone = 0;
@@ -2069,7 +2091,7 @@ void move_all()
 					unsigned int cellWorldPositionY = (cellLocalPositionY + animalWorldPositionY) % worldSize;
 					unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
 
-					printf(" moving into cellWorldPositionX %u cellWorldPositionY %u\n", cellWorldPositionX, cellWorldPositionY);
+					// printf(" moving into cellWorldPositionX %u cellWorldPositionY %u\n", cellWorldPositionX, cellWorldPositionY);
 
 					if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
 					{
@@ -2167,11 +2189,11 @@ void move_all()
 						world[cellWorldPositionI].occupyingCell = cellIndex;
 						world[cellWorldPositionI].trail    = dAngle;
 
-						printf("Animal %u cell %u lpx %i lpy %i placed at x %u y %u\n" , animalIndex, cellIndex, animals[animalIndex].body[cellIndex].localPosX, animals[animalIndex].body[cellIndex].localPosY, cellWorldPositionX, cellWorldPositionY);
+						// printf("Animal %u cell %u lpx %i lpy %i placed at x %u y %u\n" , animalIndex, cellIndex, animals[animalIndex].body[cellIndex].localPosX, animals[animalIndex].body[cellIndex].localPosY, cellWorldPositionX, cellWorldPositionY);
 					}
 					else
 					{
-						printf("failed to place\n");
+						// printf("failed to place\n");
 					}
 					// }
 					// if (cellsDone >= animals[animalIndex].mass) { break;}
@@ -2226,6 +2248,7 @@ void energy_all() // perform energies.
 			{
 				if (animals[animalIndex].damageReceived > animals[animalIndex].mass) // player can only be killed by MURDER
 				{
+					printf("The player was harmed until death! dmg %u mass %u\n", animals[animalIndex].damageReceived, animals[animalIndex].mass);
 					execute = true;
 				}
 			}
