@@ -113,7 +113,7 @@ const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i ca
 
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 // const int animalSize     = 8;
-const unsigned int animalSquareSize      = 64;// animalSize * animalSize;
+const unsigned int animalSquareSize      = 128;// animalSize * animalSize;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const unsigned int numberOfAnimals = 10000;
 const unsigned int numberOfSpecies = 20;
@@ -222,7 +222,7 @@ struct Cell
 	float timerFreq;
 	float timerPhase;  // also used as memory state
 	Color color;
-	int speakerChannel;
+	unsigned int speakerChannel;
 	int eyeLookX;
 	int eyeLookY;
 	int localPosX;
@@ -242,7 +242,7 @@ struct Animal
 	unsigned int damageReceived;
 	unsigned int birthLocation;
 	unsigned int age;
-	int lifespan;
+	unsigned int lifespan;
 	int parentIdentity;
 	bool retired;
 	float offspringEnergy;
@@ -256,7 +256,8 @@ struct Animal
 	float fPosY;
 	float fAngle;  // the direction the animal is facing
 	bool parentAmnesty;
-	int totalMuscle;
+	unsigned int totalMuscle;
+	unsigned int totalGonads;
 	bool canBreatheUnderwater;
 	bool canBreatheAir;
 	unsigned int lastTouchedStranger;
@@ -267,7 +268,7 @@ struct Animal
 bool speciesVacancies [numberOfSpecies];
 unsigned int speciesPopulationCounts [numberOfSpecies];
 unsigned int populationCountUpdates  [numberOfSpecies];
-unsigned int speciesAttacksPerTurn[numberOfSpecies];
+unsigned int speciesAttacksPerTurn   [numberOfSpecies];
 
 float organGrowthCost(unsigned int organ)
 {
@@ -495,7 +496,9 @@ bool organIsASensor(unsigned int organ)
 
 
 // // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
-void measureAnimalQualities(unsigned int animalIndex)
+// this function studies the phenotype, not the genotype.
+// returns whether the animal is fit to live.
+bool measureAnimalQualities(unsigned int animalIndex)
 {
 	// update mass and debt
 	animals[animalIndex].mass = 0;
@@ -509,6 +512,7 @@ void measureAnimalQualities(unsigned int animalIndex)
 	animals[animalIndex].totalMuscle = 0;
 	animals[animalIndex].offspringEnergy = 1.0f;
 	animals[animalIndex].lifespan = baseLifespan;
+	unsigned int totalGonads = 0;
 
 	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
 	{
@@ -530,6 +534,20 @@ void measureAnimalQualities(unsigned int animalIndex)
 		{
 			animals[animalIndex].lifespan += baseLifespan;
 		}
+
+		if (animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD)
+		{
+			totalGonads ++;
+		}
+	}
+
+	if (animals[animalIndex].mass > 0 && totalGonads > 0 )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
@@ -805,19 +823,17 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 	unsigned int cellIndex = animals[animalIndex].cellsUsed;
 	animals[animalIndex].cellsUsed ++;
 
-	printf("cells used %u\n", animals[animalIndex].cellsUsed);
+	// printf("cells used %u\n", animals[animalIndex].cellsUsed);
 
 	// figure out a new position anywhere on the animal edge
 
 
 	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
-	printf("got new empty edge position at x%i, y%i\n", newPosition.x, newPosition.y);
+	// printf("got new empty edge position at x%i, y%i\n", newPosition.x, newPosition.y);
 
 	animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
 	animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
 
-
-	printf("animal cell placed locally at x%i, y%i\n", animals[animalIndex].body[cellIndex].localPosX , animals[animalIndex].body[cellIndex].localPosY );
 
 
 	if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
@@ -1260,12 +1276,13 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	Color displayColor = color_black;
 	int viewedAnimal = -1;
 	unsigned int animalIndex = world[worldI].identity;
-	int occupyingCell = 0;
+	unsigned int occupyingCell = 0;
 	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
 		occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
 		if (occupyingCell != -1)
 		{
+			printf("animal %u cell %u occupies this square\n", animalIndex, occupyingCell);
 			viewedAnimal = animalIndex;
 		}
 	}
@@ -1413,6 +1430,7 @@ void organs_all()
 			float highestIntensity = 0.0f;
 			animals[animalIndex].canBreatheUnderwater = false;
 			animals[animalIndex].canBreatheAir        = false;
+
 			for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
 			{
 				// if (animals[animalIndex].body[cellLocalPositionI].organ == MATERIAL_NOTHING)
@@ -1450,10 +1468,10 @@ void organs_all()
 				unsigned int cellWorldPositionX = cellLocalPositionX + animalWorldPositionX;
 				unsigned int cellWorldPositionY = cellLocalPositionY + animalWorldPositionY;
 				unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
-				if (cellWorldPositionI >= worldSquareSize)
-				{
-					continue;
-				}
+				// if (cellWorldPositionI >= worldSquareSize)
+				// {
+				// 	continue;
+				// }
 				unsigned int organ = animals[animalIndex].body[cellIndex].organ;
 
 				switch (organ)
@@ -1461,7 +1479,7 @@ void organs_all()
 
 				case ORGAN_SENSOR_AGE:
 				{
-					if (animals[animalIndex].lifespan != 0.0f)
+					if (animals[animalIndex].lifespan > 0.0f)
 					{
 						animals[animalIndex].body[cellIndex].signalIntensity = animals[animalIndex].age / animals[animalIndex].lifespan;
 					}
@@ -1471,7 +1489,7 @@ void organs_all()
 
 				case ORGAN_SENSOR_HUNGER:
 				{
-					if (animals[animalIndex].maxEnergy != 0.0f)
+					if (animals[animalIndex].maxEnergy > 0.0f)
 					{
 						animals[animalIndex].body[cellIndex].signalIntensity = animals[animalIndex].energy / animals[animalIndex].maxEnergy;
 					}
@@ -1639,6 +1657,7 @@ void organs_all()
 					}
 					world[cellWorldPositionI].pheromoneChannel = animals[animalIndex].body[cellIndex]. speakerChannel ;
 					world[cellWorldPositionI].pheromoneIntensity = animals[animalIndex].body[cellIndex].signalIntensity;
+					break;
 				}
 
 				case ORGAN_SPEAKER:
@@ -1764,6 +1783,7 @@ void organs_all()
 
 				case ORGAN_NEURON:
 				{
+					printf("BLEEEEEEE\n");
 					// go through the list of connections and sum their values.
 					float sum = 0.0f;
 					sum += neuralNoise * ((RNG() - 0.5f) * 2); // add noise all throughout the brain, this makes everything more robust and lifelike
@@ -1786,7 +1806,7 @@ void organs_all()
 				case ORGAN_GONAD:
 				{
 					totalGonads++;
-					printf("found a gonad\n");
+					// printf("found a gonad\n");
 					if (doReproduction && animals[animalIndex].energyDebt <= 0.0f )
 					{
 						if (animals[animalIndex].energy > ((animals[animalIndex].mass / 2 ) + animals[animalIndex].offspringEnergy ))
@@ -1945,6 +1965,7 @@ void organs_all()
 							animals[animalIndex].fAngle += 2 * pi;
 						}
 					}
+					break;
 				}
 
 				}
@@ -1952,14 +1973,7 @@ void organs_all()
 				// if (cellsDone >= animals[animalIndex].mass) {break;}
 			}
 
-			if (totalGonads == 0) // no point in infertile mature animals existing
-			{
-
-				printf("cells used player %u\n", animals[playerCreature].cellsUsed);
-
-				printf("gonads exploded after fucking too much\n");
-				killAnimal (animalIndex);
-			}
+			animals[animalIndex].totalGonads = totalGonads;
 			animals[animalIndex].maxEnergy = animals[animalIndex].mass + (totalLiver * liverStorage);
 		}
 	}
@@ -1976,6 +1990,8 @@ void move_all()
 	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 	{
 		unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+
+		// printf("ggeeeeeebb\n");
 		if (!animals[animalIndex].retired)
 		{
 			// calculate direction of movement.
@@ -1991,6 +2007,8 @@ void move_all()
 			unsigned int newPosX  = animals[animalIndex].fPosX;
 			unsigned int newPosY  = animals[animalIndex].fPosY;
 			unsigned int newPosition  =  (newPosY * worldSize) + newPosX; // move
+
+					// printf("attempting to move \n");
 
 			if (newPosition < worldSquareSize)
 			{
@@ -2051,7 +2069,7 @@ void move_all()
 					unsigned int cellWorldPositionY = (cellLocalPositionY + animalWorldPositionY) % worldSize;
 					unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
 
-					// printf("uuuuuuuhhhh \n");
+					printf(" moving into cellWorldPositionX %u cellWorldPositionY %u\n", cellWorldPositionX, cellWorldPositionY);
 
 					if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
 					{
@@ -2151,6 +2169,10 @@ void move_all()
 
 						printf("Animal %u cell %u lpx %i lpy %i placed at x %u y %u\n" , animalIndex, cellIndex, animals[animalIndex].body[cellIndex].localPosX, animals[animalIndex].body[cellIndex].localPosY, cellWorldPositionX, cellWorldPositionY);
 					}
+					else
+					{
+						printf("failed to place\n");
+					}
 					// }
 					// if (cellsDone >= animals[animalIndex].mass) { break;}
 				}
@@ -2222,6 +2244,11 @@ void energy_all() // perform energies.
 						printf("died of old age!\n");
 						execute = true;
 					}
+					if (animals[animalIndex].totalGonads == 0)
+					{
+						printf("genitals exploded and died!\n");
+						execute = true;
+					}
 					if (animals[animalIndex].damageReceived > animals[animalIndex].mass)
 					{
 						printf("murdered to death (or drowned)!\n");
@@ -2236,6 +2263,7 @@ void energy_all() // perform energies.
 			}
 			if (execute)
 			{
+				printf("execute animal %u \n", animalIndex);
 				killAnimal( animalIndex);
 			}
 			if (tournament)
@@ -2427,22 +2455,22 @@ void setupExampleAnimal2(int i)
 }
 
 
-void printcells(unsigned int animalIndex)
-{
+// void printcells(unsigned int animalIndex)
+// {
 
-	// for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
-	// {
-	for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
-	{
-		printf("eegy beegy at x%i, y%i\n", animals[animalIndex].body[cellIndex].localPosX , animals[animalIndex].body[cellIndex].localPosY );
+// 	// for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+// 	// {
+// 	for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
+// 	{
+// 		printf("eegy beegy at x%i, y%i\n", animals[animalIndex].body[cellIndex].localPosX , animals[animalIndex].body[cellIndex].localPosY );
 
 
 
-	}
+// 	}
 
-	// }
+// 	// }
 
-}
+// }
 
 void spawnPlayer()
 {
@@ -2462,7 +2490,7 @@ void spawnPlayer()
 		                    targetWorldPositionI, false);
 
 
-		printcells(playerCreature);
+		// printcells(playerCreature);
 		cameraTargetCreature = playerCreature;
 
 		printf("spawned player creature\n");
@@ -2605,6 +2633,7 @@ void tournamentController()
 
 				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
 				{
+					printf("repopulated an endangered species\n");
 					spawnAnimal(i, animals[foundAnimal], randompos, false);
 				}
 			}
