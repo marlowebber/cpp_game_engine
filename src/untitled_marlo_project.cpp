@@ -1069,9 +1069,6 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	for (int i = 0; i < animalSquareSize; ++i)
 	{
 		animals[animalIndex].genes[i] = parent.genes[i];
-	}
-	for (int i = 0; i < animalSquareSize; ++i)
-	{
 		animals[animalIndex].body[i] = parent.genes[i];
 	}
 	animals[animalIndex].cellsUsed = parent.cellsUsed;
@@ -1468,6 +1465,7 @@ void organs_all()
 					{
 						animals[animalIndex].body[cellIndex].signalIntensity = animals[animalIndex].age / animals[animalIndex].lifespan;
 					}
+					break;
 
 				}
 
@@ -1477,6 +1475,7 @@ void organs_all()
 					{
 						animals[animalIndex].body[cellIndex].signalIntensity = animals[animalIndex].energy / animals[animalIndex].maxEnergy;
 					}
+					break;
 				}
 
 				case ORGAN_SENSOR_BIRTHPLACE:
@@ -1490,6 +1489,7 @@ void organs_all()
 						float targetAngle = atan2( fdiffy, fdiffx );
 						animals[animalIndex].body[cellIndex].signalIntensity = targetAngle;
 					}
+					break;
 				}
 
 				case ORGAN_SENSOR_PARENT:
@@ -1506,6 +1506,7 @@ void organs_all()
 							animals[animalIndex].body[cellIndex].signalIntensity = targetAngle;
 						}
 					}
+					break;
 				}
 
 				case ORGAN_SENSOR_LAST_STRANGER:
@@ -1522,6 +1523,7 @@ void organs_all()
 							animals[animalIndex].body[cellIndex].signalIntensity = targetAngle;
 						}
 					}
+					break;
 				}
 
 				case ORGAN_SENSOR_LAST_KIN:
@@ -1538,22 +1540,26 @@ void organs_all()
 							animals[animalIndex].body[cellIndex].signalIntensity = targetAngle;
 						}
 					}
+					break;
 				}
 
 				case ORGAN_LUNG:
 				{
 					animals[animalIndex].canBreatheAir = true;
+					break;
 
 				}
 				case ORGAN_GILL:
 				{
 					animals[animalIndex].canBreatheUnderwater = true;
+					break;
 
 				}
 
 				case ORGAN_MEMORY_RX:
 				{
 					// don't need to do anything, the tx part does all the work.
+					break;
 				}
 
 				case ORGAN_MEMORY_TX:
@@ -1604,6 +1610,7 @@ void organs_all()
 
 						}
 					}
+					break;
 				}
 
 				case ORGAN_SENSOR_PHEROMONE:
@@ -1779,6 +1786,7 @@ void organs_all()
 				case ORGAN_GONAD:
 				{
 					totalGonads++;
+					printf("found a gonad\n");
 					if (doReproduction && animals[animalIndex].energyDebt <= 0.0f )
 					{
 						if (animals[animalIndex].energy > ((animals[animalIndex].mass / 2 ) + animals[animalIndex].offspringEnergy ))
@@ -2141,7 +2149,7 @@ void move_all()
 						world[cellWorldPositionI].occupyingCell = cellIndex;
 						world[cellWorldPositionI].trail    = dAngle;
 
-						printf("Animal %u cell %u lpx %i lpy %i placed at x %u y %u\n" , animalIndex, cellIndex, animals[animalIndex].body[cellIndex].localPosX, animals[animalIndex].body[cellIndex].localPosY, cellWorldPositionX, cellWorldPositionI);
+						printf("Animal %u cell %u lpx %i lpy %i placed at x %u y %u\n" , animalIndex, cellIndex, animals[animalIndex].body[cellIndex].localPosX, animals[animalIndex].body[cellIndex].localPosY, cellWorldPositionX, cellWorldPositionY);
 					}
 					// }
 					// if (cellsDone >= animals[animalIndex].mass) { break;}
