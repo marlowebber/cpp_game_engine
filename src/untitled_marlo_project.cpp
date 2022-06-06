@@ -116,8 +116,8 @@ const unsigned int numberOfAnimals = 10000;
 const unsigned int numberOfSpecies = 20;
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
-const float taxEnergyScale         = 0.001f;        // a multiplier for how much it costs animals just to exist.
-const float movementEnergyScale    = 0.001f;        // a multiplier for how much it costs animals to move.
+const float taxEnergyScale         = 0.0005f;        // a multiplier for how much it costs animals just to exist.
+const float movementEnergyScale    = 0.0005f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
 
@@ -211,6 +211,7 @@ struct Cell
 	int eyeLookY;
 	int localPosX;
 	int localPosY;
+	unsigned int worldPositionI;
 	float damage;
 	bool dead;
 	Connection connections[NUMBER_OF_CONNECTIONS];
@@ -239,6 +240,8 @@ struct Animal
 	float fPosX;
 	float fPosY;
 	float fAngle;  // the direction the animal is facing
+	float fAngleSin;
+	float fAngleCos;
 	bool parentAmnesty;
 	unsigned int totalMuscle;
 	unsigned int totalGonads;
@@ -780,47 +783,51 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
 	// figure out the lowest index in the animal array and put the new cell there
 	unsigned int cellIndex = animals[animalIndex].cellsUsed;
-	animals[animalIndex].cellsUsed ++;
 
-	// figure out a new position anywhere on the animal edge
-	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
-
-	animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
-	animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
-
-	animals[animalIndex].genes[cellIndex].organ = organType;
-
-
-	if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
+	if (cellIndex < animalSquareSize)
 	{
-		unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
-		for (int i = 0; i < randomNumberOfConnections; ++i)
+		animals[animalIndex].cellsUsed ++;
+
+		// figure out a new position anywhere on the animal edge
+		Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
+
+		animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
+		animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
+
+		animals[animalIndex].genes[cellIndex].organ = organType;
+
+
+		if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
 		{
-			// pick a random connectable cell to connect to.
-			unsigned int connectableCell = getRandomConnectableCell( animalIndex);
-
-			// check if you are already connected to it.
-			bool alreadyConnected =  false;
-			for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
+			unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
+			for (int i = 0; i < randomNumberOfConnections; ++i)
 			{
-				if (  animals[animalIndex].genes[cellIndex].connections[j].connectedTo == connectableCell &&
-				        animals[animalIndex].genes[cellIndex].connections[j] .used)
-				{
-					alreadyConnected = true;
-				}
-			}
+				// pick a random connectable cell to connect to.
+				unsigned int connectableCell = getRandomConnectableCell( animalIndex);
 
-			// make the new connection if appropriate.
-			if (!alreadyConnected)
-			{
+				// check if you are already connected to it.
+				bool alreadyConnected =  false;
 				for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
 				{
-					if ( ! (animals[animalIndex].genes[cellIndex].connections[j].used))
+					if (  animals[animalIndex].genes[cellIndex].connections[j].connectedTo == connectableCell &&
+					        animals[animalIndex].genes[cellIndex].connections[j] .used)
 					{
-						animals[animalIndex].genes[cellIndex].connections[j].used = true;
-						animals[animalIndex].genes[cellIndex].connections[j].connectedTo = connectableCell;
-						animals[animalIndex].genes[cellIndex].connections[j].weight = (RNG() - 0.5f ) * 2;
-						break;
+						alreadyConnected = true;
+					}
+				}
+
+				// make the new connection if appropriate.
+				if (!alreadyConnected)
+				{
+					for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
+					{
+						if ( ! (animals[animalIndex].genes[cellIndex].connections[j].used))
+						{
+							animals[animalIndex].genes[cellIndex].connections[j].used = true;
+							animals[animalIndex].genes[cellIndex].connections[j].connectedTo = connectableCell;
+							animals[animalIndex].genes[cellIndex].connections[j].weight = (RNG() - 0.5f ) * 2;
+							break;
+						}
 					}
 				}
 			}
@@ -1106,23 +1113,19 @@ void killAnimal(int animalIndex)
 // check if an animal is currently occupying a square. return the local index of the occupying cell, otherwise, return -1 if not occupied.
 int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 {
-	if (world[cellWorldPositionI].identity >= 0 )
+	if (cellWorldPositionI < worldSquareSize && world[cellWorldPositionI].identity >= 0 )
 	{
 		if (!animals[animalIndex].retired)
 		{
 			unsigned int cellIndex = world[cellWorldPositionI].occupyingCell;
 
-			// calculate the world position of the cell based on the animals position, and see if it matches the given position.
-			unsigned int cellWorldPositionX = animals[animalIndex].uPosX + animals[animalIndex].body[cellIndex].localPosX;
-			unsigned int cellWorldPositionY = animals[animalIndex].uPosY + animals[animalIndex].body[cellIndex].localPosY;
-			unsigned int actualWorldPosition = (cellWorldPositionY * worldSize) + (cellWorldPositionX);
-
-			if (actualWorldPosition == cellWorldPositionI)
+			if (animals[animalIndex].body[cellIndex].worldPositionI == cellWorldPositionI)
 			{
 				return cellIndex;
 			}
 		}
 	}
+
 	return -1;
 }
 
@@ -1831,6 +1834,9 @@ void organs_all()
 						{
 							animals[animalIndex].fAngle += 2 * pi;
 						}
+
+						animals[animalIndex].fAngleCos = cos(animals[animalIndex].fAngle);
+						animals[animalIndex].fAngleSin = sin(animals[animalIndex].fAngle);
 					}
 					break;
 				}
@@ -1918,16 +1924,17 @@ void move_all()
 					}
 					bool okToStep = true;
 
-					// in general, local positions can be signed, and world positions should be unsigned.
-					// this is because local positions are coordinates relative to another point and can be negative
-					// but world positions are indexes in an array and can never be negative.
-					unsigned int animalWorldPositionX    = animals[animalIndex].position % worldSize;
-					unsigned int animalWorldPositionY    = animals[animalIndex].position / worldSize;
-					unsigned int cellLocalPositionX = animals[animalIndex].body[cellIndex].localPosX; //cellIndex % animalSize;
-					unsigned int cellLocalPositionY = animals[animalIndex].body[cellIndex].localPosY; //cellIndex / animalSize;
-					unsigned int cellWorldPositionX = (cellLocalPositionX + animalWorldPositionX) % worldSize;
-					unsigned int cellWorldPositionY = (cellLocalPositionY + animalWorldPositionY) % worldSize;
-					unsigned int cellWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+
+
+
+					int rotatedX = animals[animalIndex].body[cellIndex].localPosX * animals[animalIndex].fAngleCos - animals[animalIndex].body[cellIndex].localPosY * animals[animalIndex].fAngleSin;
+					int rotatedY = animals[animalIndex].body[cellIndex].localPosX * animals[animalIndex].fAngleSin + animals[animalIndex].body[cellIndex].localPosY * animals[animalIndex].fAngleCos ;
+
+					unsigned int cellWorldPositionX = animals[animalIndex].uPosX + rotatedX;
+					unsigned int cellWorldPositionY = animals[animalIndex].uPosY + rotatedY;
+					unsigned int cellWorldPositionI = ((cellWorldPositionY * worldSize) + (cellWorldPositionX)) % worldSquareSize;
+
+
 
 					if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
 					{
@@ -2017,6 +2024,7 @@ void move_all()
 						world[cellWorldPositionI].identity = animalIndex;
 						world[cellWorldPositionI].occupyingCell = cellIndex;
 						world[cellWorldPositionI].trail    = dAngle;
+						animals[animalIndex].body[cellIndex].worldPositionI = cellWorldPositionI;
 					}
 				}
 			}
@@ -2235,64 +2243,32 @@ void setupExampleAnimal2(int i)
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
 
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_SENSOR_EYE );
-	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EAR );
-	animalAppendCell( i, ORGAN_SENSOR_EAR );
-	animalAppendCell( i, ORGAN_SENSOR_PHEROMONE );
 	animalAppendCell( i, ORGAN_SENSOR_PHEROMONE );
 	animalAppendCell( i, ORGAN_SENSOR_NOSE );
-	animalAppendCell( i, ORGAN_SENSOR_NOSE );
-	animalAppendCell( i, ORGAN_SENSOR_TOUCH );
 	animalAppendCell( i, ORGAN_SENSOR_TOUCH );
 	animalAppendCell( i, ORGAN_SENSOR_BODYANGLE );
-	animalAppendCell( i, ORGAN_SENSOR_BODYANGLE );
-	animalAppendCell( i, ORGAN_MEMORY_RX );
-	animalAppendCell( i, ORGAN_MEMORY_RX );
-	animalAppendCell( i, ORGAN_MEMORY_RX );
 	animalAppendCell( i, ORGAN_MEMORY_RX );
 	animalAppendCell( i, ORGAN_BIASNEURON );
 	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
 	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_MEMORY_TX );
-	animalAppendCell( i, ORGAN_MEMORY_TX );
-	animalAppendCell( i, ORGAN_MEMORY_TX );
 	animalAppendCell( i, ORGAN_MEMORY_TX );
 	animalAppendCell( i, ORGAN_MUSCLE );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
 	animalAppendCell( i, ORGAN_LUNG );
 	animalAppendCell( i, ORGAN_LIVER );
-	animalAppendCell( i, ORGAN_LIVER );
-	animalAppendCell( i, ORGAN_LIVER );
-	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
-	animalAppendCell( i, ORGAN_GONAD );
-	animalAppendCell( i, ORGAN_GONAD );
+
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
 }
 
 void spawnPlayer()
@@ -2446,12 +2422,21 @@ void tournamentController()
 							}
 						}
 					}
+					if (foundAnimal >= 0)
+					{
+						break;
+					}
 				}
 
 				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
 				{
 					// printf("repopulated an endangered species\n");
-					spawnAnimal(i, animals[foundAnimal], randompos, false);
+					int animalIndex = spawnAnimal(i, animals[foundAnimal], randompos, false);
+
+					if (animalIndex >= 0 )
+					{
+						animals[animalIndex].energy = animals[animalIndex].maxEnergy;
+					}
 				}
 			}
 		}
