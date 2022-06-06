@@ -45,7 +45,7 @@
 #define ORGAN_BIASNEURON          16    // can be thought of as ORGAN_SENSOR_CONSTANTVALUE
 #define ORGAN_SENSOR_TIMER        17
 #define ORGAN_SENSOR_BODYANGLE	  18
-#define ORGAN_SENSOR_NOSE         19
+#define ORGAN_SENSOR_TRACKER         19
 #define ORGAN_SPEAKER             20
 #define ORGAN_SENSOR_EAR          21
 #define ORGAN_MUSCLE_STRAFE       22
@@ -113,7 +113,7 @@ const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const unsigned int animalSquareSize      = 128;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const unsigned int numberOfAnimals = 10000;
-const unsigned int numberOfSpecies = 20;
+const unsigned int numberOfSpecies = 8;
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
 const float taxEnergyScale         = 0.0005f;        // a multiplier for how much it costs animals just to exist.
@@ -461,7 +461,7 @@ bool organIsASensor(unsigned int organ)
 	    organ == ORGAN_SENSOR_TOUCH ||
 	    organ == ORGAN_SENSOR_TIMER ||
 	    organ == ORGAN_SENSOR_BODYANGLE ||
-	    organ == ORGAN_SENSOR_NOSE      ||
+	    organ == ORGAN_SENSOR_TRACKER      ||
 	    organ == ORGAN_SENSOR_EAR        ||
 	    organ == ORGAN_SENSOR_PHEROMONE ||
 	    organ == ORGAN_MEMORY_RX ||
@@ -776,8 +776,8 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 }
 
 
-// add a cell to an animal germline in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
-void animalAppendCell(unsigned int animalIndex, unsigned int organType)
+
+void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosition)
 {
 	// pick a random location for the new cell which is adjacent to a normal cell.
 	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
@@ -788,8 +788,6 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 	{
 		animals[animalIndex].cellsUsed ++;
 
-		// figure out a new position anywhere on the animal edge
-		Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
 
 		animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
 		animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
@@ -834,6 +832,23 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 		}
 	}
 }
+
+// add a cell to an animal germline in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
+void animalAppendCell(unsigned int animalIndex, unsigned int organType)
+{
+
+
+	// figure out a new position anywhere on the animal edge
+	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
+
+
+	appendCell(animalIndex, organType,  newPosition);
+}
+
+
+
+
+
 
 
 void mutateAnimal(unsigned int animalIndex)
@@ -1574,7 +1589,7 @@ void organs_all()
 					break;
 				}
 
-				case ORGAN_SENSOR_NOSE:
+				case ORGAN_SENSOR_TRACKER:
 				{
 					animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 					if ( world [cellWorldPositionI].identity != animalIndex )
@@ -2247,7 +2262,7 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EAR );
 	animalAppendCell( i, ORGAN_SENSOR_PHEROMONE );
-	animalAppendCell( i, ORGAN_SENSOR_NOSE );
+	animalAppendCell( i, ORGAN_SENSOR_TRACKER );
 	animalAppendCell( i, ORGAN_SENSOR_TOUCH );
 	animalAppendCell( i, ORGAN_SENSOR_BODYANGLE );
 	animalAppendCell( i, ORGAN_MEMORY_RX );
@@ -2271,6 +2286,154 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 }
 
+
+
+
+
+void setupExampleHuman(int i)
+{
+
+
+	resetAnimal(i);
+
+
+
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(0, 1 ));
+
+
+	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(-1, 0) );
+	appendCell( i, ORGAN_BONE, Vec_i2(0, 0) );
+	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(1, 0) );
+
+
+
+	appendCell( i, ORGAN_SENSOR_EAR, Vec_i2(-2, -1) );
+	appendCell( i, ORGAN_BONE, Vec_i2(-1, -1) );
+	appendCell( i, ORGAN_SENSOR_PHEROMONE, Vec_i2(0, -1) );
+	appendCell( i, ORGAN_BONE, Vec_i2(1, -1) );
+	appendCell( i, ORGAN_SENSOR_EAR, Vec_i2(-3, -1) );
+
+
+
+	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(0, -2));
+	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(0, -2));
+	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(0, -2));
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(0, -3) );
+
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(-3, -4) );
+	appendCell( i, ORGAN_BONE, Vec_i2(-2, -4) );
+	appendCell( i, ORGAN_BONE, Vec_i2(-1, -4) );
+	appendCell( i, ORGAN_BONE, Vec_i2(0, -4) );
+	appendCell( i, ORGAN_BONE, Vec_i2(1, -4) );
+	appendCell( i, ORGAN_BONE, Vec_i2(2, -4) );
+	appendCell( i, ORGAN_BONE, Vec_i2(3, -4) );
+
+
+
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-3, -5) );
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(-1, -5) );
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, -5) );
+	appendCell( i, ORGAN_BONE, Vec_i2(1, -5) );
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-3, -5) );
+
+
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-3, -6) );
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(-1, -6) );
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, -6) );
+	appendCell( i, ORGAN_BONE, Vec_i2(1, -6) );
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-3, -6) );
+
+
+
+
+
+
+
+
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(-3, -7) );
+
+
+	appendCell( i, ORGAN_LIVER, Vec_i2(1, -7) );
+	appendCell( i, ORGAN_LIVER, Vec_i2(0, -7) );
+	appendCell( i, ORGAN_LIVER, Vec_i2(1, -7) );
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(-3, -7) );
+
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(3, -8) );
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -8) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, -8) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -8) );
+
+
+	appendCell( i, ORGAN_BONE, Vec_i2(-3, -8) );
+
+
+
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -9 ));
+	// appendCell( i, ORGAN_GONAD, Vec_i2(3, -8) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -9) );
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -10) );
+	// appendCell( i, ORGAN_GONAD, Vec_i2(3, -8) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -10) );
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -11) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -11) );
+
+
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -12) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -12) );
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
 void spawnPlayer()
 {
 	if (playerCreature == -1)
@@ -2279,7 +2442,7 @@ void spawnPlayer()
 		unsigned int targetWorldPositionY = cameraPositionY ;
 		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 		int i = 1;
-		setupExampleAnimal2(i);
+		setupExampleHuman(i);
 
 		playerCreature = 0;
 		spawnAnimalIntoSlot(playerCreature,
