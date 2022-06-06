@@ -30,5 +30,6 @@ void model();
 void drawGameInterfaceText();
 
 void spawnTournamentAnimals();
+void adjustPlayerPos(Vec_f2 pos);
 
  #endif //MARLO_H

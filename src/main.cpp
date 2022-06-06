@@ -112,6 +112,8 @@ void threadInterface()
 						// unsigned int destination = getPlayerDestination();
 						// destination += 1;
 						// setPlayerDestination(destination);
+
+						adjustPlayerPos(Vec_f2(1.0f, 0.0f));
 					}
 				}
 				else
@@ -135,6 +137,8 @@ void threadInterface()
 						// unsigned int destination = getPlayerDestination();
 						// destination -= worldSize;
 						// setPlayerDestination(destination);
+
+						adjustPlayerPos(Vec_f2(0.0f, -1.0f));
 					}
 				}
 				else
@@ -161,7 +165,7 @@ void threadInterface()
 					{
 						// unsigned int destination = getPlayerDestination();
 						// destination -= 1;
-						// setPlayerDestination(destination);
+						adjustPlayerPos(Vec_f2(-1.0f, 0.0f));
 					}
 				}
 				else
@@ -183,6 +187,8 @@ void threadInterface()
 						// unsigned int destination = getPlayerDestination();
 						// destination += worldSize;
 						// setPlayerDestination(destination);
+
+						adjustPlayerPos(Vec_f2(0.0f, 1.0f));
 					}
 				}
 				else
