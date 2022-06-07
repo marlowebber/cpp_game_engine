@@ -2021,7 +2021,9 @@ void move_all()
 
 				if (world[newPosition].terrain == TERRAIN_WATER)
 				{
-					if (! animals[animalIndex].canBreatheUnderwater)
+					if (! animals[animalIndex].canBreatheUnderwater &&
+					        ! animals[animalIndex].isMachine
+					   )
 					{
 						animals[animalIndex].damageReceived ++;
 					}
@@ -2029,7 +2031,8 @@ void move_all()
 
 				if (world[newPosition].terrain == TERRAIN_STONE )
 				{
-					if (! animals[animalIndex].canBreatheAir)
+					if (! animals[animalIndex].canBreatheAir &&
+					        ! animals[animalIndex].isMachine)
 					{
 						animals[animalIndex].damageReceived ++;
 					}
@@ -2355,6 +2358,48 @@ void drawGameInterfaceText()
 
 	printText2D(   std::string("Mouse X ") + std::to_string(mousePositionX ) + std::string(" Y ") + std::to_string(mousePositionY) , menuX, menuY, textSize);
 	menuY -= spacing;
+
+
+	int cursorPosX = cameraPositionX +  mousePositionX ;
+	int cursorPosY = cameraPositionY + mousePositionY;
+	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+
+	int cursorAnimal = world[worldCursorPos].identity;
+	if (cursorAnimal >= 0)
+	{
+		if (isAnimalInSquare(cursorAnimal, worldCursorPos))
+		{
+
+
+			printText2D(   std::string("Animal ") + std::to_string(cursorAnimal ) , menuX, menuY, textSize);
+			menuY -= spacing;
+
+		}
+		else {
+			cursorAnimal = -1;
+		}
+	}
+
+	if (cursorAnimal < 0)
+	{
+
+
+		if (world[worldCursorPos].material != MATERIAL_NOTHING)
+		{
+			printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
+			menuY -= spacing;
+		}
+		else
+		{
+printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
+			menuY -= spacing;
+		}
+	}
+
+
+
+
+
 }
 
 
