@@ -14,6 +14,8 @@ int mouseY;
 
 float panSpeed = 0.1f;
 
+float playerSpeed = 0.3f;
+
 void quit ()
 {
 	shutdownGraphics();
@@ -97,6 +99,11 @@ void threadInterface()
 
 
 
+				case SDLK_g:
+				togglePlayerGrabbers();
+				break;
+
+
 			case SDLK_y:
 				spawnTournamentAnimals();
 				break;
@@ -113,7 +120,7 @@ void threadInterface()
 						// destination += 1;
 						// setPlayerDestination(destination);
 
-						adjustPlayerPos(Vec_f2(1.0f, 0.0f));
+						adjustPlayerPos(Vec_f2(playerSpeed, 0.0f));
 					}
 				}
 				else
@@ -138,7 +145,7 @@ void threadInterface()
 						// destination -= worldSize;
 						// setPlayerDestination(destination);
 
-						adjustPlayerPos(Vec_f2(0.0f, -1.0f));
+						adjustPlayerPos(Vec_f2(0.0f, -playerSpeed));
 					}
 				}
 				else
@@ -165,7 +172,7 @@ void threadInterface()
 					{
 						// unsigned int destination = getPlayerDestination();
 						// destination -= 1;
-						adjustPlayerPos(Vec_f2(-1.0f, 0.0f));
+						adjustPlayerPos(Vec_f2(-playerSpeed, 0.0f));
 					}
 				}
 				else
@@ -188,7 +195,7 @@ void threadInterface()
 						// destination += worldSize;
 						// setPlayerDestination(destination);
 
-						adjustPlayerPos(Vec_f2(0.0f, 1.0f));
+						adjustPlayerPos(Vec_f2(0.0f, playerSpeed));
 					}
 				}
 				else

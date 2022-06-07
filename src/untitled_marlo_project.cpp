@@ -74,11 +74,13 @@
 #define MATERIAL_BLOOD            64
 #define MATERIAL_GRASS            65
 
-#define MATERIAL_GUNMETAL         66
+#define MATERIAL_METAL            66
+#define MATERIAL_VOIDMETAL        67
 
 #define TERRAIN_STONE             50
 #define TERRAIN_WATER             52
 #define TERRAIN_LAVA              54
+#define TERRAIN_VOIDMETAL         68
 
 #define MARKER                    35 // numbers above 25 don't correspond to lower-case letters(0..25) so we don't use them in the gene code. But (26..31) are still compatible with our masking scheme.
 
@@ -483,6 +485,18 @@ bool organIsASensor(unsigned int organ)
 	    organ == ORGAN_SENSOR_BIRTHPLACE ||
 	    organ == ORGAN_SENSOR_PARENT
 	)
+	{
+		return true;
+	}
+	return false;
+}
+
+
+bool materialBlocksMovement(unsigned int material)
+{
+	if (material == MATERIAL_ROCK ||
+	        material == MATERIAL_VOIDMETAL ||
+	        material == MATERIAL_METAL)
 	{
 		return true;
 	}
@@ -1168,6 +1182,8 @@ Color terrainColors(unsigned int terrain)
 		return color_lightblue;
 	case TERRAIN_LAVA:
 		return color_orange;
+	case TERRAIN_VOIDMETAL:
+		return color_charcoal;
 	}
 	return color_yellow;
 }
@@ -1188,6 +1204,10 @@ Color materialColors(unsigned int material)
 		return color_brightred;
 	case MATERIAL_GRASS:
 		return color_green;
+	case MATERIAL_METAL:
+		return color_darkgrey;
+	case MATERIAL_VOIDMETAL:
+		return color_charcoal;
 	}
 	return color_yellow;
 }
@@ -1277,7 +1297,12 @@ void updateMap()
 
 			if (world[randomI].terrain == TERRAIN_LAVA)
 			{
-				if (world[randomI].material != MATERIAL_NOTHING)
+				if (
+				    world[randomI].material != MATERIAL_NOTHING
+				    &&
+				    world[randomI].material != MATERIAL_VOIDMETAL // voidmetal is indestructible
+
+				)
 				{
 					world[randomI].material = MATERIAL_NOTHING;
 				}
@@ -1388,15 +1413,18 @@ void organs_all()
 				case ORGAN_GRABBER:
 				{
 
-					animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
-					for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+					if (animalIndex != playerCreature)
 					{
-						if (animals[animalIndex].body[cellIndex].connections[i] .used)
+						animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+						for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 						{
-							unsigned int connected_to_cell = animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-							if (connected_to_cell < animalSquareSize)
+							if (animals[animalIndex].body[cellIndex].connections[i] .used)
 							{
-								animals[animalIndex].body[cellIndex].signalIntensity  += animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellIndex].connections[i] .weight;
+								unsigned int connected_to_cell = animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
+								if (connected_to_cell < animalSquareSize)
+								{
+									animals[animalIndex].body[cellIndex].signalIntensity  += animals[animalIndex].body[connected_to_cell].signalIntensity * animals[animalIndex].body[cellIndex].connections[i] .weight;
+								}
 							}
 						}
 					}
@@ -1411,7 +1439,10 @@ void organs_all()
 							if (targetLocalPositionI >= 0)
 							{
 								animals[animalIndex].body[cellIndex].grabbedCreature = world[cellWorldPositionI].identity;
-
+								if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
+								{
+									printf("grabbed creature %u\n", animals[animalIndex].body[cellIndex].grabbedCreature);
+								}
 							}
 
 						}
@@ -1424,6 +1455,7 @@ void organs_all()
 						// else release.
 						animals[animalIndex].body[cellIndex].grabbedCreature = -1;
 						// animals[animalIndex].body[cellIndex].grabbedMaterial = MATERIAL_NOTHING;
+						// printf("released a grabbed creature\n");
 					}
 
 				}
@@ -1974,7 +2006,7 @@ void move_all()
 
 			if (newPosition < worldSquareSize)
 			{
-				if (world[newPosition].material == MATERIAL_ROCK)
+				if (  materialBlocksMovement( world[newPosition].material ) )
 				{
 					animals[animalIndex].fPosX  = animals[animalIndex].uPosX;
 					animals[animalIndex].fPosY  = animals[animalIndex].uPosY;
@@ -2390,13 +2422,13 @@ void setupExampleHuman(int i)
 	appendCell( i, ORGAN_BONE, Vec_i2(-1, -1) );
 	appendCell( i, ORGAN_SENSOR_PHEROMONE, Vec_i2(0, -1) );
 	appendCell( i, ORGAN_BONE, Vec_i2(1, -1) );
-	appendCell( i, ORGAN_SENSOR_EAR, Vec_i2(-3, -1) );
+	appendCell( i, ORGAN_SENSOR_EAR, Vec_i2(2, -1) );
 
 
 
+	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(-1, -2));
 	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(0, -2));
-	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(0, -2));
-	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(0, -2));
+	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(1, -2));
 
 
 	appendCell( i, ORGAN_BONE, Vec_i2(0, -3) );
@@ -2412,7 +2444,7 @@ void setupExampleHuman(int i)
 	appendCell( i, ORGAN_BONE, Vec_i2(-1, -5) );
 	appendCell( i, ORGAN_LUNG, Vec_i2(0, -5) );
 	appendCell( i, ORGAN_BONE, Vec_i2(1, -5) );
-	appendCell( i, ORGAN_MUSCLE, Vec_i2(-3, -5) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(3, -5) );
 
 
 
@@ -2420,7 +2452,7 @@ void setupExampleHuman(int i)
 	appendCell( i, ORGAN_BONE, Vec_i2(-1, -6) );
 	appendCell( i, ORGAN_LUNG, Vec_i2(0, -6) );
 	appendCell( i, ORGAN_BONE, Vec_i2(1, -6) );
-	appendCell( i, ORGAN_MUSCLE, Vec_i2(-3, -6) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(3, -6) );
 
 
 
@@ -2429,15 +2461,15 @@ void setupExampleHuman(int i)
 	appendCell( i, ORGAN_LIVER, Vec_i2(1, -7) );
 	appendCell( i, ORGAN_LIVER, Vec_i2(0, -7) );
 	appendCell( i, ORGAN_LIVER, Vec_i2(1, -7) );
-	appendCell( i, ORGAN_BONE, Vec_i2(-3, -7) );
+	appendCell( i, ORGAN_BONE, Vec_i2(3, -7) );
 
 
 
-	appendCell( i, ORGAN_GRABBER, Vec_i2(3, -8) );
-	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -8) );
-	appendCell( i, ORGAN_GONAD, Vec_i2(0, -8) );
-	appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -8) );
 	appendCell( i, ORGAN_GRABBER, Vec_i2(-3, -8) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -8) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, -8) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -8) );
+	appendCell( i, ORGAN_GRABBER, Vec_i2(3, -8) );
 
 
 
@@ -2470,15 +2502,122 @@ void setupExampleGun(int i)
 
 	resetAnimal(i);
 
-	appendCell( i, MATERIAL_GUNMETAL, Vec_i2(-1, 1) );
-	appendCell( i, MATERIAL_GUNMETAL, Vec_i2(0, 1) );
-	appendCell( i, MATERIAL_GUNMETAL, Vec_i2(1, 1) );
-	appendCell( i, MATERIAL_GUNMETAL, Vec_i2(2, 1) );
-	appendCell( i, MATERIAL_GUNMETAL, Vec_i2(0, 0) );
-	appendCell( i, MATERIAL_GUNMETAL, Vec_i2(-1, -1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(1, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
 }
 
 
+
+
+
+
+void setupBuilding_playerBase(unsigned int worldPositionI)
+{
+
+
+	unsigned int worldPositionX = worldPositionI % worldSize;
+	unsigned int worldPositionY = worldPositionI / worldSize;
+
+	int baseSize = 100;
+	int wallThickness = 8;
+	int doorThickness = 16;
+
+
+	for (unsigned int i = 0; i < worldSquareSize; ++i)
+	{
+		int x = i % worldSize;
+		int y = i / worldSize;
+
+
+
+
+		int xdiff = x - worldPositionX;
+		int ydiff = y - worldPositionY;
+
+
+
+
+		// set all the tiles around the position to a floor tile
+		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
+		{
+			world[i].terrain = TERRAIN_VOIDMETAL;
+			world[i].material = MATERIAL_NOTHING;
+		}
+
+
+
+		// make walls around it
+
+		if (
+
+		    // a square border of certain thickness
+		    (((x > worldPositionX - baseSize - wallThickness) && (x < worldPositionX - baseSize + wallThickness) ) ||
+		     ((x > worldPositionX + baseSize - wallThickness) && (x < worldPositionX + baseSize + wallThickness) ) ||
+		     ((y > worldPositionY - baseSize - wallThickness) && (y < worldPositionY - baseSize + wallThickness) ) ||
+		     ((y > worldPositionY + baseSize - wallThickness) && (y < worldPositionY + baseSize + wallThickness) ) )
+
+		    &&
+
+		    (abs(xdiff) < (baseSize + wallThickness) &&
+		     abs(ydiff) < (baseSize + wallThickness))
+
+		    &&
+
+		    // with doors in the middle of each wall
+		    ((abs(xdiff) > doorThickness) &&
+		     (abs(ydiff) > doorThickness) )
+
+		)
+		{
+			world[i].material = MATERIAL_VOIDMETAL;
+
+		}
+
+
+
+
+	}
+
+
+	cameraPositionX  = worldPositionX;
+	cameraPositionY = worldPositionY;
+
+
+	// add equipment.
+
+
+
+}
+
+
+void togglePlayerGrabbers()
+{
+	if (playerCreature >= 0)
+	{
+
+		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
+		{
+			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
+			{
+				if (animals[playerCreature].body[i].signalIntensity >= 0.0f)
+				{
+					animals[playerCreature].body[i].signalIntensity = -1;
+				}
+				else
+				{
+
+					animals[playerCreature].body[i].signalIntensity = 1;
+				}
+			}
+		}
+
+	}
+
+}
 
 void adjustPlayerPos(Vec_f2 pos)
 {
@@ -2620,9 +2759,14 @@ void setupRandomWorld()
 
 		// items
 
-		unsigned int targetWorldPositionX = 100 ;
-		unsigned int targetWorldPositionY = 100 ;
+
+
+		unsigned int targetWorldPositionX = 200 ;
+		unsigned int targetWorldPositionY = 200 ;
 		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+		setupBuilding_playerBase(targetWorldPositionI);
+
 		int i = 1;
 		setupExampleGun(i);
 
@@ -2631,9 +2775,9 @@ void setupRandomWorld()
 		                    animals[i],
 		                    targetWorldPositionI, false);
 
-		cameraTargetCreature = playerCreature;
+		// cameraTargetCreature = playerCreature;
 
-		printf("spawned player creature\n");
+		// printf("spawned player creature\n");
 	}
 }
 

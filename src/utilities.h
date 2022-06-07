@@ -44,6 +44,8 @@ const Color color_yellow             = Color( 1.0f, 1.0f, 0.0f, 1.0f );
 const Color color_lightgrey          = Color( 0.75f, 0.75f, 0.75f, 1.0f );
 const Color color_grey               = Color( 0.50f, 0.50f, 0.50f, 1.0f );
 const Color color_darkgrey           = Color( 0.25f, 0.25f, 0.25f, 1.0f );
+
+const Color color_charcoal           = Color( 0.1f, 0.1f, 0.1f, 1.0f );
 const Color color_black              = Color( 0.0f, 0.0f, 0.0f, 1.0f );
 const Color color_white              = Color (1.0f, 1.0f, 1.0f, 1.0f);
 const Color color_purple             = Color( 0.8f, 0.0f, 0.8f, 1.0f );
