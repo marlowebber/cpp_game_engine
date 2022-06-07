@@ -47,7 +47,7 @@ void rebuildMenus ()
 
 const unsigned int mapsize = 10;
 const float tileHeight =  1.0f;
-const float tileWidth = 2.0f;
+const float tileWidth = 0.5f;
 unsigned int heightmap[mapsize * mapsize];
 
 

@@ -15,6 +15,10 @@ extern bool playerInControl;
 extern int mousePositionX;
 extern int mousePositionY;
 
+
+extern float fmousePositionX;
+extern float fmousePositionY;
+
 extern bool lockfps;
 const  int cameraPanSpeed = 10;
 extern float fps ;

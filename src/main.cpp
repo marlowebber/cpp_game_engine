@@ -99,7 +99,7 @@ void threadInterface()
 
 
 
-				case SDLK_g:
+			case SDLK_g:
 				togglePlayerGrabbers();
 				break;
 
@@ -304,12 +304,15 @@ void threadInterface()
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
 
-			int deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) ;
-			int deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) ;
+			float deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) * (viewZoom/380.0f);
+			float deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) * (viewZoom/380.0f) ;
 
 
-			mousePositionX += deltaMouseX;
-			mousePositionY += deltaMouseY;
+			fmousePositionX += deltaMouseX  ;
+			fmousePositionY += deltaMouseY  ;
+
+			mousePositionX = fmousePositionX;
+			mousePositionY = fmousePositionY;
 
 
 			if ( draggedMenu != nullptr)

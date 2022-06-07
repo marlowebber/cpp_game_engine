@@ -143,6 +143,10 @@ bool lockfps               = false;
 int mousePositionX =  -430;
 int mousePositionY =  330;
 
+float fmousePositionX = mousePositionX;
+float fmousePositionY = mousePositionY;
+
+
 unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
 float fps = 1.0f;
@@ -1086,6 +1090,8 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 		animals[animalIndex].genes[i] = parent.genes[i];
 		animals[animalIndex].body[i] = parent.genes[i];
 	}
+	animals[animalIndex].isMachine = parent.isMachine;
+	animals[animalIndex].machineCallback = parent.machineCallback;
 	animals[animalIndex].cellsUsed = parent.cellsUsed;
 	animals[animalIndex].retired = false;
 	animals[animalIndex].position = position;
@@ -1430,19 +1436,31 @@ void organs_all()
 					}
 
 					// if greater than 0, grab.
-					if (animals[animalIndex].body[cellIndex].signalIntensity  > 0.0f)
+					if (animals[animalIndex].body[cellIndex].signalIntensity  >= 1.0f)
 					{
 
-						if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
+						printf("clamps are ready! \n");
+
+						for (int n = 0; n < nNeighbours; ++n)
 						{
-							int targetLocalPositionI = isAnimalInSquare( world[cellWorldPositionI].identity, cellWorldPositionI);
-							if (targetLocalPositionI >= 0)
+							unsigned int neighbour = cellWorldPositionI + neighbourOffsets[n];
+
+
+							if (world[neighbour].identity >= 0 && world[neighbour].identity != animalIndex && world[neighbour].identity < numberOfAnimals)
 							{
-								animals[animalIndex].body[cellIndex].grabbedCreature = world[cellWorldPositionI].identity;
-								if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
+
+								printf("goingto clamp! %i \n", world[neighbour].identity  );
+								int targetLocalPositionI = isAnimalInSquare( world[neighbour].identity, neighbour);
+								if (targetLocalPositionI >= 0)
 								{
-									printf("grabbed creature %u\n", animals[animalIndex].body[cellIndex].grabbedCreature);
+									animals[animalIndex].body[cellIndex].grabbedCreature = world[neighbour].identity;
+									if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
+									{
+										printf("grabbed creature %u\n", animals[animalIndex].body[cellIndex].grabbedCreature);
+										break;
+									}
 								}
+
 							}
 
 						}
@@ -1450,7 +1468,7 @@ void organs_all()
 
 
 					}
-					else
+					else if (animals[animalIndex].body[cellIndex].signalIntensity  <= -1.0f)
 					{
 						// else release.
 						animals[animalIndex].body[cellIndex].grabbedCreature = -1;
@@ -2200,17 +2218,17 @@ void energy_all() // perform energies.
 			}
 
 			bool execute = false;
-			if (animalIndex == playerCreature)
+			if (animalIndex == playerCreature )
 			{
 				if (animals[animalIndex].damageReceived > animals[animalIndex].mass) // player can only be killed by MURDER
 				{
-					// printf("The player was harmed until death! dmg %u mass %u\n", animals[animalIndex].damageReceived, animals[animalIndex].mass);
+					// printf("A machine or player was harmed until death! dmg %u mass %u\n", animals[animalIndex].damageReceived, animals[animalIndex].mass);
 					execute = true;
 				}
 			}
 			else
 			{
-				if (!immortality) // reasons an npc can die
+				if (!immortality && !animals[animalIndex].isMachine) // reasons an npc can die
 				{
 					if (speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) ) // only kill off weak animals if there is some population.
 						if (animals[animalIndex].energy < 0.0f)
@@ -2308,10 +2326,10 @@ void camera()
 			}
 		}
 	}
-	float fmx = mousePositionX;
-	float fmy = mousePositionY;
+	// float fmx = mousePositionX;
+	// float fmy = mousePositionY;
 	Color displayColor = color_white;
-	Vec_f2 worldMousePos = Vec_f2( fmx, fmy);
+	Vec_f2 worldMousePos = Vec_f2( fmousePositionX, fmousePositionY);
 	drawTile( worldMousePos, displayColor);
 }
 
@@ -2356,6 +2374,11 @@ void drawGameInterfaceText()
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
 	menuY -= spacing;
 
+
+	printText2D(   std::string("Zoom ") + std::to_string(viewZoom ) , menuX, menuY, textSize);
+	menuY -= spacing;
+
+
 	printText2D(   std::string("Mouse X ") + std::to_string(mousePositionX ) + std::string(" Y ") + std::to_string(mousePositionY) , menuX, menuY, textSize);
 	menuY -= spacing;
 
@@ -2363,39 +2386,40 @@ void drawGameInterfaceText()
 	int cursorPosX = cameraPositionX +  mousePositionX ;
 	int cursorPosY = cameraPositionY + mousePositionY;
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
-
-	int cursorAnimal = world[worldCursorPos].identity;
-	if (cursorAnimal >= 0)
+	if (worldCursorPos < worldSquareSize)
 	{
-		if (isAnimalInSquare(cursorAnimal, worldCursorPos))
+		int cursorAnimal = world[worldCursorPos].identity;
+		if (cursorAnimal >= 0)
+		{
+			if (isAnimalInSquare(cursorAnimal, worldCursorPos) >= 0)
+			{
+
+
+				printText2D(   std::string("Animal ") + std::to_string(cursorAnimal ) , menuX, menuY, textSize);
+				menuY -= spacing;
+
+			}
+			else {
+				cursorAnimal = -1;
+			}
+		}
+
+		if (cursorAnimal < 0)
 		{
 
 
-			printText2D(   std::string("Animal ") + std::to_string(cursorAnimal ) , menuX, menuY, textSize);
-			menuY -= spacing;
-
-		}
-		else {
-			cursorAnimal = -1;
+			if (world[worldCursorPos].material != MATERIAL_NOTHING)
+			{
+				printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
+				menuY -= spacing;
+			}
+			else
+			{
+				printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
+				menuY -= spacing;
+			}
 		}
 	}
-
-	if (cursorAnimal < 0)
-	{
-
-
-		if (world[worldCursorPos].material != MATERIAL_NOTHING)
-		{
-			printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
-			menuY -= spacing;
-		}
-		else
-		{
-printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
-			menuY -= spacing;
-		}
-	}
-
 
 
 
@@ -2546,6 +2570,7 @@ void setupExampleGun(int i)
 {
 
 	resetAnimal(i);
+	animals[i].isMachine = true;
 
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
@@ -2553,6 +2578,7 @@ void setupExampleGun(int i)
 	appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
+
 }
 
 
@@ -2839,8 +2865,10 @@ void tournamentController()
 
 	if (respawnLowSpecies)
 	{
-		for (int i = 0; i < numberOfSpecies; ++i)
+		unsigned int totalpop = 0;
+		for (int i = 1; i < numberOfSpecies; ++i)
 		{
+			totalpop += speciesPopulationCounts[i] ;
 			if (speciesPopulationCounts[i] == 0)
 			{
 				unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
@@ -2872,14 +2900,31 @@ void tournamentController()
 				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
 				{
 					// printf("repopulated an endangered species\n");
-					int animalIndex = spawnAnimal(i, animals[foundAnimal], randompos, false);
+					// int animalIndex = spawnAnimal(i, animals[foundAnimal], randompos, false);
+
+					int animalIndex = getNewIdentity(i);
+					// if (animalIndex >= 0) // an animalIndex was available
+					// {
 
 					if (animalIndex >= 0 )
 					{
-						animals[animalIndex].energy = animals[animalIndex].maxEnergy;
+						// animals[animalIndex].energy = animals[animalIndex].maxEnergy;
+
+						// just swap the animal between species without disturbing it.
+						animals[animalIndex] = animals[foundAnimal];
+						animals[foundAnimal].retired = true;
 					}
 				}
 			}
+		}
+		if (totalpop == 0)
+		{
+			unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+			int j = 1;
+			setupExampleAnimal2(j);
+			spawnAnimal( 1,
+			             animals[j],
+			             targetWorldPositionI, true);
 		}
 	}
 }
