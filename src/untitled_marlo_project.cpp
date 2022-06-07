@@ -1385,8 +1385,8 @@ void organs_all()
 				cellLocalPositionY += animals[animalIndex].body[cellIndex].eyeLookY;
 
 				// rotate by animal angle
-				cellLocalPositionX *= cos(animals[animalIndex].fAngle);
-				cellLocalPositionY *= sin(animals[animalIndex].fAngle);
+				cellLocalPositionX *= animals[animalIndex].fAngleCos;
+				cellLocalPositionY *= animals[animalIndex].fAngleSin;
 
 				// move the center back to bottom left
 				// cellLocalPositionX += (animalSize / 2);
@@ -1439,30 +1439,41 @@ void organs_all()
 					if (animals[animalIndex].body[cellIndex].signalIntensity  >= 1.0f)
 					{
 
-						printf("clamps are ready! \n");
+						// printf("clamps are ready! \n");
 
-						for (int n = 0; n < nNeighbours; ++n)
+						// printf("cell local pos %u %u \n", cellWorldPositionX, cellWorldPositionY);
+
+						int grabArea = 5;
+						for (int y = -grabArea; y < grabArea; ++y)
 						{
-							unsigned int neighbour = cellWorldPositionI + neighbourOffsets[n];
-
-
-							if (world[neighbour].identity >= 0 && world[neighbour].identity != animalIndex && world[neighbour].identity < numberOfAnimals)
+							for (int x = -grabArea; x < grabArea; ++x)
 							{
+								unsigned int neighbour = animals[animalIndex].body[cellIndex].worldPositionI + (y * worldSize) + x;
 
-								printf("goingto clamp! %i \n", world[neighbour].identity  );
-								int targetLocalPositionI = isAnimalInSquare( world[neighbour].identity, neighbour);
-								if (targetLocalPositionI >= 0)
+								if (neighbour < worldSquareSize)
 								{
-									animals[animalIndex].body[cellIndex].grabbedCreature = world[neighbour].identity;
-									if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
+									// printf("%i\n",world[neighbour].identity);
+
+									// world[neighbour].material = MATERIAL_FOOD;
+
+									if (world[neighbour].identity >= 0 && world[neighbour].identity != animalIndex && world[neighbour].identity < numberOfAnimals)
 									{
-										printf("grabbed creature %u\n", animals[animalIndex].body[cellIndex].grabbedCreature);
-										break;
+
+										// printf("goingto clamp! %i \n", world[neighbour].identity  );
+										int targetLocalPositionI = isAnimalInSquare( world[neighbour].identity, neighbour);
+										if (targetLocalPositionI >= 0)
+										{
+											animals[animalIndex].body[cellIndex].grabbedCreature = world[neighbour].identity;
+											// if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
+											// {
+											// printf("grabbed creature %i\n", animals[animalIndex].body[cellIndex].grabbedCreature);
+											break;
+											// }
+										}
+
 									}
 								}
-
 							}
-
 						}
 
 
@@ -1475,6 +1486,21 @@ void organs_all()
 						// animals[animalIndex].body[cellIndex].grabbedMaterial = MATERIAL_NOTHING;
 						// printf("released a grabbed creature\n");
 					}
+
+
+
+					// if there is a grabbed creature, adjust its position to the grabber.
+					if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
+					{
+						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].uPosX = cellWorldPositionX;
+						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].uPosY = cellWorldPositionY;
+
+						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].fPosX = cellWorldPositionX;
+						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].fPosY = cellWorldPositionY;
+
+						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].position = cellWorldPositionI;
+					}
+
 
 				}
 
@@ -2088,75 +2114,79 @@ void move_all()
 						{
 							okToStep = false;
 
-							unsigned int fellowSpeciesIndex = (world[cellWorldPositionI].identity) / numberOfAnimalsPerSpecies;
-							if (fellowSpeciesIndex == speciesIndex)
+							if (!animals[   world[cellWorldPositionI].identity  ].isMachine)
 							{
-								animals[animalIndex].lastTouchedKin = world[cellWorldPositionI].identity;
-							}
-							else
-							{
-								animals[animalIndex].lastTouchedStranger = world[cellWorldPositionI].identity;
-							}
 
-							if (animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON ||
-							        animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE )
-							{
-								if (animals[animalIndex].parentAmnesty) // don't allow the animal to harm its parent until the amnesty period is over.
+								unsigned int fellowSpeciesIndex = (world[cellWorldPositionI].identity) / numberOfAnimalsPerSpecies;
+								if (fellowSpeciesIndex == speciesIndex)
 								{
-									if (world[cellWorldPositionI].identity == animals[animalIndex].parentIdentity)
-									{
-										continue;
-									}
+									animals[animalIndex].lastTouchedKin = world[cellWorldPositionI].identity;
+								}
+								else
+								{
+									animals[animalIndex].lastTouchedStranger = world[cellWorldPositionI].identity;
 								}
 
-								float defense = defenseAtWorldPoint(world[cellWorldPositionI].identity, cellWorldPositionI);
-
-								if (defense > 0)
+								if (animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON ||
+								        animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE )
 								{
-									animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage += 1.0f / defense;
-								}
-
-								if (defense == 0 || animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage > 1.0f )
-								{
-									animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].dead = true;
-
-									if (animals[world[cellWorldPositionI].identity].mass >= 1)
+									if (animals[animalIndex].parentAmnesty) // don't allow the animal to harm its parent until the amnesty period is over.
 									{
-										animals[world[cellWorldPositionI].identity].mass--;
-									}
-									animals[world[cellWorldPositionI].identity].damageReceived++;
-									okToStep = true;
-									animals[animalIndex].damageDone++;
-
-									if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
-									{
-										world[cellWorldPositionI].material = MATERIAL_BLOOD;
-									}
-
-									speciesAttacksPerTurn[speciesIndex] ++;
-
-									if (animals[world[cellWorldPositionI].identity].energyDebt <= 0.0f) // if the animal can lose the limb, and create energetic food, before the debt is paid, infinite energy can be produced.
-									{
-										if (animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON)
+										if (world[cellWorldPositionI].identity == animals[animalIndex].parentIdentity)
 										{
-											if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
+											continue;
+										}
+									}
+
+									float defense = defenseAtWorldPoint(world[cellWorldPositionI].identity, cellWorldPositionI);
+
+									if (defense > 0)
+									{
+										animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage += 1.0f / defense;
+									}
+
+									if (defense == 0 || animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage > 1.0f )
+									{
+										animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].dead = true;
+
+										if (animals[world[cellWorldPositionI].identity].mass >= 1)
+										{
+											animals[world[cellWorldPositionI].identity].mass--;
+										}
+										animals[world[cellWorldPositionI].identity].damageReceived++;
+										okToStep = true;
+										animals[animalIndex].damageDone++;
+
+										if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
+										{
+											world[cellWorldPositionI].material = MATERIAL_BLOOD;
+										}
+
+										speciesAttacksPerTurn[speciesIndex] ++;
+
+										if (animals[world[cellWorldPositionI].identity].energyDebt <= 0.0f) // if the animal can lose the limb, and create energetic food, before the debt is paid, infinite energy can be produced.
+										{
+											if (animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON)
 											{
-												world[cellWorldPositionI].material = MATERIAL_FOOD;
+												if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
+												{
+													world[cellWorldPositionI].material = MATERIAL_FOOD;
+												}
 											}
-										}
-										if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE)
-										{
-											animals[animalIndex].energy += foodEnergy * energyScaleIn;
-										}
+											if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE)
+											{
+												animals[animalIndex].energy += foodEnergy * energyScaleIn;
+											}
 
+										}
 									}
 								}
-							}
-							else if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_PARASITE )
-							{
-								float amount = (animals[world[cellWorldPositionI].identity].energy) / animalSquareSize;
-								animals[animalIndex].energy += amount;
-								animals[world[cellWorldPositionI].identity].energy -= amount;
+								else if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_PARASITE )
+								{
+									float amount = (animals[world[cellWorldPositionI].identity].energy) / animalSquareSize;
+									animals[animalIndex].energy += amount;
+									animals[world[cellWorldPositionI].identity].energy -= amount;
+								}
 							}
 						}
 						else
@@ -2664,25 +2694,30 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 
 }
 
-
+bool playerGrabState = false;
 void togglePlayerGrabbers()
 {
 	if (playerCreature >= 0)
 	{
-
+		playerGrabState = !playerGrabState;
 		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
 		{
 			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
 			{
-				if (animals[playerCreature].body[i].signalIntensity >= 0.0f)
+				// if (animals[playerCreature].body[i].signalIntensity >= 0.0f)
+				// {
+				// 	animals[playerCreature].body[i].signalIntensity = -1;
+				// }
+				// else
+				// {
+				if (playerGrabState)
 				{
-					animals[playerCreature].body[i].signalIntensity = -1;
-				}
-				else
-				{
-
 					animals[playerCreature].body[i].signalIntensity = 1;
 				}
+				else{
+					animals[playerCreature].body[i].signalIntensity = -1;
+				}
+				// }
 			}
 		}
 
@@ -2897,7 +2932,7 @@ void tournamentController()
 					}
 				}
 
-				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
+				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals && foundAnimal != playerCreature)
 				{
 					// printf("repopulated an endangered species\n");
 					// int animalIndex = spawnAnimal(i, animals[foundAnimal], randompos, false);
