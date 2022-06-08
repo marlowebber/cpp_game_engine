@@ -73,12 +73,9 @@
 #define MATERIAL_BONE             63
 #define MATERIAL_BLOOD            64
 #define MATERIAL_GRASS            65
-
 #define MATERIAL_METAL            66
 #define MATERIAL_VOIDMETAL        67
-
 #define MATERIAL_SMOKE           68
-
 #define MATERIAL_GLASS            69
 
 #define TERRAIN_STONE             50
@@ -94,7 +91,16 @@
 
 #define WORLD_EXAMPLECREATURE 2
 
+#define VISUALIZER_TRUECOLOR           1001
+#define VISUALIZER_TRACKS              1003
+#define VISUALIZER_IDENTITY            1004
+#define VISUALIZER_PHEROMONE           1005
+#define VISUALIZER_NEURALACTIVITY      1006
+
+
 #define NUMBER_OF_CONNECTIONS 8
+
+int visualizer = VISUALIZER_TRUECOLOR;
 
 const bool brownianMotion        = false;
 const bool immortality           = false;
@@ -125,20 +131,20 @@ const unsigned int numberOfAnimals = 10000;
 const unsigned int numberOfSpecies = 8;
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
-const float taxEnergyScale         = 0.0005f;        // a multiplier for how much it costs animals just to exist.
-const float movementEnergyScale    = 0.0005f;        // a multiplier for how much it costs animals to move.
+const float taxEnergyScale         = 0.0002f;        // a multiplier for how much it costs animals just to exist.
+const float movementEnergyScale    = 0.0002f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
 
 const float neuralNoise = 0.1f;
 
 const float liverStorage = 20.0f;
-const unsigned int baseLifespan = 1000;
+const unsigned int baseLifespan = 5000;
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 const float musclePower = 40.0f;
 const float thresholdOfBoredom = 0.1f;
 
-const unsigned int numberOfSpeakerChannels = 256;
+const unsigned int numberOfSpeakerChannels = 16;
 
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
@@ -181,7 +187,9 @@ unsigned int cameraPositionX = 0 ;
 unsigned int cameraPositionY = 0 ;
 unsigned int modelFrameCount = 0;
 
-int champion = -1;
+// int champion = -1;
+
+
 int championScore = 0;
 int tournamentInterval = 10000;
 int tournamentCounter  = 0;
@@ -266,10 +274,344 @@ struct Animal
 	unsigned int lastTouchedStranger;
 	unsigned int lastTouchedKin;
 	unsigned int cellsUsed;
+	Color identityColor;
 
 	bool isMachine;
 	void (* machineCallback)(int, int);
 };
+
+Animal champion;
+
+
+std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
+{
+	std::string( "It has an earthy smell." ),
+	std::string( "It has a musty smell." ),
+	std::string( "It smells of urine." ),
+	std::string( "It smells like beer." ),
+	std::string( "It has a gamey smell." ),
+	std::string( "It smells like a cat's fur." ),
+	std::string( "It smells like dried hay." ),
+	std::string( "It smells like fresh dried laundry. Delightful." ),
+	std::string( "It smells like the rain after a hot day." ),
+	std::string( "It smells like the salt air at the beach." ),
+	std::string( "It smells like the perfume of a frangipani's flower." ),
+	std::string( "It smells like pool chlorine. Yuck!" ),
+	std::string( "It smells like electricity." ),
+	std::string( "It smells like dead rotting flesh." ),
+	std::string( "You can smell raspberries. Incredible!" ),
+	std::string( "It smells like vomit." ),
+
+};
+
+std::string terrainDescriptions(unsigned int terrain)
+{
+
+	switch (terrain)
+	{
+
+// #define TERRAIN_STONE             50
+// #define TERRAIN_WATER             52
+// #define TERRAIN_LAVA              54
+// #define TERRAIN_VOIDMETAL         68
+
+
+	case TERRAIN_STONE:
+	{
+		return std::string("The ground here is solid rock.");
+	}
+	case TERRAIN_WATER:
+	{
+		return std::string("There is deep, cold water here.");
+	}
+	case TERRAIN_LAVA:
+	{
+		return std::string("The ground here is molten burning lava.");
+	}
+	case TERRAIN_VOIDMETAL:
+	{
+		return std::string("The ground here is black, shiny void metal.");
+	}
+
+
+
+	}
+	return std::string("You can't tell if the ground is safe here.");
+}
+
+
+
+
+
+
+
+std::string organDescriptions(unsigned int organ)
+{
+// #define ORGAN_MOUTH_VEG           1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
+// #define ORGAN_MOUTH_SCAVENGE      2
+// #define ORGAN_GONAD               3
+// #define ORGAN_MUSCLE              4
+// #define ORGAN_BONE                5
+// #define ORGAN_WEAPON              6
+// #define ORGAN_LIVER               7
+// #define ORGAN_MUSCLE_TURN         8
+// #define ORGAN_SENSOR_EYE          9
+// #define ORGAN_MOUTH_CARNIVORE     10
+// #define ORGAN_MOUTH_PARASITE      11
+// #define ORGAN_ADDOFFSPRINGENERGY  12
+// #define ORGAN_ADDLIFESPAN         13
+// #define ORGAN_NEURON              15
+// #define ORGAN_BIASNEURON          16    // can be thought of as ORGAN_SENSOR_CONSTANTVALUE
+// #define ORGAN_SENSOR_TIMER        17
+// #define ORGAN_SENSOR_BODYANGLE	  18
+// #define ORGAN_SENSOR_TRACKER         19
+// #define ORGAN_SPEAKER             20
+// #define ORGAN_SENSOR_EAR          21
+// #define ORGAN_MUSCLE_STRAFE       22
+// #define ORGAN_SENSOR_PHEROMONE    23
+// #define ORGAN_EMITTER_PHEROMONE   24
+// #define ORGAN_MEMORY_RX           25
+// #define ORGAN_MEMORY_TX           26
+// #define ORGAN_GILL                27
+// #define ORGAN_LUNG                 28
+// #define ORGAN_SENSOR_HUNGER        29
+// #define ORGAN_SENSOR_AGE           30
+// #define ORGAN_SENSOR_LAST_STRANGER 31
+// #define ORGAN_SENSOR_LAST_KIN      32
+// #define ORGAN_SENSOR_PARENT        33
+// #define ORGAN_SENSOR_BIRTHPLACE    34
+// #define ORGAN_SENSOR_TOUCH         35
+// #define ORGAN_GRABBER              36
+
+
+	switch (organ)
+	{
+	case ORGAN_MOUTH_VEG:
+	{
+		return std::string("A chomping mouth with flat teeth that chews side-to-side.");
+	}
+	case ORGAN_MOUTH_SCAVENGE:
+	{
+		return std::string("A sucker-like mouth that slurps up detritus.");
+	}
+	case ORGAN_GONAD:
+	{
+		return std::string("A bulging testicle filled with potential offspring.");
+	}
+	case ORGAN_MUSCLE:
+	{
+		return std::string("A muscular limb that can pull the animal along.");
+	}
+	case ORGAN_BONE:
+	{
+		return std::string("A strong slab of bone.");
+	}
+	case ORGAN_WEAPON:
+	{
+		return std::string("A wicked razor-sharp claw.");
+	}
+	case ORGAN_LIVER:
+	{
+		return std::string("A brownish slab of flesh that stores energy.");
+	}
+	case ORGAN_MUSCLE_TURN:
+	{
+		return std::string("A muscular limb that's good for turning and spinning.");
+	}
+	case ORGAN_SENSOR_EYE:
+	{
+		return std::string("A monochrome, single pixel eye.");
+	}
+	case ORGAN_MOUTH_CARNIVORE:
+	{
+		return std::string("A grinning mouth with serrated, backward curving teeth.");
+	}
+	case ORGAN_MOUTH_PARASITE:
+	{
+		return std::string("A leech-like mouth that drains vital energy from victims.");
+	}
+	case ORGAN_ADDOFFSPRINGENERGY:
+	{
+		return std::string("A womb-like organ that imbues the offspring with energy before they are born.");
+	}
+	case ORGAN_ADDLIFESPAN:
+	{
+		return std::string("A mysterious organ that promotes long life.");
+	}
+	case ORGAN_NEURON:
+	{
+		return std::string("A basic brain cell that connects to form networks.");
+	}
+	case ORGAN_BIASNEURON:
+	{
+		return std::string("A part of the brain that provides a constant output.");
+	}
+	case ORGAN_SENSOR_BODYANGLE:
+	{
+		return std::string("Part of the brain that senses the body's orientation.");
+	}
+	case ORGAN_SENSOR_TRACKER:
+	{
+		return std::string("Part of the brain that seeks prey.");
+	}
+	case ORGAN_SPEAKER:
+	{
+		return std::string("A resonant chamber that is blown with air to produce sound.");
+	}
+	case ORGAN_SENSOR_EAR:
+	{
+		return std::string("A chamber full of tiny hairs that detect vibrations.");
+	}
+
+	case ORGAN_MUSCLE_STRAFE:
+	{
+		return std::string("A muscular limb that's good for moving sideways.");
+	}
+	case ORGAN_SENSOR_PHEROMONE:
+	{
+		return std::string("A pocket that detects chemical signals.");
+	}
+	case ORGAN_EMITTER_PHEROMONE:
+	{
+		return std::string("A scent-producing gland that is plump with waxy secretions.");
+	}
+	case ORGAN_MEMORY_TX:
+	{
+		return std::string("A part of the brain responsible for storing knowledge in memory.");
+	}
+	case ORGAN_MEMORY_TX:
+	{
+		return std::string("A part of the brain responsible for retrieving knowledge from memory.");
+	}
+	case ORGAN_GILL:
+	{
+		return std::string("A red, frilly gill for breathing water.");
+	}
+	case ORGAN_LUNG:
+	{
+		return std::string("A pink, spongy, air breathing lung.");
+	}
+	case ORGAN_SENSOR_HUNGER:
+	{
+		return std::string("This part of the brain feels the pain of hunger.");
+	}
+	case ORGAN_SENSOR_AGE:
+	{
+		return std::string("This part of the brain feels the weight of age.");
+	}
+	case ORGAN_SENSOR_LAST_STRANGER:
+	{
+		return std::string("This part contains a memory of meeting an unknown animal.");
+	}
+	case ORGAN_SENSOR_LAST_KIN:
+	{
+		return std::string("This part contains a memory of the animal's peer.");
+	}
+	case ORGAN_SENSOR_PARENT:
+	{
+		return std::string("This part contains a memory of the animal's mother.");
+	}
+
+	case ORGAN_SENSOR_BIRTHPLACE:
+	{
+		return std::string("This part contains a memory of a childhood home.");
+	}
+
+	case ORGAN_SENSOR_TOUCH:
+	{
+		return std::string("Soft, pillowy flesh that responds to touch.");
+	}
+
+	case ORGAN_GRABBER:
+	{
+		return std::string("A bony hand which can clutch items and grab animals.");
+	}
+
+
+
+
+	}
+
+
+
+
+}
+
+
+
+std::string materialDescriptions(unsigned int material)
+{
+
+
+	switch (material)
+	{
+
+// #define MATERIAL_FOOD             60
+// #define MATERIAL_ROCK             61
+// #define MATERIAL_MEAT             62
+// #define MATERIAL_BONE             63
+// #define MATERIAL_BLOOD            64
+// #define MATERIAL_GRASS            65
+// #define MATERIAL_METAL            66
+// #define MATERIAL_VOIDMETAL        67
+// #define MATERIAL_SMOKE           68
+// #define MATERIAL_GLASS            69
+
+	case MATERIAL_FOOD:
+	{
+		return std::string("There's a piece of food here.");
+	}
+
+	case MATERIAL_ROCK:
+	{
+		return std::string("There's a solid grey rock.");
+	}
+
+	case MATERIAL_MEAT:
+	{
+		return std::string("A bleeding chunk of flesh.");
+	}
+	case MATERIAL_BONE:
+	{
+		return std::string("A fragment of bone.");
+	}
+	case MATERIAL_BLOOD:
+	{
+		return std::string("Splatters of coagulating blood.");
+	}
+	case MATERIAL_METAL:
+	{
+		return std::string("This is made of smooth, polished metal.");
+	}
+	case MATERIAL_VOIDMETAL:
+	{
+		return std::string("It's made of impenetrable void metal.");
+	}
+	case MATERIAL_SMOKE:
+	{
+		return std::string("A wisp of smoke.");
+	}
+	case MATERIAL_GLASS:
+	{
+		return std::string("A pane of glass.");
+	}
+	case MATERIAL_NOTHING:
+	{
+		return std::string("There's nothing there.");
+	}
+	case MATERIAL_GRASS:
+	{
+		return std::string("A patch of green grass.");
+	}
+	}
+
+
+
+	return std::string("An unknown material.");
+
+}
+
+
 
 bool speciesVacancies [numberOfSpecies];
 unsigned int speciesPopulationCounts [numberOfSpecies];
@@ -334,6 +676,17 @@ float organUpkeepCost(unsigned int organ)
 
 Animal animals[numberOfAnimals];
 
+void resetMouseCursor()
+{
+	// mouseX = 0;
+	// mouseY = 0;
+	mousePositionX = 0;
+	mousePositionY = 0;
+	fmousePositionX = 0.0f;
+	fmousePositionY = 0.0f;
+
+}
+
 void resetConnection(unsigned int animalIndex, unsigned int cellLocalPositionI, unsigned int i)
 {
 	animals[animalIndex].body[cellLocalPositionI].connections[i].used = true;
@@ -392,7 +745,7 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].canBreatheUnderwater = false;
 		animals[animalIndex].canBreatheAir = false;
 		animals[animalIndex].cellsUsed = 0;
-
+		animals[animalIndex].identityColor = Color(RNG(), RNG(), RNG(), 1.0f);
 		animals[animalIndex].isMachine = false;
 		animals[animalIndex].machineCallback == nullptr;
 
@@ -404,269 +757,6 @@ void resetAnimal(unsigned int animalIndex)
 	}
 }
 
-void resetAnimals()
-{
-	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
-	{
-		resetAnimal(animalIndex);
-	}
-}
-
-void resetGrid()
-{
-	for (int i = 0; i < worldSquareSize; ++i)
-	{
-		world[i].terrain = MATERIAL_NOTHING;
-		world[i].material = MATERIAL_NOTHING;
-		world[i].identity = -1;
-		world[i].trail = 0.0f;
-		world[i].height = 0;
-		world[i].light = 1.0f;
-		world[i].pheromoneIntensity = 0.0f;
-		world[i].pheromoneChannel = 0;
-	}
-}
-
-char randomLetter()
-{
-	return	extremelyFastNumberFromZeroTo(numberOfOrganTypes);
-}
-
-int getNewIdentity(unsigned int speciesIndex)
-{
-	if (!speciesVacancies[speciesIndex])
-	{
-		return -1;
-	}
-	int animalIndex;
-	for ( animalIndex = speciesIndex * numberOfAnimalsPerSpecies; animalIndex < (speciesIndex + 1) * numberOfAnimalsPerSpecies; ++animalIndex)
-	{
-		if (animalIndex < numberOfAnimals && animalIndex >= 0)
-		{
-			if (animals[animalIndex].retired)
-			{
-				return animalIndex;
-			}
-		}
-	}
-	speciesVacancies[speciesIndex] = false;
-	return -1;
-}
-
-bool organIsAnActuator(unsigned int organ)
-{
-	if (    organ == ORGAN_MUSCLE ||
-	        organ == ORGAN_MUSCLE_TURN ||
-	        organ == ORGAN_MUSCLE_STRAFE ||
-	        organ == ORGAN_SPEAKER  ||
-	        organ == ORGAN_EMITTER_PHEROMONE ||
-	        organ == ORGAN_MEMORY_TX
-	   )
-	{
-		return true;
-	}
-	return false;
-}
-
-bool organIsANeuron(unsigned int organ)
-{
-	if (    organ == ORGAN_NEURON ||
-	        organ == ORGAN_BIASNEURON
-	   )
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool organIsASensor(unsigned int organ)
-{
-	if (
-	    organ == ORGAN_SENSOR_EYE ||
-	    organ == ORGAN_SENSOR_TOUCH ||
-	    organ == ORGAN_SENSOR_TIMER ||
-	    organ == ORGAN_SENSOR_BODYANGLE ||
-	    organ == ORGAN_SENSOR_TRACKER      ||
-	    organ == ORGAN_SENSOR_EAR        ||
-	    organ == ORGAN_SENSOR_PHEROMONE ||
-	    organ == ORGAN_MEMORY_RX ||
-	    organ == ORGAN_SENSOR_LAST_STRANGER ||
-	    organ == ORGAN_SENSOR_LAST_KIN ||
-	    organ == ORGAN_SENSOR_HUNGER ||
-	    organ == ORGAN_SENSOR_AGE ||
-	    organ == ORGAN_SENSOR_BIRTHPLACE ||
-	    organ == ORGAN_SENSOR_PARENT
-	)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-bool materialBlocksMovement(unsigned int material)
-{
-	if (material == MATERIAL_ROCK ||
-	        material == MATERIAL_VOIDMETAL ||
-	        material == MATERIAL_METAL)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-// // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
-// this function studies the phenotype, not the genotype.
-// returns whether the animal is fit to live.
-bool measureAnimalQualities(unsigned int animalIndex)
-{
-	// update mass and debt
-	animals[animalIndex].mass = 0;
-	animals[animalIndex].energyDebt = 0.0f;
-	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		animals[animalIndex].mass++;
-		animals[animalIndex].energyDebt += 1.0f;
-	}
-
-	animals[animalIndex].totalMuscle = 0;
-	animals[animalIndex].offspringEnergy = 1.0f;
-	animals[animalIndex].lifespan = baseLifespan;
-	unsigned int totalGonads = 0;
-
-	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		if (animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE ||
-		        animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE_TURN ||
-		        animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE_STRAFE
-		   )
-		{
-
-			animals[animalIndex].totalMuscle ++;
-		}
-		if (animals[animalIndex].body[cellIndex].organ == ORGAN_ADDOFFSPRINGENERGY)
-		{
-			animals[animalIndex].offspringEnergy += animals[animalIndex].offspringEnergy ;
-		}
-
-		if (animals[animalIndex].body[cellIndex].organ == ORGAN_ADDLIFESPAN)
-		{
-			animals[animalIndex].lifespan += baseLifespan;
-		}
-
-		if (animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD)
-		{
-			totalGonads ++;
-		}
-	}
-
-	if (animals[animalIndex].mass > 0 && totalGonads > 0 )
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-bool isCellConnectable(unsigned int organ)
-{
-	if (
-	    organIsASensor(organ) ||
-	    organIsANeuron(organ)
-	)
-	{
-		return true;
-	}
-
-	return false;
-}
-
-
-bool isCellConnecting(unsigned int organ)
-{
-	if (
-	    organIsAnActuator(organ) ||
-	    organIsANeuron(organ)
-	)
-	{
-		return true;
-	}
-
-	return false;
-}
-
-// choose a random cell of any type that can be connected to, which includes all neurons and all sensors.
-int getRandomConnectableCell( unsigned int animalIndex)
-{
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		if (isCellConnectable(  animals[animalIndex].genes[cellIndex].organ ))
-		{
-			cellsOfType.push_back(cellIndex);
-			found++;
-		}
-	}
-
-	if (found > 0)
-	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
-		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
-		return *iterator;
-	}
-	return -1;
-}
-
-// choose a random cell of any type that can put forth a connection, which includes all neurons and actuators.
-int getRandomConnectingCell( unsigned int animalIndex)
-{
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		if (isCellConnecting(  animals[animalIndex].genes[cellIndex].organ ))
-		{
-			cellsOfType.push_back(cellIndex);
-			found++;
-		}
-	}
-
-	if (found > 0)
-	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
-		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
-		return *iterator;
-	}
-	return -1;
-}
-
-// choose a random cell of a particular organ type in a given animal, or MATERIAL_NOTHING if the organ doesn't exist.
-int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
-{
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		if (animals[animalIndex].genes[cellIndex].organ == organType)
-		{
-			cellsOfType.push_back(cellIndex);
-			found++;
-		}
-	}
-
-	if (found > 0)
-	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
-		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
-		return *iterator;
-	}
-	return -1;
-}
 
 // check if a cell has an empty neighbour.
 bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)
@@ -758,6 +848,398 @@ Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
 	return result;
 }
 
+
+bool organIsAnActuator(unsigned int organ)
+{
+	if (    organ == ORGAN_MUSCLE ||
+	        organ == ORGAN_MUSCLE_TURN ||
+	        organ == ORGAN_MUSCLE_STRAFE ||
+	        organ == ORGAN_SPEAKER  ||
+	        organ == ORGAN_EMITTER_PHEROMONE ||
+	        organ == ORGAN_MEMORY_TX
+	   )
+	{
+		return true;
+	}
+	return false;
+}
+
+bool organIsANeuron(unsigned int organ)
+{
+	if (    organ == ORGAN_NEURON ||
+	        organ == ORGAN_BIASNEURON
+	   )
+	{
+		return true;
+	}
+	return false;
+}
+
+
+bool organIsASensor(unsigned int organ)
+{
+	if (
+	    organ == ORGAN_SENSOR_EYE ||
+	    organ == ORGAN_SENSOR_TOUCH ||
+	    organ == ORGAN_SENSOR_TIMER ||
+	    organ == ORGAN_SENSOR_BODYANGLE ||
+	    organ == ORGAN_SENSOR_TRACKER      ||
+	    organ == ORGAN_SENSOR_EAR        ||
+	    organ == ORGAN_SENSOR_PHEROMONE ||
+	    organ == ORGAN_MEMORY_RX ||
+	    organ == ORGAN_SENSOR_LAST_STRANGER ||
+	    organ == ORGAN_SENSOR_LAST_KIN ||
+	    organ == ORGAN_SENSOR_HUNGER ||
+	    organ == ORGAN_SENSOR_AGE ||
+	    organ == ORGAN_SENSOR_BIRTHPLACE ||
+	    organ == ORGAN_SENSOR_PARENT
+	)
+	{
+		return true;
+	}
+	return false;
+}
+
+
+
+bool isCellConnecting(unsigned int organ)
+{
+	if (
+	    organIsAnActuator(organ) ||
+	    organIsANeuron(organ)
+	)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool isCellConnectable(unsigned int organ)
+{
+	if (
+	    organIsASensor(organ) ||
+	    organIsANeuron(organ)
+	)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+
+
+
+// choose a random cell of any type that can be connected to, which includes all neurons and all sensors.
+int getRandomConnectableCell( unsigned int animalIndex)
+{
+	std::list<unsigned int> cellsOfType;
+	unsigned int found = 0;
+	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		if (isCellConnectable(  animals[animalIndex].genes[cellIndex].organ ))
+		{
+			cellsOfType.push_back(cellIndex);
+			found++;
+		}
+	}
+
+	if (found > 0)
+	{
+		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
+		return *iterator;
+	}
+	return -1;
+}
+
+void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosition)
+{
+	// pick a random location for the new cell which is adjacent to a normal cell.
+	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
+	// figure out the lowest index in the animal array and put the new cell there
+	unsigned int cellIndex = animals[animalIndex].cellsUsed;
+
+	if (cellIndex < animalSquareSize)
+	{
+		animals[animalIndex].cellsUsed ++;
+
+
+		animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
+		animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
+
+		animals[animalIndex].genes[cellIndex].organ = organType;
+
+
+		if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
+		{
+			unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
+			for (int i = 0; i < randomNumberOfConnections; ++i)
+			{
+				// pick a random connectable cell to connect to.
+				unsigned int connectableCell = getRandomConnectableCell( animalIndex);
+
+				// check if you are already connected to it.
+				bool alreadyConnected =  false;
+				for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
+				{
+					if (  animals[animalIndex].genes[cellIndex].connections[j].connectedTo == connectableCell &&
+					        animals[animalIndex].genes[cellIndex].connections[j] .used)
+					{
+						alreadyConnected = true;
+					}
+				}
+
+				// make the new connection if appropriate.
+				if (!alreadyConnected)
+				{
+					for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
+					{
+						if ( ! (animals[animalIndex].genes[cellIndex].connections[j].used))
+						{
+							animals[animalIndex].genes[cellIndex].connections[j].used = true;
+							animals[animalIndex].genes[cellIndex].connections[j].connectedTo = connectableCell;
+							animals[animalIndex].genes[cellIndex].connections[j].weight = (RNG() - 0.5f ) * 2;
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+
+// add a cell to an animal germline in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
+void animalAppendCell(unsigned int animalIndex, unsigned int organType)
+{
+
+
+	// figure out a new position anywhere on the animal edge
+	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
+
+
+	appendCell(animalIndex, organType,  newPosition);
+}
+
+
+
+
+void setupExampleAnimal2(int i)
+{
+	// set the example back to the default state or it wont work properly.
+	resetAnimal(i);
+
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EAR );
+	animalAppendCell( i, ORGAN_SENSOR_PHEROMONE );
+	animalAppendCell( i, ORGAN_SENSOR_TRACKER );
+	animalAppendCell( i, ORGAN_SENSOR_TOUCH );
+	animalAppendCell( i, ORGAN_SENSOR_BODYANGLE );
+	animalAppendCell( i, ORGAN_MEMORY_RX );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_MEMORY_TX );
+	animalAppendCell( i, ORGAN_MUSCLE );
+	animalAppendCell( i, ORGAN_MUSCLE_TURN );
+	animalAppendCell( i, ORGAN_LUNG );
+	animalAppendCell( i, ORGAN_LIVER );
+	animalAppendCell( i, ORGAN_GONAD );
+	animalAppendCell( i, ORGAN_GONAD );
+
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+}
+
+
+
+
+void resetAnimals()
+{
+
+	// resetAnimal(champion);
+
+	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+	{
+		resetAnimal(animalIndex);
+	}
+
+	int j = 1;
+	setupExampleAnimal2(j);
+	champion = animals[j];
+	championScore = 1;
+}
+
+void resetGrid()
+{
+	for (int i = 0; i < worldSquareSize; ++i)
+	{
+		world[i].terrain = MATERIAL_NOTHING;
+		world[i].material = MATERIAL_NOTHING;
+		world[i].identity = -1;
+		world[i].trail = 0.0f;
+		world[i].height = 0;
+		world[i].light = 1.0f;
+		world[i].pheromoneIntensity = 0.0f;
+		world[i].pheromoneChannel = 0;
+	}
+}
+
+char randomLetter()
+{
+	return	extremelyFastNumberFromZeroTo(numberOfOrganTypes);
+}
+
+int getNewIdentity(unsigned int speciesIndex)
+{
+	if (!speciesVacancies[speciesIndex])
+	{
+		return -1;
+	}
+	int animalIndex;
+	for ( animalIndex = speciesIndex * numberOfAnimalsPerSpecies; animalIndex < (speciesIndex + 1) * numberOfAnimalsPerSpecies; ++animalIndex)
+	{
+		if (animalIndex < numberOfAnimals && animalIndex >= 0)
+		{
+			if (animals[animalIndex].retired)
+			{
+				return animalIndex;
+			}
+		}
+	}
+	speciesVacancies[speciesIndex] = false;
+	return -1;
+}
+
+bool materialBlocksMovement(unsigned int material)
+{
+	if (material == MATERIAL_ROCK ||
+	        material == MATERIAL_VOIDMETAL ||
+	        material == MATERIAL_METAL)
+	{
+		return true;
+	}
+	return false;
+}
+
+
+// // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
+// this function studies the phenotype, not the genotype.
+// returns whether the animal is fit to live.
+bool measureAnimalQualities(unsigned int animalIndex)
+{
+	// update mass and debt
+	animals[animalIndex].mass = 0;
+	animals[animalIndex].energyDebt = 0.0f;
+	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		animals[animalIndex].mass++;
+		animals[animalIndex].energyDebt += 1.0f;
+	}
+
+	animals[animalIndex].totalMuscle = 0;
+	animals[animalIndex].offspringEnergy = 1.0f;
+	animals[animalIndex].lifespan = baseLifespan;
+	unsigned int totalGonads = 0;
+
+	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		if (animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE ||
+		        animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE_TURN ||
+		        animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE_STRAFE
+		   )
+		{
+
+			animals[animalIndex].totalMuscle ++;
+		}
+		if (animals[animalIndex].body[cellIndex].organ == ORGAN_ADDOFFSPRINGENERGY)
+		{
+			animals[animalIndex].offspringEnergy += animals[animalIndex].offspringEnergy ;
+		}
+
+		if (animals[animalIndex].body[cellIndex].organ == ORGAN_ADDLIFESPAN)
+		{
+			animals[animalIndex].lifespan += baseLifespan;
+		}
+
+		if (animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD)
+		{
+			totalGonads ++;
+		}
+	}
+
+	animals[animalIndex].lifespan *= 0.75 + (RNG() * 0.5);
+
+	if (animals[animalIndex].mass > 0 && totalGonads > 0 )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+
+
+
+
+// choose a random cell of any type that can put forth a connection, which includes all neurons and actuators.
+int getRandomConnectingCell( unsigned int animalIndex)
+{
+	std::list<unsigned int> cellsOfType;
+	unsigned int found = 0;
+	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		if (isCellConnecting(  animals[animalIndex].genes[cellIndex].organ ))
+		{
+			cellsOfType.push_back(cellIndex);
+			found++;
+		}
+	}
+
+	if (found > 0)
+	{
+		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
+		return *iterator;
+	}
+	return -1;
+}
+
+// choose a random cell of a particular organ type in a given animal, or MATERIAL_NOTHING if the organ doesn't exist.
+int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
+{
+	std::list<unsigned int> cellsOfType;
+	unsigned int found = 0;
+	for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		if (animals[animalIndex].genes[cellIndex].organ == organType)
+		{
+			cellsOfType.push_back(cellIndex);
+			found++;
+		}
+	}
+
+	if (found > 0)
+	{
+		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
+		return *iterator;
+	}
+	return -1;
+}
+
 // choose any random populated cell.
 int getRandomPopulatedCell(unsigned int animalIndex)
 {
@@ -816,75 +1298,6 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 	}
 }
 
-
-
-void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosition)
-{
-	// pick a random location for the new cell which is adjacent to a normal cell.
-	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
-	// figure out the lowest index in the animal array and put the new cell there
-	unsigned int cellIndex = animals[animalIndex].cellsUsed;
-
-	if (cellIndex < animalSquareSize)
-	{
-		animals[animalIndex].cellsUsed ++;
-
-
-		animals[animalIndex].genes[cellIndex].localPosX = newPosition.x;
-		animals[animalIndex].genes[cellIndex].localPosY = newPosition.y;
-
-		animals[animalIndex].genes[cellIndex].organ = organType;
-
-
-		if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
-		{
-			unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
-			for (int i = 0; i < randomNumberOfConnections; ++i)
-			{
-				// pick a random connectable cell to connect to.
-				unsigned int connectableCell = getRandomConnectableCell( animalIndex);
-
-				// check if you are already connected to it.
-				bool alreadyConnected =  false;
-				for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
-				{
-					if (  animals[animalIndex].genes[cellIndex].connections[j].connectedTo == connectableCell &&
-					        animals[animalIndex].genes[cellIndex].connections[j] .used)
-					{
-						alreadyConnected = true;
-					}
-				}
-
-				// make the new connection if appropriate.
-				if (!alreadyConnected)
-				{
-					for (int j = 0; j < NUMBER_OF_CONNECTIONS; ++j)
-					{
-						if ( ! (animals[animalIndex].genes[cellIndex].connections[j].used))
-						{
-							animals[animalIndex].genes[cellIndex].connections[j].used = true;
-							animals[animalIndex].genes[cellIndex].connections[j].connectedTo = connectableCell;
-							animals[animalIndex].genes[cellIndex].connections[j].weight = (RNG() - 0.5f ) * 2;
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-// add a cell to an animal germline in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
-void animalAppendCell(unsigned int animalIndex, unsigned int organType)
-{
-
-
-	// figure out a new position anywhere on the animal edge
-	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex);
-
-
-	appendCell(animalIndex, organType,  newPosition);
-}
 
 
 
@@ -1257,6 +1670,8 @@ Color organColors(unsigned int organ)
 	return color_yellow;
 }
 
+
+
 Color whatColorIsThisSquare(  unsigned int worldI)
 {
 	Color displayColor = color_black;
@@ -1391,7 +1806,7 @@ void activateGrabbedMachine()
 							// void (*callback)(int) =	 animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback;
 
 							(*animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback)( animals[playerCreature].body[i].grabbedCreature , playerCreature) ;
-
+							break;
 						}
 
 					}
@@ -2381,11 +2796,11 @@ void energy_all() // perform energies.
 			}
 			if (tournament)
 			{
-				int animalScore = animals[animalIndex].damageDone + animals[animalIndex].damageReceived ;
+				int animalScore = animals[animalIndex].damageDone + animals[animalIndex].damageReceived  + animals[animalIndex].numberOfTimesReproduced ;
 				if ( animalScore > championScore)
 				{
 					championScore = animalScore;
-					champion = animalIndex;
+					champion = animals[animalIndex];
 				}
 			}
 		}
@@ -2437,7 +2852,46 @@ void camera()
 			{
 				float fx = vx;
 				float fy = vy;
-				displayColor = whatColorIsThisSquare(worldI);
+
+
+				switch (visualizer)
+				{
+				case VISUALIZER_TRUECOLOR:
+				{
+
+					displayColor = whatColorIsThisSquare(worldI);
+					break;
+				}
+
+				case VISUALIZER_IDENTITY:
+				{
+
+					// displayColor = whatColorIsThisSquare(worldI);
+					if (world[worldI].identity < numberOfAnimals)
+					{
+						displayColor = animals[ world[worldI].identity ].identityColor;
+					}
+					break;
+				}
+
+				case VISUALIZER_TRACKS:
+				{
+
+					// displayColor = whatColorIsThisSquare(worldI);
+					if (world[worldI].identity < numberOfAnimals)
+					{
+						displayColor = animals[ world[worldI].identity ].identityColor;
+						drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
+					}
+					break;
+				}
+
+
+
+
+
+				}
+
 				drawTile( Vec_f2( fx, fy ), displayColor);
 			}
 		}
@@ -2448,6 +2902,33 @@ void camera()
 	Vec_f2 worldMousePos = Vec_f2( fmousePositionX, fmousePositionY);
 	drawTile( worldMousePos, displayColor);
 }
+
+
+
+bool computer1display = false;
+void displayComputerText()
+{
+
+	int menuX = 50;
+	int menuY = 50;
+	int textSize = 10;
+	int spacing = 20;
+
+
+	if (computer1display)
+	{
+
+
+		printText2D(  "computer1display\n" , menuX, menuY, textSize);
+		menuY -= spacing;
+
+	}
+
+
+
+}
+
+
 
 void drawGameInterfaceText()
 {
@@ -2464,39 +2945,39 @@ void drawGameInterfaceText()
 	}
 	menuY -= spacing;
 
-	printText2D(   std::string("Player ") + std::to_string(playerCreature) , menuX, menuY, textSize);
-	menuY -= spacing;
+	// printText2D(   std::string("Player ") + std::to_string(playerCreature) , menuX, menuY, textSize);
+	// menuY -= spacing;
 
-	if (playerCreature >= 0)
-	{
-		printText2D(   std::string("Energy ") + std::to_string(animals[playerCreature].energy ) , menuX, menuY, textSize);
-		menuY -= spacing;
+	// if (playerCreature >= 0)
+	// {
+	// 	printText2D(   std::string("Energy ") + std::to_string(animals[playerCreature].energy ) , menuX, menuY, textSize);
+	// 	menuY -= spacing;
 
-		printText2D(   std::string("Energy debt ") + std::to_string(animals[playerCreature].energyDebt ) , menuX, menuY, textSize);
-		menuY -= spacing;
+	// 	printText2D(   std::string("Energy debt ") + std::to_string(animals[playerCreature].energyDebt ) , menuX, menuY, textSize);
+	// 	menuY -= spacing;
 
 
-		printText2D(   std::string("Max energy ") + std::to_string(animals[playerCreature].maxEnergy ) , menuX, menuY, textSize);
-		menuY -= spacing;
+	// 	printText2D(   std::string("Max energy ") + std::to_string(animals[playerCreature].maxEnergy ) , menuX, menuY, textSize);
+	// 	menuY -= spacing;
 
-		printText2D(   std::string("Offspring energy ") + std::to_string(animals[playerCreature].offspringEnergy ) , menuX, menuY, textSize);
-		menuY -= spacing;
+	// 	printText2D(   std::string("Offspring energy ") + std::to_string(animals[playerCreature].offspringEnergy ) , menuX, menuY, textSize);
+	// 	menuY -= spacing;
 
-		printText2D(   std::string("Reproduces at ") + std::to_string( ((animals[playerCreature].maxEnergy / 2) + (animals[playerCreature].offspringEnergy )) ) , menuX, menuY, textSize);
-		menuY -= spacing;
-	}
-	menuY -= spacing;
+	// 	printText2D(   std::string("Reproduces at ") + std::to_string( ((animals[playerCreature].maxEnergy / 2) + (animals[playerCreature].offspringEnergy )) ) , menuX, menuY, textSize);
+	// 	menuY -= spacing;
+	// }
+	// menuY -= spacing;
 
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
 	menuY -= spacing;
 
 
-	printText2D(   std::string("Zoom ") + std::to_string(viewZoom ) , menuX, menuY, textSize);
-	menuY -= spacing;
+	// printText2D(   std::string("Zoom ") + std::to_string(viewZoom ) , menuX, menuY, textSize);
+	// menuY -= spacing;
 
 
-	printText2D(   std::string("Mouse X ") + std::to_string(mousePositionX ) + std::string(" Y ") + std::to_string(mousePositionY) , menuX, menuY, textSize);
-	menuY -= spacing;
+	// printText2D(   std::string("Mouse X ") + std::to_string(mousePositionX ) + std::string(" Y ") + std::to_string(mousePositionY) , menuX, menuY, textSize);
+	// menuY -= spacing;
 
 
 	int cursorPosX = cameraPositionX +  mousePositionX ;
@@ -2504,81 +2985,76 @@ void drawGameInterfaceText()
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 	if (worldCursorPos < worldSquareSize)
 	{
-		int cursorAnimal = world[worldCursorPos].identity;
-		if (cursorAnimal >= 0)
+		// int cursorAnimal = world[worldCursorPos].identity;
+		// if (cursorAnimal >= 0)
+		// {
+		// 	if (isAnimalInSquare(cursorAnimal, worldCursorPos) >= 0)
+		// 	{
+
+
+		// 		printText2D(   std::string("Animal ") + std::to_string(cursorAnimal ) , menuX, menuY, textSize);
+		// 		menuY -= spacing;
+
+		// 	}
+		// 	else {
+		// 		cursorAnimal = -1;
+		// 	}
+		// }
+
+		// if (cursorAnimal < 0)
+		// {
+
+
+		// 	if (world[worldCursorPos].material != MATERIAL_NOTHING)
+		// 	{
+		// 		printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
+		// 		menuY -= spacing;
+		// 	}
+		// 	else
+		// 	{
+		// 		printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
+		// 		menuY -= spacing;
+		// 	}
+		// }
+
+
+
+		// describe the material.
+		printText2D(  materialDescriptions(world[worldCursorPos].material ), menuX, menuY, textSize);
+		menuY -= spacing;
+
+		// describe the terrain
+		printText2D(  terrainDescriptions (world[worldCursorPos].terrain ), menuX, menuY, textSize);
+		menuY -= spacing;
+	}
+
+	// if the player has a nose, print what it smells like here.
+	if (getRandomCellOfType( playerCreature, ORGAN_SENSOR_PHEROMONE ) >= 0)
+	{
+		if (world[worldCursorPos].pheromoneChannel > 0 &&  world[worldCursorPos].pheromoneChannel < numberOfSpeakerChannels)
 		{
-			if (isAnimalInSquare(cursorAnimal, worldCursorPos) >= 0)
-			{
-
-
-				printText2D(   std::string("Animal ") + std::to_string(cursorAnimal ) , menuX, menuY, textSize);
-				menuY -= spacing;
-
-			}
-			else {
-				cursorAnimal = -1;
-			}
+			printText2D(   pheromoneChannelDescriptions[  world[worldCursorPos].pheromoneChannel ] , menuX, menuY, textSize);
+			menuY -= spacing;
+		}
+		else
+		{
+			printText2D(   std::string("You can't smell anything in particular.") , menuX, menuY, textSize);
+			menuY -= spacing;
 		}
 
-		if (cursorAnimal < 0)
-		{
-
-
-			if (world[worldCursorPos].material != MATERIAL_NOTHING)
-			{
-				printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
-				menuY -= spacing;
-			}
-			else
-			{
-				printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
-				menuY -= spacing;
-			}
-		}
 	}
 
 
+// if (world[worldCursorPos])
+
+
+	displayComputerText();
 
 
 }
 
 
 
-
-
-
-void setupExampleAnimal2(int i)
-{
-	// set the example back to the default state or it wont work properly.
-	resetAnimal(i);
-
-	animalAppendCell( i, ORGAN_SENSOR_EYE );
-	animalAppendCell( i, ORGAN_SENSOR_EYE );
-	animalAppendCell( i, ORGAN_SENSOR_EAR );
-	animalAppendCell( i, ORGAN_SENSOR_PHEROMONE );
-	animalAppendCell( i, ORGAN_SENSOR_TRACKER );
-	animalAppendCell( i, ORGAN_SENSOR_TOUCH );
-	animalAppendCell( i, ORGAN_SENSOR_BODYANGLE );
-	animalAppendCell( i, ORGAN_MEMORY_RX );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_MEMORY_TX );
-	animalAppendCell( i, ORGAN_MUSCLE );
-	animalAppendCell( i, ORGAN_MUSCLE_TURN );
-	animalAppendCell( i, ORGAN_LUNG );
-	animalAppendCell( i, ORGAN_LIVER );
-	animalAppendCell( i, ORGAN_GONAD );
-	animalAppendCell( i, ORGAN_GONAD );
-
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-}
 
 
 
@@ -2681,6 +3157,30 @@ void setupExampleHuman(int i)
 
 
 
+
+void computerCallback( int gunIndex, int shooterIndex)
+{
+
+
+	printf("computerCallback\n");
+	if (gunIndex == 3)
+	{
+
+		printf("computer1Callback\n");
+		computer1display = !computer1display;
+
+
+	}
+
+
+
+
+
+}
+
+
+
+
 void exampleGunCallback( int gunIndex, int shooterIndex)
 {
 
@@ -2771,10 +3271,10 @@ void setupExampleComputer(int i)
 {
 	resetAnimal(i);
 	animals[i].isMachine = true;
-	animals[i].machineCallback = exampleGunCallback;
+	animals[i].machineCallback = computerCallback;
 
 
-
+	animals[i].fAngle = 0.0f;
 
 	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 2) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
@@ -3119,6 +3619,7 @@ void setupRandomWorld()
 		                    animals[i],
 		                    targetWorldPositionI, false);
 
+		animals[3].fAngle = 0.0f;
 
 
 
@@ -3165,7 +3666,7 @@ void tournamentController()
 				{
 					if (speciesPopulationCounts[j] >= 1)
 					{
-						for (unsigned int k = extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies-2); k < numberOfAnimalsPerSpecies; ++k)
+						for (unsigned int k = extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 2); k < numberOfAnimalsPerSpecies; ++k)
 						{
 							unsigned int animalToCopy = (j * numberOfAnimalsPerSpecies) + k;
 
@@ -3186,7 +3687,7 @@ void tournamentController()
 
 				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
 				{
-					int ispeciesindex= speciesIndex;
+					int ispeciesindex = speciesIndex;
 					// printf("repopulated endangered species %i from species %i animal %u\n", ispeciesindex, foundSpecies, foundAnimal );
 					// int animalIndex = spawnAnimal(i, animals[foundAnimal], randompos, false);
 
@@ -3241,10 +3742,25 @@ void tournamentController()
 			{
 				unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 
+
+				// if (championScore > 20)
+				// {
+				// 	// setupExampleAnimal2(j);
+				// 	spawnAnimal( 1,
+				// 	             champion,
+				// 	             targetWorldPositionI, true);
+
+				// }
+				// else {
 				setupExampleAnimal2(j);
 				spawnAnimal( 1,
 				             animals[j],
-				             targetWorldPositionI, true);
+				             targetWorldPositionI, false);
+
+				// }
+
+
+
 
 			}
 		}

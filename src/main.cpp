@@ -108,6 +108,16 @@ void threadInterface()
 				spawnTournamentAnimals();
 				break;
 
+
+
+
+			case SDLK_SPACE:
+				resetMouseCursor();
+				break;
+
+
+
+
 			case SDLK_d:
 			{
 

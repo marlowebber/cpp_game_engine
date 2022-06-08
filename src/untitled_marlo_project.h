@@ -40,5 +40,6 @@ void togglePlayerGrabbers();
 
 
 void activateGrabbedMachine();
+void resetMouseCursor();
 
  #endif //MARLO_H

@@ -16,5 +16,6 @@ void drawIsometricTile( Vec_f2 position , Color finalColor);
 
 void drawTile( Vec_f2 position , Color finalColor);
 
+void drawPointerTriangle( Vec_f2 position , Color finalColor, float angle);
 void threadGraphics();
 #endif 

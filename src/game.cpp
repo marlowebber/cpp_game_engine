@@ -92,6 +92,40 @@ void drawTile( Vec_f2 position , Color finalColor)
 
 
 
+void drawPointerTriangle( Vec_f2 position , Color finalColor, float angle)
+{
+
+
+
+
+	// one triangle
+
+
+	Vec_f2 pointA = Vec_f2 (  position.x -    (tileWidth/2)          , position.y -     tileWidth            );
+	Vec_f2 pointB = Vec_f2 (  position.x +    (tileWidth/2)          , position.y -     tileWidth            );
+	Vec_f2 pointC = Vec_f2 (  position.x                              , position.y +     tileWidth            ) ;
+
+
+// Vec_f2
+ pointA = rotatePointPrecomputed( position, sin(angle), cos(angle), pointA);
+ pointB = rotatePointPrecomputed( position, sin(angle), cos(angle), pointB);
+ pointC = rotatePointPrecomputed( position, sin(angle), cos(angle), pointC);
+
+
+	vertToBuffer ( finalColor, pointA ); // A
+	vertToBuffer ( finalColor, pointB ); // B
+	vertToBuffer ( finalColor, pointC ); // C
+
+
+	// vertToBuffer ( finalColor, Vec_f2 (  position.x -    (tileWidth/10)          , position.y -     tileWidth            ) ); // A
+	// vertToBuffer ( finalColor, Vec_f2 (  position.x +    (tileWidth/10)          , position.y +     tileWidth            ) ); // B
+	// vertToBuffer ( finalColor, Vec_f2 (  position.x +    (tileWidth/10)          , position.y -     tileWidth            ) ); // D
+
+
+}
+
+
+
 
 
 
