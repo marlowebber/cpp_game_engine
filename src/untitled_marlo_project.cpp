@@ -77,6 +77,8 @@
 #define MATERIAL_METAL            66
 #define MATERIAL_VOIDMETAL        67
 
+#define MATERIAL_SMOKE           68
+
 #define TERRAIN_STONE             50
 #define TERRAIN_WATER             52
 #define TERRAIN_LAVA              54
@@ -348,6 +350,10 @@ void resetCell(unsigned int animalIndex, unsigned int cellLocalPositionI)
 	animals[animalIndex].body[cellLocalPositionI].localPosX = 0;
 	animals[animalIndex].body[cellLocalPositionI].localPosY = 0;
 	animals[animalIndex].body[cellLocalPositionI].dead = false;
+
+
+	animals[animalIndex].body[cellLocalPositionI].grabbedCreature = -1;
+
 	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 	{
 		resetConnection(animalIndex, cellLocalPositionI, i);
@@ -1214,6 +1220,8 @@ Color materialColors(unsigned int material)
 		return color_darkgrey;
 	case MATERIAL_VOIDMETAL:
 		return color_charcoal;
+	case MATERIAL_SMOKE:
+		return color_lightgrey;
 	}
 	return color_yellow;
 }
@@ -1546,7 +1554,13 @@ void organs_all()
 
 						// also, if grabbed by the player, adjust the angle of the grabbed object so it points at the mouse cursor. for aiming weapons.
 
-						float angleToCursor = atan2( cellWorldPositionY -  fmousePositionY , cellWorldPositionX - fmousePositionX );
+						float fposx = cellWorldPositionX;
+						float fposy = cellWorldPositionY;
+
+
+						float angleToCursor = atan2( fposx -  fmousePositionY , fposy - fmousePositionX );
+
+
 						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].fAngle = angleToCursor;
 					}
 
@@ -2648,11 +2662,11 @@ void exampleGunCallback( int gunIndex)
 {
 
 	if (gunIndex >= 0)
-	{	
+	{
 
 
 
-	printf(" you hear a gunshot! \n");
+		printf(" you hear a gunshot! \n");
 
 
 		// trace a line from the gun and destroy any tissue found on the way.
@@ -2660,22 +2674,22 @@ void exampleGunCallback( int gunIndex)
 
 		float bulletPosX = animals[gunIndex].fPosX;
 		float bulletPosY = animals[gunIndex].fPosY;
-		float angle =  animals[gunIndex].fAngle;
+		float angle      =  animals[gunIndex].fAngle;
 
 		for (int i = 0; i < range; ++i)
 		{
 
 			bulletPosX += 1.0f * (cos(angle));
-			bulletPosY += 1.0f * (cos(angle));
+			bulletPosY += 1.0f * (sin(angle));
 			unsigned int ubulletPosX = bulletPosX;
 			unsigned int ubulletPosY = bulletPosY;
 
 			unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
 
-			if (world[shootWorldPosition].identity >= 0)
+			if (world[shootWorldPosition].identity >= 0 && world[shootWorldPosition].identity != gunIndex && world[shootWorldPosition].identity < numberOfAnimals)
 			{
 				unsigned int shotOffNub = isAnimalInSquare(world[shootWorldPosition].identity, shootWorldPosition);
-				if (shotOffNub >= 0)
+				if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
 				{
 
 					// eliminateCell(world[shootWorldPosition].identity, )
@@ -2684,10 +2698,17 @@ void exampleGunCallback( int gunIndex)
 
 			}
 
-			if (world[shootWorldPosition].material != MATERIAL_NOTHING && world[shootWorldPosition].material != MATERIAL_VOIDMETAL)
+			if (world[shootWorldPosition].material != MATERIAL_NOTHING &&
+			        world[shootWorldPosition].material != MATERIAL_SMOKE
+			   )
 			{
 				world[shootWorldPosition].material == MATERIAL_NOTHING;
 				break;
+			}
+
+			if (world[shootWorldPosition].material == MATERIAL_NOTHING )
+			{
+				world[shootWorldPosition].material = MATERIAL_SMOKE;
 			}
 
 		}
