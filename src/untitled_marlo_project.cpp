@@ -263,7 +263,7 @@ struct Animal
 	unsigned int cellsUsed;
 
 	bool isMachine;
-	void * machineCallback;
+	void (* machineCallback)(int);
 };
 
 bool speciesVacancies [numberOfSpecies];
@@ -1353,6 +1353,46 @@ float fast_sigmoid(float in)
 	return  out;
 }
 
+void activateGrabbedMachine()
+{
+
+	printf("activate grabbed machine\n");
+
+	if (playerCreature >= 0 && playerInControl)
+	{
+
+		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
+		{
+			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
+			{
+				if (animals[playerCreature].body[i].grabbedCreature >= 0 && animals[playerCreature].body[i].grabbedCreature < numberOfAnimals)
+				{
+
+					if (animals [   animals[playerCreature].body[i].grabbedCreature  ].isMachine)
+					{
+
+						if (animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback != nullptr)
+						{
+
+
+							// void (*callback)(int) =	 animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback;
+
+							(*animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback)(animals[playerCreature].body[i].grabbedCreature);
+
+						}
+
+					}
+
+				}
+			}
+		}
+
+
+	}
+
+}
+
+
 // the animal is a grid of living cells that do different things. this function describes what they do each turn.
 void organs_all()
 {
@@ -1506,7 +1546,7 @@ void organs_all()
 
 						// also, if grabbed by the player, adjust the angle of the grabbed object so it points at the mouse cursor. for aiming weapons.
 
-						float angleToCursor = atan2( cellWorldPositionY-  fmousePositionY , cellWorldPositionX - fmousePositionX );
+						float angleToCursor = atan2( cellWorldPositionY -  fmousePositionY , cellWorldPositionX - fmousePositionX );
 						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].fAngle = angleToCursor;
 					}
 
@@ -2604,46 +2644,54 @@ void setupExampleHuman(int i)
 
 
 
-void exampleGunCallback(unsigned int gunIndex)
+void exampleGunCallback( int gunIndex)
 {
 
-	// trace a line from the gun and destroy any tissue found on the way.
-	unsigned int range = 1000;
+	if (gunIndex >= 0)
+	{	
 
-	float bulletPosX = animals[gunIndex].fPosX;
-	float bulletPosY = animals[gunIndex].fPosY;
-	float angle =  animals[gunIndex].fAngle;
 
-	for (int i = 0; i < range; ++i)
-	{
 
-		bulletPosX += 1.0f * (cos(angle));
-		bulletPosY += 1.0f * (cos(angle));
-		unsigned int ubulletPosX = bulletPosX;
-		unsigned int ubulletPosY = bulletPosY;
+	printf(" you hear a gunshot! \n");
 
-		unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
 
-		if (world[shootWorldPosition].identity >= 0)
+		// trace a line from the gun and destroy any tissue found on the way.
+		unsigned int range = 1000;
+
+		float bulletPosX = animals[gunIndex].fPosX;
+		float bulletPosY = animals[gunIndex].fPosY;
+		float angle =  animals[gunIndex].fAngle;
+
+		for (int i = 0; i < range; ++i)
 		{
-			unsigned int shotOffNub = isAnimalInSquare(world[shootWorldPosition].identity, shootWorldPosition);
-			if (shotOffNub >= 0)
+
+			bulletPosX += 1.0f * (cos(angle));
+			bulletPosY += 1.0f * (cos(angle));
+			unsigned int ubulletPosX = bulletPosX;
+			unsigned int ubulletPosY = bulletPosY;
+
+			unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
+
+			if (world[shootWorldPosition].identity >= 0)
 			{
-			
-				// eliminateCell(world[shootWorldPosition].identity, )
-				animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
+				unsigned int shotOffNub = isAnimalInSquare(world[shootWorldPosition].identity, shootWorldPosition);
+				if (shotOffNub >= 0)
+				{
+
+					// eliminateCell(world[shootWorldPosition].identity, )
+					animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
+				}
+
+			}
+
+			if (world[shootWorldPosition].material != MATERIAL_NOTHING && world[shootWorldPosition].material != MATERIAL_VOIDMETAL)
+			{
+				world[shootWorldPosition].material == MATERIAL_NOTHING;
+				break;
 			}
 
 		}
-
-		if (world[shootWorldPosition].material != MATERIAL_NOTHING && world[shootWorldPosition].material != MATERIAL_VOIDMETAL)
-		{
-			world[shootWorldPosition].material == MATERIAL_NOTHING;
-			break;
-		}
-
 	}
-
 }
 
 
@@ -2653,6 +2701,8 @@ void setupExampleGun(int i)
 
 	resetAnimal(i);
 	animals[i].isMachine = true;
+	animals[i].machineCallback = exampleGunCallback;
+
 
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
@@ -2660,6 +2710,8 @@ void setupExampleGun(int i)
 	appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
+
+
 
 }
 

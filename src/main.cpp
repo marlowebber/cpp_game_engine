@@ -259,6 +259,11 @@ void threadInterface()
 					// {
 					// 	return;
 					// }
+
+
+					activateGrabbedMachine();
+
+
 				}
 
 

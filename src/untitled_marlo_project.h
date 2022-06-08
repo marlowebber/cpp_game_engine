@@ -38,4 +38,7 @@ void adjustPlayerPos(Vec_f2 pos);
 
 void togglePlayerGrabbers();
 
+
+void activateGrabbedMachine();
+
  #endif //MARLO_H
