@@ -1466,7 +1466,7 @@ void organs_all()
 											animals[animalIndex].body[cellIndex].grabbedCreature = world[neighbour].identity;
 											// if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
 											// {
-											// printf("grabbed creature %i\n", animals[animalIndex].body[cellIndex].grabbedCreature);
+											printf("grabbed creature %i\n", animals[animalIndex].body[cellIndex].grabbedCreature);
 											break;
 											// }
 										}
@@ -1489,8 +1489,10 @@ void organs_all()
 
 
 
+
+
 					// if there is a grabbed creature, adjust its position to the grabber.
-					if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
+					if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0 )
 					{
 						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].uPosX = cellWorldPositionX;
 						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].uPosY = cellWorldPositionY;
@@ -1499,6 +1501,13 @@ void organs_all()
 						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].fPosY = cellWorldPositionY;
 
 						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].position = cellWorldPositionI;
+
+
+
+						// also, if grabbed by the player, adjust the angle of the grabbed object so it points at the mouse cursor. for aiming weapons.
+
+						float angleToCursor = atan2( cellWorldPositionY-  fmousePositionY , cellWorldPositionX - fmousePositionX );
+						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].fAngle = angleToCursor;
 					}
 
 
@@ -2595,6 +2604,49 @@ void setupExampleHuman(int i)
 
 
 
+void exampleGunCallback(unsigned int gunIndex)
+{
+
+	// trace a line from the gun and destroy any tissue found on the way.
+	unsigned int range = 1000;
+
+	float bulletPosX = animals[gunIndex].fPosX;
+	float bulletPosY = animals[gunIndex].fPosY;
+	float angle =  animals[gunIndex].fAngle;
+
+	for (int i = 0; i < range; ++i)
+	{
+
+		bulletPosX += 1.0f * (cos(angle));
+		bulletPosY += 1.0f * (cos(angle));
+		unsigned int ubulletPosX = bulletPosX;
+		unsigned int ubulletPosY = bulletPosY;
+
+		unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
+
+		if (world[shootWorldPosition].identity >= 0)
+		{
+			unsigned int shotOffNub = isAnimalInSquare(world[shootWorldPosition].identity, shootWorldPosition);
+			if (shotOffNub >= 0)
+			{
+			
+				// eliminateCell(world[shootWorldPosition].identity, )
+				animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
+			}
+
+		}
+
+		if (world[shootWorldPosition].material != MATERIAL_NOTHING && world[shootWorldPosition].material != MATERIAL_VOIDMETAL)
+		{
+			world[shootWorldPosition].material == MATERIAL_NOTHING;
+			break;
+		}
+
+	}
+
+}
+
+
 
 void setupExampleGun(int i)
 {
@@ -2714,7 +2766,7 @@ void togglePlayerGrabbers()
 				{
 					animals[playerCreature].body[i].signalIntensity = 1;
 				}
-				else{
+				else {
 					animals[playerCreature].body[i].signalIntensity = -1;
 				}
 				// }
