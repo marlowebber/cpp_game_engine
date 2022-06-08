@@ -91,16 +91,9 @@
 
 #define WORLD_EXAMPLECREATURE 2
 
-#define VISUALIZER_TRUECOLOR           1001
-#define VISUALIZER_TRACKS              1003
-#define VISUALIZER_IDENTITY            1004
-#define VISUALIZER_PHEROMONE           1005
-#define VISUALIZER_NEURALACTIVITY      1006
-
+int visualizer = VISUALIZER_TRUECOLOR;
 
 #define NUMBER_OF_CONNECTIONS 8
-
-int visualizer = VISUALIZER_TRUECOLOR;
 
 const bool brownianMotion        = false;
 const bool immortality           = false;
@@ -296,9 +289,9 @@ std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 	std::string( "It smells like the rain after a hot day." ),
 	std::string( "It smells like the salt air at the beach." ),
 	std::string( "It smells like the perfume of a frangipani's flower." ),
-	std::string( "It smells like pool chlorine. Yuck!" ),
+	std::string( "It smells like pool chlorine." ),
 	std::string( "It smells like electricity." ),
-	std::string( "It smells like dead rotting flesh." ),
+	std::string( "It smells like dead rotting flesh. Yuck!" ),
 	std::string( "You can smell raspberries. Incredible!" ),
 	std::string( "It smells like vomit." ),
 
@@ -479,9 +472,9 @@ std::string organDescriptions(unsigned int organ)
 	{
 		return std::string("A part of the brain responsible for storing knowledge in memory.");
 	}
-	case ORGAN_MEMORY_TX:
+	case ORGAN_MEMORY_RX:
 	{
-		return std::string("A part of the brain responsible for retrieving knowledge from memory.");
+		return std::string("A part of the brain that retrieves knowledge from memory.");
 	}
 	case ORGAN_GILL:
 	{
@@ -501,11 +494,11 @@ std::string organDescriptions(unsigned int organ)
 	}
 	case ORGAN_SENSOR_LAST_STRANGER:
 	{
-		return std::string("This part contains a memory of meeting an unknown animal.");
+		return std::string("A part of the brain which contains a memory of meeting an unknown animal.");
 	}
 	case ORGAN_SENSOR_LAST_KIN:
 	{
-		return std::string("This part contains a memory of the animal's peer.");
+		return std::string("A part of the brain which contains a memory of the animal's peer.");
 	}
 	case ORGAN_SENSOR_PARENT:
 	{
@@ -535,6 +528,7 @@ std::string organDescriptions(unsigned int organ)
 
 
 
+	return std::string("Throbbing grey meat of unknown function.");
 }
 
 
@@ -1696,13 +1690,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		{
 			displayColor = animals[viewedAnimal].body[occupyingCell].color;
 		}
-		if (isCellConnectable(animals[viewedAnimal].body[occupyingCell].organ ) )
-		{
-			float amount = animals[viewedAnimal].body[occupyingCell].signalIntensity * 2.0f;
-			displayColor.r *= amount ;
-			displayColor.g *= amount;
-			displayColor.b *= amount;
-		}
+
 	}
 	else
 	{
@@ -2536,8 +2524,8 @@ void move_all()
 			float ufposx = animals[animalIndex].uPosX;
 			float ufposy = animals[animalIndex].uPosY;
 			// get the diff between the last actual place and the proposed new place
-			float fdiffx = ufposx - animals[animalIndex].fPosX;
-			float fdiffy = ufposy - animals[animalIndex].fPosY;
+			float fdiffx =  animals[animalIndex].fPosX - ufposx;
+			float fdiffy =  animals[animalIndex].fPosY - ufposy;
 			// use atan2 to turn the diff into an angle.
 			float dAngle = atan2(fdiffy, fdiffx);
 
@@ -2860,6 +2848,8 @@ void camera()
 				{
 
 					displayColor = whatColorIsThisSquare(worldI);
+
+					drawTile( Vec_f2( fx, fy ), displayColor);
 					break;
 				}
 
@@ -2867,10 +2857,12 @@ void camera()
 				{
 
 					// displayColor = whatColorIsThisSquare(worldI);
-					if (world[worldI].identity < numberOfAnimals)
+					if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
 					{
 						displayColor = animals[ world[worldI].identity ].identityColor;
 					}
+
+					drawTile( Vec_f2( fx, fy ), displayColor);
 					break;
 				}
 
@@ -2878,10 +2870,38 @@ void camera()
 				{
 
 					// displayColor = whatColorIsThisSquare(worldI);
-					if (world[worldI].identity < numberOfAnimals)
+					if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
 					{
 						displayColor = animals[ world[worldI].identity ].identityColor;
 						drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
+					}
+					break;
+				}
+
+				case VISUALIZER_NEURALACTIVITY:
+				{
+
+					// displayColor = whatColorIsThisSquare(worldI);
+					if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
+					{
+						displayColor = color_grey;//animals[ world[worldI].identity ].identityColor;
+						// drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
+
+						// if (isCellConnectable(animals[viewedAnimal].body[occupyingCell].organ ) )
+						// {
+
+						int occupyingCell = isAnimalInSquare(world[worldI].identity, worldI);
+						if ( occupyingCell >= 0)
+						{
+
+
+							float amount = animals[world[worldI].identity].body[occupyingCell].signalIntensity ;//* 2.0f;
+							displayColor.r *= amount ;
+							displayColor.g *= amount;
+							displayColor.b *= amount;
+						}
+
+						drawTile( Vec_f2( fx, fy ), displayColor);
 					}
 					break;
 				}
@@ -2890,9 +2910,13 @@ void camera()
 
 
 
+
+
+
+
+
 				}
 
-				drawTile( Vec_f2( fx, fy ), displayColor);
 			}
 		}
 	}
@@ -2910,17 +2934,33 @@ void displayComputerText()
 {
 
 	int menuX = 50;
-	int menuY = 50;
+	int menuY = 500;
 	int textSize = 10;
 	int spacing = 20;
+
+
 
 
 	if (computer1display)
 	{
 
 
-		printText2D(  "computer1display\n" , menuX, menuY, textSize);
+		// printText2D(  "computer1display\n" , menuX, menuY, textSize);
+		// menuY -= spacing;
+
+		for (int i = 0; i < numberOfSpecies; ++i)
+		{
+
+			printText2D(   std::string("Species ") + std::to_string(i) +   std::string(" pop. " + std::to_string(speciesPopulationCounts[i])) + " hits " + std::to_string(speciesAttacksPerTurn[i]) , menuX, menuY, textSize);
+			menuY -= spacing;
+		}
 		menuY -= spacing;
+
+
+		printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
+		menuY -= spacing;
+
+
 
 	}
 
@@ -2932,18 +2972,14 @@ void displayComputerText()
 
 void drawGameInterfaceText()
 {
+
 	int menuX = 50;
-	int menuY = 500;
+	int menuY = 50;
 	int textSize = 10;
 	int spacing = 20;
 
-	for (int i = 0; i < numberOfSpecies; ++i)
-	{
 
-		printText2D(   std::string("Species ") + std::to_string(i) +   std::string(" pop. " + std::to_string(speciesPopulationCounts[i])) + " hits " + std::to_string(speciesAttacksPerTurn[i]) , menuX, menuY, textSize);
-		menuY -= spacing;
-	}
-	menuY -= spacing;
+
 
 	// printText2D(   std::string("Player ") + std::to_string(playerCreature) , menuX, menuY, textSize);
 	// menuY -= spacing;
@@ -2968,9 +3004,6 @@ void drawGameInterfaceText()
 	// }
 	// menuY -= spacing;
 
-	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
-	menuY -= spacing;
-
 
 	// printText2D(   std::string("Zoom ") + std::to_string(viewZoom ) , menuX, menuY, textSize);
 	// menuY -= spacing;
@@ -2985,47 +3018,60 @@ void drawGameInterfaceText()
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 	if (worldCursorPos < worldSquareSize)
 	{
-		// int cursorAnimal = world[worldCursorPos].identity;
-		// if (cursorAnimal >= 0)
-		// {
-		// 	if (isAnimalInSquare(cursorAnimal, worldCursorPos) >= 0)
-		// 	{
+		int cursorAnimal = world[worldCursorPos].identity;
+		if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
+		{
+			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
+			if ( occupyingCell >= 0)
+			{
 
 
-		// 		printText2D(   std::string("Animal ") + std::to_string(cursorAnimal ) , menuX, menuY, textSize);
-		// 		menuY -= spacing;
-
-		// 	}
-		// 	else {
-		// 		cursorAnimal = -1;
-		// 	}
-		// }
-
-		// if (cursorAnimal < 0)
-		// {
+				// 		printText2D(   std::string("Animal ") + std::to_string(cursorAnimal ) , menuX, menuY, textSize);
+				// 		menuY -= spacing;
 
 
-		// 	if (world[worldCursorPos].material != MATERIAL_NOTHING)
-		// 	{
-		// 		printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
-		// 		menuY -= spacing;
-		// 	}
-		// 	else
-		// 	{
-		// 		printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
-		// 		menuY -= spacing;
-		// 	}
-		// }
+				// describe the material.
+				printText2D(  organDescriptions(  animals[  cursorAnimal].body[occupyingCell].organ ), menuX, menuY, textSize);
+				menuY += spacing;
+
+			}
+			else {
+				cursorAnimal = -1;
 
 
 
-		// describe the material.
-		printText2D(  materialDescriptions(world[worldCursorPos].material ), menuX, menuY, textSize);
-		menuY -= spacing;
 
-		// describe the terrain
-		printText2D(  terrainDescriptions (world[worldCursorPos].terrain ), menuX, menuY, textSize);
-		menuY -= spacing;
+
+			}
+		}
+
+		if (cursorAnimal < 0)
+		{
+
+
+			if (world[worldCursorPos].material != MATERIAL_NOTHING)
+			{
+				// printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
+				// menuY -= spacing;
+				// describe the material.
+				printText2D(  materialDescriptions(world[worldCursorPos].material ), menuX, menuY, textSize);
+				menuY += spacing;
+
+			}
+			else
+			{
+				// printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
+				// menuY -= spacing;
+				// describe the terrain
+				printText2D(  terrainDescriptions (world[worldCursorPos].terrain ), menuX, menuY, textSize);
+				menuY += spacing;
+			}
+		}
+
+
+
+
+
 	}
 
 	// if the player has a nose, print what it smells like here.
@@ -3034,12 +3080,12 @@ void drawGameInterfaceText()
 		if (world[worldCursorPos].pheromoneChannel > 0 &&  world[worldCursorPos].pheromoneChannel < numberOfSpeakerChannels)
 		{
 			printText2D(   pheromoneChannelDescriptions[  world[worldCursorPos].pheromoneChannel ] , menuX, menuY, textSize);
-			menuY -= spacing;
+			menuY += spacing;
 		}
 		else
 		{
 			printText2D(   std::string("You can't smell anything in particular.") , menuX, menuY, textSize);
-			menuY -= spacing;
+			menuY += spacing;
 		}
 
 	}
@@ -3242,6 +3288,54 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 
 		}
 	}
+}
+
+
+void exampleGlassesCallback( int gunIndex, int shooterIndex)
+{
+	printf("example glasses callback\n");
+
+}
+
+
+void setupExampleGlasses(int i)
+{
+
+	resetAnimal(i);
+	animals[i].isMachine = true;
+	animals[i].machineCallback = exampleGlassesCallback;
+
+
+	// appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
+	// appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+	// appendCell( i, MATERIAL_METAL, Vec_i2(1, 1) );
+	// appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
+	// appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+	// appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
+
+
+
+
+	appendCell( i, MATERIAL_GLASS, Vec_i2(1, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(2, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(3, 0) );
+
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+
+
+
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-3, 0) );
+
+
+
 }
 
 
@@ -3606,7 +3700,7 @@ void setupRandomWorld()
 
 
 
-		targetWorldPositionI += (1000);
+		targetWorldPositionI += (400);
 		// targetWorldPositionX = 200 ;
 		// targetWorldPositionY = 300 ;
 		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
@@ -3620,6 +3714,28 @@ void setupRandomWorld()
 		                    targetWorldPositionI, false);
 
 		animals[3].fAngle = 0.0f;
+
+
+
+
+
+
+
+		targetWorldPositionI += (400);
+		// targetWorldPositionX = 200 ;
+		// targetWorldPositionY = 300 ;
+		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+		setupBuilding_playerBase(targetWorldPositionI);
+
+		// int i = 1;
+		setupExampleGlasses(i);
+		spawnAnimalIntoSlot(4,
+		                    animals[i],
+		                    targetWorldPositionI, false);
+
+		// animals[3].fAngle = 0.0f;
+
 
 
 

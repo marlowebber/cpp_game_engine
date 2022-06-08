@@ -97,6 +97,26 @@ void threadInterface()
 				lockfps = !lockfps;
 				break;
 
+			case SDLK_1:
+				visualizer = VISUALIZER_TRUECOLOR;
+				break;
+
+			case SDLK_2:
+				visualizer = VISUALIZER_TRACKS;
+				break;
+
+			case SDLK_3:
+				visualizer = VISUALIZER_IDENTITY;
+				break;
+
+			case SDLK_4:
+				// visualizer = VISUALIZER_PHEROMONE;
+				visualizer = VISUALIZER_NEURALACTIVITY;
+				break;
+
+			case SDLK_5:
+				// visualizer = VISUALIZER_NEURALACTIVITY;
+				break;
 
 
 			case SDLK_g:
@@ -319,8 +339,8 @@ void threadInterface()
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
 
-			float deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) * (viewZoom/380.0f);
-			float deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) * (viewZoom/380.0f) ;
+			float deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) * (viewZoom / 380.0f);
+			float deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) * (viewZoom / 380.0f) ;
 
 
 			fmousePositionX += deltaMouseX  ;

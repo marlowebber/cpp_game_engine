@@ -42,4 +42,13 @@ void togglePlayerGrabbers();
 void activateGrabbedMachine();
 void resetMouseCursor();
 
+
+#define VISUALIZER_TRUECOLOR           1001
+#define VISUALIZER_TRACKS              1003
+#define VISUALIZER_IDENTITY            1004
+#define VISUALIZER_NEURALACTIVITY      1006
+
+
+extern int visualizer ;//= VISUALIZER_TRUECOLOR;
+
  #endif //MARLO_H
