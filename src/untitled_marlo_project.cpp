@@ -79,6 +79,8 @@
 
 #define MATERIAL_SMOKE           68
 
+#define MATERIAL_GLASS            69
+
 #define TERRAIN_STONE             50
 #define TERRAIN_WATER             52
 #define TERRAIN_LAVA              54
@@ -153,7 +155,8 @@ unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
 float fps = 1.0f;
 
-bool playerInControl = false;
+bool playerGrabState = false;
+bool playerInControl = true;
 int playerCreature = -1;
 
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
@@ -265,7 +268,7 @@ struct Animal
 	unsigned int cellsUsed;
 
 	bool isMachine;
-	void (* machineCallback)(int);
+	void (* machineCallback)(int, int);
 };
 
 bool speciesVacancies [numberOfSpecies];
@@ -1222,6 +1225,8 @@ Color materialColors(unsigned int material)
 		return color_charcoal;
 	case MATERIAL_SMOKE:
 		return color_lightgrey;
+	case MATERIAL_GLASS:
+		return color_lightblue;
 	}
 	return color_yellow;
 }
@@ -1364,7 +1369,7 @@ float fast_sigmoid(float in)
 void activateGrabbedMachine()
 {
 
-	printf("activate grabbed machine\n");
+	// printf("activate grabbed machine\n");
 
 	if (playerCreature >= 0 && playerInControl)
 	{
@@ -1385,7 +1390,7 @@ void activateGrabbedMachine()
 
 							// void (*callback)(int) =	 animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback;
 
-							(*animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback)(animals[playerCreature].body[i].grabbedCreature);
+							(*animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback)( animals[playerCreature].body[i].grabbedCreature , playerCreature) ;
 
 						}
 
@@ -1492,6 +1497,7 @@ void organs_all()
 						// printf("cell local pos %u %u \n", cellWorldPositionX, cellWorldPositionY);
 
 						int grabArea = 5;
+						bool grabbedSomething = false;
 						for (int y = -grabArea; y < grabArea; ++y)
 						{
 							for (int x = -grabArea; x < grabArea; ++x)
@@ -1514,7 +1520,8 @@ void organs_all()
 											animals[animalIndex].body[cellIndex].grabbedCreature = world[neighbour].identity;
 											// if (animals[animalIndex].body[cellIndex].grabbedCreature >= 0)
 											// {
-											printf("grabbed creature %i\n", animals[animalIndex].body[cellIndex].grabbedCreature);
+											// printf("grabbed creature %i\n", animals[animalIndex].body[cellIndex].grabbedCreature);
+											grabbedSomething = true;
 											break;
 											// }
 										}
@@ -1522,19 +1529,35 @@ void organs_all()
 									}
 								}
 							}
+							if (grabbedSomething)
+							{
+								break;
+							}
 						}
 
 
 
 					}
-					else if (animals[animalIndex].body[cellIndex].signalIntensity  <= -1.0f)
-					{
-						// else release.
-						animals[animalIndex].body[cellIndex].grabbedCreature = -1;
-						// animals[animalIndex].body[cellIndex].grabbedMaterial = MATERIAL_NOTHING;
-						// printf("released a grabbed creature\n");
-					}
 
+					if (animalIndex != playerCreature)
+					{
+						if (animals[animalIndex].body[cellIndex].signalIntensity  <= -1.0f)
+						{
+							// else release.
+							animals[animalIndex].body[cellIndex].grabbedCreature = -1;
+							// animals[animalIndex].body[cellIndex].grabbedMaterial = MATERIAL_NOTHING;
+							// printf("released a grabbed creature\n");
+						}
+
+					}
+					else
+					{
+						if (!playerGrabState)
+						{
+
+							animals[animalIndex].body[cellIndex].grabbedCreature = -1;
+						}
+					}
 
 
 
@@ -1558,7 +1581,7 @@ void organs_all()
 						float fposy = cellWorldPositionY;
 
 
-						float angleToCursor = atan2( fposx -  fmousePositionY , fposy - fmousePositionX );
+						float angleToCursor = atan2(   fmousePositionY - (  cameraPositionY - fposy)  ,  fmousePositionX - (cameraPositionX - fposx));
 
 
 						animals [ animals[animalIndex].body[cellIndex].grabbedCreature  ].fAngle = angleToCursor;
@@ -2658,7 +2681,7 @@ void setupExampleHuman(int i)
 
 
 
-void exampleGunCallback( int gunIndex)
+void exampleGunCallback( int gunIndex, int shooterIndex)
 {
 
 	if (gunIndex >= 0)
@@ -2686,7 +2709,10 @@ void exampleGunCallback( int gunIndex)
 
 			unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
 
-			if (world[shootWorldPosition].identity >= 0 && world[shootWorldPosition].identity != gunIndex && world[shootWorldPosition].identity < numberOfAnimals)
+			if (world[shootWorldPosition].identity >= 0 && world[shootWorldPosition].identity != gunIndex && world[shootWorldPosition].identity < numberOfAnimals
+
+			        && world[shootWorldPosition].identity != shooterIndex
+			   )
 			{
 				unsigned int shotOffNub = isAnimalInSquare(world[shootWorldPosition].identity, shootWorldPosition);
 				if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
@@ -2698,17 +2724,20 @@ void exampleGunCallback( int gunIndex)
 
 			}
 
-			if (world[shootWorldPosition].material != MATERIAL_NOTHING &&
-			        world[shootWorldPosition].material != MATERIAL_SMOKE
-			   )
-			{
-				world[shootWorldPosition].material == MATERIAL_NOTHING;
-				break;
-			}
+
 
 			if (world[shootWorldPosition].material == MATERIAL_NOTHING )
 			{
 				world[shootWorldPosition].material = MATERIAL_SMOKE;
+			}
+
+			if (world[shootWorldPosition].material != MATERIAL_NOTHING &&
+			        world[shootWorldPosition].material != MATERIAL_SMOKE &&
+			        world[shootWorldPosition].material != MATERIAL_GRASS
+			   )
+			{
+				world[shootWorldPosition].material == MATERIAL_NOTHING;
+				break;
 			}
 
 		}
@@ -2731,6 +2760,63 @@ void setupExampleGun(int i)
 	appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
+
+
+
+}
+
+
+
+void setupExampleComputer(int i)
+{
+	resetAnimal(i);
+	animals[i].isMachine = true;
+	animals[i].machineCallback = exampleGunCallback;
+
+
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 0, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 1, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 2) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 1) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 0) );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, -1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -1) );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -2) );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, -3) );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -4) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -4) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -4) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -4) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -4) );
 
 
 
@@ -2774,6 +2860,12 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 			world[i].material = MATERIAL_NOTHING;
 		}
 
+
+		if (abs(xdiff) < baseSize * 1.5 && abs(ydiff) < baseSize * 1.5)
+		{
+
+			world[i].material = MATERIAL_NOTHING;
+		}
 
 
 		// make walls around it
@@ -2819,7 +2911,6 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 
 }
 
-bool playerGrabState = false;
 void togglePlayerGrabbers()
 {
 	if (playerCreature >= 0)
@@ -2881,6 +2972,12 @@ void spawnPlayer()
 	{
 		unsigned int targetWorldPositionX = cameraPositionX ;
 		unsigned int targetWorldPositionY = cameraPositionY ;
+
+		fmousePositionX = cameraPositionX;
+		fmousePositionY = cameraPositionY;
+		mousePositionX = cameraPositionX;
+		mousePositionY = cameraPositionY;
+
 		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 		int i = 1;
 		setupExampleHuman(i);
@@ -2903,7 +3000,8 @@ void spawnPlayer()
 
 void spawnTournamentAnimals()
 {
-	for (int i = 0; i < numberOfAnimals; ++i)
+	// animals in the tournament are not in the 0th species, which is for players and machines.
+	for (int i = (1 * numberOfAnimalsPerSpecies); i < numberOfAnimals; ++i)
 	{
 		// printf("setting up animal %i\n", i);
 		unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
@@ -2927,6 +3025,7 @@ void setupRandomWorld()
 		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; ++worldPositionI)
 		{
 			world[worldPositionI].terrain = TERRAIN_STONE;
+			world[worldPositionI].material = MATERIAL_GRASS;
 
 			unsigned int x = worldPositionI % worldSize;
 			unsigned int y = worldPositionI / worldSize;
@@ -3000,15 +3099,39 @@ void setupRandomWorld()
 
 		int i = 1;
 		setupExampleGun(i);
-
-		// playerCreature = 2;
 		spawnAnimalIntoSlot(2,
 		                    animals[i],
 		                    targetWorldPositionI, false);
 
-		// cameraTargetCreature = playerCreature;
 
-		// printf("spawned player creature\n");
+
+
+		targetWorldPositionI += (1000);
+		// targetWorldPositionX = 200 ;
+		// targetWorldPositionY = 300 ;
+		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+		setupBuilding_playerBase(targetWorldPositionI);
+
+		// int i = 1;
+		setupExampleComputer(i);
+		spawnAnimalIntoSlot(3,
+		                    animals[i],
+		                    targetWorldPositionI, false);
+
+
+
+
+		// spawn the player
+		spawnPlayer();
+
+
+
+
+
+
+
+
 	}
 }
 
@@ -3026,27 +3149,30 @@ void tournamentController()
 	if (respawnLowSpecies)
 	{
 		unsigned int totalpop = 0;
-		for (int i = 1; i < numberOfSpecies; ++i)
+		for (unsigned int speciesIndex = 1; speciesIndex < numberOfSpecies; speciesIndex++) // start at 1 to ignore the non-natural species 0.
 		{
-			totalpop += speciesPopulationCounts[i] ;
-			if (speciesPopulationCounts[i] == 0)
+			totalpop += speciesPopulationCounts[speciesIndex] ;
+			if (speciesPopulationCounts[speciesIndex] == 0)
 			{
-				unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-				unsigned int randomSpeciesSlot = (i * numberOfAnimalsPerSpecies) + (extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 1));
+				// printf("a species is empty\n");
+				// unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+				// unsigned int randomSpeciesSlot = (i * numberOfAnimalsPerSpecies) + (extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 1));
 
 				// if there is another species who is successful, duplicate an animal from them.
 				int foundAnimal = -1;
-				for (unsigned int j = 0; j < numberOfSpecies; ++j)
+				int foundSpecies = -1;
+				for (unsigned int j = 1; j < numberOfSpecies; ++j)
 				{
-					if (speciesPopulationCounts[j] > 1)
+					if (speciesPopulationCounts[j] >= 1)
 					{
-						for (unsigned int k = 0; k < numberOfAnimalsPerSpecies; ++k)
+						for (unsigned int k = extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies-2); k < numberOfAnimalsPerSpecies; ++k)
 						{
 							unsigned int animalToCopy = (j * numberOfAnimalsPerSpecies) + k;
 
 							if (!animals[animalToCopy].retired)
 							{
 								foundAnimal = animalToCopy;
+								foundSpecies = j;
 								break;
 							}
 						}
@@ -3057,34 +3183,70 @@ void tournamentController()
 					}
 				}
 
-				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals && foundAnimal != playerCreature)
+
+				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
 				{
-					// printf("repopulated an endangered species\n");
+					int ispeciesindex= speciesIndex;
+					// printf("repopulated endangered species %i from species %i animal %u\n", ispeciesindex, foundSpecies, foundAnimal );
 					// int animalIndex = spawnAnimal(i, animals[foundAnimal], randompos, false);
 
-					int animalIndex = getNewIdentity(i);
-					// if (animalIndex >= 0) // an animalIndex was available
+					// int animalIndex = getNewIdentity(i);
+					// // if (animalIndex >= 0) // an animalIndex was available
+					// // {
+
+					// if (animalIndex >= 0 )
 					// {
+					// 	// animals[animalIndex].energy = animals[animalIndex].maxEnergy;
 
-					if (animalIndex >= 0 )
-					{
-						// animals[animalIndex].energy = animals[animalIndex].maxEnergy;
+					// 	// just swap the animal between species without disturbing it.
+					// 	animals[animalIndex] = animals[foundAnimal];
+					// 	animals[foundAnimal].retired = true;
+					// }
 
-						// just swap the animal between species without disturbing it.
-						animals[animalIndex] = animals[foundAnimal];
-						animals[foundAnimal].retired = true;
-					}
+
+
+					// int spawnAnimal( unsigned int speciesIndex,
+					//                  Animal parent,
+					//                  unsigned int position, bool mutation)
+
+					memcpy(    &animals[ (speciesIndex * numberOfAnimalsPerSpecies) ] , &animals[ foundAnimal ], sizeof(Animal)    );
+
+					resetAnimal(foundAnimal);
+
+
+					// int newAnimal = spawnAnimal(speciesIndex, animals[foundAnimal], animals[foundAnimal].position, false);
+					// if (newAnimal >= 0)
+					// {
+					// 	// 	animals[newAnimal].energy = animals[newAnimal].maxEnergy;
+					// 	// }
+
+
+					// 	// animals[animalIndex].body[cellIndex].organ = MATERIAL_NOTHING;
+					// 	// animals[animalIndex].numberOfTimesReproduced++;
+					// 	// animals[animalIndex].energy -= animals[animalIndex].offspringEnergy;
+					// 	animals[newAnimal].energy       =animals[newAnimal].maxEnergy  ;//  animals[animalIndex].offspringEnergy;
+					// 	animals[newAnimal].parentIdentity       = foundAnimal;
+					// }
+
 				}
 			}
 		}
+		// printf("totalpop %u\n", totalpop);
 		if (totalpop == 0)
 		{
-			unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
 			int j = 1;
-			setupExampleAnimal2(j);
-			spawnAnimal( 1,
-			             animals[j],
-			             targetWorldPositionI, true);
+
+			for (int k = j + 1; k < numberOfAnimalsPerSpecies; ++k)
+			{
+				unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+				setupExampleAnimal2(j);
+				spawnAnimal( 1,
+				             animals[j],
+				             targetWorldPositionI, true);
+
+			}
 		}
 	}
 }
