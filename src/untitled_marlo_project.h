@@ -39,6 +39,8 @@ void adjustPlayerPos(Vec_f2 pos);
 void playerGrab();
 void playerDrop();
 
+void togglePause ();
+
 
 void activateGrabbedMachine();
 void resetMouseCursor();

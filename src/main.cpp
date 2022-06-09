@@ -6,7 +6,7 @@
 #include "menus.h"
 #include "untitled_marlo_project.h"
 
-bool paused = false;
+// bool paused = false;
 bool flagQuit = false;
 
 int mouseX;
@@ -22,11 +22,6 @@ void quit ()
 	cleanupText2D();
 	SDL_Quit();
 	flagQuit = true;
-}
-
-void togglePause ()
-{
-	paused = !paused;
 }
 
 
@@ -123,10 +118,11 @@ void threadInterface()
 				playerGrab();
 				break;
 
-				case SDLK_f:
+			case SDLK_f:
 				playerDrop();
 				break;
 
+			
 
 			case SDLK_y:
 				spawnTournamentAnimals();

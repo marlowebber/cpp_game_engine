@@ -143,6 +143,8 @@ unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
 bool lockfps               = false;
 
+bool paused = false;
+
 int mousePositionX =  -430;
 int mousePositionY =  330;
 
@@ -200,7 +202,47 @@ struct Square
 	float light;
 	float pheromoneIntensity;
 	int pheromoneChannel;
+
+
+	// int plantIdentity;
+	// float plantEnergy;
+	// Color plantColor;
+	// unsigned int plantState;
+	// char plantGenes[32];
+	// unsigned int plantGeneCursor;
+	// unsigned seedGenes[32];
+
 };
+
+
+// #define PLANT_LEAF;
+// #define PLANT_SEED;
+// #define PLANT_WOOD;
+// #define PLANT_FLOWER;
+// #define PLANT_ROOT;
+
+// void plantTurn(unsigned int worldPositionI)
+// {
+
+
+
+// // add some energy to leaves.
+// 	world[worldPositionI].plantEnergy += world[worldPositionI].light;
+
+// // grow into surrounding squares if energy available.
+// 	if ()
+
+// 		// seeds shift into neighbour square at random.
+
+
+
+// 	}
+
+
+
+
+
+
 
 struct Square world[worldSquareSize];
 
@@ -265,6 +307,9 @@ struct Animal
 	unsigned int cellsUsed;
 	Color identityColor;
 	// bool grabbed;
+	// std::string displayName;
+
+	char displayName[32];
 
 	bool isMachine;
 	void (* machineCallback)(int, int);
@@ -586,6 +631,11 @@ void resetMouseCursor()
 	fmousePositionX = 0.0f;
 	fmousePositionY = 0.0f;
 }
+void togglePause ()
+{
+	paused = !paused;
+}
+
 
 void resetConnection(unsigned int animalIndex, unsigned int cellLocalPositionI, unsigned int i)
 {
@@ -619,6 +669,8 @@ void resetAnimal(unsigned int animalIndex)
 {
 	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
+		// animals[animalIndex].displayName = std::string("").c_str();
+		// memset( (&animals[animalIndex].displayName), ' ', 32);
 		animals[animalIndex].mass = 0;
 		animals[animalIndex].numberOfTimesReproduced = 0;
 		animals[animalIndex].damageDone = 0;
@@ -1763,7 +1815,7 @@ void organs_all()
 
 												if (animals[animalIndex].body[cellIndexB].organ == ORGAN_GRABBER)
 												{
-													if (animals[animalIndex].body[cellIndexB].grabbedCreature ==world[neighbour].identity ) 
+													if (animals[animalIndex].body[cellIndexB].grabbedCreature == world[neighbour].identity )
 													{
 														grabbedByAnotherGrabber = true;
 														break;
@@ -2055,15 +2107,6 @@ void organs_all()
 
 				case ORGAN_SENSOR_TRACKER:
 				{
-
-					// Vec_f2 eyeLook = Vec_f2(animals[animalIndex].body[cellIndex].eyeLookX , animals[animalIndex].body[cellIndex].eyeLookY);
-					// Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), animals[animalIndex].fAngleSin, animals[animalIndex].fAngleCos, eyeLook);
-
-					// unsigned int eyeLookWorldPositionX = cellWorldPositionX + rotatedEyeLook.x;
-					// unsigned int eyeLookWorldPositionY = cellWorldPositionY + rotatedEyeLook.y;
-					// unsigned int eyeLookWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
-
-
 					animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 					if ( world [cellWorldPositionI].identity != animalIndex )
 					{
@@ -2086,8 +2129,6 @@ void organs_all()
 					unsigned int eyeLookWorldPositionX = cellWorldPositionX + rotatedEyeLook.x;
 					unsigned int eyeLookWorldPositionY = cellWorldPositionY + rotatedEyeLook.y;
 					unsigned int eyeLookWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
-
-
 
 					Color receivedColor = whatColorIsThisSquare(eyeLookWorldPositionI);
 					Color perceivedColor = multiplyColor( receivedColor, animals[animalIndex].body[cellIndex].color  );
@@ -2125,9 +2166,6 @@ void organs_all()
 						{
 							if (touchedAnimal != animalIndex)
 							{
-
-
-
 								if (isAnimalInSquare( touchedAnimal , cellWorldPositionI ))
 								{
 									animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
@@ -2815,8 +2853,6 @@ void displayComputerText()
 		menuY -= spacing;
 
 
-		printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
-		menuY -= spacing;
 
 
 
@@ -2837,6 +2873,8 @@ void drawGameInterfaceText()
 	int spacing = 20;
 
 
+	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
+	menuY += spacing;
 
 
 	// printText2D(   std::string("Player ") + std::to_string(playerCreature) , menuX, menuY, textSize);
@@ -2877,18 +2915,40 @@ void drawGameInterfaceText()
 	if (worldCursorPos < worldSquareSize)
 	{
 		int cursorAnimal = world[worldCursorPos].identity;
+
+		unsigned int cursorAnimalSpecies = cursorAnimal / numberOfAnimalsPerSpecies;
 		if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
 		{
 			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
 			if ( occupyingCell >= 0)
 			{
 
+				if (cursorAnimalSpecies == 0)
+				{
+					if (cursorAnimal == playerCreature)
+					{
+						printText2D(   std::string("This is you. ") + std::to_string(cursorAnimalSpecies ) , menuX, menuY, textSize);
+						menuY += spacing;
+					}
 
-				// 		printText2D(   std::string("Animal ") + std::to_string(cursorAnimal ) , menuX, menuY, textSize);
-				// 		menuY -= spacing;
+					printText2D(   std::string(animals[cursorAnimal].displayName) , menuX, menuY, textSize);
+					menuY += spacing;
 
 
-				// describe the material.
+				}
+
+
+
+				else
+				{
+					printText2D(   std::string("An animal of species ") + std::to_string(cursorAnimalSpecies ) , menuX, menuY, textSize);
+					menuY += spacing;
+
+
+
+				}
+
+				// describe the organ.
 				printText2D(  organDescriptions(  animals[  cursorAnimal].body[occupyingCell].organ ), menuX, menuY, textSize);
 				menuY += spacing;
 
@@ -2970,9 +3030,10 @@ void setupExampleHuman(int i)
 
 	resetAnimal(i);
 
+	// std::string("A human.").c_str().cop
 
 
-
+	snprintf (animals[i].displayName, 32, "A human.");
 
 	appendCell( i, ORGAN_BONE, Vec_i2(0, 1 ));
 
@@ -3056,6 +3117,8 @@ void setupExampleHuman(int i)
 
 	appendCell( i, ORGAN_BONE, Vec_i2(-1, -13) );
 	appendCell( i, ORGAN_BONE, Vec_i2(1, -13) );
+
+
 }
 
 
@@ -3171,7 +3234,9 @@ void setupExampleGlasses(int i)
 	// appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
 	// appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
 
+	// animals[i].displayName = std::string("A pair of glasses.").c_str();
 
+	snprintf (animals[i].displayName, 32, "A pair of glasses.");
 
 
 	appendCell( i, MATERIAL_GLASS, Vec_i2(1, 0) );
@@ -3204,6 +3269,10 @@ void setupExampleGun(int i)
 	resetAnimal(i);
 	animals[i].isMachine = true;
 	animals[i].machineCallback = exampleGunCallback;
+
+	// animals[i].displayName = std::string("A pistol.").c_str();
+
+	snprintf (animals[i].displayName, 32, "A pistol.");
 
 
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
@@ -3269,6 +3338,10 @@ void setupExampleComputer(int i)
 	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -4) );
 	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -4) );
 	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -4) );
+
+	// animals[i].displayName = std::string("A computer terminal.").c_str();
+
+	snprintf (animals[i].displayName, 32, "A computer terminal.");
 
 
 
@@ -3749,28 +3822,32 @@ void tournamentController()
 	}
 }
 
-void sprinkleFood()
-{
-	if (extremelyFastNumberFromZeroTo(100) == 0)
-	{
-		unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-		if (world[randompos].material == MATERIAL_NOTHING)
-		{
-			world[randompos].material = MATERIAL_FOOD;
-		}
-	}
-}
+// void sprinkleFood()
+// {
+// 	if (extremelyFastNumberFromZeroTo(100) == 0)
+// 	{
+// 		unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+// 		if (world[randompos].material == MATERIAL_NOTHING)
+// 		{
+// 			world[randompos].material = MATERIAL_FOOD;
+// 		}
+// 	}
+// }
 
 void model()
 {
 	auto start = std::chrono::steady_clock::now();
-	updateMap();
-	computeAllAnimalsOneTurn();
+
+	if (!paused)
+	{
+		computeAllAnimalsOneTurn();
+		updateMap();
+		// sprinkleFood();
+	}
 	if (tournament)
 	{
 		tournamentController();
 	}
-	sprinkleFood();
 	modelFrameCount++;
 	auto end = std::chrono::steady_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -3825,3 +3902,17 @@ void load()
 	in7.read( (char *)(&(animals)), sizeof(Animal) *  numberOfAnimals);
 	in7.close();
 }
+
+
+void saveParticularAnimal()
+{
+	std::ofstream out7(std::string("save/animal").c_str());
+	out7.write( (char*)(animals[selectedAnimal]), sizeof(Animal));
+	out7.close();
+}
+
+void loadParticlarAnimal()
+{
+
+}
+
