@@ -152,6 +152,9 @@ float fmousePositionX = mousePositionX;
 float fmousePositionY = mousePositionY;
 
 
+int selectedAnimal = -1;
+int cursorAnimal = -1;
+
 unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
 float fps = 1.0f;
@@ -1013,7 +1016,7 @@ void resetGrid()
 		world[i].height = 0;
 		world[i].light = 1.0f;
 		world[i].pheromoneIntensity = 0.0f;
-		world[i].pheromoneChannel = 0;
+		world[i].pheromoneChannel = -1;
 	}
 }
 
@@ -1475,6 +1478,11 @@ void killAnimal(int animalIndex)
 		{
 			if (animals[animalIndex].body[cellIndex].organ != MATERIAL_NOTHING)
 			{
+
+				world[cellWorldPositionI].pheromoneChannel = 13;
+				world[cellWorldPositionI].pheromoneIntensity = 1.0f;
+
+
 				if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
 				{
 					world[cellWorldPositionI].material = MATERIAL_FOOD;
@@ -1620,6 +1628,16 @@ void updateMap()
 		unsigned int randomI = (randomY * worldSize) + randomX;
 		if (randomI < worldSquareSize)
 		{
+			if (world[randomI].pheromoneIntensity > 0.2f)
+			{
+				world[randomI].pheromoneIntensity -= 0.2f;
+			}
+			else
+			{
+				world[randomI].pheromoneChannel = -1;
+			}
+
+
 			if (world[randomI].material == MATERIAL_NOTHING)
 			{
 				if (world[randomI].terrain == TERRAIN_STONE ||  world[randomI].terrain == TERRAIN_WATER )
@@ -2032,9 +2050,12 @@ void organs_all()
 				case ORGAN_SENSOR_PHEROMONE:
 				{
 					animals[animalIndex].body[cellIndex].signalIntensity = 0;
-					if (animals[animalIndex].body[cellIndex]. speakerChannel ==   world[cellWorldPositionI].pheromoneChannel)
+					if (world[cellWorldPositionI].pheromoneChannel >= 0)
 					{
-						animals[animalIndex].body[cellIndex].signalIntensity  = world[cellWorldPositionI].pheromoneIntensity;
+						if (animals[animalIndex].body[cellIndex]. speakerChannel ==   world[cellWorldPositionI].pheromoneChannel)
+						{
+							animals[animalIndex].body[cellIndex].signalIntensity  = world[cellWorldPositionI].pheromoneIntensity;
+						}
 					}
 					break;
 				}
@@ -2914,11 +2935,12 @@ void drawGameInterfaceText()
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 	if (worldCursorPos < worldSquareSize)
 	{
-		int cursorAnimal = world[worldCursorPos].identity;
+		int tempCursorAnimal = world[worldCursorPos].identity;
 
-		unsigned int cursorAnimalSpecies = cursorAnimal / numberOfAnimalsPerSpecies;
-		if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
+		unsigned int cursorAnimalSpecies = tempCursorAnimal / numberOfAnimalsPerSpecies;
+		if (tempCursorAnimal >= 0 && tempCursorAnimal < numberOfAnimals)
 		{
+			cursorAnimal = tempCursorAnimal;
 			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
 			if ( occupyingCell >= 0)
 			{
@@ -2993,11 +3015,15 @@ void drawGameInterfaceText()
 	}
 
 	// if the player has a nose, print what it smells like here.
-	if (getRandomCellOfType( playerCreature, ORGAN_SENSOR_PHEROMONE ) >= 0)
+	unsigned int playerPheromoneSensor = getRandomCellOfType( playerCreature, ORGAN_SENSOR_PHEROMONE ) ;
+	if (playerPheromoneSensor >= 0)
 	{
-		if (world[worldCursorPos].pheromoneChannel > 0 &&  world[worldCursorPos].pheromoneChannel < numberOfSpeakerChannels)
+
+		unsigned int playerPheromoneSensorWorldPos = animals[playerCreature].body[playerPheromoneSensor].worldPositionI;
+
+		if (world[playerPheromoneSensorWorldPos].pheromoneChannel >= 0 &&  world[playerPheromoneSensorWorldPos].pheromoneChannel < numberOfSpeakerChannels)
 		{
-			printText2D(   pheromoneChannelDescriptions[  world[worldCursorPos].pheromoneChannel ] , menuX, menuY, textSize);
+			printText2D(   pheromoneChannelDescriptions[  world[playerPheromoneSensorWorldPos].pheromoneChannel ] , menuX, menuY, textSize);
 			menuY += spacing;
 		}
 		else
@@ -3907,12 +3933,14 @@ void load()
 void saveParticularAnimal()
 {
 	std::ofstream out7(std::string("save/animal").c_str());
-	out7.write( (char*)(animals[selectedAnimal]), sizeof(Animal));
+	out7.write( (char*)(&animals[selectedAnimal]), sizeof(Animal));
 	out7.close();
 }
 
 void loadParticlarAnimal()
 {
+
+
 
 }
 
