@@ -120,7 +120,11 @@ void threadInterface()
 
 
 			case SDLK_g:
-				togglePlayerGrabbers();
+				playerGrab();
+				break;
+
+				case SDLK_f:
+				playerDrop();
 				break;
 
 

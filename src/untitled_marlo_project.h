@@ -36,7 +36,8 @@ void drawGameInterfaceText();
 void spawnTournamentAnimals();
 void adjustPlayerPos(Vec_f2 pos);
 
-void togglePlayerGrabbers();
+void playerGrab();
+void playerDrop();
 
 
 void activateGrabbedMachine();
