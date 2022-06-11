@@ -167,7 +167,7 @@ float fps = 1.0f;
 bool playerGrabState = false;
 bool playerInControl = true;
 int playerCreature = -1;
-
+bool playerCanSee = true;
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
 
@@ -1688,7 +1688,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 
 
 
-
+		// outline selected animal.
 		// to draw an outline around the selected animal:
 		// 1. make a list of all the animal squares and note the animal's bounding box.
 		// 2. use it to make a list of all neighbours.
@@ -1696,6 +1696,11 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		// 4. when drawing the view, check if you are within the bounding box, and if so, draw an outline tile if you are drawing a tile that is not part of the body.
 
 
+		// highlight selected animal.
+		if (viewedAnimal == selectedAnimal)
+		{
+			displayColor = filterColor(displayColor, tint_selected);
+		}
 
 	}
 	else
@@ -2838,20 +2843,28 @@ void computeAllAnimalsOneTurn()
 
 void selectCursorAnimal()
 {
-	int cursorPosX = cameraPositionX +  mousePositionX ;
-	int cursorPosY = cameraPositionY + mousePositionY;
-	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
-	if (worldCursorPos < worldSquareSize)
+
+	if (selectedAnimal >= 0)
 	{
-		int tempCursorAnimal = world[worldCursorPos].identity;
-		unsigned int cursorAnimalSpecies = tempCursorAnimal / numberOfAnimalsPerSpecies;
-		if (tempCursorAnimal >= 0 && tempCursorAnimal < numberOfAnimals)
+		selectedAnimal = -1;
+	}
+	else {
+
+		int cursorPosX = cameraPositionX +  mousePositionX ;
+		int cursorPosY = cameraPositionY + mousePositionY;
+		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+		if (worldCursorPos < worldSquareSize)
 		{
-			cursorAnimal = tempCursorAnimal;
-			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
-			if ( occupyingCell >= 0)
+			int tempCursorAnimal = world[worldCursorPos].identity;
+			unsigned int cursorAnimalSpecies = tempCursorAnimal / numberOfAnimalsPerSpecies;
+			if (tempCursorAnimal >= 0 && tempCursorAnimal < numberOfAnimals)
 			{
-				selectedAnimal = cursorAnimal;
+				cursorAnimal = tempCursorAnimal;
+				int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
+				if ( occupyingCell >= 0)
+				{
+					selectedAnimal = cursorAnimal;
+				}
 			}
 		}
 	}
@@ -2871,13 +2884,17 @@ void camera()
 	}
 
 	// if the player doesn't have any eyes, don't draw anything!
-	bool playerCanSee = true;
+
 	if (playerCreature >= 0 && cameraTargetCreature == playerCreature && playerInControl)
 	{
 		unsigned int playerEye = getRandomCellOfType(playerCreature, ORGAN_SENSOR_EYE);
 		if (playerEye >= 0)
 		{
 			playerCanSee = false;
+		}
+		else
+		{
+			playerCanSee = true;
 		}
 	}
 
@@ -3185,6 +3202,13 @@ void drawGameInterfaceText()
 
 	}
 
+
+	// if the player is blind, say so!
+	if (!playerCanSee)
+	{
+		printText2D(   std::string("You can't see anything. ") , menuX, menuY, textSize);
+		menuY += spacing;
+	}
 
 // if (world[worldCursorPos])
 

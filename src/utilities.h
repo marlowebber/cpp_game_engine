@@ -60,6 +60,9 @@ const Color color_clear              = Color( 0.0f, 0.0f, 0.0f, 0.0f );
 const Color color_pink              = Color(  1.0f, 0.8f, 0.8f, 1.0f );
 
 
+
+const Color tint_selected              = Color (1.0f, 1.0f, 1.0f, 0.25f);
+
 struct Vec_u2
 {
 	unsigned int x;

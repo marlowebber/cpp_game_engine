@@ -254,6 +254,12 @@ void threadInterface()
 				break;
 			}
 
+			case SDLK_e:
+			{
+				selectCursorAnimal();
+				break;
+			}
+
 
 			case SDLK_ESCAPE:
 				quit();

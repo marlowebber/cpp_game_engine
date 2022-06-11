@@ -41,6 +41,7 @@ void playerDrop();
 
 void togglePause ();
 
+void selectCursorAnimal();
 
 void activateGrabbedMachine();
 void resetMouseCursor();
