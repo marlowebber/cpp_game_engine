@@ -3152,6 +3152,9 @@ void camera()
 
 
 
+
+
+
 bool computer1display = false;
 void displayComputerText()
 {
