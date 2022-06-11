@@ -64,6 +64,10 @@
 #define ORGAN_SENSOR_BIRTHPLACE    34
 #define ORGAN_SENSOR_TOUCH         35
 
+
+#define ORGAN_COLDADAPT            2001
+#define ORGAN_HEATADAPT            2002
+
 #define ORGAN_GRABBER              36
 
 #define numberOfOrganTypes        37 // the number limit of growable genes
@@ -77,11 +81,12 @@
 #define MATERIAL_VOIDMETAL        67
 #define MATERIAL_SMOKE           68
 #define MATERIAL_GLASS            69
+#define MATERIAL_WATER            70
 
-#define TERRAIN_STONE             50
-#define TERRAIN_WATER             52
-#define TERRAIN_LAVA              54
-#define TERRAIN_VOIDMETAL         68
+// #define TERRAIN_STONE             50
+// #define TERRAIN_WATER             52
+// #define TERRAIN_LAVA              54
+// #define TERRAIN_VOIDMETAL         68
 
 #define MARKER                    35 // numbers above 25 don't correspond to lower-case letters(0..25) so we don't use them in the gene code. But (26..31) are still compatible with our masking scheme.
 
@@ -112,7 +117,7 @@ const bool doMutation            = true;
 const bool sensorJiggles         = false;
 const bool useTimers             = false;
 const bool setOrSteerAngle       = true;
-const bool useLava               = true;
+// const bool useLava               = true;
 
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
@@ -196,13 +201,18 @@ unsigned int cameraFrameCount = 0;
 
 struct Square
 {
+
 	unsigned int material;
 	unsigned int terrain;
-	int identity; // id of the last animal to cross the tile
+
+
+
+	int identity;   // id of the last animal to cross the tile
 	int occupyingCell; // id of the last cell to cross this tile
-	float trail;  // movement direction of the last animal to cross the tile
+	float trail;    // movement direction of the last animal to cross the tile
 	int height;
-	float light;
+	Color light;
+	float temperature;
 	float pheromoneIntensity;
 	int pheromoneChannel;
 
@@ -311,7 +321,8 @@ struct Animal
 	Color identityColor;
 	// bool grabbed;
 	// std::string displayName;
-
+	float temp_limit_low;
+	float temp_limit_high;
 	char displayName[32];
 
 	bool isMachine;
@@ -341,33 +352,33 @@ std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 	std::string( "It smells like vomit." ),
 };
 
-std::string terrainDescriptions(unsigned int terrain)
-{
-	switch (terrain)
-	{
-	case TERRAIN_STONE:
-	{
-		return std::string("The ground here is solid rock.");
-	}
-	case TERRAIN_WATER:
-	{
-		return std::string("There is deep, cold water here.");
-	}
-	case TERRAIN_LAVA:
-	{
-		return std::string("The ground here is molten burning lava.");
-	}
-	case TERRAIN_VOIDMETAL:
-	{
-		return std::string("The ground here is black, shiny void metal.");
-	}
-	}
-	return std::string("You can't tell if the ground is safe here.");
-}
+// std::string terrainDescriptions(unsigned int terrain)
+// {
+// 	switch (terrain)
+// 	{
+// 	case TERRAIN_STONE:
+// 	{
+// 		return std::string("The ground here is solid rock.");
+// 	}
+// 	case TERRAIN_WATER:
+// 	{
+// 		return std::string("There is deep, cold water here.");
+// 	}
+// 	case TERRAIN_LAVA:
+// 	{
+// 		return std::string("The ground here is molten burning lava.");
+// 	}
+// 	case TERRAIN_VOIDMETAL:
+// 	{
+// 		return std::string("The ground here is black, shiny void metal.");
+// 	}
+// 	}
+// 	return std::string("You can't tell if the ground is safe here.");
+// }
 
-std::string organDescriptions(unsigned int organ)
+std::string tileDescriptions(unsigned int tile)
 {
-	switch (organ)
+	switch (tile)
 	{
 	case ORGAN_MOUTH_VEG:
 	{
@@ -505,14 +516,7 @@ std::string organDescriptions(unsigned int organ)
 	{
 		return std::string("A bony hand which can clutch items and grab animals.");
 	}
-	}
-	return std::string("Throbbing grey meat of unknown function.");
-}
 
-std::string materialDescriptions(unsigned int material)
-{
-	switch (material)
-	{
 
 	case MATERIAL_FOOD:
 	{
@@ -560,9 +564,66 @@ std::string materialDescriptions(unsigned int material)
 	{
 		return std::string("Scruffy green grass.");
 	}
+
+
 	}
-	return std::string("An unknown material.");
+	return std::string("You don't know what this is.");
 }
+
+// std::string materialDescriptions(unsigned int material)
+// {
+// 	switch (material)
+// 	{
+
+// 	case MATERIAL_FOOD:
+// 	{
+// 		return std::string("There's a piece of dried-out old meat.");
+// 	}
+
+// 	case MATERIAL_ROCK:
+// 	{
+// 		return std::string("There's a solid grey rock.");
+// 	}
+
+// 	case MATERIAL_MEAT:
+// 	{
+// 		return std::string("A bleeding chunk of flesh.");
+// 	}
+// 	case MATERIAL_BONE:
+// 	{
+// 		return std::string("A fragment of bone.");
+// 	}
+// 	case MATERIAL_BLOOD:
+// 	{
+// 		return std::string("Splatters of coagulating blood.");
+// 	}
+// 	case MATERIAL_METAL:
+// 	{
+// 		return std::string("This is made of smooth, polished metal.");
+// 	}
+// 	case MATERIAL_VOIDMETAL:
+// 	{
+// 		return std::string("It's made of impenetrable void metal.");
+// 	}
+// 	case MATERIAL_SMOKE:
+// 	{
+// 		return std::string("A wisp of smoke.");
+// 	}
+// 	case MATERIAL_GLASS:
+// 	{
+// 		return std::string("A pane of glass.");
+// 	}
+// 	case MATERIAL_NOTHING:
+// 	{
+// 		return std::string("There's nothing there.");
+// 	}
+// 	case MATERIAL_GRASS:
+// 	{
+// 		return std::string("Scruffy green grass.");
+// 	}
+// 	}
+// 	return std::string("An unknown material.");
+// }
 
 bool speciesVacancies [numberOfSpecies];
 unsigned int speciesPopulationCounts [numberOfSpecies];
@@ -700,6 +761,8 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].identityColor = Color(RNG(), RNG(), RNG(), 1.0f);
 		animals[animalIndex].isMachine = false;
 		animals[animalIndex].machineCallback == nullptr;
+		animals[animalIndex].temp_limit_low = 273.0f;
+		animals[animalIndex].temp_limit_high = 323.0f;
 
 		for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
 		{
@@ -1014,7 +1077,7 @@ void resetGrid()
 		world[i].identity = -1;
 		world[i].trail = 0.0f;
 		world[i].height = 0;
-		world[i].light = 1.0f;
+		world[i].light = color_white;
 		world[i].pheromoneIntensity = 0.0f;
 		world[i].pheromoneChannel = -1;
 	}
@@ -1098,6 +1161,18 @@ bool measureAnimalQualities(unsigned int animalIndex)
 		if (animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD)
 		{
 			totalGonads ++;
+		}
+
+		if (animals[animalIndex].body[cellIndex].organ == ORGAN_COLDADAPT)
+		{
+			animals[animalIndex].temp_limit_low -= 35.0f;
+			animals[animalIndex].temp_limit_high -= 35.0f;
+		}
+
+		if (animals[animalIndex].body[cellIndex].organ == ORGAN_HEATADAPT)
+		{
+			animals[animalIndex].temp_limit_high += 35.0f;
+			animals[animalIndex].temp_limit_low  += 35.0f;
 		}
 	}
 
@@ -1516,21 +1591,21 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 	return -1;
 }
 
-Color terrainColors(unsigned int terrain)
-{
-	switch (terrain)
-	{
-	case TERRAIN_STONE:
-		return color_grey;
-	case TERRAIN_WATER:
-		return color_lightblue;
-	case TERRAIN_LAVA:
-		return color_orange;
-	case TERRAIN_VOIDMETAL:
-		return color_charcoal;
-	}
-	return color_yellow;
-}
+// Color terrainColors(unsigned int terrain)
+// {
+// 	switch (terrain)
+// 	{
+// 	case TERRAIN_STONE:
+// 		return color_grey;
+// 	case TERRAIN_WATER:
+// 		return color_lightblue;
+// 	case TERRAIN_LAVA:
+// 		return color_orange;
+// 	case TERRAIN_VOIDMETAL:
+// 		return color_charcoal;
+// 	}
+// 	return color_yellow;
+// }
 
 Color materialColors(unsigned int material)
 {
@@ -1610,11 +1685,26 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		{
 			displayColor = animals[viewedAnimal].body[occupyingCell].color;
 		}
+
+
+
+
+		// to draw an outline around the selected animal:
+		// 1. make a list of all the animal squares and note the animal's bounding box.
+		// 2. use it to make a list of all neighbours.
+		// 3. subtract any of the neighbours that are within the animal's body (leaving just an outline).
+		// 4. when drawing the view, check if you are within the bounding box, and if so, draw an outline tile if you are drawing a tile that is not part of the body.
+
+
+
 	}
 	else
 	{
-		displayColor = filterColor( terrainColors(world[worldI].terrain),  materialColors(world[worldI].material) );
+		displayColor = filterColor( materialColors(world[worldI].terrain),  materialColors(world[worldI].material) );
 	}
+
+	displayColor = multiplyColor(displayColor, world[worldI].light);
+
 	return displayColor;
 }
 
@@ -1640,24 +1730,24 @@ void updateMap()
 
 			if (world[randomI].material == MATERIAL_NOTHING)
 			{
-				if (world[randomI].terrain == TERRAIN_STONE ||  world[randomI].terrain == TERRAIN_WATER )
+				if (world[randomI].terrain == MATERIAL_ROCK ||  world[randomI].terrain == MATERIAL_WATER )
 				{
 					world[randomI].material = MATERIAL_GRASS;
 				}
 			}
 
-			if (world[randomI].terrain == TERRAIN_LAVA)
-			{
-				if (
-				    world[randomI].material != MATERIAL_NOTHING
-				    &&
-				    world[randomI].material != MATERIAL_VOIDMETAL // voidmetal is indestructible
+			// if (world[randomI].terrain == TERRAIN_LAVA)
+			// {
+			// 	if (
+			// 	    world[randomI].material != MATERIAL_NOTHING
+			// 	    &&
+			// 	    world[randomI].material != MATERIAL_VOIDMETAL // voidmetal is indestructible
 
-				)
-				{
-					world[randomI].material = MATERIAL_NOTHING;
-				}
-			}
+			// 	)
+			// 	{
+			// 		world[randomI].material = MATERIAL_NOTHING;
+			// 	}
+			// }
 
 			if (world[randomI].material == MATERIAL_BLOOD)
 			{
@@ -2469,7 +2559,7 @@ void move_all()
 
 				animals[animalIndex].position = newPosition;
 
-				if (world[newPosition].terrain == TERRAIN_WATER)
+				if (world[newPosition].terrain == MATERIAL_WATER)
 				{
 					if (! animals[animalIndex].canBreatheUnderwater &&
 					        ! animals[animalIndex].isMachine
@@ -2479,7 +2569,7 @@ void move_all()
 					}
 				}
 
-				if (world[newPosition].terrain == TERRAIN_STONE )
+				if (world[newPosition].terrain == MATERIAL_ROCK )
 				{
 					if (! animals[animalIndex].canBreatheAir &&
 					        ! animals[animalIndex].isMachine)
@@ -2488,10 +2578,17 @@ void move_all()
 					}
 				}
 
-				if (world[newPosition].terrain == TERRAIN_LAVA)
+				if (world[newPosition].temperature > animals[animalIndex].temp_limit_high)
 				{
-					animals[animalIndex].damageReceived += 10;
+					animals[animalIndex].damageReceived += abs(world[newPosition].temperature  - animals[animalIndex].temp_limit_high);
 				}
+
+
+				if (world[newPosition].temperature < animals[animalIndex].temp_limit_low)
+				{
+					animals[animalIndex].damageReceived += abs(world[newPosition].temperature  - animals[animalIndex].temp_limit_low);
+				}
+
 
 				for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
 				{
@@ -2736,112 +2833,167 @@ void computeAllAnimalsOneTurn()
 	}
 }
 
+
+
+
+void selectCursorAnimal()
+{
+	int cursorPosX = cameraPositionX +  mousePositionX ;
+	int cursorPosY = cameraPositionY + mousePositionY;
+	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+	if (worldCursorPos < worldSquareSize)
+	{
+		int tempCursorAnimal = world[worldCursorPos].identity;
+		unsigned int cursorAnimalSpecies = tempCursorAnimal / numberOfAnimalsPerSpecies;
+		if (tempCursorAnimal >= 0 && tempCursorAnimal < numberOfAnimals)
+		{
+			cursorAnimal = tempCursorAnimal;
+			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
+			if ( occupyingCell >= 0)
+			{
+				selectedAnimal = cursorAnimal;
+			}
+		}
+	}
+}
+
+
+
 void camera()
 {
+
+
+
 	if (cameraTargetCreature >= 0)
 	{
 		cameraPositionX = animals[cameraTargetCreature].position % worldSize;
 		cameraPositionY = animals[cameraTargetCreature].position / worldSize;
 	}
-	int viewFieldMax = +(viewFieldY / 2);
-	int viewFieldMin = -(viewFieldX / 2);
-	for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
+
+	// if the player doesn't have any eyes, don't draw anything!
+	bool playerCanSee = true;
+	if (playerCreature >= 0 && cameraTargetCreature == playerCreature && playerInControl)
 	{
-		for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
+		unsigned int playerEye = getRandomCellOfType(playerCreature, ORGAN_SENSOR_EYE);
+		if (playerEye >= 0)
 		{
-			unsigned int x = (vx + cameraPositionX) % worldSize;
-			unsigned int y = (vy + cameraPositionY) % worldSize;
-			Color displayColor = color_black;
-			unsigned int worldI = (y * worldSize) + x;
-			if (worldI < worldSquareSize)
+			playerCanSee = false;
+		}
+	}
+
+	if (playerCanSee)
+	{
+		int viewFieldMax = +(viewFieldY / 2);
+		int viewFieldMin = -(viewFieldX / 2);
+		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
+		{
+			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
 			{
-				float fx = vx;
-				float fy = vy;
-
-
-				switch (visualizer)
+				unsigned int x = (vx + cameraPositionX) % worldSize;
+				unsigned int y = (vy + cameraPositionY) % worldSize;
+				Color displayColor = color_black;
+				unsigned int worldI = (y * worldSize) + x;
+				if (worldI < worldSquareSize)
 				{
-				case VISUALIZER_TRUECOLOR:
-				{
+					float fx = vx;
+					float fy = vy;
 
-					displayColor = whatColorIsThisSquare(worldI);
 
-					drawTile( Vec_f2( fx, fy ), displayColor);
-					break;
-				}
-
-				case VISUALIZER_IDENTITY:
-				{
-
-					// displayColor = whatColorIsThisSquare(worldI);
-					if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
+					switch (visualizer)
 					{
-						displayColor = animals[ world[worldI].identity ].identityColor;
+					case VISUALIZER_TRUECOLOR:
+					{
+
+						displayColor = whatColorIsThisSquare(worldI);
+
+
+
+						drawTile( Vec_f2( fx, fy ), displayColor);
+						break;
 					}
 
-					drawTile( Vec_f2( fx, fy ), displayColor);
-					break;
-				}
-
-				case VISUALIZER_TRACKS:
-				{
-
-					// displayColor = whatColorIsThisSquare(worldI);
-					if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
+					case VISUALIZER_IDENTITY:
 					{
-						displayColor = animals[ world[worldI].identity ].identityColor;
-						drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
-					}
-					break;
-				}
 
-				case VISUALIZER_NEURALACTIVITY:
-				{
-
-					// displayColor = whatColorIsThisSquare(worldI);
-					if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
-					{
-						displayColor = color_grey;//animals[ world[worldI].identity ].identityColor;
-						// drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
-
-						// if (isCellConnectable(animals[viewedAnimal].body[occupyingCell].organ ) )
-						// {
-
-						int occupyingCell = isAnimalInSquare(world[worldI].identity, worldI);
-						if ( occupyingCell >= 0)
+						// displayColor = whatColorIsThisSquare(worldI);
+						if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
 						{
-
-
-							float amount = animals[world[worldI].identity].body[occupyingCell].signalIntensity ;//* 2.0f;
-							displayColor.r *= amount ;
-							displayColor.g *= amount;
-							displayColor.b *= amount;
+							displayColor = animals[ world[worldI].identity ].identityColor;
 						}
 
 						drawTile( Vec_f2( fx, fy ), displayColor);
+						break;
 					}
-					break;
+
+					case VISUALIZER_TRACKS:
+					{
+
+						// displayColor = whatColorIsThisSquare(worldI);
+						if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
+						{
+							displayColor = animals[ world[worldI].identity ].identityColor;
+							drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
+						}
+						break;
+					}
+
+					case VISUALIZER_NEURALACTIVITY:
+					{
+
+						// displayColor = whatColorIsThisSquare(worldI);
+						if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
+						{
+							displayColor = color_grey;//animals[ world[worldI].identity ].identityColor;
+							// drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
+
+							// if (isCellConnectable(animals[viewedAnimal].body[occupyingCell].organ ) )
+							// {
+
+							int occupyingCell = isAnimalInSquare(world[worldI].identity, worldI);
+							if ( occupyingCell >= 0)
+							{
+
+
+								float amount = animals[world[worldI].identity].body[occupyingCell].signalIntensity ;//* 2.0f;
+								displayColor.r *= amount ;
+								displayColor.g *= amount;
+								displayColor.b *= amount;
+							}
+
+							drawTile( Vec_f2( fx, fy ), displayColor);
+						}
+						break;
+					}
+
+
+
+
+
+
+
+
+
+
+					}
+
 				}
-
-
-
-
-
-
-
-
-
-
-				}
-
 			}
 		}
 	}
-	// float fmx = mousePositionX;
-	// float fmy = mousePositionY;
+
+
+
+
+
+	// draw the cursor.
 	Color displayColor = color_white;
 	Vec_f2 worldMousePos = Vec_f2( fmousePositionX, fmousePositionY);
 	drawTile( worldMousePos, displayColor);
+
+
+
+
+
 }
 
 
@@ -2971,42 +3123,41 @@ void drawGameInterfaceText()
 				}
 
 				// describe the organ.
-				printText2D(  organDescriptions(  animals[  cursorAnimal].body[occupyingCell].organ ), menuX, menuY, textSize);
+				printText2D(  tileDescriptions(  animals[  cursorAnimal].body[occupyingCell].organ ), menuX, menuY, textSize);
 				menuY += spacing;
 
 			}
 			else {
 				cursorAnimal = -1;
 
+				if (world[worldCursorPos].material != MATERIAL_NOTHING)
+				{
+					// printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
+					// menuY -= spacing;
+					// describe the material.
+					printText2D(  tileDescriptions(world[worldCursorPos].material ), menuX, menuY, textSize);
+					menuY += spacing;
 
-
+				}
+				else
+				{
+					// printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
+					// menuY -= spacing;
+					// describe the terrain
+					printText2D(  tileDescriptions (world[worldCursorPos].terrain ), menuX, menuY, textSize);
+					menuY += spacing;
+				}
 
 
 			}
 		}
 
-		if (cursorAnimal < 0)
-		{
+		// if (cursorAnimal < 0)
+		// {
 
 
-			if (world[worldCursorPos].material != MATERIAL_NOTHING)
-			{
-				// printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
-				// menuY -= spacing;
-				// describe the material.
-				printText2D(  materialDescriptions(world[worldCursorPos].material ), menuX, menuY, textSize);
-				menuY += spacing;
 
-			}
-			else
-			{
-				// printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
-				// menuY -= spacing;
-				// describe the terrain
-				printText2D(  terrainDescriptions (world[worldCursorPos].terrain ), menuX, menuY, textSize);
-				menuY += spacing;
-			}
-		}
+		// }
 
 
 
@@ -3407,7 +3558,7 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 		// set all the tiles around the position to a floor tile
 		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
 		{
-			world[i].terrain = TERRAIN_VOIDMETAL;
+			world[i].terrain = MATERIAL_VOIDMETAL;
 			world[i].material = MATERIAL_NOTHING;
 		}
 
@@ -3583,7 +3734,11 @@ void setupRandomWorld()
 		unsigned int wallthickness = 8;
 		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; ++worldPositionI)
 		{
-			world[worldPositionI].terrain = TERRAIN_STONE;
+
+			world[worldPositionI].temperature = 300.0f;
+			world[worldPositionI].light = color_white;
+
+			world[worldPositionI].terrain = MATERIAL_ROCK;
 			world[worldPositionI].material = MATERIAL_GRASS;
 
 			unsigned int x = worldPositionI % worldSize;
@@ -3613,24 +3768,24 @@ void setupRandomWorld()
 		}
 
 		// lava
-		if (useLava)
-		{
-			for (int i = 0; i < 35; ++i)
-			{
-				unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-				unsigned int x = randompos % worldSize;
-				unsigned int y = randompos / worldSize;
-				int rocksize = 250;
-				for (int j = 0; j < rocksize; ++j)
-				{
-					for (int k = 0; k < rocksize; ++k)
-					{
-						unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-						world[square].terrain = TERRAIN_LAVA;
-					}
-				}
-			}
-		}
+		// if (useLava)
+		// {
+		// 	for (int i = 0; i < 35; ++i)
+		// 	{
+		// 		unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+		// 		unsigned int x = randompos % worldSize;
+		// 		unsigned int y = randompos / worldSize;
+		// 		int rocksize = 250;
+		// 		for (int j = 0; j < rocksize; ++j)
+		// 		{
+		// 			for (int k = 0; k < rocksize; ++k)
+		// 			{
+		// 				unsigned int square = ( (y + j) * worldSize ) + ( x + k );
+		// 				world[square].terrain = TERRAIN_LAVA;
+		// 			}
+		// 		}
+		// 	}
+		// }
 
 		// water
 		unsigned int x = worldSize / 2 ;
@@ -3641,7 +3796,7 @@ void setupRandomWorld()
 			for (int k = 0; k < rocksize; ++k)
 			{
 				unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-				world[square].terrain = TERRAIN_WATER;
+				world[square].terrain = MATERIAL_WATER;
 			}
 		}
 
