@@ -142,7 +142,12 @@ const float signalPropagationConstant = 0.1f;      // how strongly sensor organs
 const float musclePower = 40.0f;
 const float thresholdOfBoredom = 0.1f;
 
+const unsigned int displayNameSize = 32;
+
 const unsigned int numberOfSpeakerChannels = 16;
+
+
+const float const_pi = 3.1415f;
 
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
@@ -349,7 +354,10 @@ struct Animal
 	// std::string displayName;
 	float temp_limit_low;
 	float temp_limit_high;
-	char displayName[32];
+	char displayName[displayNameSize];
+
+	float lastfposx ;
+	float lastfposy;
 
 	bool isMachine;
 	void (* machineCallback)(int, int);
@@ -588,7 +596,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case MATERIAL_GRASS:
 	{
-		return std::string("Scruffy green grass.");
+		return std::string("Grass and weeds.");
 	}
 
 
@@ -1536,6 +1544,9 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	animals[animalIndex].fAngle = ( (RNG() - 0.5f) * 2 * 3.141f  );
 	mutateAnimal( animalIndex);
 	measureAnimalQualities(animalIndex);
+
+	memcpy( &( animals[animalIndex].displayName[0]), &(parent.displayName[0]), sizeof(char) * displayNameSize  );
+
 }
 
 int spawnAnimal( unsigned int speciesIndex,
@@ -2584,15 +2595,14 @@ void organs_all()
 							animals[animalIndex].fAngle += (animals[animalIndex].body[cellIndex].signalIntensity ) * 0.1f;
 						}
 
-						const float pi = 3.1415f;
-						if (animals[animalIndex].fAngle > pi)
+						if (animals[animalIndex].fAngle > const_pi)
 						{
-							animals[animalIndex].fAngle -= 2 * pi;
+							animals[animalIndex].fAngle -= 2 * const_pi;
 						}
 
-						if (animals[animalIndex].fAngle < -pi)
+						if (animals[animalIndex].fAngle < -const_pi)
 						{
-							animals[animalIndex].fAngle += 2 * pi;
+							animals[animalIndex].fAngle += 2 * const_pi;
 						}
 
 						animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
@@ -2628,13 +2638,37 @@ void move_all()
 		{
 			// calculate direction of movement.
 			// ufpos is the last guaranteed place of the animal, in floats
-			float ufposx = animals[animalIndex].uPosX;
-			float ufposy = animals[animalIndex].uPosY;
+			// float ufposx = animals[animalIndex].uPosX;
+			// float ufposy = animals[animalIndex].uPosY;
 			// get the diff between the last actual place and the proposed new place
-			float fdiffx =  animals[animalIndex].fPosX - ufposx;
-			float fdiffy =  animals[animalIndex].fPosY - ufposy;
-			// use atan2 to turn the diff into an angle.
-			float dAngle = atan2(fdiffy, fdiffx);
+
+			bool trailUpdate = false;
+			float dAngle = 0.0f;
+			if (animals[animalIndex].fPosX != animals[animalIndex].lastfposx ||
+			        animals[animalIndex].fPosY != animals[animalIndex].lastfposy  )
+			{
+				float fdiffx =  animals[animalIndex].fPosX - animals[animalIndex].lastfposx;
+				float fdiffy =  animals[animalIndex].fPosY - animals[animalIndex].lastfposy;
+				// use atan2 to turn the diff into an angle.
+				dAngle = atan2(fdiffy, fdiffx);
+
+				dAngle -= 0.5 * const_pi;
+
+				if (dAngle < const_pi)
+				{
+					dAngle += (2 * const_pi);
+				}
+
+				trailUpdate = true;
+				// if (animalIndex == playerCreature)
+				// {
+				// 	printf("magle dangle = %f\n", dAngle);
+				// }
+
+				animals[animalIndex].lastfposx = animals[animalIndex].fPosX;
+				animals[animalIndex].lastfposy = animals[animalIndex].fPosY;
+			}
+
 
 
 			animals[animalIndex].fAngleCos = cos(animals[animalIndex].fAngle);
@@ -2801,7 +2835,11 @@ void move_all()
 					{
 						world[cellWorldPositionI].identity = animalIndex;
 						world[cellWorldPositionI].occupyingCell = cellIndex;
-						world[cellWorldPositionI].trail    = dAngle;
+						if (trailUpdate)
+						{
+
+							world[cellWorldPositionI].trail    = dAngle;
+						}
 						animals[animalIndex].body[cellIndex].worldPositionI = cellWorldPositionI;
 					}
 				}
@@ -3203,12 +3241,13 @@ void drawGameInterfaceText()
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 	if (worldCursorPos < worldSquareSize)
 	{
-		int tempCursorAnimal = world[worldCursorPos].identity;
-
-		unsigned int cursorAnimalSpecies = tempCursorAnimal / numberOfAnimalsPerSpecies;
-		if (tempCursorAnimal >= 0 && tempCursorAnimal < numberOfAnimals)
+		// int tempCursorAnimal = world[worldCursorPos].identity;
+		cursorAnimal = world[worldCursorPos].identity;
+		bool animalInSquare = false;
+		if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
 		{
-			cursorAnimal = tempCursorAnimal;
+			unsigned int cursorAnimalSpecies = cursorAnimal / numberOfAnimalsPerSpecies;
+			// cursorAnimal = tempCursorAnimal;
 			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
 			if ( occupyingCell >= 0)
 			{
@@ -3217,12 +3256,18 @@ void drawGameInterfaceText()
 				{
 					if (cursorAnimal == playerCreature)
 					{
-						printText2D(   std::string("This is you. ") + std::to_string(cursorAnimalSpecies ) , menuX, menuY, textSize);
+						printText2D(   std::string("This is you."), menuX, menuY, textSize);
 						menuY += spacing;
 					}
+					else
+					{
 
-					printText2D(   std::string(animals[cursorAnimal].displayName) , menuX, menuY, textSize);
-					menuY += spacing;
+						// printf(" eeeee %s \n", animals[cursorAnimal].displayName);
+						printText2D(   std::string(animals[cursorAnimal].displayName) , menuX, menuY, textSize);
+						menuY += spacing;
+
+					}
+
 
 
 				}
@@ -3241,39 +3286,35 @@ void drawGameInterfaceText()
 				// describe the organ.
 				printText2D(  tileDescriptions(  animals[  cursorAnimal].body[occupyingCell].organ ), menuX, menuY, textSize);
 				menuY += spacing;
-
-			}
-			else {
-				cursorAnimal = -1;
-
-				if (world[worldCursorPos].material != MATERIAL_NOTHING)
-				{
-					// printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
-					// menuY -= spacing;
-					// describe the material.
-					printText2D(  tileDescriptions(world[worldCursorPos].material ), menuX, menuY, textSize);
-					menuY += spacing;
-
-				}
-				else
-				{
-					// printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
-					// menuY -= spacing;
-					// describe the terrain
-					printText2D(  tileDescriptions (world[worldCursorPos].terrain ), menuX, menuY, textSize);
-					menuY += spacing;
-				}
-
+				animalInSquare = true;
 
 			}
 		}
 
-		// if (cursorAnimal < 0)
-		// {
+
+		if (!animalInSquare)
+		{
+
+			if (world[worldCursorPos].material != MATERIAL_NOTHING)
+			{
+				// printText2D(   std::string("Material ") + std::to_string(world[worldCursorPos].material ) , menuX, menuY, textSize);
+				// menuY -= spacing;
+				// describe the material.
+				printText2D(  tileDescriptions(world[worldCursorPos].material ), menuX, menuY, textSize);
+				menuY += spacing;
+
+			}
+			else
+			{
+				// printText2D(   std::string("Terrain ") + std::to_string(world[worldCursorPos].terrain ) , menuX, menuY, textSize);
+				// menuY -= spacing;
+				// describe the terrain
+				printText2D(  tileDescriptions (world[worldCursorPos].terrain ), menuX, menuY, textSize);
+				menuY += spacing;
+			}
 
 
-
-		// }
+		}
 
 
 
@@ -3360,7 +3401,13 @@ void setupExampleHuman(int i)
 	// std::string("A human.").c_str().cop
 
 
-	snprintf (animals[i].displayName, 32, "A human.");
+	// snprintf (animals[i].displayName, 32, "A human.");
+
+	// strcpy( &animals[i].displayName[0] , std::string("A human.").c_str() );
+
+
+	std::string gunDescription = std::string("A human.");
+	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
 
 	appendCell( i, ORGAN_BONE, Vec_i2(0, 1 ));
 
@@ -3379,9 +3426,9 @@ void setupExampleHuman(int i)
 
 
 
-	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(-1, -2));
-	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(0, -2));
-	appendCell( i, ORGAN_MOUTH_CARNIVORE , Vec_i2(1, -2));
+	appendCell( i, ORGAN_BONE , Vec_i2(-1, -2));
+	appendCell( i, ORGAN_SPEAKER , Vec_i2(0, -2));
+	appendCell( i, ORGAN_BONE , Vec_i2(1, -2));
 
 
 	appendCell( i, ORGAN_BONE, Vec_i2(0, -3) );
@@ -3563,8 +3610,13 @@ void setupExampleGlasses(int i)
 
 	// animals[i].displayName = std::string("A pair of glasses.").c_str();
 
-	snprintf (animals[i].displayName, 32, "A pair of glasses.");
+	// snprintf (animals[i].displayName, 32, "A pair of glasses.");
 
+	// strcpy( &animals[i].displayName[0] , std::string("A pair of glasses.").c_str() );
+
+
+	std::string gunDescription = std::string("A pair of glasses.");
+	strcpy( &(animals[i].displayName[0]) , gunDescription.c_str() );
 
 	appendCell( i, MATERIAL_GLASS, Vec_i2(1, 0) );
 	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 0) );
@@ -3599,8 +3651,10 @@ void setupExampleGun(int i)
 
 	// animals[i].displayName = std::string("A pistol.").c_str();
 
-	snprintf (animals[i].displayName, 32, "A pistol.");
+	// snprintf (animals[i].displayName, 32, "A pistol.");
 
+	std::string gunDescription = std::string("A pistol.");
+	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
 
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
@@ -3668,8 +3722,11 @@ void setupExampleComputer(int i)
 
 	// animals[i].displayName = std::string("A computer terminal.").c_str();
 
-	snprintf (animals[i].displayName, 32, "A computer terminal.");
+	// snprintf (animals[i].displayName, 32, "A computer terminal.");
 
+	std::string gunDescription = std::string("A computer.");
+	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
+	// strcpy( &animals[i].displayName[0] , std::string("A computer.").c_str() );
 
 
 }
