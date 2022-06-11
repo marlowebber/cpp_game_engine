@@ -46,6 +46,7 @@ void selectCursorAnimal();
 void activateGrabbedMachine();
 void resetMouseCursor();
 
+void saveSelectedAnimal();
 
 #define VISUALIZER_TRUECOLOR           1001
 #define VISUALIZER_TRACKS              1003

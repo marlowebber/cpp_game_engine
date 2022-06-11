@@ -122,7 +122,7 @@ void threadInterface()
 				playerDrop();
 				break;
 
-			
+
 
 			case SDLK_y:
 				spawnTournamentAnimals();
@@ -257,6 +257,13 @@ void threadInterface()
 			case SDLK_e:
 			{
 				selectCursorAnimal();
+				break;
+			}
+
+
+			case SDLK_k:
+			{
+				saveSelectedAnimal();
 				break;
 			}
 

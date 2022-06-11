@@ -168,6 +168,10 @@ bool playerGrabState = false;
 bool playerInControl = true;
 int playerCreature = -1;
 bool playerCanSee = true;
+bool playerCanHear = true;
+bool playerCanSmell = true;
+
+
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
 
@@ -2887,15 +2891,19 @@ void camera()
 
 	if (playerCreature >= 0 && cameraTargetCreature == playerCreature && playerInControl)
 	{
-		unsigned int playerEye = getRandomCellOfType(playerCreature, ORGAN_SENSOR_EYE);
+		int playerEye = getRandomCellOfType(playerCreature, ORGAN_SENSOR_EYE);
 		if (playerEye >= 0)
-		{
-			playerCanSee = false;
-		}
-		else
 		{
 			playerCanSee = true;
 		}
+		else
+		{
+			playerCanSee = false;
+		}
+	}
+	else
+	{
+		playerCanSee = true; // if you're in the spectator view, basically not 'the player' or any other creature, you stil want to be able to see.
 	}
 
 	if (playerCanSee)
@@ -3182,34 +3190,37 @@ void drawGameInterfaceText()
 
 	}
 
-	// if the player has a nose, print what it smells like here.
-	unsigned int playerPheromoneSensor = getRandomCellOfType( playerCreature, ORGAN_SENSOR_PHEROMONE ) ;
-	if (playerPheromoneSensor >= 0)
+
+	if (playerCreature >= 0)
 	{
-
-		unsigned int playerPheromoneSensorWorldPos = animals[playerCreature].body[playerPheromoneSensor].worldPositionI;
-
-		if (world[playerPheromoneSensorWorldPos].pheromoneChannel >= 0 &&  world[playerPheromoneSensorWorldPos].pheromoneChannel < numberOfSpeakerChannels)
+		// if the player has a nose, print what it smells like here.
+		int playerPheromoneSensor = getRandomCellOfType( playerCreature, ORGAN_SENSOR_PHEROMONE ) ;
+		if (playerPheromoneSensor >= 0)
 		{
-			printText2D(   pheromoneChannelDescriptions[  world[playerPheromoneSensorWorldPos].pheromoneChannel ] , menuX, menuY, textSize);
+
+			unsigned int playerPheromoneSensorWorldPos = animals[playerCreature].body[playerPheromoneSensor].worldPositionI;
+
+			if (world[playerPheromoneSensorWorldPos].pheromoneChannel >= 0 &&  world[playerPheromoneSensorWorldPos].pheromoneChannel < numberOfSpeakerChannels)
+			{
+				printText2D(   pheromoneChannelDescriptions[  world[playerPheromoneSensorWorldPos].pheromoneChannel ] , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+			else
+			{
+				printText2D(   std::string("You can't smell anything in particular.") , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+
+		}
+
+
+		// if the player is blind, say so!
+		if (!playerCanSee)
+		{
+			printText2D(   std::string("You can't see anything. ") , menuX, menuY, textSize);
 			menuY += spacing;
 		}
-		else
-		{
-			printText2D(   std::string("You can't smell anything in particular.") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
-
 	}
-
-
-	// if the player is blind, say so!
-	if (!playerCanSee)
-	{
-		printText2D(   std::string("You can't see anything. ") , menuX, menuY, textSize);
-		menuY += spacing;
-	}
-
 // if (world[worldCursorPos])
 
 
@@ -4109,17 +4120,27 @@ void load()
 }
 
 
-void saveParticularAnimal()
+void saveParticularAnimal(unsigned int animalIndex, std::string filename )
 {
-	std::ofstream out7(std::string("save/animal").c_str());
+	std::ofstream out7( filename .c_str());
 	out7.write( (char*)(&animals[selectedAnimal]), sizeof(Animal));
 	out7.close();
 }
 
-void loadParticlarAnimal()
+void loadParticlarAnimal(unsigned int animalIndex, std::string filename)
 {
 
 
-
+	std::ifstream in7(filename.c_str());
+	in7.read( (char*)(&animals[selectedAnimal]), sizeof(Animal));
+	in7.close();
 }
 
+
+void saveSelectedAnimal ( )
+{
+	if (selectedAnimal >= 0)
+	{
+		saveParticularAnimal(selectedAnimal, std::string("save/selectedAnimal") );
+	}
+}
