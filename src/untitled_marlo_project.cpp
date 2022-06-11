@@ -198,10 +198,31 @@ int championScore = 0;
 int tournamentInterval = 10000;
 int tournamentCounter  = 0;
 
+int adversary = -1;
+
 int cameraTargetCreature = -1;
 unsigned int usPerFrame = 0;
 unsigned int populationCount = 0;
 unsigned int cameraFrameCount = 0;
+
+
+const unsigned int nLogs = 32;
+const unsigned int logLength = 64;
+
+char logs[logLength][nLogs];
+
+
+
+
+void appendLog( std::string input)
+{
+	for (int i = nLogs; i > 0; i--)
+	{
+		memcpy(  &logs[i] , &logs[i - 1], sizeof(char) * logLength   );
+	}
+	// memcpy(  &logs[0] , &input, sizeof(char) * logLength   );
+	strcpy( &logs[0][0] , input.c_str() );
+}
 
 struct Square
 {
@@ -220,6 +241,7 @@ struct Square
 	float pheromoneIntensity;
 	int pheromoneChannel;
 
+	Color grassColor;
 
 	// int plantIdentity;
 	// float plantEnergy;
@@ -1084,6 +1106,7 @@ void resetGrid()
 		world[i].light = color_white;
 		world[i].pheromoneIntensity = 0.0f;
 		world[i].pheromoneChannel = -1;
+		world[i].grassColor = color_green;
 	}
 }
 
@@ -1709,7 +1732,16 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	}
 	else
 	{
-		displayColor = filterColor( materialColors(world[worldI].terrain),  materialColors(world[worldI].material) );
+
+		if (world[worldI].material == MATERIAL_GRASS)
+		{
+			displayColor = world[worldI].grassColor;
+		}
+		else
+		{
+			displayColor = filterColor( materialColors(world[worldI].terrain),  materialColors(world[worldI].material) );
+		}
+
 	}
 
 	displayColor = multiplyColor(displayColor, world[worldI].light);
@@ -1717,9 +1749,20 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	return displayColor;
 }
 
+
+bool materialDegrades(unsigned int material)
+{
+	if (material == MATERIAL_FOOD ||
+	        material == MATERIAL_BONE ||
+	        material == MATERIAL_BLOOD)
+	{return true;}
+
+	return false;
+}
+
 void updateMap()
 {
-	unsigned int mapUpdateFidelity = worldSquareSize / 50000;
+	unsigned int mapUpdateFidelity = worldSquareSize / 25000;
 	for (unsigned int i = 0; i < mapUpdateFidelity; ++i)
 	{
 		unsigned int randomX = extremelyFastNumberFromZeroTo(worldSize - 1);
@@ -1727,6 +1770,9 @@ void updateMap()
 		unsigned int randomI = (randomY * worldSize) + randomX;
 		if (randomI < worldSquareSize)
 		{
+
+
+			// slowly reduce pheromones over time.
 			if (world[randomI].pheromoneIntensity > 0.2f)
 			{
 				world[randomI].pheromoneIntensity -= 0.2f;
@@ -1737,13 +1783,13 @@ void updateMap()
 			}
 
 
-			if (world[randomI].material == MATERIAL_NOTHING)
-			{
-				if (world[randomI].terrain == MATERIAL_ROCK ||  world[randomI].terrain == MATERIAL_WATER )
-				{
-					world[randomI].material = MATERIAL_GRASS;
-				}
-			}
+			// if (world[randomI].material == MATERIAL_NOTHING)
+			// {
+			// 	if (world[randomI].terrain == MATERIAL_ROCK ||  world[randomI].terrain == MATERIAL_WATER )
+			// 	{
+			// 		world[randomI].material = MATERIAL_GRASS;
+			// 	}
+			// }
 
 			// if (world[randomI].terrain == TERRAIN_LAVA)
 			// {
@@ -1758,15 +1804,55 @@ void updateMap()
 			// 	}
 			// }
 
-			if (world[randomI].material == MATERIAL_BLOOD)
+
+			if (world[randomI].material == MATERIAL_NOTHING)
 			{
-				world[randomI].material = MATERIAL_NOTHING;
+
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					unsigned int neighbour = randomI + neighbourOffsets[i];
+					if (neighbour < worldSquareSize)
+					{
+						if (world[neighbour].material == MATERIAL_GRASS)
+						{
+							world[randomI].material = MATERIAL_GRASS;
+
+							world[randomI].grassColor = world[neighbour].grassColor;
+
+							world[randomI].grassColor.r += (RNG() - 0.5f) * 0.1f;
+							world[randomI].grassColor.g += (RNG() - 0.5f) * 0.1f;
+							world[randomI].grassColor.b += (RNG() - 0.5f) * 0.1f;
+
+							world[randomI].grassColor = clampColor(world[randomI].grassColor);
+
+
+						}
+					}
+				}
+
+			}
+			else
+			{
+				if ( materialDegrades( world[randomI].material) )
+				{
+					world[randomI].material = MATERIAL_NOTHING;
+				}
+
 			}
 
-			if (world[randomI].material == MATERIAL_BONE)
-			{
-				world[randomI].material = MATERIAL_NOTHING;
-			}
+
+
+
+
+			// if (world[randomI].material == MATERIAL_BLOOD)
+			// {
+			// 	world[randomI].material = MATERIAL_NOTHING;
+			// }
+
+			// if (world[randomI].material == MATERIAL_BONE)
+			// {
+			// 	world[randomI].material = MATERIAL_NOTHING;
+			// }
 		}
 	}
 }
@@ -1946,6 +2032,11 @@ void organs_all()
 												animals[animalIndex].body[cellIndex].grabbedCreature = world[neighbour].identity;
 												animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 												grabbedSomething = true;
+
+
+
+												appendLog( std::string ("you picked up an item") );
+
 												break;
 											}
 										}
@@ -3071,8 +3162,8 @@ void drawGameInterfaceText()
 	int spacing = 20;
 
 
-	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
-	menuY += spacing;
+	// printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
+	// menuY += spacing;
 
 
 	// printText2D(   std::string("Player ") + std::to_string(playerCreature) , menuX, menuY, textSize);
@@ -3225,6 +3316,30 @@ void drawGameInterfaceText()
 
 
 	displayComputerText();
+
+
+
+
+
+
+	// int menuX = 50;
+	// int menuY = 50;
+	// int textSize = 10;
+	// int spacing = 20;
+
+	menuY += spacing;
+	for (int i = 0; i < 8; ++i)
+	{
+		printText2D(   logs[i] , menuX, menuY, textSize);
+		menuY += spacing;
+
+
+	}
+	menuY += spacing;
+
+	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
+	menuY += spacing;
+
 
 
 }
@@ -3743,6 +3858,33 @@ void spawnPlayer()
 	}
 }
 
+
+
+void saveParticularAnimal(unsigned int animalIndex, std::string filename )
+{
+	std::ofstream out7( filename .c_str());
+	out7.write( (char*)(&animals[selectedAnimal]), sizeof(Animal));
+	out7.close();
+}
+
+void loadParticlarAnimal(unsigned int animalIndex, std::string filename)
+{
+
+
+	std::ifstream in7(filename.c_str());
+	in7.read( (char*)(&animals[selectedAnimal]), sizeof(Animal));
+	in7.close();
+}
+
+
+void saveSelectedAnimal ( )
+{
+	if (selectedAnimal >= 0)
+	{
+		saveParticularAnimal(selectedAnimal, std::string("save/selectedAnimal") );
+	}
+}
+
 void spawnTournamentAnimals()
 {
 	// animals in the tournament are not in the 0th species, which is for players and machines.
@@ -3751,7 +3893,11 @@ void spawnTournamentAnimals()
 		// printf("setting up animal %i\n", i);
 		unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 		int j = 1;
-		setupExampleAnimal2(j);
+		// setupExampleAnimal2(j);
+
+
+		loadParticlarAnimal(j, std::string("save/macrolongus_smigmanosa"));
+
 		spawnAnimalIntoSlot(i,
 		                    animals[j],
 		                    targetWorldPositionI, true);
@@ -4093,6 +4239,8 @@ void modelSupervisor()
 
 void startSimulation()
 {
+
+	// setupLogs();
 	setupRandomWorld();
 	boost::thread t7{ modelSupervisor };
 }
@@ -4119,28 +4267,3 @@ void load()
 	in7.close();
 }
 
-
-void saveParticularAnimal(unsigned int animalIndex, std::string filename )
-{
-	std::ofstream out7( filename .c_str());
-	out7.write( (char*)(&animals[selectedAnimal]), sizeof(Animal));
-	out7.close();
-}
-
-void loadParticlarAnimal(unsigned int animalIndex, std::string filename)
-{
-
-
-	std::ifstream in7(filename.c_str());
-	in7.read( (char*)(&animals[selectedAnimal]), sizeof(Animal));
-	in7.close();
-}
-
-
-void saveSelectedAnimal ( )
-{
-	if (selectedAnimal >= 0)
-	{
-		saveParticularAnimal(selectedAnimal, std::string("save/selectedAnimal") );
-	}
-}
