@@ -24,6 +24,7 @@ const  int cameraPanSpeed = 10;
 extern float fps ;
 
 extern  int playerCreature ;
+
 void spawnPlayer();
 
 void save();
@@ -49,6 +50,10 @@ void resetMouseCursor();
 void saveSelectedAnimal();
 
 void viewAdversary();
+
+void incrementSelectedOrgan();
+
+void decrementSelectedOrgan();
 
 #define VISUALIZER_TRUECOLOR           1001
 #define VISUALIZER_TRACKS              1003

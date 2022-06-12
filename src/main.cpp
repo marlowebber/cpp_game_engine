@@ -92,6 +92,13 @@ void threadInterface()
 				lockfps = !lockfps;
 				break;
 
+				case SDLK_y:
+				incrementSelectedOrgan();
+				break;
+				case SDLK_h:
+				decrementSelectedOrgan();
+				break;
+
 			// case SDLK_1:
 			// 	// visualizer = VISUALIZER_TRUECOLOR;
 			// 	break;
@@ -124,9 +131,9 @@ void threadInterface()
 
 
 
-			case SDLK_y:
-				spawnTournamentAnimals();
-				break;
+			// case SDLK_y:
+			// 	spawnTournamentAnimals();
+			// 	break;
 
 
 

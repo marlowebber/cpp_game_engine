@@ -208,7 +208,7 @@ int paletteTextSize = 10;
 int paletteSpacing = 20;
 
 
-unsigned int paletteClosestToMouse = 0;
+unsigned int paletteSelectedOrgan = 0;
 unsigned int paletteWidth = 3;
 
 
@@ -1268,6 +1268,7 @@ void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosi
 			}
 		}
 	}
+	animals[animalIndex].body[cellIndex] = animals[animalIndex].genes[cellIndex] ;
 }
 
 // add a cell to an animal germline in a guided but random way. Used to messily construct new animals, for situations where lots of variation is desirable.
@@ -2133,10 +2134,106 @@ float fast_sigmoid(float in)
 	return  out;
 }
 
+
+
+void paletteCallback()
+{
+	printf("a\n");
+	// add the selected organ to the selected animal
+	if (selectedAnimal >= 0 && selectedAnimal < numberOfAnimals)
+	{
+	printf("b\n");
+		if (paletteSelectedOrgan >= 0 && paletteSelectedOrgan < numberOfOrganTypes)
+		{
+
+
+	printf("c\n");
+			int newPosX = animals[selectedAnimal].uPosX - mousePositionX;
+			int newPosY = animals[selectedAnimal].uPosY - mousePositionY;
+
+			// animalAppendCell()
+
+			appendCell(selectedAnimal, paletteSelectedOrgan, Vec_i2(newPosX, newPosY));
+
+		}
+	}
+}
+
+void drawPalette()
+{
+
+
+	int closestValue = 1000;
+	unsigned int tempClosestToMouse = 0;
+
+	for (int i = 0; i < numberOfOrganTypes; ++i)
+	{
+		unsigned int paletteX = i % paletteWidth;
+		unsigned int paletteY = i / paletteWidth;
+
+		int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
+		int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
+
+		// int diffX = mousePositionX - paletteFinalX;
+		// int diffY = mousePositionY - paletteFinalY;
+
+		// int absoluteDistance = abs(diffX) + abs(diffY);
+
+		// if ( absoluteDistance < closestValue )
+		// {
+		// 	closestValue = absoluteDistance;
+		// 	tempClosestToMouse = i;
+		// }
+
+
+		if (i == paletteSelectedOrgan)
+		{
+
+			printText2D(  std::string("X ") +  tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
+		}
+		else
+		{
+
+			printText2D(   tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
+		}
+	}
+
+	// paletteSelectedOrgan= tempClosestToMouse;
+
+	// draw a white box under the selected one.
+
+	// unsigned int paletteX = paletteSelectedOrgan % paletteWidth;
+	// unsigned int paletteY = paletteSelectedOrgan / paletteWidth;
+
+	// int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
+	// int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
+
+	// drawTile( Vec_f2(paletteFinalX, paletteFinalY), color_brightred );
+}
+
+void incrementSelectedOrgan()
+{
+	paletteSelectedOrgan++;
+	paletteSelectedOrgan = paletteSelectedOrgan % numberOfOrganTypes;
+}
+void decrementSelectedOrgan()
+{
+	paletteSelectedOrgan--;
+	paletteSelectedOrgan = paletteSelectedOrgan % numberOfOrganTypes;
+}
+
+// occurs whenever a left click is received.
 void activateGrabbedMachine()
 {
 	if (playerCreature >= 0 && playerInControl)
 	{
+
+		if (palette)
+		{
+			paletteCallback();
+		}
+
+
 		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
 		{
 			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
@@ -3479,59 +3576,6 @@ void displayComputerText()
 
 
 
-void drawPalette()
-{
-
-
-	int closestValue = 1000;
-	unsigned int tempClosestToMouse = 0;
-
-	for (int i = 0; i < numberOfOrganTypes; ++i)
-	{
-		unsigned int paletteX = i % paletteWidth;
-		unsigned int paletteY = i / paletteWidth;
-
-		int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
-		int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
-
-		int diffX = mousePositionX - paletteFinalX;
-		int diffY = mousePositionY - paletteFinalY;
-
-		int absoluteDistance = abs(diffX) + abs(diffY);
-
-		if ( absoluteDistance < closestValue )
-		{
-			closestValue = absoluteDistance;
-			tempClosestToMouse = i;
-		}
-
-
-		if (i == paletteClosestToMouse)
-		{
-
-		printText2D(  std::string("X ")+  tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
-		}
-		else
-		{
-
-		printText2D(   tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
-		}
-	}
-
-	paletteClosestToMouse= tempClosestToMouse;
-
-	// draw a white box under the selected one.
-
-	// unsigned int paletteX = paletteClosestToMouse % paletteWidth;
-	// unsigned int paletteY = paletteClosestToMouse / paletteWidth;
-
-	// int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
-	// int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
-
-	// drawTile( Vec_f2(paletteFinalX, paletteFinalY), color_brightred );
-}
-
-
 
 // void checkPalette(vec_i2 input)
 // {
@@ -3750,7 +3794,7 @@ void drawGameInterfaceText()
 
 
 	// draw edit palette
-	if (true)
+	if (palette)
 	{
 		drawPalette();
 	}
@@ -4111,7 +4155,13 @@ void setupMessageComputer(int i)
 	animals[i].machineCallback = communicationComputerCallback;
 }
 
-
+void setupHospitalComputer(int i)
+{
+	setupExampleComputer(i);
+	std::string gunDescription = std::string("A hospital.");
+	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
+	animals[i].machineCallback = hospitalCallback;
+}
 
 
 void setupBuilding_playerBase(unsigned int worldPositionI)
@@ -4519,6 +4569,32 @@ void setupRandomWorld()
 		                    targetWorldPositionI, false);
 
 		// animals[3].fAngle = 0.0f;
+
+
+
+
+
+	targetWorldPositionI += (400);
+		// targetWorldPositionX = 200 ;
+		// targetWorldPositionY = 300 ;
+		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+		setupBuilding_playerBase(targetWorldPositionI);
+
+		// int i = 1;
+		// setupExampleGlasses(i);
+		// setupTrackerGlasses(i)
+
+	 setupHospitalComputer(i);
+		spawnAnimalIntoSlot(5,
+		                    animals[i],
+		                    targetWorldPositionI, false);
+
+		// animals[3].fAngle = 0.0f;
+
+
+
+
 
 
 
