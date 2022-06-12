@@ -267,6 +267,13 @@ void threadInterface()
 				break;
 			}
 
+			case SDLK_m:
+			{
+
+			    viewAdversary();
+			    break;
+			}
+
 
 			case SDLK_ESCAPE:
 				quit();

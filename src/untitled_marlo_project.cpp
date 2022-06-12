@@ -232,8 +232,9 @@ void appendLog( std::string input)
 struct Square
 {
 
-	unsigned int material;
-	unsigned int terrain;
+	unsigned int wall;      //  material filling the volume of the square. You probably can't move through it.
+	unsigned int material;  // a piece of material sitting on the ground. You can move over it, no matter what it is made of.
+	unsigned int terrain;   // the floor itself. If it is not solid, you may have to swim in it.
 
 
 
@@ -248,39 +249,45 @@ struct Square
 
 	Color grassColor;
 
-	// int plantIdentity;
-	// float plantEnergy;
-	// Color plantColor;
-	// unsigned int plantState;
-	// char plantGenes[32];
-	// unsigned int plantGeneCursor;
-	// unsigned seedGenes[32];
 
 };
 
 
-// #define PLANT_LEAF;
-// #define PLANT_SEED;
-// #define PLANT_WOOD;
-// #define PLANT_FLOWER;
-// #define PLANT_ROOT;
+// struct Plant
+// {
+
+// 	int plantIdentity;
+// 	float plantEnergy;
+// 	Color plantColor;
+// 	unsigned int plantState;
+// 	char plantGenes[32];
+// 	unsigned int plantGeneCursor;
+// 	unsigned seedGenes[32];
+// };
+
+
+// #define PLANT_LEAF   1
+// #define PLANT_SEED   2
+// #define PLANT_WOOD   3
+// #define PLANT_FLOWER 4
+// #define PLANT_ROOT   5
 
 // void plantTurn(unsigned int worldPositionI)
 // {
 
 
 
-// // add some energy to leaves.
-// 	world[worldPositionI].plantEnergy += world[worldPositionI].light;
+// // // add some energy to leaves.
+// // 	world[worldPositionI].plantEnergy += world[worldPositionI].light;
 
-// // grow into surrounding squares if energy available.
-// 	if ()
+// // // grow into surrounding squares if energy available.
+// // 	if ()
 
-// 		// seeds shift into neighbour square at random.
+// // 		// seeds shift into neighbour square at random.
 
 
 
-// 	}
+// }
 
 
 
@@ -371,7 +378,7 @@ std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 	std::string( "It has an earthy smell." ),
 	std::string( "It has a musty smell." ),
 	std::string( "It smells of urine." ),
-	std::string( "It smells like beer." ),
+	std::string( "It smells like soap." ),
 	std::string( "It has a gamey smell." ),
 	std::string( "It smells like a cat's fur." ),
 	std::string( "It smells like dried hay." ),
@@ -381,7 +388,7 @@ std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 	std::string( "It smells like the perfume of a frangipani's flower." ),
 	std::string( "It smells like pool chlorine." ),
 	std::string( "It smells like electricity." ),
-	std::string( "It smells like dead rotting flesh. Yuck!" ),
+	std::string( "It smells like rotting meat. Yuck!" ),
 	std::string( "You can smell raspberries. Incredible!" ),
 	std::string( "It smells like vomit." ),
 };
@@ -550,13 +557,10 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("A bony hand which can clutch items and grab animals.");
 	}
-
-
 	case MATERIAL_FOOD:
 	{
 		return std::string("There's a piece of dried-out old meat.");
 	}
-
 	case MATERIAL_ROCK:
 	{
 		return std::string("There's a solid grey rock.");
@@ -603,6 +607,203 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	return std::string("You don't know what this is.");
 }
+
+
+
+
+std::string tileShortNames(unsigned int tile)
+{
+	switch (tile)
+	{
+	case ORGAN_MOUTH_VEG:
+	{
+		return std::string("Herbivore mouth");
+	}
+	case ORGAN_MOUTH_SCAVENGE:
+	{
+		return std::string("Scavenger mouth");
+	}
+	case ORGAN_GONAD:
+	{
+		return std::string("Asexual gonad");
+	}
+	case ORGAN_MUSCLE:
+	{
+		return std::string("Forward muscle");
+	}
+	case ORGAN_BONE:
+	{
+		return std::string("Bone");
+	}
+	case ORGAN_WEAPON:
+	{
+		return std::string("Claw");
+	}
+	case ORGAN_LIVER:
+	{
+		return std::string("Liver");
+	}
+	case ORGAN_MUSCLE_TURN:
+	{
+		return std::string("Turning muscle");
+	}
+	case ORGAN_SENSOR_EYE:
+	{
+		return std::string("Eye");
+	}
+	case ORGAN_MOUTH_CARNIVORE:
+	{
+		return std::string("Carnivore mouth");
+	}
+	case ORGAN_MOUTH_PARASITE:
+	{
+		return std::string("Parasite mouth");
+	}
+	case ORGAN_ADDOFFSPRINGENERGY:
+	{
+		return std::string("Add offspring energy");
+	}
+	case ORGAN_ADDLIFESPAN:
+	{
+		return std::string("Add lifespan");
+	}
+	case ORGAN_NEURON:
+	{
+		return std::string("Neuron");
+	}
+	case ORGAN_BIASNEURON:
+	{
+		return std::string("Bias neuron");
+	}
+	case ORGAN_SENSOR_BODYANGLE:
+	{
+		return std::string("Body angle sensor");
+	}
+	case ORGAN_SENSOR_TRACKER:
+	{
+		return std::string("Tracker sensor");
+	}
+	case ORGAN_SPEAKER:
+	{
+		return std::string("Speaker");
+	}
+	case ORGAN_SENSOR_EAR:
+	{
+		return std::string("Ear");
+	}
+	case ORGAN_MUSCLE_STRAFE:
+	{
+		return std::string("Strafe muscle");
+	}
+	case ORGAN_SENSOR_PHEROMONE:
+	{
+		return std::string("Pheromone sensor");
+	}
+	case ORGAN_EMITTER_PHEROMONE:
+	{
+		return std::string("Pheromone emitter");
+	}
+	case ORGAN_MEMORY_TX:
+	{
+		return std::string("Memory TX");
+	}
+	case ORGAN_MEMORY_RX:
+	{
+		return std::string("Memory RX");
+	}
+	case ORGAN_GILL:
+	{
+		return std::string("Gill");
+	}
+	case ORGAN_LUNG:
+	{
+		return std::string("Lung");
+	}
+	case ORGAN_SENSOR_HUNGER:
+	{
+		return std::string("Hunger sensor");
+	}
+	case ORGAN_SENSOR_AGE:
+	{
+		return std::string("Age sensor");
+	}
+	case ORGAN_SENSOR_LAST_STRANGER:
+	{
+		return std::string("Direction of last stranger sensor");
+	}
+	case ORGAN_SENSOR_LAST_KIN:
+	{
+		return std::string("Direction of last peer sensor");
+	}
+	case ORGAN_SENSOR_PARENT:
+	{
+		return std::string("Direction of parent sensor");
+	}
+	case ORGAN_SENSOR_BIRTHPLACE:
+	{
+		return std::string("Direction of birthplace sensor");
+	}
+	case ORGAN_SENSOR_TOUCH:
+	{
+		return std::string("Touch sensor");
+	}
+	case ORGAN_GRABBER:
+	{
+		return std::string("Grabber");
+	}
+	case MATERIAL_FOOD:
+	{
+		return std::string("Food");
+	}
+	case MATERIAL_ROCK:
+	{
+		return std::string("Rock");
+	}
+
+	case MATERIAL_MEAT:
+	{
+		return std::string("Meat");
+	}
+	case MATERIAL_BONE:
+	{
+		return std::string("Bone");
+	}
+	case MATERIAL_BLOOD:
+	{
+		return std::string("Blood");
+	}
+	case MATERIAL_METAL:
+	{
+		return std::string("Metal");
+	}
+	case MATERIAL_VOIDMETAL:
+	{
+		return std::string("Void metal");
+	}
+	case MATERIAL_SMOKE:
+	{
+		return std::string("Smoke");
+	}
+	case MATERIAL_GLASS:
+	{
+		return std::string("Glass");
+	}
+	case MATERIAL_NOTHING:
+	{
+		return std::string("Nothing");
+	}
+	case MATERIAL_GRASS:
+	{
+		return std::string("Grass");
+	}
+
+
+	}
+	return std::string("Unknown");
+}
+
+
+
 
 // std::string materialDescriptions(unsigned int material)
 // {
@@ -1744,14 +1945,29 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	else
 	{
 
+		// if (world[worldI].material == MATERIAL_GRASS)
+		// {
+		// displayColor =
+		// }
+		// else
+		// {
+
+		Color floorColor ;
 		if (world[worldI].material == MATERIAL_GRASS)
 		{
-			displayColor = world[worldI].grassColor;
+			floorColor = world[worldI].grassColor;
 		}
 		else
 		{
-			displayColor = filterColor( materialColors(world[worldI].terrain),  materialColors(world[worldI].material) );
+			floorColor = materialColors(world[worldI].terrain);
 		}
+
+
+
+		// you can see the three material layers in order, wall then material then floor.
+		displayColor = filterColor( floorColor,  materialColors(world[worldI].material) );
+		displayColor = filterColor( displayColor,  materialColors(world[worldI].wall) );
+		// }
 
 	}
 
@@ -1765,7 +1981,8 @@ bool materialDegrades(unsigned int material)
 {
 	if (material == MATERIAL_FOOD ||
 	        material == MATERIAL_BONE ||
-	        material == MATERIAL_BLOOD)
+	        material == MATERIAL_BLOOD ||
+	        material == MATERIAL_SMOKE)
 	{return true;}
 
 	return false;
@@ -1816,7 +2033,7 @@ void updateMap()
 			// }
 
 
-			if (world[randomI].material == MATERIAL_NOTHING)
+			if (world[randomI].material == MATERIAL_NOTHING && world[randomI].wall == MATERIAL_NOTHING)
 			{
 
 				for (int i = 0; i < nNeighbours; ++i)
@@ -1842,14 +2059,17 @@ void updateMap()
 				}
 
 			}
-			else
-			{
-				if ( materialDegrades( world[randomI].material) )
-				{
-					world[randomI].material = MATERIAL_NOTHING;
-				}
 
+			if ( materialDegrades( world[randomI].material) )
+			{
+				world[randomI].material = MATERIAL_NOTHING;
 			}
+
+			if ( materialDegrades( world[randomI].wall) )
+			{
+				world[randomI].wall = MATERIAL_NOTHING;
+			}
+
 
 
 
@@ -2680,7 +2900,7 @@ void move_all()
 
 			if (newPosition < worldSquareSize)
 			{
-				if (  materialBlocksMovement( world[newPosition].material ) )
+				if (  materialBlocksMovement( world[newPosition].wall ) )
 				{
 					animals[animalIndex].fPosX  = animals[animalIndex].uPosX;
 					animals[animalIndex].fPosY  = animals[animalIndex].uPosY;
@@ -2693,24 +2913,25 @@ void move_all()
 
 				animals[animalIndex].position = newPosition;
 
-				if (world[newPosition].terrain == MATERIAL_WATER)
+
+				if (! animals[animalIndex].isMachine)
 				{
-					if (! animals[animalIndex].canBreatheUnderwater &&
-					        ! animals[animalIndex].isMachine
-					   )
+					if (world[newPosition].terrain == MATERIAL_WATER )
 					{
-						animals[animalIndex].damageReceived ++;
+						if (! animals[animalIndex].canBreatheUnderwater )
+						{
+							animals[animalIndex].damageReceived ++;
+						}
+					}
+					else
+					{
+						if (! animals[animalIndex].canBreatheAir)
+						{
+							animals[animalIndex].damageReceived ++;
+						}
 					}
 				}
 
-				if (world[newPosition].terrain == MATERIAL_ROCK )
-				{
-					if (! animals[animalIndex].canBreatheAir &&
-					        ! animals[animalIndex].isMachine)
-					{
-						animals[animalIndex].damageReceived ++;
-					}
-				}
 
 				if (world[newPosition].temperature > animals[animalIndex].temp_limit_high)
 				{
@@ -3005,6 +3226,15 @@ void selectCursorAnimal()
 
 
 
+void viewAdversary()
+{
+	if (adversary >= 0)
+	{
+		cameraTargetCreature = adversary;
+	}
+}
+
+
 void camera()
 {
 
@@ -3192,6 +3422,25 @@ void displayComputerText()
 
 }
 
+
+
+void drawPalette()
+{
+
+
+
+	int menuX = 50;
+	int menuY = 50;
+	int textSize = 10;
+	int spacing = 20;
+
+	for (int i = 0; i < numberOfOrganTypes; ++i)
+	{
+
+	}
+
+
+}
 
 
 void drawGameInterfaceText()
@@ -3570,17 +3819,15 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 
 
 
-			if (world[shootWorldPosition].material == MATERIAL_NOTHING )
+			if (world[shootWorldPosition].wall == MATERIAL_NOTHING )
 			{
-				world[shootWorldPosition].material = MATERIAL_SMOKE;
+				world[shootWorldPosition].wall = MATERIAL_SMOKE;
 			}
 
-			if (world[shootWorldPosition].material != MATERIAL_NOTHING &&
-			        world[shootWorldPosition].material != MATERIAL_SMOKE &&
-			        world[shootWorldPosition].material != MATERIAL_GRASS
+			if ( materialBlocksMovement( world[shootWorldPosition].wall)
 			   )
 			{
-				world[shootWorldPosition].material == MATERIAL_NOTHING;
+				world[shootWorldPosition].wall = MATERIAL_NOTHING;
 				break;
 			}
 
@@ -3770,6 +4017,7 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 		{
 			world[i].terrain = MATERIAL_VOIDMETAL;
 			world[i].material = MATERIAL_NOTHING;
+			world[i].wall = MATERIAL_NOTHING;
 		}
 
 
@@ -3803,7 +4051,7 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 
 		)
 		{
-			world[i].material = MATERIAL_VOIDMETAL;
+			world[i].wall = MATERIAL_VOIDMETAL;
 
 		}
 
@@ -4003,7 +4251,7 @@ void setupRandomWorld()
 				for (int k = 0; k < rocksize; ++k)
 				{
 					unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-					world[square].material = MATERIAL_ROCK;
+					world[square].wall = MATERIAL_ROCK;
 				}
 			}
 		}

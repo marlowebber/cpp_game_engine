@@ -48,6 +48,8 @@ void resetMouseCursor();
 
 void saveSelectedAnimal();
 
+void viewAdversary();
+
 #define VISUALIZER_TRUECOLOR           1001
 #define VISUALIZER_TRACKS              1003
 #define VISUALIZER_IDENTITY            1004
