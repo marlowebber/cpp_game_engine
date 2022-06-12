@@ -175,7 +175,10 @@ int playerCreature = -1;
 bool playerCanSee = true;
 bool playerCanHear = true;
 bool playerCanSmell = true;
+bool palette = false;
 
+bool computer1display = false;
+bool computer2display = false;
 
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
@@ -198,6 +201,16 @@ int neighbourOffsets[] =
 unsigned int cameraPositionX = 0 ;
 unsigned int cameraPositionY = 0 ;
 unsigned int modelFrameCount = 0;
+
+int paletteMenuX = 200;
+int paletteMenuY = 500;
+int paletteTextSize = 10;
+int paletteSpacing = 20;
+
+
+unsigned int paletteClosestToMouse = 0;
+unsigned int paletteWidth = 3;
+
 
 int championScore = 0;
 int tournamentInterval = 10000;
@@ -367,6 +380,7 @@ struct Animal
 	float lastfposy;
 
 	bool isMachine;
+	// unsigned int machineType;
 	void (* machineCallback)(int, int);
 };
 
@@ -968,6 +982,11 @@ void resetAnimal(unsigned int animalIndex)
 {
 	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
+
+
+		std::string gunDescription = std::string("An animal");
+		strcpy( &animals[animalIndex].displayName[0] , gunDescription.c_str() );
+
 		// animals[animalIndex].displayName = std::string("").c_str();
 		// memset( (&animals[animalIndex].displayName), ' ', 32);
 		animals[animalIndex].mass = 0;
@@ -2266,7 +2285,7 @@ void organs_all()
 
 
 
-												appendLog( std::string ("you picked up an item") );
+												// appendLog( std::string ("you picked up an item") );
 
 												break;
 											}
@@ -3414,8 +3433,6 @@ void camera()
 
 
 
-
-bool computer1display = false;
 void displayComputerText()
 {
 
@@ -3443,11 +3460,19 @@ void displayComputerText()
 		menuY -= spacing;
 
 
+	}
 
+
+
+	if (computer2display)
+	{
+
+
+		printText2D(  "    \n" , menuX, menuY, textSize);
+		menuY -= spacing;
 
 
 	}
-
 
 
 }
@@ -3458,19 +3483,61 @@ void drawPalette()
 {
 
 
-
-	int menuX = 50;
-	int menuY = 50;
-	int textSize = 10;
-	int spacing = 20;
+	int closestValue = 1000;
+	unsigned int tempClosestToMouse = 0;
 
 	for (int i = 0; i < numberOfOrganTypes; ++i)
 	{
+		unsigned int paletteX = i % paletteWidth;
+		unsigned int paletteY = i / paletteWidth;
 
+		int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
+		int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
+
+		int diffX = mousePositionX - paletteFinalX;
+		int diffY = mousePositionY - paletteFinalY;
+
+		int absoluteDistance = abs(diffX) + abs(diffY);
+
+		if ( absoluteDistance < closestValue )
+		{
+			closestValue = absoluteDistance;
+			tempClosestToMouse = i;
+		}
+
+
+		if (i == paletteClosestToMouse)
+		{
+
+		printText2D(  std::string("X ")+  tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
+		}
+		else
+		{
+
+		printText2D(   tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
+		}
 	}
 
+	paletteClosestToMouse= tempClosestToMouse;
 
+	// draw a white box under the selected one.
+
+	// unsigned int paletteX = paletteClosestToMouse % paletteWidth;
+	// unsigned int paletteY = paletteClosestToMouse / paletteWidth;
+
+	// int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
+	// int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
+
+	// drawTile( Vec_f2(paletteFinalX, paletteFinalY), color_brightred );
 }
+
+
+
+// void checkPalette(vec_i2 input)
+// {
+
+
+// }
 
 
 void drawGameInterfaceText()
@@ -3634,13 +3701,27 @@ void drawGameInterfaceText()
 			printText2D(   std::string("You can't see anything. ") , menuX, menuY, textSize);
 			menuY += spacing;
 		}
+
+
+		// print grabber states
+
+		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
+		{
+			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
+			{
+				if (animals[playerCreature].body[i].grabbedCreature >= 0)
+				{
+					printText2D(   std::string("Holding ") + animals[  animals[playerCreature].body[i].grabbedCreature ].displayName , menuX, menuY, textSize);
+					menuY += spacing;
+				}
+
+			}
+		}
 	}
 // if (world[worldCursorPos])
 
 
 	displayComputerText();
-
-
 
 
 
@@ -3663,6 +3744,16 @@ void drawGameInterfaceText()
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
 	menuY += spacing;
 
+
+
+
+
+
+	// draw edit palette
+	if (true)
+	{
+		drawPalette();
+	}
 
 
 }
@@ -3781,24 +3872,22 @@ void setupExampleHuman(int i)
 
 
 
-void computerCallback( int gunIndex, int shooterIndex)
+void ecologyComputerCallback( int gunIndex, int shooterIndex)
 {
+	computer1display = !computer1display;
+}
 
-
-	printf("computerCallback\n");
-	if (gunIndex == 3)
-	{
-
-		printf("computer1Callback\n");
-		computer1display = !computer1display;
-
-
-	}
+void communicationComputerCallback( int gunIndex, int shooterIndex)
+{
+	computer2display = !computer2display;
+}
 
 
 
-
-
+void hospitalCallback( int gunIndex, int shooterIndex)
+{
+	// computer1display = !computer1display;
+	palette = !palette;
 }
 
 
@@ -3866,9 +3955,17 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 }
 
 
-void exampleGlassesCallback( int gunIndex, int shooterIndex)
+void trackerGlassesCallback( int gunIndex, int shooterIndex)
 {
-	printf("example glasses callback\n");
+	// printf("example glasses callback\n");
+	if (visualizer == VISUALIZER_TRUECOLOR)
+	{
+		visualizer = VISUALIZER_TRACKS;
+	}
+	else
+	{
+		visualizer = VISUALIZER_TRUECOLOR;
+	}
 
 }
 
@@ -3878,26 +3975,6 @@ void setupExampleGlasses(int i)
 
 	resetAnimal(i);
 	animals[i].isMachine = true;
-	animals[i].machineCallback = exampleGlassesCallback;
-
-
-	// appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
-	// appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-	// appendCell( i, MATERIAL_METAL, Vec_i2(1, 1) );
-	// appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
-	// appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-	// appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
-
-	// animals[i].displayName = std::string("A pair of glasses.").c_str();
-
-	// snprintf (animals[i].displayName, 32, "A pair of glasses.");
-
-	// strcpy( &animals[i].displayName[0] , std::string("A pair of glasses.").c_str() );
-
-
-	std::string gunDescription = std::string("A pair of glasses.");
-	strcpy( &(animals[i].displayName[0]) , gunDescription.c_str() );
-
 	appendCell( i, MATERIAL_GLASS, Vec_i2(1, 0) );
 	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 0) );
 	appendCell( i, MATERIAL_GLASS, Vec_i2(2, -1) );
@@ -3916,10 +3993,21 @@ void setupExampleGlasses(int i)
 	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 1) );
 	appendCell( i, MATERIAL_GLASS, Vec_i2(-3, 0) );
 
+}
+
+
+
+void setupTrackerGlasses(int i)
+{
+
+	animals[i].machineCallback = trackerGlassesCallback;
+
+
+	std::string gunDescription = std::string("A pair of tracker glasses.");
+	strcpy( &(animals[i].displayName[0]) , gunDescription.c_str() );
 
 
 }
-
 
 
 void setupExampleGun(int i)
@@ -3953,8 +4041,6 @@ void setupExampleComputer(int i)
 {
 	resetAnimal(i);
 	animals[i].isMachine = true;
-	animals[i].machineCallback = computerCallback;
-
 
 	animals[i].fAngle = 0.0f;
 
@@ -4004,14 +4090,26 @@ void setupExampleComputer(int i)
 
 	// snprintf (animals[i].displayName, 32, "A computer terminal.");
 
-	std::string gunDescription = std::string("A computer.");
-	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
-	// strcpy( &animals[i].displayName[0] , std::string("A computer.").c_str() );
-
-
 }
 
 
+
+void setupEcologyCompter(int i)
+{
+	setupExampleComputer(i);
+	std::string gunDescription = std::string("A ecology terminal.");
+	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
+	animals[i].machineCallback = ecologyComputerCallback;
+}
+
+
+void setupMessageComputer(int i)
+{
+	setupExampleComputer(i);
+	std::string gunDescription = std::string("A communication terminal.");
+	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
+	animals[i].machineCallback = communicationComputerCallback;
+}
 
 
 
@@ -4167,7 +4265,7 @@ void spawnAdversary()
 {
 
 // printf("setting up animal %i\n", i);
-	unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize-1); //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+	unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize - 1); //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 	int j = 1;
 
 
@@ -4181,7 +4279,7 @@ void spawnAdversary()
 	animals[adversary].uPosY = targetWorldPositionI / worldSize;
 	animals[adversary].fPosX = animals[adversary].uPosX;
 	animals[adversary].fPosY = animals[adversary].uPosY;
-	
+
 
 
 	// loadParticlarAnimal(j, std::string("save/macrolongus_smigmanosa"));
@@ -4196,10 +4294,8 @@ void spawnAdversary()
 	animals[adversary].uPosY = targetWorldPositionI / worldSize;
 	animals[adversary].fPosX = animals[adversary].uPosX;
 	animals[adversary].fPosY = animals[adversary].uPosY;
-	
 
-	appendLog( std::string("The adversary has been released.") );
-	appendLog( std::string("Find the adversary and kill it.") );
+
 }
 
 
@@ -4227,6 +4323,9 @@ void spawnPlayer()
 		cameraTargetCreature = playerCreature;
 
 		printf("spawned player creature\n");
+
+
+		appendLog( std::string("Spawned the player.") );
 	}
 	else
 	{
@@ -4389,7 +4488,10 @@ void setupRandomWorld()
 		setupBuilding_playerBase(targetWorldPositionI);
 
 		// int i = 1;
-		setupExampleComputer(i);
+		// setupExampleComputer(i);
+
+
+		setupEcologyCompter( i);
 		spawnAnimalIntoSlot(3,
 		                    animals[i],
 		                    targetWorldPositionI, false);
@@ -4410,7 +4512,8 @@ void setupRandomWorld()
 		setupBuilding_playerBase(targetWorldPositionI);
 
 		// int i = 1;
-		setupExampleGlasses(i);
+		// setupExampleGlasses(i);
+		setupTrackerGlasses(i);
 		spawnAnimalIntoSlot(4,
 		                    animals[i],
 		                    targetWorldPositionI, false);

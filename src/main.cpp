@@ -92,26 +92,26 @@ void threadInterface()
 				lockfps = !lockfps;
 				break;
 
-			case SDLK_1:
-				visualizer = VISUALIZER_TRUECOLOR;
-				break;
+			// case SDLK_1:
+			// 	// visualizer = VISUALIZER_TRUECOLOR;
+			// 	break;
 
-			case SDLK_2:
-				visualizer = VISUALIZER_TRACKS;
-				break;
+			// case SDLK_2:
+			// 	visualizer = VISUALIZER_TRACKS;
+			// 	break;
 
-			case SDLK_3:
-				visualizer = VISUALIZER_IDENTITY;
-				break;
+			// case SDLK_3:
+			// 	visualizer = VISUALIZER_IDENTITY;
+			// 	break;
 
-			case SDLK_4:
-				// visualizer = VISUALIZER_PHEROMONE;
-				visualizer = VISUALIZER_NEURALACTIVITY;
-				break;
+			// case SDLK_4:
+			// 	// visualizer = VISUALIZER_PHEROMONE;
+			// 	visualizer = VISUALIZER_NEURALACTIVITY;
+			// 	break;
 
-			case SDLK_5:
-				// visualizer = VISUALIZER_NEURALACTIVITY;
-				break;
+			// case SDLK_5:
+			// 	// visualizer = VISUALIZER_NEURALACTIVITY;
+			// 	break;
 
 
 			case SDLK_g:
