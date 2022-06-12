@@ -3062,6 +3062,16 @@ void move_all()
 							world[cellWorldPositionI].trail    = dAngle;
 						}
 						animals[animalIndex].body[cellIndex].worldPositionI = cellWorldPositionI;
+
+						if (animalIndex == adversary)
+						{
+							if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
+							{
+								world[cellWorldPositionI].material = MATERIAL_GRASS;
+
+							}
+						}
+
 					}
 				}
 			}
@@ -3120,7 +3130,7 @@ void energy_all() // perform energies.
 			}
 			else
 			{
-				if (!immortality && !animals[animalIndex].isMachine) // reasons an npc can die
+				if (!immortality && !animals[animalIndex].isMachine && animalIndex) // reasons an npc can die
 				{
 					if (speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) ) // only kill off weak animals if there is some population.
 						if (animals[animalIndex].energy < 0.0f)
@@ -3153,7 +3163,20 @@ void energy_all() // perform energies.
 			if (execute)
 			{
 				// printf("execute animal %u \n", animalIndex);
-				killAnimal( animalIndex);
+				// ;
+
+				if (animalIndex == adversary && adversary >= 0)
+				{
+					unsigned int adversaryPos = animals[adversary].position;
+					setupExampleAnimal2(adversary);
+					spawnAnimalIntoSlot( adversary, animals[adversary], adversaryPos, true  )  ;
+
+				}
+				else
+				{
+					killAnimal( animalIndex);
+				}
+
 			}
 			if (tournament)
 			{
@@ -3228,9 +3251,16 @@ void selectCursorAnimal()
 
 void viewAdversary()
 {
-	if (adversary >= 0)
+	if (adversary >= 0 && playerCreature >= 0)
 	{
-		cameraTargetCreature = adversary;
+		if (cameraTargetCreature == playerCreature)
+		{
+			cameraTargetCreature = adversary;
+		}
+		else
+		{
+			cameraTargetCreature = playerCreature;
+		}
 	}
 }
 
@@ -4133,6 +4163,45 @@ void adjustPlayerPos(Vec_f2 pos)
 }
 
 
+void spawnAdversary()
+{
+
+// printf("setting up animal %i\n", i);
+	unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize-1); //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+	int j = 1;
+
+
+	adversary = numberOfAnimalsPerSpecies + 1; // adversary animal is a low number index in the 1th species. 0th is for players and machines.
+
+	setupExampleAnimal2(j);
+
+
+	animals[adversary].position = targetWorldPositionI;
+	animals[adversary].uPosX = targetWorldPositionI % worldSize;
+	animals[adversary].uPosY = targetWorldPositionI / worldSize;
+	animals[adversary].fPosX = animals[adversary].uPosX;
+	animals[adversary].fPosY = animals[adversary].uPosY;
+	
+
+
+	// loadParticlarAnimal(j, std::string("save/macrolongus_smigmanosa"));
+	spawnAnimalIntoSlot(adversary,
+	                    animals[j],
+	                    targetWorldPositionI, true);
+
+
+
+	animals[adversary].position = targetWorldPositionI;
+	animals[adversary].uPosX = targetWorldPositionI % worldSize;
+	animals[adversary].uPosY = targetWorldPositionI / worldSize;
+	animals[adversary].fPosX = animals[adversary].uPosX;
+	animals[adversary].fPosY = animals[adversary].uPosY;
+	
+
+	appendLog( std::string("The adversary has been released.") );
+	appendLog( std::string("Find the adversary and kill it.") );
+}
+
 
 void spawnPlayer()
 {
@@ -4195,20 +4264,23 @@ void saveSelectedAnimal ( )
 
 void spawnTournamentAnimals()
 {
-	// animals in the tournament are not in the 0th species, which is for players and machines.
-	for (int i = (1 * numberOfAnimalsPerSpecies); i < numberOfAnimals; ++i)
+	if (adversary >= 0)
 	{
-		// printf("setting up animal %i\n", i);
-		unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-		int j = 1;
-		// setupExampleAnimal2(j);
+		// animals in the tournament are not in the 0th species, which is for players and machines.
+		for (int i = (1 * numberOfAnimalsPerSpecies); i < numberOfAnimals; ++i)
+		{
+			// printf("setting up animal %i\n", i);
+			unsigned int targetWorldPositionI = animals[adversary].position;//extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+			int j = 1;
+			// setupExampleAnimal2(j);
 
 
-		loadParticlarAnimal(j, std::string("save/macrolongus_smigmanosa"));
+			loadParticlarAnimal(j, std::string("save/macrolongus_smigmanosa"));
 
-		spawnAnimalIntoSlot(i,
-		                    animals[j],
-		                    targetWorldPositionI, true);
+			spawnAnimalIntoSlot(i,
+			                    animals[j],
+			                    targetWorldPositionI, true);
+		}
 	}
 }
 
@@ -4228,7 +4300,7 @@ void setupRandomWorld()
 			world[worldPositionI].light = color_white;
 
 			world[worldPositionI].terrain = MATERIAL_ROCK;
-			world[worldPositionI].material = MATERIAL_GRASS;
+			// world[worldPositionI].material = MATERIAL_GRASS;
 
 			unsigned int x = worldPositionI % worldSize;
 			unsigned int y = worldPositionI / worldSize;
@@ -4353,7 +4425,8 @@ void setupRandomWorld()
 
 
 
-
+		// spawn the adversary
+		spawnAdversary();
 
 
 
@@ -4458,14 +4531,14 @@ void tournamentController()
 			}
 		}
 		// printf("totalpop %u\n", totalpop);
-		if (totalpop == 0)
+		if (totalpop == 0 && adversary >= 0)
 		{
 
 			int j = 1;
 
 			for (int k = j + 1; k < numberOfAnimalsPerSpecies; ++k)
 			{
-				unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+				// unsigned int targetWorldPositionI = ;//extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 
 
 				// if (championScore > 20)
@@ -4480,7 +4553,7 @@ void tournamentController()
 				setupExampleAnimal2(j);
 				spawnAnimal( 1,
 				             animals[j],
-				             targetWorldPositionI, false);
+				             animals[adversary].position, true);
 
 				// }
 
