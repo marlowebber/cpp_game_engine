@@ -26,6 +26,23 @@
 #include "menus.h"
 #include "main.h"
 
+// #include "PerlinNoise.hpp"
+
+
+#define DB_PERLIN_IMPL
+#include "db_perlin.hpp"
+
+int perlin() {
+	// float x = /* ... */;
+	// float y = /* ... */;
+	// float z = /* ... */;
+
+	// float noise1D = db::perlin(x);
+	float noise2D = db::perlin(0, 0);
+	// float noise3D = db::perlin(x, y, z);
+}
+
+
 #define MATERIAL_NOTHING           0
 #define ORGAN_MOUTH_VEG            1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
 #define ORGAN_MOUTH_SCAVENGE       2
@@ -89,6 +106,9 @@
 
 #define WORLD_EXAMPLECREATURE 2
 #define WORLD_CALADAN 3
+
+
+unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
 int visualizer = VISUALIZER_TRUECOLOR;
 
@@ -162,7 +182,6 @@ unsigned int adversaryRespawnPos;
 int selectedAnimal = -1;
 int cursorAnimal = -1;
 
-unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
 float fps = 1.0f;
 
@@ -4185,7 +4204,7 @@ void lighterCallback( int gunIndex, int shooterIndex )
 
 		if ( world[worldCursorPos].material == MATERIAL_NOTHING ||  world[worldCursorPos].material == MATERIAL_GRASS )
 		{
-			 world[worldCursorPos].material = MATERIAL_FIRE; 
+			world[worldCursorPos].material = MATERIAL_FIRE;
 		}
 
 	}
@@ -4205,14 +4224,14 @@ void setupExampleLighter(int i)
 
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
 
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) ); 
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
 
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) ); 
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
 
 
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) ); 
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
 
 
@@ -4847,7 +4866,7 @@ void setupRandomWorld()
 
 
 
-
+	perlin();
 	if (worldToLoad == WORLD_CALADAN)
 	{
 

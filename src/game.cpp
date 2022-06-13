@@ -89,7 +89,14 @@ void drawTile( Vec_f2 position , Color finalColor)
 }
 
 
+void drawLine(  Vec_f2 a, Vec_f2 b, float thickness, Color finalColor )
+{
 
+
+	
+
+
+}
 
 
 void drawPointerTriangle( Vec_f2 position , Color finalColor, float angle)

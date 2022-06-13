@@ -6,6 +6,8 @@
 
 #IncludeRegexTransform: 
 
+/home/marlo/Documents/cpp_game_engine/src/db_perlin.hpp
+
 /home/marlo/Documents/cpp_game_engine/src/game.h
 utilities.h
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
@@ -59,6 +61,8 @@ menus.h
 /home/marlo/Documents/cpp_game_engine/src/menus.h
 main.h
 /home/marlo/Documents/cpp_game_engine/src/main.h
+db_perlin.hpp
+/home/marlo/Documents/cpp_game_engine/src/db_perlin.hpp
 
 /home/marlo/Documents/cpp_game_engine/src/untitled_marlo_project.h
 
