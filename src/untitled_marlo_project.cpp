@@ -81,6 +81,7 @@
 #define MATERIAL_SMOKE           68
 #define MATERIAL_GLASS            69
 #define MATERIAL_WATER            70
+#define MATERIAL_FIRE              71
 
 #define CONDITION_GREATER         41
 #define CONDITION_EQUAL           42
@@ -1753,6 +1754,8 @@ Color materialColors(unsigned int material)
 		return color_lightblue;
 	case MATERIAL_WATER:
 		return color_darkblue;
+	case MATERIAL_FIRE:
+		return color_orange;
 	}
 	return color_yellow;
 }
@@ -2064,6 +2067,35 @@ void updateMap()
 			// 		world[randomI].material = MATERIAL_NOTHING;
 			// 	}
 			// }
+
+
+			if (world[randomI].material == MATERIAL_FIRE)
+			{
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					unsigned int neighbour = randomI + neighbourOffsets[i];
+					if (neighbour < worldSquareSize)
+					{
+						if (world[neighbour].material == MATERIAL_GRASS)
+						{
+							world[randomI].material = MATERIAL_FIRE;
+						}
+					}
+				}
+				if (extremelyFastNumberFromZeroTo(1) == 0)
+				{
+
+					world[randomI].material = MATERIAL_NOTHING;
+				}
+				else
+				{
+					unsigned int neighbour = randomI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
+					if (neighbour < worldSquareSize)
+					{
+						world[neighbour].material = MATERIAL_FIRE;
+					}
+				}
+			}
 
 
 			if (world[randomI].material == MATERIAL_NOTHING && world[randomI].wall == MATERIAL_NOTHING)
@@ -3038,6 +3070,31 @@ void organs_all()
 	}
 }
 
+
+void spillBlood(unsigned int worldPositionI)
+{
+	if (world[worldPositionI].material == MATERIAL_NOTHING)
+	{
+		world[worldPositionI].material = MATERIAL_BLOOD;
+	}
+	else
+	{
+		for (int i = 0; i < nNeighbours; ++i)
+		{
+			unsigned int neighbour = worldPositionI += neighbourOffsets[i];
+			if ( neighbour < worldSquareSize)
+			{
+				if (world[neighbour].material == MATERIAL_NOTHING)
+				{
+					world[neighbour].material = MATERIAL_BLOOD;
+					break;
+				}
+			}
+		}
+	}
+}
+
+
 void move_all()
 {
 	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
@@ -3209,10 +3266,12 @@ void move_all()
 										okToStep = true;
 										animals[animalIndex].damageDone++;
 
-										if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
-										{
-											world[cellWorldPositionI].material = MATERIAL_BLOOD;
-										}
+										// if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
+										// {
+										// 	world[cellWorldPositionI].material = MATERIAL_BLOOD;
+										// }
+
+										spillBlood(cellWorldPositionI);
 
 										speciesAttacksPerTurn[speciesIndex] ++;
 
@@ -4086,6 +4145,12 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 			break;
 		case 'O':
 			newOrgan = ORGAN_ADDOFFSPRINGENERGY;
+
+
+
+		case '1':
+			newOrgan = MATERIAL_METAL;
+
 		}
 
 
@@ -4110,64 +4175,60 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 
 }
 
+void lighterCallback( int gunIndex, int shooterIndex )
+{
+	if (gunIndex >= 0)
+	{
+		int cursorPosX = cameraPositionX +  mousePositionX ;
+		int cursorPosY = cameraPositionY + mousePositionY;
+		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+
+		if ( world[worldCursorPos].material == MATERIAL_NOTHING ||  world[worldCursorPos].material == MATERIAL_GRASS )
+		{
+			 world[worldCursorPos].material = MATERIAL_FIRE; 
+		}
+
+	}
+
+}
+
+
+void setupExampleLighter(int i)
+{
+	resetAnimal(i);
+	animals[i].isMachine = true;
+	animals[i].machineCallback = lighterCallback;
+
+	std::string gunDescription = std::string("lighter");
+	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) ); 
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) ); 
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) ); 
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
+
+
+}
+
 
 
 void setupExampleHuman(int i)
 {
-
-
 	resetAnimal(i);
-
 
 	std::string gunDescription = std::string("A human.");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
 
-
-
-
-
-
 	char humanBody[] =
 	{
-
-
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		ORGAN_BONE ,				MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		ORGAN_BONE,				ORGAN_BONE,					ORGAN_BONE,				MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		ORGAN_SENSOR_EYE,		ORGAN_BONE,					ORGAN_SENSOR_EYE,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		ORGAN_BONE,				ORGAN_SENSOR_PHEROMONE,		ORGAN_BONE,				MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		ORGAN_BONE,					MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// ORGAN_BONE,				ORGAN_BONE,				ORGAN_BONE,					ORGAN_BONE,				ORGAN_BONE,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// ORGAN_SENSOR_PHEROMONE,	ORGAN_SENSOR_PHEROMONE,	ORGAN_SENSOR_PHEROMONE,		ORGAN_SENSOR_PHEROMONE,	ORGAN_SENSOR_PHEROMONE,
-
-
-
-
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-// MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,			MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,		MATERIAL_NOTHING,
-
-
 		' ', ' ', ' ', 'B', ' ', ' ', ' ',
 		' ', ' ', 'B', 'B', 'B', ' ', ' ',
 		' ', 'B', 'E', 'B', 'E', 'B', ' ',
@@ -4189,127 +4250,9 @@ void setupExampleHuman(int i)
 		' ', ' ', 'B', ' ', 'B', ' ', ' ',
 		' ', ' ', 'B', ' ', 'B', ' ', ' ',
 		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', ' ', ' ', ' ', ' ', ' ',
-		' ', ' ', ' ', ' ', ' ', ' ', ' ',
-		' ', ' ', ' ', ' ', ' ', ' ', ' ',
-		' ', ' ', ' ', ' ', ' ', ' ', ' ',
-
-
-
-
-
-
 	};
 
-
-
-
 	setupCreatureFromCharArray( i, humanBody, animalSquareSize, 7 );
-
-	// // head
-	// p.x++; a(i, ORGAN_BONE,        &p, c); 		a(i, ORGAN_BONE,             &p, c); 				a(i, ORGAN_BONE,       &p,  c); p.y--; p.x = o.x;
-	// p.x++; a(i, ORGAN_SENSOR_EYE,  &p, c);      	a(i, ORGAN_BONE,             &p, c); 				a(i, ORGAN_SENSOR_EYE, &p,  c); p.y--; p.x = o.x;
-	// p.x++; a(i, ORGAN_BONE,        &p, c); 		a(i, ORGAN_SENSOR_PHEROMONE, &p, c); 	            a(i, ORGAN_BONE,       &p,  c); p.y--; p.x = o.x;
-	// p.x++; a(i, ORGAN_BONE,        &p, c); 		a(i, ORGAN_SPEAKER,          &p, c); 			    a(i, ORGAN_BONE,       &p,  c); p.y--; p.x = o.x;
-	// p.x++; a(i, ORGAN_BONE,        &p, c); 		a(i, ORGAN_BONE,             &p, c); 				a(i, ORGAN_BONE,       &p,  c); p.y--; p.x = o.x;
-	// p.x++; p.x++;									a(i, ORGAN_BONE, &p, c); 					     	 p.y++;
-
-
-	// // torso
-
-	// a(i, ORGAN_BONE,        &p, c); 	a(i, ORGAN_BONE,        &p, c); 		a(i, ORGAN_BONE,             &p, c); 		a(i, ORGAN_BONE,        &p, c); 			a(i, ORGAN_BONE,       &p,  c); a(i, ORGAN_BONE,             &p, c); p.y--; p.x = o.x;
-
-
-	// a(i, ORGAN_BONE,        &p, c); 	p.x++;									a(i, ORGAN_BONE,             &p, c); 		a(i, ORGAN_BONE,        &p, c); 			a(i, ORGAN_BONE,       &p,  c);p.x++;	a(i, ORGAN_BONE,             &p, c);   p.y--; p.x = o.x;
-
-
-
-
-
-	// appendCell( i, ORGAN_BONE, Vec_i2(0, 1 ));
-
-
-	// appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(-1, 0) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(0, 0) );
-	// appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(1, 0) );
-
-
-
-	// appendCell( i, ORGAN_SENSOR_EAR, Vec_i2(-2, -1) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(-1, -1) );
-	// appendCell( i, ORGAN_SENSOR_PHEROMONE, Vec_i2(0, -1) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(1, -1) );
-	// appendCell( i, ORGAN_SENSOR_EAR, Vec_i2(2, -1) );
-
-
-
-	// appendCell( i, ORGAN_BONE , Vec_i2(-1, -2));
-	// appendCell( i, ORGAN_SPEAKER , Vec_i2(0, -2));
-	// appendCell( i, ORGAN_BONE , Vec_i2(1, -2));
-
-
-	// appendCell( i, ORGAN_BONE, Vec_i2(0, -3) );
-
-	// appendCell( i, ORGAN_BONE, Vec_i2(-2, -4) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(-1, -4) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(0, -4) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(1, -4) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(2, -4) );
-
-
-	// appendCell( i, ORGAN_MUSCLE, Vec_i2(-3, -5) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(-1, -5) );
-	// appendCell( i, ORGAN_LUNG, Vec_i2(0, -5) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(1, -5) );
-	// appendCell( i, ORGAN_MUSCLE, Vec_i2(3, -5) );
-
-
-
-	// appendCell( i, ORGAN_MUSCLE, Vec_i2(-3, -6) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(-1, -6) );
-	// appendCell( i, ORGAN_LUNG, Vec_i2(0, -6) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(1, -6) );
-	// appendCell( i, ORGAN_MUSCLE, Vec_i2(3, -6) );
-
-
-
-
-	// appendCell( i, ORGAN_BONE, Vec_i2(-3, -7) );
-	// appendCell( i, ORGAN_LIVER, Vec_i2(1, -7) );
-	// appendCell( i, ORGAN_LIVER, Vec_i2(0, -7) );
-	// appendCell( i, ORGAN_LIVER, Vec_i2(1, -7) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(3, -7) );
-
-
-
-	// appendCell( i, ORGAN_GRABBER, Vec_i2(-3, -8) );
-	// appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -8) );
-	// appendCell( i, ORGAN_GONAD, Vec_i2(0, -8) );
-	// appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -8) );
-	// appendCell( i, ORGAN_GRABBER, Vec_i2(3, -8) );
-
-
-
-	// appendCell( i, ORGAN_MUSCLE, Vec_i2(-1, -9 ));
-	// appendCell( i, ORGAN_MUSCLE, Vec_i2(1, -9) );
-
-
-	// appendCell( i, ORGAN_MUSCLE_STRAFE, Vec_i2(-1, -10) );
-	// appendCell( i, ORGAN_MUSCLE_STRAFE, Vec_i2(1, -10) );
-
-
-	// appendCell( i, ORGAN_BONE, Vec_i2(-1, -11) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(1, -11) );
-
-
-	// appendCell( i, ORGAN_BONE, Vec_i2(-1, -12) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(1, -12) );
-
-
-	// appendCell( i, ORGAN_BONE, Vec_i2(-1, -13) );
-	// appendCell( i, ORGAN_BONE, Vec_i2(1, -13) );
-
-
 }
 
 
@@ -4348,39 +4291,9 @@ void knifeCallback( int gunIndex, int shooterIndex )
 		if ( occupyingCell >= 0)
 		{
 			animals[cursorAnimal].body[occupyingCell].damage += 0.3f;
-
-
-
-
-
-			if (world[worldCursorPos].material == MATERIAL_NOTHING)
-			{
-				world[worldCursorPos].material = MATERIAL_BLOOD;
-			}
-			else
-			{
-				for (int i = 0; i < nNeighbours; ++i)
-				{
-					unsigned int neighbour = worldCursorPos += neighbourOffsets[i];
-					if ( neighbour < worldSquareSize)
-					{
-						if (world[neighbour].material == MATERIAL_NOTHING)
-						{
-							world[neighbour].material = MATERIAL_BLOOD;
-							break;
-						}
-					}
-				}
-			}
-
-
-
-
-
+			spillBlood(worldCursorPos);
 		}
 	}
-
-
 }
 
 
@@ -4425,6 +4338,7 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 
 						// eliminateCell(world[shootWorldPosition].identity, )
 						animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
+						spillBlood(shootWorldPosition);
 					}
 
 				}
@@ -5102,6 +5016,8 @@ void setupRandomWorld()
 		}
 
 
+
+// 1
 		unsigned int targetWorldPositionX = 200 ;
 		unsigned int targetWorldPositionY = 200 ;
 		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
@@ -5117,6 +5033,8 @@ void setupRandomWorld()
 
 
 
+
+// 2
 		targetWorldPositionI += (400);
 		// targetWorldPositionX = 200 ;
 		// targetWorldPositionY = 300 ;
@@ -5140,7 +5058,7 @@ void setupRandomWorld()
 
 
 
-
+// 3
 		targetWorldPositionI += (400);
 		// targetWorldPositionX = 200 ;
 		// targetWorldPositionY = 300 ;
@@ -5159,7 +5077,7 @@ void setupRandomWorld()
 
 
 
-
+// 4
 
 		targetWorldPositionI += (400);
 		// targetWorldPositionX = 200 ;
@@ -5182,7 +5100,7 @@ void setupRandomWorld()
 
 
 
-
+// 5
 
 		targetWorldPositionI += (400);
 		// targetWorldPositionX = 200 ;
@@ -5201,8 +5119,17 @@ void setupRandomWorld()
 		                    targetWorldPositionI, false);
 
 
+		targetWorldPositionI += 25;
+
+		setupExampleLighter(i);
+		spawnAnimalIntoSlot(7,
+		                    animals[i],
+		                    targetWorldPositionI, false);
 
 
+
+
+// 6
 
 		targetWorldPositionI += (400);
 		// targetWorldPositionX = 200 ;
@@ -5216,9 +5143,11 @@ void setupRandomWorld()
 		// setupTrackerGlasses(i)
 
 		setupNeuroGlasses(i);
-		spawnAnimalIntoSlot(7,
+		spawnAnimalIntoSlot(8,
 		                    animals[i],
 		                    targetWorldPositionI, false);
+
+
 
 
 
