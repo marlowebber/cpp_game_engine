@@ -50,7 +50,6 @@ const Color color_black              = Color( 0.0f, 0.0f, 0.0f, 1.0f );
 const Color color_white              = Color (1.0f, 1.0f, 1.0f, 1.0f);
 const Color color_purple             = Color( 0.8f, 0.0f, 0.8f, 1.0f );
 const Color color_orange             = Color( 1.0f, 0.8f, 0.0f, 1.0f);
-const Color color_offwhite           = Color( 0.9f, 1.0f, 0.8f, 1.0f );
 const Color color_brightred          = Color( 0.9f, 0.1f, 0.0f, 1.0f);
 const Color color_darkred            = Color( 0.5f, 0.05f, 0.0f, 1.0f);
 const Color color_brown              = Color(  0.25f, 0.1f, 0.0f, 1.0f );
@@ -59,9 +58,28 @@ const Color color_darkgreen              = Color(  0.1f, 0.35f, 0.15f, 1.0f );
 const Color color_clear              = Color( 0.0f, 0.0f, 0.0f, 0.0f );
 const Color color_pink              = Color(  1.0f, 0.8f, 0.8f, 1.0f );
 
-
+const Color color_cream          = Color(  0.91f, 0.92f, 0.782f, 1.0f );
+const Color color_offwhite           = Color( 0.9f, 1.0f, 0.8f, 1.0f );
 
 const Color tint_selected              = Color (1.0f, 1.0f, 1.0f, 0.25f);
+
+const Color color_puce               = Color(0.48, 0.204, 0.134, 1.0f);
+const Color color_tan           = Color(0.910, 0.815, 0.673, 1.0f);
+
+const Color color_muscles1     = Color(0.710, 0.140, 0.09, 1.0f);
+const Color color_muscles2     = Color(0.780, 0.120, 0.0468, 1.0f);
+
+const Color color_brains1      = Color(0.830, 0.506, 0.711, 1.0f);
+const Color color_brains2      = Color(0.9, 0.648, 0.808, 1.0f);
+const Color color_brains3      = Color(0.710, 0.582, 0.691, 1.0f);
+const Color color_brains4      = Color(0.92, 0.856, 0.910, 1.0f);
+
+const Color color_lungs1      = Color(0.99, 0.683, 0.867, 1.0f);
+
+const Color color_violet     = Color(0.762, 0.560, 0.950, 1.0f);
+
+const Color color_peach       = Color(	1.0, 0.375, 0.250, 1.0f);
+const Color color_peach_light = Color(0.950, 0.681, 0.627, 1.0f);
 
 struct Vec_u2
 {
