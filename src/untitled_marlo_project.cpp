@@ -64,13 +64,12 @@
 #define ORGAN_SENSOR_BIRTHPLACE    34
 #define ORGAN_SENSOR_TOUCH         35
 
+#define ORGAN_COLDADAPT            36
+#define ORGAN_HEATADAPT            37
 
-#define ORGAN_COLDADAPT            2001
-#define ORGAN_HEATADAPT            2002
+#define ORGAN_GRABBER              38
 
-#define ORGAN_GRABBER              36
-
-#define numberOfOrganTypes        37 // the number limit of growable genes
+#define numberOfOrganTypes        39 // the number limit of growable genes
 #define MATERIAL_FOOD             60
 #define MATERIAL_ROCK             61
 #define MATERIAL_MEAT             62
@@ -82,11 +81,6 @@
 #define MATERIAL_SMOKE           68
 #define MATERIAL_GLASS            69
 #define MATERIAL_WATER            70
-
-// #define TERRAIN_STONE             50
-// #define TERRAIN_WATER             52
-// #define TERRAIN_LAVA              54
-// #define TERRAIN_VOIDMETAL         68
 
 #define MARKER                    35 // numbers above 25 don't correspond to lower-case letters(0..25) so we don't use them in the gene code. But (26..31) are still compatible with our masking scheme.
 
@@ -117,7 +111,6 @@ const bool doMutation            = true;
 const bool sensorJiggles         = false;
 const bool useTimers             = false;
 const bool setOrSteerAngle       = true;
-// const bool useLava               = true;
 
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
@@ -146,7 +139,6 @@ const unsigned int displayNameSize = 32;
 
 const unsigned int numberOfSpeakerChannels = 16;
 
-
 const float const_pi = 3.1415f;
 
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
@@ -161,6 +153,7 @@ int mousePositionY =  330;
 float fmousePositionX = mousePositionX;
 float fmousePositionY = mousePositionY;
 
+unsigned int adversaryRespawnPos;
 
 int selectedAnimal = -1;
 int cursorAnimal = -1;
@@ -179,8 +172,14 @@ bool playerCanHear = true;
 bool playerCanSmell = true;
 bool palette = false;
 
+bool ecologyComputerDisplay = false;
+
+
 bool computer1display = false;
 bool computer2display = false;
+bool computer3display = false;
+bool computer4display = false;
+bool computer5display = false;
 
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
@@ -209,7 +208,6 @@ int paletteMenuY = 500;
 int paletteTextSize = 10;
 int paletteSpacing = 20;
 
-
 unsigned int paletteSelectedOrgan = 0;
 unsigned int paletteWidth = 3;
 
@@ -230,8 +228,6 @@ const unsigned int nLogs = 32;
 const unsigned int logLength = 64;
 
 char logs[logLength][nLogs];
-
-
 
 
 void appendLog( std::string input)
@@ -336,6 +332,7 @@ struct Cell
 	bool dead;
 	int grabbedCreature;
 	Connection connections[NUMBER_OF_CONNECTIONS];
+	// bool visibleOrgan;
 };
 
 struct Animal
@@ -1015,6 +1012,10 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].canBreatheAir = false;
 		animals[animalIndex].cellsUsed = 0;
 		animals[animalIndex].identityColor = Color(RNG(), RNG(), RNG(), 1.0f);
+		if (animalIndex == adversary)
+		{
+			animals[animalIndex].identityColor = color_white;
+		}
 		animals[animalIndex].isMachine = false;
 		animals[animalIndex].machineCallback == nullptr;
 		animals[animalIndex].temp_limit_low = 273.0f;
@@ -1026,6 +1027,21 @@ void resetAnimal(unsigned int animalIndex)
 			resetCell(animalIndex, cellLocalPositionI );
 		}
 	}
+}
+
+void paintAnimal(unsigned int animalIndex)
+{
+
+	// applies color to an animal.
+
+	Color newAnimalColorA = Color(RNG(), RNG(), RNG(), 1.0f);
+	Color newAnimalColorB = Color(RNG(), RNG(), RNG(), 1.0f);
+
+	for (int i = 0; i < animalSquareSize; ++i)
+	{
+		animals[animalIndex].body[i].color = filterColor(  newAnimalColorA , multiplyColorByScalar( newAnimalColorB , RNG())  );
+	}
+
 }
 
 // check if a cell has an empty neighbour.
@@ -1191,6 +1207,11 @@ bool isCellConnectable(unsigned int organ)
 	}
 
 	return false;
+}
+
+bool isOrganVisible()
+{
+
 }
 
 // choose a random cell of any type that can be connected to, which includes all neurons and all sensors.
@@ -1663,20 +1684,22 @@ void mutateAnimal(unsigned int animalIndex)
 			unsigned int auxMutation = extremelyFastNumberFromZeroTo(6);
 			if (auxMutation == 0)
 			{
+				// mutate a cell's skin color
 				int mutantCell = getRandomPopulatedCell(animalIndex);
 				if (mutantCell >= 0 && mutantCell < animalSquareSize)
 				{
 					animals[animalIndex].genes[mutantCell].color = mutateColor(	animals[animalIndex].genes[mutantCell].color);
 				}
 			}
-			else if (auxMutation == 1)
-			{
-				int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
-				if (mutantCell >= 0 && mutantCell < animalSquareSize)
-				{
-					animals[animalIndex].genes[mutantCell].color = mutateColor(	animals[animalIndex].genes[mutantCell].color);
-				}
-			}
+			// else if (auxMutation == 1)
+			// {
+			// 	// mutate an eye color
+			// 	int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
+			// 	if (mutantCell >= 0 && mutantCell < animalSquareSize)
+			// 	{
+			// 		animals[animalIndex].genes[mutantCell].eyeColor = mutateColor(	animals[animalIndex].genes[mutantCell].eyeColor);
+			// 	}
+			// }
 			else if (auxMutation == 2)
 			{
 				// mutate a timers freq
@@ -1981,20 +2004,20 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		// else
 		// {
 
-		Color floorColor ;
+		Color materialColor ;
 		if (world[worldI].material == MATERIAL_GRASS)
 		{
-			floorColor = world[worldI].grassColor;
+			materialColor = world[worldI].grassColor;
 		}
 		else
 		{
-			floorColor = materialColors(world[worldI].terrain);
+			materialColor = materialColors(world[worldI].material);
 		}
 
 
 
 		// you can see the three material layers in order, wall then material then floor.
-		displayColor = filterColor( floorColor,  materialColors(world[worldI].material) );
+		displayColor = filterColor( materialColors(world[worldI].terrain) ,  materialColor);
 		displayColor = filterColor( displayColor,  materialColors(world[worldI].wall) );
 		// }
 
@@ -3098,6 +3121,10 @@ void move_all()
 				}
 
 				animals[animalIndex].position = newPosition;
+				// if (animalIndex == adversary)
+				// {
+				// 	// adversaryRespawnPos = newPosition;
+				// }
 
 
 				if (! animals[animalIndex].isMachine)
@@ -3240,6 +3267,14 @@ void move_all()
 					}
 					if (okToStep)
 					{
+
+						if (world[cellWorldPositionI].material == MATERIAL_NOTHING && world[cellWorldPositionI].identity == -1)
+						{
+							world[cellWorldPositionI].material = MATERIAL_GRASS;
+							world[cellWorldPositionI].grassColor = animals[animalIndex].identityColor;
+						}
+
+
 						world[cellWorldPositionI].identity = animalIndex;
 						world[cellWorldPositionI].occupyingCell = cellIndex;
 						if (trailUpdate)
@@ -3249,14 +3284,10 @@ void move_all()
 						}
 						animals[animalIndex].body[cellIndex].worldPositionI = cellWorldPositionI;
 
-						if (animalIndex == adversary)
-						{
-							if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
-							{
-								world[cellWorldPositionI].material = MATERIAL_GRASS;
+						// if (animalIndex == adversary)
+						// {
 
-							}
-						}
+						// }
 
 					}
 				}
@@ -3353,9 +3384,9 @@ void energy_all() // perform energies.
 
 				if (animalIndex == adversary && adversary >= 0)
 				{
-					unsigned int adversaryPos = animals[adversary].position;
+					// unsigned int adversaryPos = animals[adversary].position;
 					setupExampleAnimal2(adversary);
-					spawnAnimalIntoSlot( adversary, animals[adversary], adversaryPos, true  )  ;
+					spawnAnimalIntoSlot( adversary, animals[adversary], adversaryRespawnPos, true  )  ;
 
 				}
 				else
@@ -3416,19 +3447,22 @@ void selectCursorAnimal()
 		int cursorPosX = cameraPositionX +  mousePositionX ;
 		int cursorPosY = cameraPositionY + mousePositionY;
 		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
-		if (worldCursorPos < worldSquareSize)
+		// if (worldCursorPos < worldSquareSize)
+		// {
+		// 	int tempCursorAnimal = world[worldCursorPos].identity;
+		// 	unsigned int cursorAnimalSpecies = tempCursorAnimal / numberOfAnimalsPerSpecies;
+		// 	if (tempCursorAnimal >= 0 && tempCursorAnimal < numberOfAnimals)
+		// 	{
+		if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
 		{
-			int tempCursorAnimal = world[worldCursorPos].identity;
-			unsigned int cursorAnimalSpecies = tempCursorAnimal / numberOfAnimalsPerSpecies;
-			if (tempCursorAnimal >= 0 && tempCursorAnimal < numberOfAnimals)
+			// cursorAnimal = tempCursorAnimal;
+			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
+			if ( occupyingCell >= 0)
 			{
-				cursorAnimal = tempCursorAnimal;
-				int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
-				if ( occupyingCell >= 0)
-				{
-					selectedAnimal = cursorAnimal;
-				}
+				selectedAnimal = cursorAnimal;
 			}
+			// }
+			// }
 		}
 	}
 }
@@ -3611,11 +3645,11 @@ void displayComputerText()
 
 
 
-	if (computer1display)
+	if (ecologyComputerDisplay)
 	{
 
 
-		// printText2D(  "computer1display\n" , menuX, menuY, textSize);
+		// printText2D(  "ecologyComputerDisplay\n" , menuX, menuY, textSize);
 		// menuY -= spacing;
 
 		for (int i = 0; i < numberOfSpecies; ++i)
@@ -3630,230 +3664,43 @@ void displayComputerText()
 	}
 
 
+// First terminal is near the player at the start.  Explain how to pick up and use items. The player is given a pistol.
+// The second terminal contains a hospital and explains how anatomy works in the game. The player is encouraged to add a gill to themselves to allow breathing underwater.
+// The 4th terminal is under water in a teeming coral reef. It contains tracker glasses that allow the adversary to be identified and found.
+// The adversary is killed and life no longer has a source, but will continue existing where it does. The adversary drops neuro glasses that the player needs to edit brain connections.
+// If all life in the simulation is destroyed, a message will become available stating that the animals broke out into the real world and caused widespread disaster
+
+
+	if (computer1display)
+	{
+		printText2D(   std::string(" ") , menuX, menuY, textSize);
+		menuY -= spacing;
+	}
 
 	if (computer2display)
 	{
-
-
-		/**
-		Cast of characters.
-
-		Fred Hoover. Project manager.
-
-		Melissa Kelly. Astrobiologist.
-
-		General Bill "Bullseye" Strickland.
-
-		You. Psychic cadet.
-
-
-		Computer. A Dell Inspiron 7500 from 1999. Intel pentium III capable of 750MHz. 512MB RAM, 30GB storage.
-
-
-
-
-		story progression in 5 terminals.
-
-		1. intro, speak to the general
-		2. the adversary
-		3. alien computer
-		4.
-		5.
-
-
-
-
-		 **/
-
-
-
-
-
-
-		/**
-
-
-		Project CONQUEST. Classification: Above top secret.
-		Private conversation between M. Kelly and F. Hoover.
-
-		How did the meeting go?
-
-		Good. Well, bad I guess. It all went sideways pretty quickly.
-
-		What happened?
-
-		I thought we'd be talking to some pencil pushers. We must have impressed someone up there though. They sent General Strickland to review our progress.
-
-		Geez. We're not ready for that.
-
-		Yeah. I wasn't ready. But I delivered our report and our findings.
-
-		What did they say?
-
-		He immediately tripled our budget. And granted our request for more personnel. And he's going to buy us a new computer.
-
-		****! What did YOU say?
-
-		Um, it was more about how I said it. See he's over in Virginia, so I spoke to them on the video telephone...
-
-		... He thought you were in the computer.
-
-		He thought I was in the computer. I should have said something, but I didn't realize until the call was finished.
-
-
-
-
-		 * */
-
-
-
-		/**
-		 *
-
-
-
-			Strickland's like a hundred years old, he doesn't know anything about computers.
-
-			That's the thing, you could see his eyes glaze over when I talk about virtual ecology. But as soon as I said 'adversary', he switched right on.
-
-			You shouldn't have called it that. It's just a pet name.
-
-			It just slipped out. I'm sorry. He fixated on it and I couldn't take it back.
-
-			We don't even know what it is yet.
-
-			Just the idea of having some opponent made him so excited. I guess he spent all day meeting with the other projects.. Psychic projection... Astrobiology..
-
-			Hmf.
-
-			Sorry Melissa. It's just that having anything to show at all kind of means we're the poster child.
-
-			What does he want us to do?
-
-			Well, he wants us to occupy the simulation, like it's a pacific island territory. We're supposed to set up a forward operating base and have a constant presence there.
-
-			Haha! Really?
-
-			Yeah. And keep doing our research. I'm supposed to train the cadets how to live and work in the sim. They figured out pretty quick it's basically a video game. They're all pretty young, but they're bright.
-
-			What about the adversary?
-
-			The cadet's mission is to find it, and kill it...
-
-
-
-
-		 *
-		 * */
-
-
-
-		/**
-		 *
-
-		Melissa, the new computer came in today.
-
-		Tell me!
-
-		Oh I'll tell you. But you won't believe me.
-
-		Try it.
-
-		Seven fifty megahertz.
-
-		... Seven and a half megahertz?
-
-		Nope. Seven hundred and fifty megahertz.
-
-		No way. There's no way.
-
-		Half a BILLION bytes of RAM.
-
-		It must be the size of a house!
-
-		That's the thing, you could pick it up in your hand...
-
-		How?
-
-		It's only as big as a lunch box I guess. I've never seen anything like it. It unfolds in half and there's a screen and a keyboard inside.
-		We're not allowed to touch it. But the techs have wired in our PCs so we can work on it remotely. We're going to move the simulation code over to it.
-
-		Gosh. If the simulation ran on something like that... We could make a whole country, we could do anything.
-
-		I haven't even told you the craziest part yet. The system clock is set to December 2, 1999.
-
-		What.
-
-		The rumor is, NRO met with an extraterrestrial entity, and traded for it. A human computer from our own future.
-
-		Wait, aliens are really real? Don't you hang up on- !!
-
-		As I end the call to Melissa, I can't help but wonder. What price did the NRO pay for this machine?
-
-
-
-		**/
-
-
-
-
-		/***
-		 *
-
-
-
-		Project CONQUEST. Classification: Above top secret.
-		Private conversation between F. Hoover and cadet R. Bienvenida.
-
-		We don't know anything about it, really. We think it's an enemy, at least we've been told to treat it that way.
-
-		Has it taken any offensive action, against us?
-
-		Yeah. Sort of. It attacked and killed one of the researchers, and hurt another. Well they were fine in the real world I guess but it still counts.
-
-		Is that all?
-
-		No. It has a corrupting influence on the simulation. Whatever it touches starts growing and mutating. Over time its creations
-
-
-
-
-
-
-
-
-
-
-
-
-		 *
-		 * */
-
-
-		/***
-		 *
-
-		 Secret diary of Melissa Kelly, Astrobiologist.
-
-
-
-
-
-
-		*/
-
-
-
-
-
-
-
-
-		printText2D(  "    \n" , menuX, menuY, textSize);
+		printText2D(   std::string(" ") , menuX, menuY, textSize);
 		menuY -= spacing;
-
-
 	}
+	if (computer3display)
+	{
+		printText2D(   std::string(" ") , menuX, menuY, textSize);
+		menuY -= spacing;
+	}
+	if (computer4display)
+	{
+		printText2D(   std::string(" ") , menuX, menuY, textSize);
+		menuY -= spacing;
+	}
+	if (computer5display)
+	{
+		printText2D(   std::string(" ") , menuX, menuY, textSize);
+		menuY -= spacing;
+	}
+
+
+	printText2D(  "    \n" , menuX, menuY, textSize);
+	menuY -= spacing;
 
 
 }
@@ -3926,6 +3773,16 @@ void drawGameInterfaceText()
 			unsigned int cursorAnimalSpecies = cursorAnimal / numberOfAnimalsPerSpecies;
 			// cursorAnimal = tempCursorAnimal;
 			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
+
+
+			std::string selectString( " [e] to select.");
+			if (selectedAnimal >= 0)
+			{
+
+				std::string selectString( " [e] to deselect.");
+			}
+
+
 			if ( occupyingCell >= 0)
 			{
 
@@ -3933,14 +3790,14 @@ void drawGameInterfaceText()
 				{
 					if (cursorAnimal == playerCreature)
 					{
-						printText2D(   std::string("This is you."), menuX, menuY, textSize);
+						printText2D(   std::string("This is you.") + selectString, menuX, menuY, textSize);
 						menuY += spacing;
 					}
 					else
 					{
 
 						// printf(" eeeee %s \n", animals[cursorAnimal].displayName);
-						printText2D(   std::string(animals[cursorAnimal].displayName) , menuX, menuY, textSize);
+						printText2D(   std::string(animals[cursorAnimal].displayName) + selectString , menuX, menuY, textSize);
 						menuY += spacing;
 
 					}
@@ -3953,10 +3810,11 @@ void drawGameInterfaceText()
 
 				else
 				{
-					printText2D(   std::string("An animal of species ") + std::to_string(cursorAnimalSpecies ) , menuX, menuY, textSize);
+					printText2D(   std::string("An animal of species ") + std::to_string(cursorAnimalSpecies ) + std::string(".") + selectString, menuX, menuY, textSize);
 					menuY += spacing;
 
-
+					// printText2D(   std::string("[e] select animal") , menuX, menuY, textSize);
+					// menuY += spacing;
 
 				}
 
@@ -4032,7 +3890,7 @@ void drawGameInterfaceText()
 
 
 		// print grabber states
-
+		bool holding = false;
 		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
 		{
 			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
@@ -4041,10 +3899,45 @@ void drawGameInterfaceText()
 				{
 					printText2D(   std::string("Holding ") + animals[  animals[playerCreature].body[i].grabbedCreature ].displayName , menuX, menuY, textSize);
 					menuY += spacing;
+					holding = true;
 				}
 
 			}
 		}
+		if (!holding)
+		{
+			printText2D(   std::string("[g] pick up") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+		else
+		{
+			printText2D(   std::string("[f] drop") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+
+
+
+		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
+		menuY += spacing;
+
+
+		printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
+		menuY += spacing;
+
+
+
+
+		if (palette)
+		{
+			printText2D(   std::string("[lmb] add, [rmb] delete ") , menuX, menuY, textSize);
+			menuY += spacing;
+			printText2D(   std::string("[y] select next, [h] select last ") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+
+
+
+
 	}
 // if (world[worldCursorPos])
 
@@ -4202,7 +4095,7 @@ void setupExampleHuman(int i)
 
 void ecologyComputerCallback( int gunIndex, int shooterIndex)
 {
-	computer1display = !computer1display;
+	ecologyComputerDisplay = !ecologyComputerDisplay;
 }
 
 void communicationComputerCallback( int gunIndex, int shooterIndex)
@@ -4214,10 +4107,41 @@ void communicationComputerCallback( int gunIndex, int shooterIndex)
 
 void hospitalCallback( int gunIndex, int shooterIndex)
 {
-	// computer1display = !computer1display;
+	// ecologyComputerDisplay = !ecologyComputerDisplay;
 	palette = !palette;
 }
 
+
+
+void knifeCallback( int gunIndex, int shooterIndex )
+{
+	// printf("knife callback\n");
+
+		int cursorPosX = cameraPositionX +  mousePositionX ;
+		int cursorPosY = cameraPositionY + mousePositionY;
+		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+		// if (worldCursorPos < worldSquareSize)
+		// {
+		// 	int tempCursorAnimal = world[worldCursorPos].identity;
+		// 	unsigned int cursorAnimalSpecies = tempCursorAnimal / numberOfAnimalsPerSpecies;
+		// 	if (tempCursorAnimal >= 0 && tempCursorAnimal < numberOfAnimals)
+		// 	{
+		if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
+		{
+			// cursorAnimal = tempCursorAnimal;
+			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
+			if ( occupyingCell >= 0)
+			{
+				// selectedAnimal = cursorAnimal;
+				// printf("cuttt\n");
+				animals[cursorAnimal].body[occupyingCell].damage += 0.3f;
+			}
+			// }
+			// }
+		}
+
+
+}
 
 
 
@@ -4229,7 +4153,7 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 
 
 
-		printf(" you hear a gunshot! \n");
+		// printf(" you hear a gunshot! \n");
 
 
 		// trace a line from the gun and destroy any tissue found on the way.
@@ -4340,14 +4264,9 @@ void setupTrackerGlasses(int i)
 
 void setupExampleGun(int i)
 {
-
 	resetAnimal(i);
 	animals[i].isMachine = true;
 	animals[i].machineCallback = exampleGunCallback;
-
-	// animals[i].displayName = std::string("A pistol.").c_str();
-
-	// snprintf (animals[i].displayName, 32, "A pistol.");
 
 	std::string gunDescription = std::string("A pistol.");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
@@ -4358,9 +4277,26 @@ void setupExampleGun(int i)
 	appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
 	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
+}
 
 
+void setupExampleKnife(int i)
+{
+	resetAnimal(i);
+	animals[i].isMachine = true;
+	animals[i].machineCallback = knifeCallback;
 
+	std::string gunDescription = std::string("A knife.");
+	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 3) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(+1, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, -1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, -2) );
 }
 
 
@@ -4881,6 +4817,29 @@ void setupRandomWorld()
 
 
 
+		targetWorldPositionI += (400);
+		// targetWorldPositionX = 200 ;
+		// targetWorldPositionY = 300 ;
+		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+		setupBuilding_playerBase(targetWorldPositionI);
+
+		// int i = 1;
+		// setupExampleGlasses(i);
+		// setupTrackerGlasses(i)
+
+		setupExampleKnife(i);
+		spawnAnimalIntoSlot(6,
+		                    animals[i],
+		                    targetWorldPositionI, false);
+
+		// animals[3].fAngle = 0.0f;
+
+
+
+
+
+
 
 
 		// spawn the player
@@ -4889,6 +4848,16 @@ void setupRandomWorld()
 
 
 		// spawn the adversary
+		while (true)
+		{
+			adversaryRespawnPos =  worldSquareSize/2;
+			if (world[adversaryRespawnPos].wall == MATERIAL_NOTHING)
+			{
+				break;
+			}
+		}
+
+		// adversaryRespawnPos = extremelyFastNumberFromZeroTo(worldSquareSize);
 		spawnAdversary();
 
 
@@ -5014,9 +4983,14 @@ void tournamentController()
 				// }
 				// else {
 				setupExampleAnimal2(j);
-				spawnAnimal( 1,
-				             animals[j],
-				             animals[adversary].position, true);
+				int domingo = spawnAnimal( 1,
+				                           animals[j],
+				                           animals[adversary].position, true);
+
+				if (domingo >= 0)
+				{
+					paintAnimal(domingo);
+				}
 
 				// }
 
