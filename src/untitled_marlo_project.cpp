@@ -2138,20 +2138,21 @@ float fast_sigmoid(float in)
 
 void paletteCallback()
 {
-	printf("a\n");
+	// printf("a\n");
 	// add the selected organ to the selected animal
 	if (selectedAnimal >= 0 && selectedAnimal < numberOfAnimals)
 	{
-	printf("b\n");
+	// printf("b\n");
 		if (paletteSelectedOrgan >= 0 && paletteSelectedOrgan < numberOfOrganTypes)
 		{
 
 
-	printf("c\n");
-			int newPosX = animals[selectedAnimal].uPosX - mousePositionX;
-			int newPosY = animals[selectedAnimal].uPosY - mousePositionY;
+	// printf("c\n");
+			int newPosX = mousePositionX -   ( cameraPositionX  - animals[selectedAnimal].uPosX);
+			int newPosY = mousePositionY -   ( cameraPositionY  - animals[selectedAnimal].uPosY);
 
 			// animalAppendCell()
+			// printf("appended cell to %i %i \n", newPosX, newPosY);
 
 			appendCell(selectedAnimal, paletteSelectedOrgan, Vec_i2(newPosX, newPosY));
 
@@ -3563,6 +3564,220 @@ void displayComputerText()
 
 	if (computer2display)
 	{
+
+
+		/**
+		Cast of characters.
+
+		Fred Hoover. Project manager.
+
+		Melissa Kelly. Astrobiologist.
+
+		General Bill "Bullseye" Strickland.
+
+		You. Psychic cadet.	 
+
+
+		Computer. A Dell Inspiron 7500 from 1999. Intel pentium III capable of 750MHz. 512MB RAM, 30GB storage.
+
+
+
+
+		story progression in 5 terminals.
+
+		1. intro, speak to the general
+		2. the adversary
+		3. alien computer
+		4.
+		5.
+
+
+
+
+		 **/
+
+
+
+
+
+
+		/**
+	
+
+Project CONQUEST. Classification: Above top secret.
+Private conversation between M. Kelly and F. Hoover.
+
+	How did the meeting go?
+
+	Good. Well, bad I guess. It all went sideways pretty quickly.
+
+	What happened?
+
+	I thought we'd be talking to some pencil pushers. We must have impressed someone up there though. They sent General Strickland to review our progress.
+
+	Geez. We're not ready for that.
+
+	Yeah. I wasn't ready. But I delivered our report and our findings.
+
+	What did they say?
+
+	He immediately tripled our budget. And granted our request for more personnel. And he's going to buy us a new computer.
+
+	****! What did YOU say?
+	
+	Um, it was more about how I said it. See he's over in Virginia, so I spoke to them on the video telephone...
+
+	... He thought you were in the computer.
+
+	He thought I was in the computer. I should have said something, but I didn't realize until the call was finished.
+
+
+
+
+		 * */
+
+
+
+/**
+ *
+
+
+
+	Strickland's like a hundred years old, he doesn't know anything about computers. 
+
+	That's the thing, you could see his eyes glaze over when I talk about virtual ecology. But as soon as I said 'adversary', he switched right on.
+
+	You shouldn't have called it that. It's just a pet name.
+
+	It just slipped out. I'm sorry. He fixated on it and I couldn't take it back.
+
+	We don't even know what it is yet.
+
+	Just the idea of having some opponent made him so excited. I guess he spent all day meeting with the other projects.. Psychic projection... Astrobiology..
+
+	Hmf.
+
+	Sorry Melissa. It's just that having anything to show at all kind of means we're the poster child. 
+
+	What does he want us to do?
+
+	Well, he wants us to occupy the simulation, like it's a pacific island territory. We're supposed to set up a forward operating base and have a constant presence there.
+
+	Haha! Really?
+
+	Yeah. And keep doing our research. I'm supposed to train the cadets how to live and work in the sim. They figured out pretty quick it's basically a video game. They're all pretty young, but they're bright.
+
+	What about the adversary?
+
+	The cadet's mission is to find it, and kill it...
+
+
+
+
+ * 
+ * */
+
+
+
+/**
+ *
+
+Melissa, the new computer came in today.
+
+Tell me!
+
+Oh I'll tell you. But you won't believe me.
+
+Try it.
+
+Seven fifty megahertz.
+
+... Seven and a half megahertz?
+
+Nope. Seven hundred and fifty megahertz. 
+
+No way. There's no way.
+
+Half a BILLION bytes of RAM.
+
+It must be the size of a house!
+
+That's the thing, you could pick it up in your hand...
+
+How?
+
+It's only as big as a lunch box I guess. I've never seen anything like it. It unfolds in half and there's a screen and a keyboard inside.
+We're not allowed to touch it. But the techs have wired in our PCs so we can work on it remotely. We're going to move the simulation code over to it.
+
+Gosh. If the simulation ran on something like that... We could make a whole country, we could do anything.
+
+I haven't even told you the craziest part yet. The system clock is set to December 2, 1999.
+
+What.
+
+The rumor is, NRO met with an extraterrestrial entity, and traded for it. A human computer from our own future.
+
+Wait, aliens are really real? Don't you hang up on- !!
+
+As I end the call to Melissa, I can't help but wonder. What price did the NRO pay for this machine?
+
+
+
+**/
+
+
+
+
+/***
+ * 
+ 
+
+
+Project CONQUEST. Classification: Above top secret.
+Private conversation between F. Hoover and cadet R. Bienvenida.
+
+We don't know anything about it, really. We think it's an enemy, at least we've been told to treat it that way.
+
+Has it taken any offensive action, against us?
+
+Yeah. Sort of. It attacked and killed one of the researchers, and hurt another. Well they were fine in the real world I guess but it still counts.
+
+Is that all?
+
+No. It has a corrupting influence on the simulation. Whatever it touches starts growing and mutating. Over time its creations 
+
+
+
+
+
+
+
+
+
+
+
+
+ * 
+ * */
+
+
+/***
+ * 
+ 
+ Secret diary of Melissa Kelly, Astrobiologist.
+
+
+
+
+
+
+*/
+
+
+
+
+
+
 
 
 		printText2D(  "    \n" , menuX, menuY, textSize);
