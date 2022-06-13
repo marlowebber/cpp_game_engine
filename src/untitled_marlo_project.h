@@ -25,6 +25,8 @@ extern float fps ;
 
 extern  int playerCreature ;
 
+extern bool shift;
+
 void spawnPlayer();
 
 void save();
@@ -55,6 +57,7 @@ void incrementSelectedOrgan();
 
 void decrementSelectedOrgan();
 
+void rightClickCallback();
 #define VISUALIZER_TRUECOLOR           1001
 #define VISUALIZER_TRACKS              1003
 #define VISUALIZER_IDENTITY            1004

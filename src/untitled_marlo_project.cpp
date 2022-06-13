@@ -169,6 +169,8 @@ unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
 
 float fps = 1.0f;
 
+bool shift =  false;
+
 bool playerGrabState = false;
 bool playerInControl = true;
 int playerCreature = -1;
@@ -1525,7 +1527,7 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 	// shift array of cells down 1, overwriting the lowest modified cell (the cell to delete)
 	for (int cellIndex = cellToDelete + 1; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
 	{
-		animals[animalIndex].body[cellIndex - 1] = animals[animalIndex].body[cellIndex];
+		animals[animalIndex].genes[cellIndex - 1] = animals[animalIndex].genes[cellIndex];
 	}
 
 	// clear the end cell which would have been duplicated
@@ -1536,16 +1538,23 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 	{
 		for (int connectionIndex = 0; connectionIndex < NUMBER_OF_CONNECTIONS; ++connectionIndex)
 		{
-			if (animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo == cellToDelete	)
+			if (animals[animalIndex].genes[cellIndex].connections[connectionIndex].connectedTo == cellToDelete	)
 			{
-				animals[animalIndex].body[cellIndex].connections[connectionIndex].used = false;
+				animals[animalIndex].genes[cellIndex].connections[connectionIndex].used = false;
 			}
-			else if (animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo > cellToDelete)
+			else if (animals[animalIndex].genes[cellIndex].connections[connectionIndex].connectedTo > cellToDelete)
 			{
-				animals[animalIndex].body[cellIndex].connections[connectionIndex].connectedTo --;
+				animals[animalIndex].genes[cellIndex].connections[connectionIndex].connectedTo --;
 			}
 		}
+
+		animals[animalIndex].body[cellIndex] = animals[animalIndex].genes[cellIndex] ;
 	}
+
+	// for (int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)
+	// {
+	// 	animals[animalIndex].body[cellIndex] = animals[animalIndex].genes[cellIndex] ;
+	// }
 }
 
 void mutateAnimal(unsigned int animalIndex)
@@ -2136,29 +2145,70 @@ float fast_sigmoid(float in)
 
 
 
+Vec_i2 getMousePositionRelativeToAnimal(unsigned int animalIndex)
+{
+
+	int newPosX = mousePositionX -   ( cameraPositionX  - animals[animalIndex].uPosX);
+	int newPosY = mousePositionY -   ( cameraPositionY  - animals[animalIndex].uPosY);
+	return Vec_i2(newPosX, newPosY);
+}
+
 void paletteCallback()
 {
 	// printf("a\n");
 	// add the selected organ to the selected animal
 	if (selectedAnimal >= 0 && selectedAnimal < numberOfAnimals)
 	{
-	// printf("b\n");
+		// printf("b\n");
 		if (paletteSelectedOrgan >= 0 && paletteSelectedOrgan < numberOfOrganTypes)
 		{
 
 
-	// printf("c\n");
-			int newPosX = mousePositionX -   ( cameraPositionX  - animals[selectedAnimal].uPosX);
-			int newPosY = mousePositionY -   ( cameraPositionY  - animals[selectedAnimal].uPosY);
+			// printf("c\n");
+			// int newPosX = mousePositionX -   ( cameraPositionX  - animals[selectedAnimal].uPosX);
+			// int newPosY = mousePositionY -   ( cameraPositionY  - animals[selectedAnimal].uPosY);
 
+			Vec_i2 newpos = getMousePositionRelativeToAnimal(selectedAnimal);
 			// animalAppendCell()
 			// printf("appended cell to %i %i \n", newPosX, newPosY);
 
-			appendCell(selectedAnimal, paletteSelectedOrgan, Vec_i2(newPosX, newPosY));
+			appendCell(selectedAnimal, paletteSelectedOrgan, newpos);
 
 		}
 	}
 }
+
+
+
+void paletteEraseAtMouse()
+{
+
+	if (selectedAnimal >= 0 && selectedAnimal < numberOfAnimals)
+	{
+		// int newPosX = mousePositionX -   ( cameraPositionX  - animals[selectedAnimal].uPosX);
+		// int newPosY = mousePositionY -   ( cameraPositionY  - animals[selectedAnimal].uPosY);
+
+
+		Vec_i2 newpos = getMousePositionRelativeToAnimal(selectedAnimal);
+
+
+		for (int i = 0; i < animals[selectedAnimal].cellsUsed; ++i)
+		{
+			if (animals[selectedAnimal].body[i].localPosX == newpos.x &&
+			        animals[selectedAnimal].body[i].localPosY == newpos.y
+
+			   )
+			{
+
+				eliminateCell(selectedAnimal, i);
+
+			}
+		}
+
+	}
+
+}
+
 
 void drawPalette()
 {
@@ -2229,9 +2279,18 @@ void activateGrabbedMachine()
 	if (playerCreature >= 0 && playerInControl)
 	{
 
+		// if
 		if (palette)
 		{
+			// if (shift)
+			// {
+			// }
+			// else
+			// {
+
+
 			paletteCallback();
+			// }
 		}
 
 
@@ -2254,6 +2313,16 @@ void activateGrabbedMachine()
 		}
 	}
 }
+
+
+void rightClickCallback ()
+{
+	if (palette)
+	{
+		paletteEraseAtMouse();
+	}
+}
+
 
 // the animal is a grid of living cells that do different things. this function describes what they do each turn.
 void organs_all()
@@ -3575,7 +3644,7 @@ void displayComputerText()
 
 		General Bill "Bullseye" Strickland.
 
-		You. Psychic cadet.	 
+		You. Psychic cadet.
 
 
 		Computer. A Dell Inspiron 7500 from 1999. Intel pentium III capable of 750MHz. 512MB RAM, 30GB storage.
@@ -3602,34 +3671,34 @@ void displayComputerText()
 
 
 		/**
-	
 
-Project CONQUEST. Classification: Above top secret.
-Private conversation between M. Kelly and F. Hoover.
 
-	How did the meeting go?
+		Project CONQUEST. Classification: Above top secret.
+		Private conversation between M. Kelly and F. Hoover.
 
-	Good. Well, bad I guess. It all went sideways pretty quickly.
+		How did the meeting go?
 
-	What happened?
+		Good. Well, bad I guess. It all went sideways pretty quickly.
 
-	I thought we'd be talking to some pencil pushers. We must have impressed someone up there though. They sent General Strickland to review our progress.
+		What happened?
 
-	Geez. We're not ready for that.
+		I thought we'd be talking to some pencil pushers. We must have impressed someone up there though. They sent General Strickland to review our progress.
 
-	Yeah. I wasn't ready. But I delivered our report and our findings.
+		Geez. We're not ready for that.
 
-	What did they say?
+		Yeah. I wasn't ready. But I delivered our report and our findings.
 
-	He immediately tripled our budget. And granted our request for more personnel. And he's going to buy us a new computer.
+		What did they say?
 
-	****! What did YOU say?
-	
-	Um, it was more about how I said it. See he's over in Virginia, so I spoke to them on the video telephone...
+		He immediately tripled our budget. And granted our request for more personnel. And he's going to buy us a new computer.
 
-	... He thought you were in the computer.
+		****! What did YOU say?
 
-	He thought I was in the computer. I should have said something, but I didn't realize until the call was finished.
+		Um, it was more about how I said it. See he's over in Virginia, so I spoke to them on the video telephone...
+
+		... He thought you were in the computer.
+
+		He thought I was in the computer. I should have said something, but I didn't realize until the call was finished.
 
 
 
@@ -3638,114 +3707,113 @@ Private conversation between M. Kelly and F. Hoover.
 
 
 
-/**
- *
+		/**
+		 *
 
 
 
-	Strickland's like a hundred years old, he doesn't know anything about computers. 
+			Strickland's like a hundred years old, he doesn't know anything about computers.
 
-	That's the thing, you could see his eyes glaze over when I talk about virtual ecology. But as soon as I said 'adversary', he switched right on.
+			That's the thing, you could see his eyes glaze over when I talk about virtual ecology. But as soon as I said 'adversary', he switched right on.
 
-	You shouldn't have called it that. It's just a pet name.
+			You shouldn't have called it that. It's just a pet name.
 
-	It just slipped out. I'm sorry. He fixated on it and I couldn't take it back.
+			It just slipped out. I'm sorry. He fixated on it and I couldn't take it back.
 
-	We don't even know what it is yet.
+			We don't even know what it is yet.
 
-	Just the idea of having some opponent made him so excited. I guess he spent all day meeting with the other projects.. Psychic projection... Astrobiology..
+			Just the idea of having some opponent made him so excited. I guess he spent all day meeting with the other projects.. Psychic projection... Astrobiology..
 
-	Hmf.
+			Hmf.
 
-	Sorry Melissa. It's just that having anything to show at all kind of means we're the poster child. 
+			Sorry Melissa. It's just that having anything to show at all kind of means we're the poster child.
 
-	What does he want us to do?
+			What does he want us to do?
 
-	Well, he wants us to occupy the simulation, like it's a pacific island territory. We're supposed to set up a forward operating base and have a constant presence there.
+			Well, he wants us to occupy the simulation, like it's a pacific island territory. We're supposed to set up a forward operating base and have a constant presence there.
 
-	Haha! Really?
+			Haha! Really?
 
-	Yeah. And keep doing our research. I'm supposed to train the cadets how to live and work in the sim. They figured out pretty quick it's basically a video game. They're all pretty young, but they're bright.
+			Yeah. And keep doing our research. I'm supposed to train the cadets how to live and work in the sim. They figured out pretty quick it's basically a video game. They're all pretty young, but they're bright.
 
-	What about the adversary?
+			What about the adversary?
 
-	The cadet's mission is to find it, and kill it...
+			The cadet's mission is to find it, and kill it...
 
 
 
 
- * 
- * */
+		 *
+		 * */
 
 
 
-/**
- *
+		/**
+		 *
 
-Melissa, the new computer came in today.
+		Melissa, the new computer came in today.
 
-Tell me!
+		Tell me!
 
-Oh I'll tell you. But you won't believe me.
+		Oh I'll tell you. But you won't believe me.
 
-Try it.
+		Try it.
 
-Seven fifty megahertz.
+		Seven fifty megahertz.
 
-... Seven and a half megahertz?
+		... Seven and a half megahertz?
 
-Nope. Seven hundred and fifty megahertz. 
+		Nope. Seven hundred and fifty megahertz.
 
-No way. There's no way.
+		No way. There's no way.
 
-Half a BILLION bytes of RAM.
+		Half a BILLION bytes of RAM.
 
-It must be the size of a house!
+		It must be the size of a house!
 
-That's the thing, you could pick it up in your hand...
+		That's the thing, you could pick it up in your hand...
 
-How?
+		How?
 
-It's only as big as a lunch box I guess. I've never seen anything like it. It unfolds in half and there's a screen and a keyboard inside.
-We're not allowed to touch it. But the techs have wired in our PCs so we can work on it remotely. We're going to move the simulation code over to it.
+		It's only as big as a lunch box I guess. I've never seen anything like it. It unfolds in half and there's a screen and a keyboard inside.
+		We're not allowed to touch it. But the techs have wired in our PCs so we can work on it remotely. We're going to move the simulation code over to it.
 
-Gosh. If the simulation ran on something like that... We could make a whole country, we could do anything.
+		Gosh. If the simulation ran on something like that... We could make a whole country, we could do anything.
 
-I haven't even told you the craziest part yet. The system clock is set to December 2, 1999.
+		I haven't even told you the craziest part yet. The system clock is set to December 2, 1999.
 
-What.
+		What.
 
-The rumor is, NRO met with an extraterrestrial entity, and traded for it. A human computer from our own future.
+		The rumor is, NRO met with an extraterrestrial entity, and traded for it. A human computer from our own future.
 
-Wait, aliens are really real? Don't you hang up on- !!
+		Wait, aliens are really real? Don't you hang up on- !!
 
-As I end the call to Melissa, I can't help but wonder. What price did the NRO pay for this machine?
+		As I end the call to Melissa, I can't help but wonder. What price did the NRO pay for this machine?
 
 
 
-**/
+		**/
 
 
 
 
-/***
- * 
- 
+		/***
+		 *
 
 
-Project CONQUEST. Classification: Above top secret.
-Private conversation between F. Hoover and cadet R. Bienvenida.
 
-We don't know anything about it, really. We think it's an enemy, at least we've been told to treat it that way.
+		Project CONQUEST. Classification: Above top secret.
+		Private conversation between F. Hoover and cadet R. Bienvenida.
 
-Has it taken any offensive action, against us?
+		We don't know anything about it, really. We think it's an enemy, at least we've been told to treat it that way.
 
-Yeah. Sort of. It attacked and killed one of the researchers, and hurt another. Well they were fine in the real world I guess but it still counts.
+		Has it taken any offensive action, against us?
 
-Is that all?
+		Yeah. Sort of. It attacked and killed one of the researchers, and hurt another. Well they were fine in the real world I guess but it still counts.
 
-No. It has a corrupting influence on the simulation. Whatever it touches starts growing and mutating. Over time its creations 
+		Is that all?
 
+		No. It has a corrupting influence on the simulation. Whatever it touches starts growing and mutating. Over time its creations
 
 
 
@@ -3757,21 +3825,22 @@ No. It has a corrupting influence on the simulation. Whatever it touches starts 
 
 
 
- * 
- * */
 
+		 *
+		 * */
 
-/***
- * 
- 
- Secret diary of Melissa Kelly, Astrobiologist.
 
+		/***
+		 *
 
+		 Secret diary of Melissa Kelly, Astrobiologist.
 
 
 
 
-*/
+
+
+		*/
 
 
 
@@ -4789,7 +4858,7 @@ void setupRandomWorld()
 
 
 
-	targetWorldPositionI += (400);
+		targetWorldPositionI += (400);
 		// targetWorldPositionX = 200 ;
 		// targetWorldPositionY = 300 ;
 		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
@@ -4800,7 +4869,7 @@ void setupRandomWorld()
 		// setupExampleGlasses(i);
 		// setupTrackerGlasses(i)
 
-	 setupHospitalComputer(i);
+		setupHospitalComputer(i);
 		spawnAnimalIntoSlot(5,
 		                    animals[i],
 		                    targetWorldPositionI, false);

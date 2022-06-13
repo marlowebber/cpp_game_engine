@@ -39,6 +39,21 @@ void threadInterface()
 		switch ( event.type )
 		{
 
+
+		case SDL_KEYUP:
+		{
+			switch ( event.key.keysym.sym )
+			{
+			case SDLK_LSHIFT:
+				shift = false;
+				break;
+
+			}
+			break;
+		}
+
+
+
 		case SDL_KEYDOWN:
 		{
 			if (capturingText)
@@ -75,6 +90,13 @@ void threadInterface()
 				viewPanSetpointY = viewPanSetpointY - (panSpeed * viewZoomSetpoint);
 				// cameraPositionY--;
 				break;
+
+
+			case SDLK_LSHIFT:
+				shift = true;
+				break;
+
+
 			case SDLK_EQUALS:
 				viewZoomSetpoint = viewZoomSetpoint * 0.9f;
 				break;
@@ -92,10 +114,10 @@ void threadInterface()
 				lockfps = !lockfps;
 				break;
 
-				case SDLK_y:
+			case SDLK_y:
 				incrementSelectedOrgan();
 				break;
-				case SDLK_h:
+			case SDLK_h:
 				decrementSelectedOrgan();
 				break;
 
@@ -277,8 +299,8 @@ void threadInterface()
 			case SDLK_m:
 			{
 
-			    viewAdversary();
-			    break;
+				viewAdversary();
+				break;
 			}
 
 
@@ -328,6 +350,10 @@ void threadInterface()
 
 
 				break;
+			}
+			case SDL_BUTTON_RIGHT:
+			{
+				rightClickCallback();
 			}
 			break;
 			}
