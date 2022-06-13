@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/game.dir/src/SimplexNoise.cpp.o"
   "CMakeFiles/game.dir/src/game.cpp.o"
   "CMakeFiles/game.dir/src/graphics.cpp.o"
   "CMakeFiles/game.dir/src/main.cpp.o"

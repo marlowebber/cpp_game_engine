@@ -30,7 +30,8 @@ set(SRCS
 	src/neuro.h
 	src/untitled_marlo_project.cpp
 	src/untitled_marlo_project.h
-	src/db_perlin.hpp
+	src/SimplexNoise.cpp
+	src/SimplexNoise.h
 )
 
 link_directories(

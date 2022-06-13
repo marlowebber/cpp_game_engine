@@ -26,22 +26,7 @@
 #include "menus.h"
 #include "main.h"
 
-// #include "PerlinNoise.hpp"
-
-
-#define DB_PERLIN_IMPL
-#include "db_perlin.hpp"
-
-int perlin() {
-	// float x = /* ... */;
-	// float y = /* ... */;
-	// float z = /* ... */;
-
-	// float noise1D = db::perlin(x);
-	float noise2D = db::perlin(0, 0);
-	// float noise3D = db::perlin(x, y, z);
-}
-
+#include "SimplexNoise.h"
 
 #define MATERIAL_NOTHING           0
 #define ORGAN_MOUTH_VEG            1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
@@ -108,7 +93,7 @@ int perlin() {
 #define WORLD_CALADAN 3
 
 
-unsigned int worldToLoad = WORLD_EXAMPLECREATURE;
+unsigned int worldToLoad = WORLD_CALADAN;
 
 int visualizer = VISUALIZER_TRUECOLOR;
 
@@ -4866,7 +4851,6 @@ void setupRandomWorld()
 
 
 
-	perlin();
 	if (worldToLoad == WORLD_CALADAN)
 	{
 
@@ -4876,13 +4860,22 @@ void setupRandomWorld()
 		{
 
 			world[worldPositionI].temperature = 300.0f;
-			world[worldPositionI].light = color_white;
-
-
 
 
 			unsigned int x = worldPositionI % worldSize;
 			unsigned int y = worldPositionI / worldSize;
+
+			float fx = x;
+			float fy = y;
+
+    float noise = SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+
+    // printf("noise %f\n", noise);
+
+			world[worldPositionI].light = multiplyColorByScalar(color_white, noise)  ;//color_white;
+
+
+
 
 
 
