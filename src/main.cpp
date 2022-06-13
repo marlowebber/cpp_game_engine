@@ -303,6 +303,14 @@ void threadInterface()
 				break;
 			}
 
+				case SDLK_n:
+			{
+
+				toggleErodingRain();
+				break;
+			}
+
+
 
 			case SDLK_ESCAPE:
 				quit();

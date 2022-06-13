@@ -61,7 +61,6 @@ const Color color_pink              = Color(  1.0f, 0.8f, 0.8f, 1.0f );
 const Color color_cream          = Color(  0.91f, 0.92f, 0.782f, 1.0f );
 const Color color_offwhite           = Color( 0.9f, 1.0f, 0.8f, 1.0f );
 
-const Color tint_selected              = Color (1.0f, 1.0f, 1.0f, 0.25f);
 
 const Color color_puce               = Color(0.48, 0.204, 0.134, 1.0f);
 const Color color_tan           = Color(0.910, 0.815, 0.673, 1.0f);
@@ -80,6 +79,13 @@ const Color color_violet     = Color(0.762, 0.560, 0.950, 1.0f);
 
 const Color color_peach       = Color(	1.0, 0.375, 0.250, 1.0f);
 const Color color_peach_light = Color(0.950, 0.681, 0.627, 1.0f);
+
+
+
+
+const Color tint_selected              = Color (1.0f, 1.0f, 1.0f, 0.25f);
+
+const Color tint_wall              = Color (1.0f, 1.0f, 1.0f, 0.1f);
 
 struct Vec_u2
 {

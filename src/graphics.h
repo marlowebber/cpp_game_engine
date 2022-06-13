@@ -86,6 +86,7 @@ Color multiplyColorByScalar(Color a, float b);
 Color filterColor( Color a, Color b);
 Color mixColor (Color a, Color b, float mix);
 Color clampColor (Color in);
+Color addColor (Color a, Color b);
 
 float colorAmplitude(Color a );
 #endif
