@@ -86,9 +86,9 @@ Color multiplyColor (Color a, Color b)
 Color multiplyColorByScalar(Color a, float b)
 {
 	Color c;
-	c.r = a.r * b;
-	c.g = a.g * b;
-	c.b = a.b * b;
+	c.r = a.r ;
+	c.g = a.g ;
+	c.b = a.b ;
 	c.a = a.a * b;
 	return clampColor(c);
 }
