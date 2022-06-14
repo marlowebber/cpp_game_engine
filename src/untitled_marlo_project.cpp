@@ -95,6 +95,7 @@
 #define WORLD_EXAMPLECREATURE 2
 #define WORLD_CALADAN 3
 
+const float seaLevel = 0.5f;
 
 unsigned int worldToLoad = WORLD_CALADAN;
 
@@ -1985,20 +1986,20 @@ void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAn
 
 
 
-	// if (true)
-	// {
+	if (true)
+	{
 
-/// light = height
+// light = height
 
-	// if (doErodingRain)
-	// {
-	// 	printf("%f\n", world[worldPositionI].height);
-	// }
-	world[worldPositionI].light = multiplyColorByScalar(color_white, world[worldPositionI].height);
+		// if (doErodingRain)
+		// {
+		// 	printf("%f\n", world[worldPositionI].height);
+		// }
+		world[worldPositionI].light = multiplyColorByScalar(color_white, world[worldPositionI].height);
 
 
 
-	// }
+	}
 
 }
 
@@ -2045,10 +2046,11 @@ void erodingRain(unsigned int worldPositionI)
 
 	float friction = 0.1f;
 	float evaporationRate = 0.999f;
-	float rainStrength = 1.0f;
+	float rainStrength = 0.1f;
 
 	float rainTimestep = 0.1f;
 
+	float maxSpeed = 10.0f;
 
 	// if (raindrops % 10000 == 0)
 	// {
@@ -2065,75 +2067,75 @@ void erodingRain(unsigned int worldPositionI)
 
 		// computeLight(position, sunXangle, sunYangle);
 		// break;
-
-		if (position >= worldSquareSize || position + 1 >= worldSquareSize)
+		if (position > worldSize + 1 && position < worldSquareSize - (worldSize + 1))
 		{
-			break;
-		}
 
-		float xdrop =  (  world[position].height - world[position + 1].height   );
-		float ydrop = ( world[position].height - world[position + worldSize].height );
+			float xdrop =  (  world[position - 1].height - world[position + 1].height   ) * -1;
+			float ydrop = ( world[position - worldSize].height - world[position + worldSize].height ) * -1;
 
-		// evaporate
-		dropVolume *= evaporationRate;
+			// evaporate
+			dropVolume *= evaporationRate;
+			if (dropVolume < 0.01f)
+			{
+				break;
+			}
 
-		//sediment absorption
-		float magnitude_speed = sqrt((xdrop * xdrop) + (ydrop * ydrop));
+			//sediment absorption
+			float magnitude_speed = sqrt((xdrop * xdrop) + (ydrop * ydrop));
 
-		float slope = 1.0f;
-		unsigned int xnext = fposition.x += velocity.x;
-		unsigned int ynext = fposition.y += velocity.y;
-		if (xnext < worldSquareSize && ynext < worldSquareSize)
-		{
-			unsigned int nextpos = (ynext * worldSize) + xnext;
-			slope = world[position].height - world[nextpos].height;
-		}
+			float slope = 1.0f;
+			unsigned int xnext = fposition.x += velocity.x;
+			unsigned int ynext = fposition.y += velocity.y;
+			if (xnext < worldSquareSize && ynext < worldSquareSize)
+			{
+				unsigned int nextpos = (ynext * worldSize) + xnext;
+				slope = world[position].height - world[nextpos].height;
+			}
 
 
-		float equilibrium = dropVolume * magnitude_speed * slope;
-		if (equilibrium < 0.0f) {equilibrium = 0.0f;}
-		float drivingForce = equilibrium - saturation;
-		saturation += drivingForce * rainStrength * rainTimestep;
+			float equilibrium = dropVolume * magnitude_speed * slope;
+			if (equilibrium < 0.0f) {equilibrium = 0.0f;}
+			float drivingForce = equilibrium - saturation;
+			saturation += drivingForce * rainStrength * rainTimestep;
 
-		float affect = dropVolume * drivingForce * rainStrength * rainTimestep;
+			float affect = dropVolume * drivingForce * rainStrength * rainTimestep;
 
-		// printf("affect %f total %f \n", affect, world[position].height);
+			// printf("affect %f total %f \n", affect, world[position].height);
 
-		world[position].height -= affect;
+			world[position].height -= affect;
 
 // void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
-		computeLight(position, sunXangle, sunYangle);
+			computeLight(position, sunXangle, sunYangle);
 
 
-		// printf(".");
-		// classical mechanics
-		velocity.x +=  xdrop * rainTimestep;
-		velocity.y +=  ydrop * rainTimestep;
+			// printf(".");
+			// classical mechanics
+			velocity.x +=  xdrop * rainTimestep;
+			velocity.y +=  ydrop * rainTimestep;
 
-		velocity.x *= (1.0f - (rainTimestep * friction));
-		velocity.y *= (1.0f - (rainTimestep * friction));
+			velocity.x *= (1.0f - (rainTimestep * friction));
+			velocity.y *= (1.0f - (rainTimestep * friction));
 
-		fposition.x += velocity.x * rainTimestep;
-		fposition.y += velocity.y * rainTimestep;
+			// if ( abs(velocity.x) > maxSpeed) { velocity.x *= (  abs(velocity.x)/maxSpeed  );}
+			// if ( abs(velocity.y) > maxSpeed) { velocity.y *= (  abs(velocity.y)/maxSpeed  );}
 
-		x = fposition.x;
-		y = fposition.y;
+			fposition.x += velocity.x * rainTimestep;
+			fposition.y += velocity.y * rainTimestep;
 
-		position = (worldSize * y) + x;
+			x = fposition.x;
+			y = fposition.y;
 
-		if (dropVolume < 0.001f)
+			position = (worldSize * y) + x;
+
+
+
+			// std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+		}
+		else
 		{
 			break;
 		}
-		if ( (position + worldSize + 1) >= worldSquareSize )
-		{
-			break;
-		}
-
-
-		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-
 
 	}
 
@@ -2205,6 +2207,21 @@ void updateMap()
 			// 	}
 			// }
 
+
+			if (world[randomI].height < seaLevel)
+			{
+				if (world[randomI].wall == MATERIAL_NOTHING)
+				{
+					world[randomI].wall = MATERIAL_WATER;
+				}
+			}
+			else
+			{
+				if (world[randomI].wall == MATERIAL_WATER)
+				{
+					world[randomI].wall = MATERIAL_NOTHING;
+				}
+			}
 
 			if (world[randomI].material == MATERIAL_FIRE)
 			{
@@ -3304,7 +3321,7 @@ void move_all()
 
 				if (! animals[animalIndex].isMachine)
 				{
-					if (world[newPosition].terrain == MATERIAL_WATER )
+					if (world[newPosition].wall == MATERIAL_WATER )
 					{
 						if (! animals[animalIndex].canBreatheUnderwater )
 						{
@@ -3758,11 +3775,6 @@ void camera()
 						if (world[worldI].wall != MATERIAL_NOTHING)
 						{
 							amount -= 0.25f;
-						}
-
-						if (world[worldI].terrain == MATERIAL_WATER)
-						{
-							amount -= 0.125f;
 						}
 
 						if (world[worldI].material != MATERIAL_NOTHING)
@@ -4977,6 +4989,38 @@ void spawnTournamentAnimals()
 
 
 
+void normalizeTerrainHeight()
+{
+
+	float maxHeight = 0.0f;
+	float minHeight = 0.0f;
+
+	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+	{
+		if (world[worldPositionI].height > maxHeight)
+		{
+			maxHeight = world[worldPositionI].height;
+		}
+
+		if (world[worldPositionI].height < minHeight)
+		{
+			minHeight = world[worldPositionI].height;
+		}
+	}
+
+
+	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+	{
+
+		world [ worldPositionI] .height =  (world [ worldPositionI] .height - minHeight) / (   maxHeight - minHeight  )  ;
+
+	}
+
+
+}
+
+
+
 void setupRandomWorld()
 {
 	resetAnimals();
@@ -4990,7 +5034,7 @@ void setupRandomWorld()
 
 		raindrops = 0;
 		unsigned int wallthickness = 8;
-		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; ++worldPositionI)
+		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 		{
 
 			world[worldPositionI].temperature = 300.0f;
@@ -5003,18 +5047,30 @@ void setupRandomWorld()
 			float fx = x * noiseScaleFactor;
 			float fy = y * noiseScaleFactor;
 
-			float noise = SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+			float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
 
 			// map -1,1 to 1,0
-			noise += 1.0f;
-			noise *= 0.5f;
+			// noise += 1.0f;
+			// noise *= 0.5f;
 
-			// printf("noise %f\n", noise);
+			// // printf("noise %f\n", noise);
 
-			world[worldPositionI].height = noise;
-			// world[worldPositionI].height += (fx / worldSize);
+			// world[worldPositionI].height = noise;
 
-			float incidentAngleSimilarity = 1.0f;
+			// world[worldPositionI].height = 0.5f;
+			// float xratio = (x / worldSize);
+			// printf("xratio %f \n", xratio);
+			// printf("")
+			float hDistance = x;
+			float hMax = worldSize;
+
+			// printf("xratio %f  %f / %f \n", fef / kek, fef, kek);
+			world[worldPositionI].height = hDistance / hMax;
+
+			world[worldPositionI].height += noise * 0.5f;
+
+
+			// float incidentAngleSimilarity = 1.0f;
 
 
 
@@ -5030,15 +5086,15 @@ void setupRandomWorld()
 			// world[worldPositionI].height = maxHeight*ratio;
 
 
+			world[worldPositionI].terrain = MATERIAL_ROCK;
 			if (x > worldSize / 2)
 			{
-				world[worldPositionI].terrain = MATERIAL_ROCK;
 				// world[worldPositionI].height = (RNG() * 0.5f ) + 0.5f;
 			}
 			else
 			{
 
-				world[worldPositionI].terrain = MATERIAL_WATER;
+				world[worldPositionI].wall = MATERIAL_WATER;
 				// world[worldPositionI].height = 0.0f;//5.0f + RNG();
 			}
 
@@ -5080,7 +5136,7 @@ void setupRandomWorld()
 
 
 
-
+		normalizeTerrainHeight();
 
 	}
 
@@ -5161,7 +5217,7 @@ void setupRandomWorld()
 			for (int k = 0; k < rocksize; ++k)
 			{
 				unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-				world[square].terrain = MATERIAL_WATER;
+				world[square].wall = MATERIAL_WATER;
 			}
 		}
 
