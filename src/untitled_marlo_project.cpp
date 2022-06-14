@@ -26,6 +26,9 @@
 #include "menus.h"
 #include "main.h"
 
+#include <chrono>
+#include <thread>
+
 #include "SimplexNoise.h"
 
 #define MATERIAL_NOTHING           0
@@ -231,6 +234,8 @@ unsigned int usPerFrame = 0;
 unsigned int populationCount = 0;
 unsigned int cameraFrameCount = 0;
 
+
+unsigned int raindrops = 0;
 
 const unsigned int nLogs = 32;
 const unsigned int logLength = 64;
@@ -1939,56 +1944,170 @@ bool materialDegrades(unsigned int material)
 	return false;
 }
 
+void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
+{
 
+if (false)
+{
+
+// calculate the angle difference between the plain and the incident light.
+
+	float xSimilarity = 0.0f;
+	float ySimilarity = 0.0f;
+
+	unsigned int xNeighbour = worldPositionI + 1;
+	if (xNeighbour < worldSquareSize)
+	{
+		float xAngle = world[worldPositionI].height - world[xNeighbour].height;
+		xSimilarity = 1.0 / ((xAngle - xLightAngle) + 1.0f);
+	}
+
+	// unsigned int yNeighbour = worldPositionI + worldSize;
+	// if (yNeighbour < worldSquareSize)
+	// {
+	// 	float yAngle = world[worldPositionI].height - world[yNeighbour].height;
+	// 	ySimilarity = 1.0 / (yAngle - yLightAngle)+1.0f;
+	// }
+
+	float brightness = xSimilarity ;//+ ySimilarity;
+
+	brightness *= 0.5f;
+
+	// brightness += 0.5f;
+
+	// printf("%f\n", brightness);
+
+	world[worldPositionI].light = multiplyColorByScalar(color_white, brightness);
+}
+
+
+
+if (true)
+{
+
+/// light = height
+	world[worldPositionI].light = multiplyColorByScalar(color_white, world[worldPositionI].height);
+}
+
+}
 
 
 void erodingRain(unsigned int worldPositionI)
 {
 
-	float rainStrength = 0.1f;
 
-// the raindrop falls on the world, if there is a downslope near it, it grabs some material and descends until it finds a bottom
+	/**
+	 *
+	 *
+	 *
+	 *
+	 *
+	 *
+	 * https://nickmcd.me/2020/04/10/simple-particle-based-hydraulic-erosion/
+	 *
+	 *
+	 *
+	 *
+	 *
+	 *     Spawn a particle at a random position on the surface
+	It moves / slides over the surface using normal classical mechanics (explained below)
+	Perform mass-transfer/ sedimentation between the surface and the particle (explained below)
+	Evaporate a part of the particle
+	If the particle is out of bounds or is too small, kill it
+	Repeat for however many particles you want.
+	 *
+	 *
+	 *
+	 *
+	 *
+	 * *///
+
 	unsigned int position = worldPositionI;
-	bool saturated = false;
+	bool saturation = 0.0f;
+	float dropVolume = 1.0f;
+	Vec_f2 velocity = Vec_f2(0.0f, 0.0f);
+
+
+	unsigned int x = position % worldSize;
+	unsigned int y = position / worldSize;
+	Vec_f2 fposition = Vec_f2(x, y);
+
+	float friction = 0.99f;
+	float evaporationRate = 0.999f;
+	float rainStrength = 0.00001f;
+
 	while (true)
 	{
-		bool moved = false;
-		unsigned int randomNeighbourOffset = extremelyFastNumberFromZeroTo(nNeighbours);
-		for (int i = 0; i < nNeighbours; ++i)
+
+
+		if (position >= worldSquareSize || position+1 >= worldSquareSize)
 		{
-			unsigned int neighbourIndex = (randomNeighbourOffset + i) % nNeighbours;
-			unsigned int neighbour = worldPositionI + neighbourOffsets[ neighbourIndex];
-			neighbour = neighbour % worldSquareSize;
-			if (world[neighbour].height < world[position].height)
-			{
-				world[position].height -= rainStrength;
-				position = neighbour;
-				saturated = true;
-				moved = true;
-				break;
-			}
+			break;
 		}
 
-		if (!moved)
+		float xdrop =  (  world[position].height - world[position + 1].height   );
+		float ydrop = ( world[position].height - world[position + worldSize].height );
+
+		// evaporate
+		dropVolume *= evaporationRate;
+
+		//sediment absorption
+		float magnitude_speed = sqrt((xdrop * xdrop) + (ydrop * ydrop));
+
+		float slope = 1.0f;
+		unsigned int xnext = fposition.x += velocity.x;
+		unsigned int ynext = fposition.y += velocity.y;
+		if (xnext < worldSquareSize && ynext < worldSquareSize)
 		{
-			if (saturated)
-			{
-				world[position].height += rainStrength;
-			}
-			else
-			{
+			unsigned int nextpos = (ynext * worldSize) + xnext;
+			slope = world[position].height - world[nextpos].height;
+		}
 
-				// world[position].height--;
 
-			}
+		float equilibrium = dropVolume * magnitude_speed * slope;
+		if (equilibrium < 0.0f) {equilibrium = 0.0f;}
+		float drivingForce = equilibrium - saturation;
+		saturation += drivingForce * rainStrength;
+		world[position].height -= dropVolume * drivingForce * rainStrength;
+
+// void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
+		computeLight(position, xdrop, ydrop);
+
+
+		// printf(".");
+		// classical mechanics
+		velocity.x += xdrop;
+		velocity.y +=  ydrop;
+
+		velocity.x *= friction;
+		velocity.y *= friction;
+
+		fposition.x += velocity.x;
+		fposition.y += velocity.y;
+
+		x = fposition.x;
+		y = fposition.y;
+
+		position = (worldSize * y) + x;
+
+		if (dropVolume < 0.001f)
+		{
+			break;
+		}
+		if ( (position + worldSize + 1) >= worldSquareSize )
+		{
 			break;
 		}
 
 
+		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
 
 
 	}
+
+	raindrops++;
+	printf("rained! %u\n", raindrops);
 
 }
 
@@ -1998,26 +2117,9 @@ void toggleErodingRain()
 	doErodingRain = !doErodingRain;
 }
 
-void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
-{
-// calculate the angle difference between the plain and the incident light.
-
-	if (worldPositionI > worldSize + 1   && worldPositionI < worldSquareSize - worldSize - 1)
-	{
-		// float xLean = world[worldPositionI - 1].height - world[worldPositionI + 1].height;
-		// float yLean = world[worldPositionI - worldSize].height - world[worldPositionI + worldSize].height;
-
-		// float xDiff = abs(xLightAngle - xLean);
-		// float yDiff = abs(yLightAngle - yLean);
-
-		// world[worldPositionI].light =  multiplyColorByScalar( color_white, xDiff + yDiff);
 
 
-		world[worldPositionI].light  = multiplyColorByScalar( color_white, world[worldPositionI].height);
 
-
-	}
-}
 
 
 void updateMap()
@@ -2036,7 +2138,7 @@ void updateMap()
 			{
 				erodingRain(randomI);
 
-				computeLight(randomI, 0.45f, 0.45f  );
+				// computeLight(randomI, 0.45f, 0.45f  );
 
 			}
 
@@ -4855,6 +4957,7 @@ void setupRandomWorld()
 	{
 
 
+		raindrops = 0;
 		unsigned int wallthickness = 8;
 		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; ++worldPositionI)
 		{
@@ -4865,17 +4968,28 @@ void setupRandomWorld()
 			unsigned int x = worldPositionI % worldSize;
 			unsigned int y = worldPositionI / worldSize;
 
-			float fx = x;
-			float fy = y;
+			float noiseScaleFactor = 0.005f;
+			float fx = x * noiseScaleFactor;
+			float fy = y * noiseScaleFactor;
 
-    float noise = SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+			float noise = SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
 
-    // printf("noise %f\n", noise);
+			// map -1,1 to 1,0
+			noise += 1.0f;
+			noise *= 0.5f;
 
-			world[worldPositionI].light = multiplyColorByScalar(color_white, noise)  ;//color_white;
+			// printf("noise %f\n", noise);
+
+			world[worldPositionI].height = noise;
+
+			float incidentAngleSimilarity = 1.0f;
 
 
 
+			// world[worldPositionI].light =  ;// multiplyColorByScalar(color_white, incidentAngleSimilarity)  ;//color_white;
+
+
+			computeLight( worldPositionI, 0.45, 0.45);
 
 
 
