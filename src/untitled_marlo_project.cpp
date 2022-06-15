@@ -95,7 +95,7 @@
 #define WORLD_EXAMPLECREATURE 2
 #define WORLD_CALADAN 3
 
-const float seaLevel = 0.5f;
+const float seaLevel = 0.5f * worldSize/2; 
 
 unsigned int worldToLoad = WORLD_CALADAN;
 
@@ -1948,6 +1948,14 @@ bool materialDegrades(unsigned int material)
 	return false;
 }
 
+
+float getNormalisedHeight(unsigned int worldPositionI)
+{	
+	float answer=   world[worldPositionI].height / (worldSize/2);
+	return answer;
+}
+
+
 void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
 {
 
@@ -1995,7 +2003,7 @@ void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAn
 		// {
 		// 	printf("%f\n", world[worldPositionI].height);
 		// }
-		world[worldPositionI].light = multiplyColorByScalar(color_white, world[worldPositionI].height);
+		world[worldPositionI].light = multiplyColorByScalar(color_white,getNormalisedHeight(worldPositionI) );
 
 
 
@@ -2039,16 +2047,19 @@ void erodingRain(unsigned int worldPositionI)
 	float dropVolume = 1.0f;
 	Vec_f2 velocity = Vec_f2(0.0f, 0.0f);
 
-	world[worldPositionI].material = MATERIAL_FIRE;
+	// world[worldPositionI].material = MATERIAL_FIRE;
 	unsigned int x = position % worldSize;
 	unsigned int y = position / worldSize;
+
+
+
 	Vec_f2 fposition = Vec_f2(x, y);
 
 	float friction = 0.1f;
-	float evaporationRate = 0.9999f;
-	float rainStrength = 0.001f;
+	float evaporationRate = 0.999f;
+	float rainStrength = 1.0f;
 
-	float rainTimestep = 0.1f;
+	float rainTimestep = 0.5f;
 
 	float maxSpeed = 10.0f;
 
@@ -2067,8 +2078,8 @@ void erodingRain(unsigned int worldPositionI)
 		if (position > worldSize + 1 && position < worldSquareSize - (worldSize + 1))
 		{
 
-			float xdrop =  (  world[position - 1].height - world[position + 1].height  *-1  );
-			float ydrop = ( world[position - worldSize].height - world[position + worldSize].height ) * 1;
+			float xdrop =  (  world[position - 1].height - world[position + 1].height ) * -1.0f;
+			float ydrop = ( world[position - worldSize].height - world[position + worldSize].height )  * -1.0f;
 
 			// evaporate
 			dropVolume *= evaporationRate;
@@ -2080,17 +2091,17 @@ void erodingRain(unsigned int worldPositionI)
 			//sediment absorption
 			float magnitude_speed = sqrt((xdrop * xdrop) + (ydrop * ydrop));
 
-			// float slope = 1.0f;
-			// unsigned int xnext = fposition.x += velocity.x;
-			// unsigned int ynext = fposition.y += velocity.y;
-			// if (xnext < worldSquareSize && ynext < worldSquareSize)
-			// {
-			// 	unsigned int nextpos = (ynext * worldSize) + xnext;
-			// 	slope = world[position].height - world[nextpos].height;
-			// }
+			float slope = 1.0f;
+			unsigned int xnext = fposition.x += velocity.x;
+			unsigned int ynext = fposition.y += velocity.y;
+			if (xnext < worldSquareSize && ynext < worldSquareSize)
+			{
+				unsigned int nextpos = (ynext * worldSize) + xnext;
+				slope = world[position].height - world[nextpos].height;
+			}
 
 
-			float equilibrium = dropVolume * magnitude_speed;
+			float equilibrium = dropVolume * magnitude_speed * slope;
 			if (equilibrium < 0.0f) {equilibrium = 0.0f;}
 
 			float drivingForce = equilibrium - saturation;
@@ -5020,10 +5031,14 @@ void normalizeTerrainHeight()
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 	{
 
-		world [ worldPositionI] .height =  (world [ worldPositionI] .height - minHeight) / (  heightRange )  ;
+		world [ worldPositionI] .height =  ((world [ worldPositionI] .height - minHeight) / (  heightRange )  ) * (worldSize/2);
 
 
+		// float amount =  world [ worldPositionI] .height / heightRange;
 
+		// world [ worldPositionI] .height -= minHeight;
+
+		// world [ worldPositionI] .height *= amount;
 
 
 		// world [ worldPositionI] .height = 0 + (world [ worldPositionI] .height * ratio);
@@ -5071,7 +5086,7 @@ void setupRandomWorld()
 			unsigned int x = worldPositionI % worldSize;
 			unsigned int y = worldPositionI / worldSize;
 
-			float noiseScaleFactor = 0.005f;
+			float noiseScaleFactor = 0.0005f;
 			float fx = x * noiseScaleFactor;
 			float fy = y * noiseScaleFactor;
 
@@ -5095,7 +5110,10 @@ void setupRandomWorld()
 			// printf("xratio %f  %f / %f \n", fef / kek, fef, kek);
 			world[worldPositionI].height = hDistance / hMax;
 
-			// world[worldPositionI].height += noise * 0.5f;
+			world[worldPositionI].height += noise * 0.5f;
+
+
+			world[worldPositionI].height *= worldSize / 2;
 
 
 			// float incidentAngleSimilarity = 1.0f;
@@ -5115,16 +5133,22 @@ void setupRandomWorld()
 
 
 			world[worldPositionI].terrain = MATERIAL_ROCK;
-			if (x > worldSize / 2)
-			{
-				// world[worldPositionI].height = (RNG() * 0.5f ) + 0.5f;
-			}
-			else
-			{
 
+			if (world[worldPositionI].height < seaLevel)
+			{
 				world[worldPositionI].wall = MATERIAL_WATER;
-				// world[worldPositionI].height = 0.0f;//5.0f + RNG();
 			}
+
+			// if (x > worldSize / 2)
+			// {
+			// 	// world[worldPositionI].height = (RNG() * 0.5f ) + 0.5f;
+			// }
+			// else
+			// {
+
+			// 	
+			// 	// world[worldPositionI].height = 0.0f;//5.0f + RNG();
+			// }
 
 
 
