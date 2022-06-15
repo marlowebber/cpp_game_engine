@@ -101,6 +101,15 @@
 #define WORLD_EXAMPLECREATURE 2
 #define WORLD_CALADAN 3
 
+#define MACHINECALLBACK_PISTOL           100
+#define MACHINECALLBACK_KNIFE            101
+#define MACHINECALLBACK_HOSPITAL         102
+#define MACHINECALLBACK_MESSAGECOMPUTER  103
+#define MACHINECALLBACK_TRACKERGLASSES   104
+#define MACHINECALLBACK_NEUROGLASSES     105
+#define MACHINECALLBACK_ECOLOGYCOMPUTER  106
+#define MACHINECALLBACK_LIGHTER          107
+
 const float baseSeaLevel = 0.5f * worldSize;;
 float seaLevel = baseSeaLevel ;//0.5f * worldSize;
 
@@ -227,7 +236,7 @@ float minimumEntropy = 0.1f;
 float speakerChannels[numberOfSpeakerChannels];
 float speakerChannelsLastTurn[numberOfSpeakerChannels];
 
-
+int finalMenuY = 0;
 
 unsigned int cameraPositionX = 0 ;
 unsigned int cameraPositionY = 0 ;
@@ -348,7 +357,8 @@ struct Animal
 	float lastfposy;
 
 	bool isMachine;
-	void (* machineCallback)(int, int);
+	// void (* machineCallback)(int, int);
+	unsigned int machineCallback;
 };
 
 Animal champion;
@@ -916,7 +926,7 @@ void resetAnimal(unsigned int animalIndex)
 			animals[animalIndex].identityColor = color_white;
 		}
 		animals[animalIndex].isMachine = false;
-		animals[animalIndex].machineCallback == nullptr;
+		animals[animalIndex].machineCallback = MATERIAL_NOTHING;
 		animals[animalIndex].temp_limit_low = 273.0f;
 		animals[animalIndex].temp_limit_high = 323.0f;
 
@@ -2190,6 +2200,207 @@ void decrementSelectedOrgan()
 	paletteSelectedOrgan = paletteSelectedOrgan % numberOfOrganTypes;
 }
 
+
+
+
+void ecologyComputerCallback( int gunIndex, int shooterIndex)
+{
+	ecologyComputerDisplay = !ecologyComputerDisplay;
+}
+
+void communicationComputerCallback( int gunIndex, int shooterIndex)
+{
+
+	// computer2display = !computer2display;
+	// if (gunIndex >= 0 && shooterIndex == playerCreature)
+	// {
+	// 	computerdisplays[gunIndex] = !computerdisplays[gunIndex];
+	// }
+
+
+	if (gunIndex == 9) { computerdisplays[0] = !computerdisplays[0] ;}
+	if (gunIndex == 10) { computerdisplays[1] = !computerdisplays[1] ;}
+	if (gunIndex == 11) { computerdisplays[2] = !computerdisplays[2] ;}
+	if (gunIndex == 12 ) { computerdisplays[3] = !computerdisplays[3] ;}
+	if (gunIndex == 13) { computerdisplays[4] = !computerdisplays[4] ;}
+
+}
+
+
+
+// void hospitalCallback( int gunIndex, int shooterIndex)
+// {
+// 	// ecologyComputerDisplay = !ecologyComputerDisplay;
+// 	palette = !palette;
+// }
+
+
+
+void spillBlood(unsigned int worldPositionI)
+{
+	if (world[worldPositionI].material == MATERIAL_NOTHING)
+	{
+		world[worldPositionI].material = MATERIAL_BLOOD;
+	}
+	else
+	{
+		for (int i = 0; i < nNeighbours; ++i)
+		{
+			unsigned int neighbour = worldPositionI += neighbourOffsets[i];
+			if ( neighbour < worldSquareSize)
+			{
+				if (world[neighbour].material == MATERIAL_NOTHING)
+				{
+					world[neighbour].material = MATERIAL_BLOOD;
+					break;
+				}
+			}
+		}
+	}
+}
+
+
+void knifeCallback( int gunIndex, int shooterIndex )
+{
+	int cursorPosX = cameraPositionX +  mousePositionX ;
+	int cursorPosY = cameraPositionY + mousePositionY;
+	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+
+	if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
+	{
+		int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
+		if ( occupyingCell >= 0)
+		{
+			animals[cursorAnimal].body[occupyingCell].damage += 0.3f;
+			spillBlood(worldCursorPos);
+			if (animals[cursorAnimal].body[occupyingCell].damage > 1.0f)
+			{
+				animals[cursorAnimal].damageReceived++;
+			}
+		}
+	}
+}
+
+
+
+void exampleGunCallback( int gunIndex, int shooterIndex)
+{
+
+	if (gunIndex >= 0)
+	{
+
+
+
+		// printf(" you hear a gunshot! \n");
+
+
+		// trace a line from the gun and destroy any tissue found on the way.
+		unsigned int range = 1000;
+
+		float bulletPosX = animals[gunIndex].fPosX;
+		float bulletPosY = animals[gunIndex].fPosY;
+		float angle      =  animals[gunIndex].fAngle;
+
+		for (int i = 0; i < range; ++i)
+		{
+
+			bulletPosX += 1.0f * (cos(angle));
+			bulletPosY += 1.0f * (sin(angle));
+			unsigned int ubulletPosX = bulletPosX;
+			unsigned int ubulletPosY = bulletPosY;
+
+			unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
+			if (shootWorldPosition < worldSquareSize)
+			{
+				if (world[shootWorldPosition].identity >= 0 && world[shootWorldPosition].identity != gunIndex && world[shootWorldPosition].identity < numberOfAnimals
+
+				        && world[shootWorldPosition].identity != shooterIndex
+				   )
+				{
+					unsigned int shotOffNub = isAnimalInSquare(world[shootWorldPosition].identity, shootWorldPosition);
+					if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
+					{
+
+						// eliminateCell(world[shootWorldPosition].identity, )
+						animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
+						if ((animals[world[shootWorldPosition].identity].body[shotOffNub] .damage) > 1.0f)
+						{
+							animals[world[shootWorldPosition].identity].damageReceived++;
+						}
+						spillBlood(shootWorldPosition);
+					}
+
+				}
+
+
+
+				if (world[shootWorldPosition].wall == MATERIAL_NOTHING )
+				{
+					world[shootWorldPosition].wall = MATERIAL_SMOKE;
+				}
+
+				if ( materialBlocksMovement( world[shootWorldPosition].wall)
+				   )
+				{
+					world[shootWorldPosition].wall = MATERIAL_NOTHING;
+					break;
+				}
+			}
+		}
+	}
+}
+
+
+void trackerGlassesCallback( int gunIndex, int shooterIndex)
+{
+	// printf("example glasses callback\n");
+	if (visualizer == VISUALIZER_TRUECOLOR)
+	{
+		visualizer = VISUALIZER_TRACKS;
+	}
+	else
+	{
+		visualizer = VISUALIZER_TRUECOLOR;
+	}
+
+}
+
+
+void neuroGlassesCallback( int gunIndex, int shooterIndex)
+{
+	// printf("example glasses callback\n");
+	if (visualizer == VISUALIZER_TRUECOLOR)
+	{
+		visualizer = VISUALIZER_NEURALACTIVITY;
+	}
+	else
+	{
+		visualizer = VISUALIZER_TRUECOLOR;
+	}
+
+}
+
+
+
+
+void lighterCallback( int gunIndex, int shooterIndex )
+{
+	if (gunIndex >= 0)
+	{
+		int cursorPosX = cameraPositionX +  mousePositionX ;
+		int cursorPosY = cameraPositionY + mousePositionY;
+		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+
+		if ( world[worldCursorPos].material == MATERIAL_NOTHING ||  world[worldCursorPos].material == MATERIAL_GRASS )
+		{
+			world[worldCursorPos].material = MATERIAL_FIRE;
+		}
+
+	}
+
+}
+
+
 // occurs whenever a left click is received.
 void activateGrabbedMachine()
 {
@@ -2208,9 +2419,65 @@ void activateGrabbedMachine()
 				{
 					if (animals [   animals[playerCreature].body[i].grabbedCreature  ].isMachine)
 					{
-						if (animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback != nullptr)
+						if (animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback !=  MATERIAL_NOTHING)
 						{
-							(*animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback)( animals[playerCreature].body[i].grabbedCreature , playerCreature) ;
+
+
+
+							switch (animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback )
+							{
+							case MACHINECALLBACK_KNIFE :
+							{
+								knifeCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							}
+
+							case MACHINECALLBACK_PISTOL :
+							{
+								exampleGunCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							}
+
+							case MACHINECALLBACK_NEUROGLASSES :
+							{
+								neuroGlassesCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							}
+
+							case MACHINECALLBACK_TRACKERGLASSES :
+							{
+								trackerGlassesCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							}
+
+							case MACHINECALLBACK_LIGHTER :
+							{
+								lighterCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							}
+
+							case MACHINECALLBACK_HOSPITAL :
+							{
+								paletteCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							}
+
+							case MACHINECALLBACK_ECOLOGYCOMPUTER :
+							{
+								ecologyComputerCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							}
+
+							case MACHINECALLBACK_MESSAGECOMPUTER :
+							{
+								communicationComputerCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							}
+
+
+							}
+
+							// (*animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback)( animals[playerCreature].body[i].grabbedCreature , playerCreature) ;
 							break;
 						}
 					}
@@ -2423,7 +2690,7 @@ void organs_all()
 							// some machines have stuff that activates on pickup
 							if (  animals[animals[playerCreature].body[cellIndex].grabbedCreature].isMachine  )
 							{
-								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) == (paletteCallback))
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) == (MACHINECALLBACK_HOSPITAL))
 								{
 									palette = true;
 									healAllDamage(playerCreature);
@@ -2545,7 +2812,7 @@ void organs_all()
 
 // void (* machineCallback)(int, int)
 
-								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   (paletteCallback))
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_HOSPITAL)
 								{
 									palette = false;
 								}
@@ -3086,29 +3353,6 @@ void organs_all()
 	}
 }
 
-
-void spillBlood(unsigned int worldPositionI)
-{
-	if (world[worldPositionI].material == MATERIAL_NOTHING)
-	{
-		world[worldPositionI].material = MATERIAL_BLOOD;
-	}
-	else
-	{
-		for (int i = 0; i < nNeighbours; ++i)
-		{
-			unsigned int neighbour = worldPositionI += neighbourOffsets[i];
-			if ( neighbour < worldSquareSize)
-			{
-				if (world[neighbour].material == MATERIAL_NOTHING)
-				{
-					world[neighbour].material = MATERIAL_BLOOD;
-					break;
-				}
-			}
-		}
-	}
-}
 
 
 void move_all()
@@ -3664,27 +3908,56 @@ void camera()
 						break;
 					}
 
-					case VISUALIZER_IDENTITY:
-					{
+					// case VISUALIZER_IDENTITY:
+					// {
 
-						// displayColor = whatColorIsThisSquare(worldI);
-						if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
-						{
-							displayColor = animals[ world[worldI].identity ].identityColor;
-						}
+					// 	// displayColor = whatColorIsThisSquare(worldI);
+					// 	if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
+					// 	{
+					// 		displayColor = animals[ world[worldI].identity ].identityColor;
+					// 	}
 
-						drawTile( Vec_f2( fx, fy ), displayColor);
-						break;
-					}
+					// 	drawTile( Vec_f2( fx, fy ), displayColor);
+					// 	break;
+					// }
 
 					case VISUALIZER_TRACKS:
 					{
 
+
+						displayColor = color_grey;//animals[ world[worldI].identity ].identityColor;
+						// drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
+
+						float amount = 0.5f;
+
+						if (world[worldI].wall != MATERIAL_NOTHING)
+						{
+							amount -= 0.25f;
+						}
+
+						if (world[worldI].material != MATERIAL_NOTHING)
+						{
+							amount -= 0.0625f;
+						}
+
+
 						// displayColor = whatColorIsThisSquare(worldI);
 						if (world[worldI].identity < numberOfAnimals && world[worldI].identity >= 0)
 						{
+
+							if (animals[ world[worldI].identity].isMachine  )
+							{
+								displayColor = color_white;
+
+								drawTile( Vec_f2( fx, fy ), displayColor);
+							}
+
+
 							displayColor = animals[ world[worldI].identity ].identityColor;
 							drawPointerTriangle( Vec_f2( fx, fy ), displayColor, world[worldI].trail );
+
+
+
 						}
 						break;
 					}
@@ -3845,7 +4118,7 @@ void displayComputerText()
 		printText2D(   std::string("which can include your sight or movement. ") , menuX, menuY, textSize);
 		menuY -= spacing;
 
-		printText2D(   std::string("Find the hospital terminal! It is in a black building like this one. You will need it to survive.") , menuX, menuY, textSize);
+		printText2D(   std::string("Find the hospital terminal! It is in a black building on land, just like this one.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (computerdisplays[1])
@@ -3853,7 +4126,7 @@ void displayComputerText()
 		printText2D(   std::string("Use the hospital terminal to add a gill to your body. It will enable you to explore underwater.") , menuX, menuY, textSize);
 		menuY -= spacing;
 
-		printText2D(   std::string("Find a building under the water and obtain tracker glasses, that can identity the adversary.") , menuX, menuY, textSize);
+		printText2D(   std::string("Find a building under the water and retrieve the tracker glasses. These can identity the adversary.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (computerdisplays[2])
@@ -3915,7 +4188,13 @@ void drawGameInterfaceText()
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
 	menuY += spacing;
 
-	printText2D(   std::string("[i] load, [o] save, [p] pause ") , menuX, menuY, textSize);
+	std::string pauseString = std::string("[p] pause ");
+	if (paused)
+	{
+		pauseString = std::string("[p] resume ");
+	}
+
+	printText2D(   std::string("[i] load, [o] save, ") + pauseString, menuX, menuY, textSize);
 	menuY += spacing;
 
 	printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
@@ -3948,7 +4227,7 @@ void drawGameInterfaceText()
 
 		}
 	}
-	if (!holding)
+	if (!holding && playerCanPickup)
 	{
 		printText2D(   std::string("[g] pick up") , menuX, menuY, textSize);
 		menuY += spacing;
@@ -3971,7 +4250,8 @@ void drawGameInterfaceText()
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 	if (worldCursorPos < worldSquareSize)
 	{
-		printText2D(   std::string("x ") + std::to_string(cursorPosX ) + std::string(" y ") + std::to_string(cursorPosY) + std::string(" height ") + std::to_string(world[worldCursorPos].height) , menuX, menuY, textSize);
+		int heightInt = world[worldCursorPos].height;
+		printText2D(   std::string("x ") + std::to_string(cursorPosX ) + std::string(" y ") + std::to_string(cursorPosY) + std::string(" height ") + std::to_string(heightInt) , menuX, menuY, textSize);
 		menuY += spacing;
 
 		cursorAnimal = world[worldCursorPos].identity;
@@ -4003,7 +4283,7 @@ void drawGameInterfaceText()
 					{
 
 						// printf(" eeeee %s \n", animals[cursorAnimal].displayName);
-						printText2D(   std::string(animals[cursorAnimal].displayName) + selectString , menuX, menuY, textSize);
+						printText2D(  std::string("A ") +  std::string(animals[cursorAnimal].displayName) + std::string(".") + selectString , menuX, menuY, textSize);
 						menuY += spacing;
 
 					}
@@ -4249,29 +4529,12 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 
 }
 
-void lighterCallback( int gunIndex, int shooterIndex )
-{
-	if (gunIndex >= 0)
-	{
-		int cursorPosX = cameraPositionX +  mousePositionX ;
-		int cursorPosY = cameraPositionY + mousePositionY;
-		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
-
-		if ( world[worldCursorPos].material == MATERIAL_NOTHING ||  world[worldCursorPos].material == MATERIAL_GRASS )
-		{
-			world[worldCursorPos].material = MATERIAL_FIRE;
-		}
-
-	}
-
-}
-
 
 void setupExampleLighter(int i)
 {
 	resetAnimal(i);
 	animals[i].isMachine = true;
-	animals[i].machineCallback = lighterCallback;
+	animals[i].machineCallback = MACHINECALLBACK_LIGHTER;
 
 	std::string gunDescription = std::string("lighter");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
@@ -4298,7 +4561,7 @@ void setupExampleHuman(int i)
 {
 	resetAnimal(i);
 
-	std::string gunDescription = std::string("A human.");
+	std::string gunDescription = std::string("human");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
 
 	char humanBody[] =
@@ -4333,161 +4596,6 @@ void setupExampleHuman(int i)
 
 
 
-void ecologyComputerCallback( int gunIndex, int shooterIndex)
-{
-	ecologyComputerDisplay = !ecologyComputerDisplay;
-}
-
-void communicationComputerCallback( int gunIndex, int shooterIndex)
-{
-
-	// computer2display = !computer2display;
-	// if (gunIndex >= 0 && shooterIndex == playerCreature)
-	// {
-	// 	computerdisplays[gunIndex] = !computerdisplays[gunIndex];
-	// }
-
-
-	if (gunIndex == 9) { computerdisplays[0] = !computerdisplays[0] ;}
-	if (gunIndex == 10) { computerdisplays[1] = !computerdisplays[1] ;}
-	if (gunIndex == 11) { computerdisplays[2] = !computerdisplays[2] ;}
-	if (gunIndex == 12 ) { computerdisplays[3] = !computerdisplays[3] ;}
-	if (gunIndex == 13) { computerdisplays[4] = !computerdisplays[4] ;}
-
-}
-
-
-
-// void hospitalCallback( int gunIndex, int shooterIndex)
-// {
-// 	// ecologyComputerDisplay = !ecologyComputerDisplay;
-// 	palette = !palette;
-// }
-
-
-
-void knifeCallback( int gunIndex, int shooterIndex )
-{
-	int cursorPosX = cameraPositionX +  mousePositionX ;
-	int cursorPosY = cameraPositionY + mousePositionY;
-	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
-
-	if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
-	{
-		int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
-		if ( occupyingCell >= 0)
-		{
-			animals[cursorAnimal].body[occupyingCell].damage += 0.3f;
-			spillBlood(worldCursorPos);
-			if (animals[cursorAnimal].body[occupyingCell].damage > 1.0f)
-			{
-				animals[cursorAnimal].damageReceived++;
-			}
-		}
-	}
-}
-
-
-
-void exampleGunCallback( int gunIndex, int shooterIndex)
-{
-
-	if (gunIndex >= 0)
-	{
-
-
-
-		// printf(" you hear a gunshot! \n");
-
-
-		// trace a line from the gun and destroy any tissue found on the way.
-		unsigned int range = 1000;
-
-		float bulletPosX = animals[gunIndex].fPosX;
-		float bulletPosY = animals[gunIndex].fPosY;
-		float angle      =  animals[gunIndex].fAngle;
-
-		for (int i = 0; i < range; ++i)
-		{
-
-			bulletPosX += 1.0f * (cos(angle));
-			bulletPosY += 1.0f * (sin(angle));
-			unsigned int ubulletPosX = bulletPosX;
-			unsigned int ubulletPosY = bulletPosY;
-
-			unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
-			if (shootWorldPosition < worldSquareSize)
-			{
-				if (world[shootWorldPosition].identity >= 0 && world[shootWorldPosition].identity != gunIndex && world[shootWorldPosition].identity < numberOfAnimals
-
-				        && world[shootWorldPosition].identity != shooterIndex
-				   )
-				{
-					unsigned int shotOffNub = isAnimalInSquare(world[shootWorldPosition].identity, shootWorldPosition);
-					if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
-					{
-
-						// eliminateCell(world[shootWorldPosition].identity, )
-						animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
-						if ((animals[world[shootWorldPosition].identity].body[shotOffNub] .damage) > 1.0f)
-						{
-							animals[world[shootWorldPosition].identity].damageReceived++;
-						}
-						spillBlood(shootWorldPosition);
-					}
-
-				}
-
-
-
-				if (world[shootWorldPosition].wall == MATERIAL_NOTHING )
-				{
-					world[shootWorldPosition].wall = MATERIAL_SMOKE;
-				}
-
-				if ( materialBlocksMovement( world[shootWorldPosition].wall)
-				   )
-				{
-					world[shootWorldPosition].wall = MATERIAL_NOTHING;
-					break;
-				}
-			}
-		}
-	}
-}
-
-
-void trackerGlassesCallback( int gunIndex, int shooterIndex)
-{
-	// printf("example glasses callback\n");
-	if (visualizer == VISUALIZER_TRUECOLOR)
-	{
-		visualizer = VISUALIZER_TRACKS;
-	}
-	else
-	{
-		visualizer = VISUALIZER_TRUECOLOR;
-	}
-
-}
-
-
-void neuroGlassesCallback( int gunIndex, int shooterIndex)
-{
-	// printf("example glasses callback\n");
-	if (visualizer == VISUALIZER_TRUECOLOR)
-	{
-		visualizer = VISUALIZER_NEURALACTIVITY;
-	}
-	else
-	{
-		visualizer = VISUALIZER_TRUECOLOR;
-	}
-
-}
-
-
-
 void setupExampleGlasses(int i)
 {
 
@@ -4518,7 +4626,7 @@ void setupExampleGlasses(int i)
 void setupTrackerGlasses(int i)
 {
 
-	animals[i].machineCallback = trackerGlassesCallback;
+	animals[i].machineCallback = MACHINECALLBACK_TRACKERGLASSES;// trackerGlassesCallback;
 
 
 	std::string gunDescription = std::string("tracker glasses");
@@ -4530,7 +4638,7 @@ void setupTrackerGlasses(int i)
 void setupNeuroGlasses(int i)
 {
 
-	animals[i].machineCallback = neuroGlassesCallback;
+	animals[i].machineCallback = MACHINECALLBACK_NEUROGLASSES;//neuroGlassesCallback;
 
 
 	std::string gunDescription = std::string("neuro glasses");
@@ -4545,7 +4653,7 @@ void setupExampleGun(int i)
 {
 	resetAnimal(i);
 	animals[i].isMachine = true;
-	animals[i].machineCallback = exampleGunCallback;
+	animals[i].machineCallback = MACHINECALLBACK_PISTOL;//exampleGunCallback;
 
 	std::string gunDescription = std::string("pistol");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
@@ -4563,7 +4671,7 @@ void setupExampleKnife(int i)
 {
 	resetAnimal(i);
 	animals[i].isMachine = true;
-	animals[i].machineCallback = knifeCallback;
+	animals[i].machineCallback = MACHINECALLBACK_KNIFE;// knifeCallback;
 
 	std::string gunDescription = std::string("knife");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
@@ -4642,7 +4750,7 @@ void setupEcologyCompter(int i)
 	setupExampleComputer(i);
 	std::string gunDescription = std::string("ecology terminal");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
-	animals[i].machineCallback = ecologyComputerCallback;
+	animals[i].machineCallback = MACHINECALLBACK_ECOLOGYCOMPUTER;//ecologyComputerCallback;
 }
 
 
@@ -4651,7 +4759,7 @@ void setupMessageComputer(int i)
 	setupExampleComputer(i);
 	std::string gunDescription = std::string("message terminal");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
-	animals[i].machineCallback = communicationComputerCallback;
+	animals[i].machineCallback = MACHINECALLBACK_MESSAGECOMPUTER;//communicationComputerCallback;
 }
 
 void setupHospitalComputer(int i)
@@ -4659,7 +4767,7 @@ void setupHospitalComputer(int i)
 	setupExampleComputer(i);
 	std::string gunDescription = std::string("hospital");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
-	animals[i].machineCallback = paletteCallback;
+	animals[i].machineCallback = MACHINECALLBACK_HOSPITAL;//paletteCallback;
 }
 
 

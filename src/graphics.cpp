@@ -472,12 +472,12 @@ void postDraw ()
 void addExamplePanelToBuffer()
 {
 	vertToBuffer(color_lightblue, Vec_f2(0.0f, 0.0f));
-	vertToBuffer(color_lightblue, Vec_f2(100.0f, 100.0f));
-	vertToBuffer(color_lightblue, Vec_f2(0.0f, 100.0f));
+	vertToBuffer(color_lightblue, Vec_f2(250.0f, 300.0f));
+	vertToBuffer(color_lightblue, Vec_f2(0.0f, 300.0f));
 
 	vertToBuffer(color_lightblue, Vec_f2(0.0f, 0.0f));
-	vertToBuffer(color_lightblue, Vec_f2(100.0f, 100.0f));
-	vertToBuffer(color_lightblue, Vec_f2(100.0f, 0.0f));
+	vertToBuffer(color_lightblue, Vec_f2(250.0f, 300.0f));
+	vertToBuffer(color_lightblue, Vec_f2(250.0f, 0.0f));
 }
 
 void threadGraphics()
@@ -495,7 +495,7 @@ void threadGraphics()
 	unsigned int endOfWorldVertexRegion = colorGridCursor;
 
 	prepareForMenuDraw();
-	addExamplePanelToBuffer();
+	// addExamplePanelToBuffer();
 	drawPanels();
 	glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
 	glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
