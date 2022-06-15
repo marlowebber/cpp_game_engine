@@ -53,7 +53,7 @@ void threadInterface()
 			switch ( event.key.keysym.sym )
 			{
 			case SDLK_LSHIFT:
-				shift = false;
+				// shift = false;
 				break;
 
 			}
@@ -101,7 +101,7 @@ void threadInterface()
 
 
 			case SDLK_LSHIFT:
-				shift = true;
+				// shift = true;
 				break;
 
 

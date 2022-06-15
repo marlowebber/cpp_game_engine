@@ -101,15 +101,12 @@
 #define WORLD_EXAMPLECREATURE 2
 #define WORLD_CALADAN 3
 
-const float seaLevel = 0.5f * worldSize;
+const float baseSeaLevel = 0.5f * worldSize;;
+float seaLevel = baseSeaLevel ;//0.5f * worldSize;
 
-unsigned int worldToLoad = WORLD_CALADAN;
-
-int visualizer = VISUALIZER_TRUECOLOR;
 
 #define NUMBER_OF_CONNECTIONS 8
 
-const bool brownianMotion        = false;
 const bool immortality           = false;
 const bool doReproduction        = true;
 const bool doMuscles             = true;
@@ -123,17 +120,11 @@ const bool variedGrowthCost      = false;
 const bool variedUpkeep          = false;
 const bool respawnLowSpecies     = true;
 const bool doMutation            = true;
-const bool sensorJiggles         = false;
-const bool useTimers             = false;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = false;
-const bool mapViewOnly           = false;
 
 
 const unsigned int prelimSquareSize = prelimSize * prelimSize;
-float prelimMap[prelimSquareSize];
-float prelimWater[prelimSquareSize];
-
 
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
@@ -164,6 +155,36 @@ const unsigned int numberOfSpeakerChannels = 16;
 
 const float const_pi = 3.1415f;
 
+
+const int baseSize = 100;
+const int wallThickness = 8;
+const int doorThickness = 16;
+const unsigned int wallthickness = 8;
+
+const unsigned int nLogs = 32;
+const unsigned int logLength = 64;
+
+
+const int neighbourOffsets[] =
+{
+	- 1,
+	- worldSize - 1,
+	- worldSize ,
+	- worldSize  + 1,
+	+ 1,
+	+worldSize + 1,
+	+worldSize,
+	+worldSize - 1
+};
+
+unsigned int worldToLoad = WORLD_CALADAN;
+
+int visualizer = VISUALIZER_TRUECOLOR;
+
+
+float prelimMap[prelimSquareSize];
+float prelimWater[prelimSquareSize];
+
 unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
 bool lockfps               = false;
@@ -176,20 +197,15 @@ int mousePositionY =  330;
 float fmousePositionX = mousePositionX;
 float fmousePositionY = mousePositionY;
 
-bool doErodingRain = false;
-
 unsigned int adversaryRespawnPos;
 
 int selectedAnimal = -1;
 int cursorAnimal = -1;
 
-
 float sunXangle = 0.45f;
 float sunYangle = 0.45f;
 
 float fps = 1.0f;
-
-bool shift =  false;
 
 bool playerGrabState = false;
 bool playerInControl = true;
@@ -198,15 +214,10 @@ bool playerCanSee = true;
 bool playerCanHear = true;
 bool playerCanSmell = true;
 bool palette = false;
+bool playerCanPickup = false;
 
 bool ecologyComputerDisplay = false;
 
-
-// bool computer1display = false;
-// bool computer2display = false;
-// bool computer3display = false;
-// bool computer4display = false;
-// bool computer5display = false;
 
 bool computerdisplays[5];
 
@@ -216,17 +227,7 @@ float minimumEntropy = 0.1f;
 float speakerChannels[numberOfSpeakerChannels];
 float speakerChannelsLastTurn[numberOfSpeakerChannels];
 
-int neighbourOffsets[] =
-{
-	- 1,
-	- worldSize - 1,
-	- worldSize ,
-	- worldSize  + 1,
-	+ 1,
-	+worldSize + 1,
-	+worldSize,
-	+worldSize - 1
-};
+
 
 unsigned int cameraPositionX = 0 ;
 unsigned int cameraPositionY = 0 ;
@@ -242,25 +243,12 @@ unsigned int paletteWidth = 3;
 
 
 int championScore = 0;
-int tournamentInterval = 10000;
-int tournamentCounter  = 0;
 
 int adversary = -1;
 
 int cameraTargetCreature = -1;
 unsigned int usPerFrame = 0;
-unsigned int populationCount = 0;
-unsigned int cameraFrameCount = 0;
 
-const int baseSize = 100;
-const int wallThickness = 8;
-const int doorThickness = 16;
-const unsigned int wallthickness = 8;
-
-unsigned int raindrops = 0;
-
-const unsigned int nLogs = 32;
-const unsigned int logLength = 64;
 
 char logs[logLength][nLogs];
 
@@ -1489,6 +1477,24 @@ void mutateAnimal(unsigned int animalIndex)
 			// add an organ
 			unsigned int newOrgan = randomLetter();
 			animalAppendCell(animalIndex, newOrgan);
+
+			if (newOrgan == ORGAN_LUNG)
+			{
+				int mutantGill = getRandomCellOfType(animalIndex, ORGAN_GILL);
+				if (mutantGill >= 0)
+				{
+					eliminateCell(animalIndex, mutantGill);
+				}
+			}
+
+			else if (newOrgan == ORGAN_GILL)
+			{
+				int mutantLung = getRandomCellOfType(animalIndex, ORGAN_LUNG);
+				if (mutantLung >= 0)
+				{
+					eliminateCell(animalIndex, mutantLung);
+				}
+			}
 		}
 
 		else if (whatToMutate == 2)
@@ -1999,20 +2005,20 @@ void updateMap()
 
 
 
-			// if (world[randomI].height < seaLevel)
-			// {
-			// 	if (world[randomI].wall == MATERIAL_NOTHING)
-			// 	{
-			// 		world[randomI].wall = MATERIAL_WATER;
-			// 	}
-			// }
-			// else
-			// {
-			// 	if (world[randomI].wall == MATERIAL_WATER)
-			// 	{
-			// 		world[randomI].wall = MATERIAL_NOTHING;
-			// 	}
-			// }
+			if (world[randomI].height < seaLevel)
+			{
+				if (world[randomI].wall == MATERIAL_NOTHING)
+				{
+					world[randomI].wall = MATERIAL_WATER;
+				}
+			}
+			else
+			{
+				if (world[randomI].wall == MATERIAL_WATER)
+				{
+					world[randomI].wall = MATERIAL_NOTHING;
+				}
+			}
 
 
 
@@ -2118,7 +2124,7 @@ Vec_i2 getMousePositionRelativeToAnimal(unsigned int animalIndex)
 	return Vec_i2(newPosX, newPosY);
 }
 
-void paletteCallback()
+void paletteCallback( int gunIndex, int shooterIndex )
 {
 	// add the selected organ to the selected animal
 	if (selectedAnimal >= 0 && selectedAnimal < numberOfAnimals)
@@ -2189,10 +2195,10 @@ void activateGrabbedMachine()
 {
 	if (playerCreature >= 0 && playerInControl)
 	{
-		if (palette)
-		{
-			paletteCallback();
-		}
+		// if (palette)
+		// {
+		// 	paletteCallback();
+		// }
 
 		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
 		{
@@ -2221,6 +2227,80 @@ void rightClickCallback ()
 	{
 		paletteEraseAtMouse();
 	}
+}
+
+
+void healAllDamage(unsigned int animalIndex)
+{
+	if (animalIndex < numberOfAnimals)
+	{
+		animals[animalIndex].damageReceived = 0;
+
+		for (int i = 0; i < animalSquareSize; ++i)
+		{
+			animals[animalIndex].body[i].damage = 0.0f;
+		}
+	}
+}
+
+
+int getGrabbableItem(unsigned int animalIndex, unsigned int cellIndex)
+{
+
+	int grabArea = 5;
+	int result = -1;
+	bool gotSomething = false;
+
+	for (int y = -grabArea; y < grabArea; ++y)
+	{
+		for (int x = -grabArea; x < grabArea; ++x)
+		{
+			unsigned int neighbour = animals[animalIndex].body[cellIndex].worldPositionI + (y * worldSize) + x;
+
+			if (neighbour < worldSquareSize)
+			{
+				if (world[neighbour].identity >= 0 && world[neighbour].identity != animalIndex && world[neighbour].identity < numberOfAnimals)
+				{
+
+					int targetLocalPositionI = isAnimalInSquare( world[neighbour].identity, neighbour);
+					if (targetLocalPositionI >= 0)
+					{
+
+
+						// finally, make sure the item is not grabbed by another of your own grabbers.
+						bool grabbedByAnotherGrabber = false;
+						for (unsigned int cellIndexB = 0; cellIndexB < animals[animalIndex].cellsUsed; cellIndexB++)                                      // place animalIndex on grid and attack / eat. add captured energy
+						{
+
+							if (animals[animalIndex].body[cellIndexB].organ == ORGAN_GRABBER)
+							{
+								if (animals[animalIndex].body[cellIndexB].grabbedCreature == world[neighbour].identity )
+								{
+									grabbedByAnotherGrabber = true;
+									break;
+								}
+							}
+
+						}
+
+						if (!grabbedByAnotherGrabber)
+						{
+							gotSomething = true;
+							result = world[neighbour].identity;
+							break;
+						}
+					}
+				}
+			}
+		}
+		if (gotSomething)
+		{
+			break;
+		}
+	}
+	return result;
+
+
 }
 
 
@@ -2272,7 +2352,7 @@ void organs_all()
 
 
 				if (cellWorldPositionI >= worldSquareSize) {continue;}
-				if (animals[animalIndex].body[cellWorldPositionI].damage > 1.0f) { continue;}
+				if (animals[animalIndex].body[cellIndex].damage > 1.0f) { continue;}
 
 				unsigned int organ = animals[animalIndex].body[cellIndex].organ;
 
@@ -2310,67 +2390,121 @@ void organs_all()
 						}
 					}
 
+					else
+					{
+
+						// check if there is anything grabbable.
+						int potentialGrab = getGrabbableItem(playerCreature, cellIndex);
+						if (potentialGrab >= 0)
+						{
+							playerCanPickup = true;
+						}
+						else
+						{
+							playerCanPickup = false;
+						}
+
+					}
+
 					// if greater than 0, grab.
 					if (animals[animalIndex].body[cellIndex].signalIntensity  >= 1.0f && animals[animalIndex].body[cellIndex].grabbedCreature  == -1)
 					{
-						int grabArea = 5;
-						bool grabbedSomething = false;
-						for (int y = -grabArea; y < grabArea; ++y)
+
+
+						int potentialGrab = getGrabbableItem (animalIndex, cellIndex);
+						if (potentialGrab >= 0)
 						{
-							for (int x = -grabArea; x < grabArea; ++x)
+
+							animals[animalIndex].body[cellIndex].grabbedCreature = potentialGrab;//world[neighbour].identity;
+							animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+							// grabbedSomething = true;
+
+
+							// some machines have stuff that activates on pickup
+							if (  animals[animals[playerCreature].body[cellIndex].grabbedCreature].isMachine  )
 							{
-								unsigned int neighbour = animals[animalIndex].body[cellIndex].worldPositionI + (y * worldSize) + x;
-
-								if (neighbour < worldSquareSize)
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) == (paletteCallback))
 								{
-									if (world[neighbour].identity >= 0 && world[neighbour].identity != animalIndex && world[neighbour].identity < numberOfAnimals)
-									{
-
-										int targetLocalPositionI = isAnimalInSquare( world[neighbour].identity, neighbour);
-										if (targetLocalPositionI >= 0)
-										{
-
-
-											// finally, make sure the item is not grabbed by another of your own grabbers.
-											bool grabbedByAnotherGrabber = false;
-											for (unsigned int cellIndexB = 0; cellIndexB < animals[animalIndex].cellsUsed; cellIndexB++)                                      // place animalIndex on grid and attack / eat. add captured energy
-											{
-
-												if (animals[animalIndex].body[cellIndexB].organ == ORGAN_GRABBER)
-												{
-													if (animals[animalIndex].body[cellIndexB].grabbedCreature == world[neighbour].identity )
-													{
-														grabbedByAnotherGrabber = true;
-														break;
-													}
-												}
-
-											}
-
-											if (!grabbedByAnotherGrabber)
-											{
-												animals[animalIndex].body[cellIndex].grabbedCreature = world[neighbour].identity;
-												animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
-												grabbedSomething = true;
-
-
-
-												// appendLog( std::string ("you picked up an item") );
-
-												break;
-											}
-										}
-
-									}
+									palette = true;
+									healAllDamage(playerCreature);
 								}
 							}
-							if (grabbedSomething)
-							{
-								break;
-							}
+
+
+							// appendLog( std::string ("you picked up an item") );
+
+							// break;
+
 						}
 
+
+						// bool grabbedSomething = false;
+						// for (int y = -grabArea; y < grabArea; ++y)
+						// {
+						// 	for (int x = -grabArea; x < grabArea; ++x)
+						// 	{
+						// 		unsigned int neighbour = animals[animalIndex].body[cellIndex].worldPositionI + (y * worldSize) + x;
+
+						// 		if (neighbour < worldSquareSize)
+						// 		{
+						// 			if (world[neighbour].identity >= 0 && world[neighbour].identity != animalIndex && world[neighbour].identity < numberOfAnimals)
+						// 			{
+
+						// 				int targetLocalPositionI = isAnimalInSquare( world[neighbour].identity, neighbour);
+						// 				if (targetLocalPositionI >= 0)
+						// 				{
+
+
+						// 					// finally, make sure the item is not grabbed by another of your own grabbers.
+						// 					bool grabbedByAnotherGrabber = false;
+						// 					for (unsigned int cellIndexB = 0; cellIndexB < animals[animalIndex].cellsUsed; cellIndexB++)                                      // place animalIndex on grid and attack / eat. add captured energy
+						// 					{
+
+						// 						if (animals[animalIndex].body[cellIndexB].organ == ORGAN_GRABBER)
+						// 						{
+						// 							if (animals[animalIndex].body[cellIndexB].grabbedCreature == world[neighbour].identity )
+						// 							{
+						// 								grabbedByAnotherGrabber = true;
+						// 								break;
+						// 							}
+						// 						}
+
+						// 					}
+
+						// 					if (!grabbedByAnotherGrabber)
+						// 					{
+						// 						animals[animalIndex].body[cellIndex].grabbedCreature = world[neighbour].identity;
+						// 						animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+						// 						grabbedSomething = true;
+
+
+						// 						// some machines have stuff that activates on pickup
+						// 						if (  animals[animals[playerCreature].body[cellIndex].grabbedCreature].isMachine  )
+						// 						{
+						// 							if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) == (paletteCallback))
+						// 							{
+						// 								palette = true;
+						// 								healAllDamage(playerCreature);
+						// 							}
+						// 						}
+
+
+						// 						// appendLog( std::string ("you picked up an item") );
+
+						// 						break;
+						// 					}
+						// 				}
+
+						// 			}
+						// 		}
+						// 	}
+						// 	if (grabbedSomething)
+						// 	{
+						// 		break;
+						// 	}
 						// }
+
+						// // }
 
 					}
 
@@ -2405,8 +2539,23 @@ void organs_all()
 						if (  animals[animalIndex].body[cellIndex].signalIntensity  <= -1.0f)
 						{
 							// printf("animals[animalIndex].body[cellIndex].signalIntensity %f\n", animals[animalIndex].body[cellIndex].signalIntensity);
+
+							if (  animals[animals[playerCreature].body[cellIndex].grabbedCreature].isMachine  )
+							{
+
+// void (* machineCallback)(int, int)
+
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   (paletteCallback))
+								{
+									palette = false;
+								}
+							}
+
+
+
 							animals[animalIndex].body[cellIndex].grabbedCreature = -1;
 							animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+
 						}
 					}
 					break;
@@ -2716,11 +2865,11 @@ void organs_all()
 				case ORGAN_SENSOR_TIMER:
 				{
 					animals[animalIndex].body[cellIndex].signalIntensity = 0;
-					if (useTimers)
-					{
-						animals[animalIndex].body[cellIndex].timerPhase += animals[animalIndex].body[cellIndex].timerFreq;
-						animals[animalIndex].body[cellIndex].signalIntensity = sin(animals[animalIndex].body[cellIndex].timerPhase);
-					}
+					// if (useTimers)
+					// {
+					animals[animalIndex].body[cellIndex].timerPhase += animals[animalIndex].body[cellIndex].timerFreq;
+					animals[animalIndex].body[cellIndex].signalIntensity = sin(animals[animalIndex].body[cellIndex].timerPhase);
+					// }
 					break;
 				}
 
@@ -3237,7 +3386,9 @@ void move_all()
 					if (world[cellWorldPositionI].material == MATERIAL_NOTHING && world[cellWorldPositionI].identity == -1 && speciesIndex != 0)
 					{
 						world[cellWorldPositionI].material = MATERIAL_GRASS;
-						world[cellWorldPositionI].grassColor = animals[animalIndex].identityColor;
+						world[cellWorldPositionI].grassColor =  addColor( color_green , multiplyColorByScalar(animals[animalIndex].identityColor, 0.35f ));//
+
+
 					}
 
 
@@ -3694,15 +3845,15 @@ void displayComputerText()
 		printText2D(   std::string("which can include your sight or movement. ") , menuX, menuY, textSize);
 		menuY -= spacing;
 
-		printText2D(   std::string("Find the hospital terminal! You will need it to survive.") , menuX, menuY, textSize);
+		printText2D(   std::string("Find the hospital terminal! It is in a black building like this one. You will need it to survive.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (computerdisplays[1])
 	{
-		printText2D(   std::string("Use the hospital to add a gill to your body. It will enable you to explore underwater.") , menuX, menuY, textSize);
+		printText2D(   std::string("Use the hospital terminal to add a gill to your body. It will enable you to explore underwater.") , menuX, menuY, textSize);
 		menuY -= spacing;
 
-		printText2D(   std::string("Go there and find tracker glasses that you can use to detect the adversary.") , menuX, menuY, textSize);
+		printText2D(   std::string("Find a building under the water and obtain tracker glasses, that can identity the adversary.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (computerdisplays[2])
@@ -3710,7 +3861,7 @@ void displayComputerText()
 		printText2D(   std::string("Activate the tracker glasses to see the trails that animals leave.") , menuX, menuY, textSize);
 		menuY -= spacing;
 
-		printText2D(   std::string("You will recognize the adversary by its white trial.") , menuX, menuY, textSize);
+		printText2D(   std::string("You will recognize the adversary by its white trail.") , menuX, menuY, textSize);
 		menuY -= spacing;
 
 		printText2D(   std::string("Take the weapon, find the adversary and kill it.") , menuX, menuY, textSize);
@@ -3730,11 +3881,11 @@ void displayComputerText()
 		// printText2D(   std::string(" ") , menuX, menuY, textSize);
 		// menuY -= spacing;
 
-		printText2D(   std::string("Fire will destroy grass and spread quickly.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		// printText2D(   std::string(".") , menuX, menuY, textSize);
+		// menuY -= spacing;
 
-		printText2D(   std::string("The knife can inflict damage precisely.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		// printText2D(   std::string(".") , menuX, menuY, textSize);
+		// menuY -= spacing;
 	}
 
 
@@ -3746,97 +3897,95 @@ void displayComputerText()
 
 
 
+void canPlayerPickup()
+{
 
-// void checkPalette(vec_i2 input)
-// {
 
-
-// }
+}
 
 
 void drawGameInterfaceText()
 {
-
 	int menuX = 50;
 	int menuY = 50;
 	int textSize = 10;
 	int spacing = 20;
 
 
-	// printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
-	// menuY += spacing;
-
-
-	// printText2D(   std::string("Player ") + std::to_string(playerCreature) , menuX, menuY, textSize);
-	// menuY -= spacing;
-
-	// if (playerCreature >= 0)
-	// {
-	// 	printText2D(   std::string("Energy ") + std::to_string(animals[playerCreature].energy ) , menuX, menuY, textSize);
-	// 	menuY -= spacing;
-
-	// 	printText2D(   std::string("Energy debt ") + std::to_string(animals[playerCreature].energyDebt ) , menuX, menuY, textSize);
-	// 	menuY -= spacing;
-
-
-	// 	printText2D(   std::string("Max energy ") + std::to_string(animals[playerCreature].maxEnergy ) , menuX, menuY, textSize);
-	// 	menuY -= spacing;
-
-	// 	printText2D(   std::string("Offspring energy ") + std::to_string(animals[playerCreature].offspringEnergy ) , menuX, menuY, textSize);
-	// 	menuY -= spacing;
-
-	// 	printText2D(   std::string("Reproduces at ") + std::to_string( ((animals[playerCreature].maxEnergy / 2) + (animals[playerCreature].offspringEnergy )) ) , menuX, menuY, textSize);
-	// 	menuY -= spacing;
-	// }
-	// menuY -= spacing;
-
-	// 	printText2D(   std::string("DMG ") + std::to_string(animals[playerCreature].damageReceived ) , menuX, menuY, textSize);
-	// menuY += spacing;
-
-
-
-
-
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
+	menuY += spacing;
+
+	printText2D(   std::string("[i] load, [o] save, [p] pause ") , menuX, menuY, textSize);
+	menuY += spacing;
+
+	printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
+	menuY += spacing;
+
+
+	printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
 	menuY += spacing;
 
 
 
+	// print grabber states
+	bool holding = false;
+	for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
+	{
+		if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
+		{
+			if (animals[playerCreature].body[i].grabbedCreature >= 0)
+			{
+				std::string stringToPrint = std::string("Holding ") + animals[  animals[playerCreature].body[i].grabbedCreature ].displayName + std::string(". [f] to drop.");
+				if (animals[  animals[playerCreature].body[i].grabbedCreature ].isMachine)
+				{
+					stringToPrint += std::string(" [lmb, rmb] to use.");
+				}
 
-	// printText2D(   std::string("zoom ") + std::to_string(viewZoom )+  std::string(", pan X ") + std::to_string(viewPanX ) + std::string(", pan Y ") + std::to_string(viewPanY )  , menuX, menuY, textSize);
-	// menuY += spacing;
+				printText2D( stringToPrint   , menuX, menuY, textSize);
+				menuY += spacing;
+				holding = true;
+			}
+
+		}
+	}
+	if (!holding)
+	{
+		printText2D(   std::string("[g] pick up") , menuX, menuY, textSize);
+		menuY += spacing;
+	}
+
+
+	if (palette)
+	{
+		printText2D(   std::string("[lmb] add, [rmb] delete ") , menuX, menuY, textSize);
+		menuY += spacing;
+		printText2D(   std::string("[y] select next, [h] select last ") , menuX, menuY, textSize);
+		menuY += spacing;
+	}
 
 
 
 	int cursorPosX = cameraPositionX +  mousePositionX ;
 	int cursorPosY = cameraPositionY + mousePositionY;
 
-
-
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 	if (worldCursorPos < worldSquareSize)
 	{
-
-
 		printText2D(   std::string("x ") + std::to_string(cursorPosX ) + std::string(" y ") + std::to_string(cursorPosY) + std::string(" height ") + std::to_string(world[worldCursorPos].height) , menuX, menuY, textSize);
 		menuY += spacing;
 
-
-		// int tempCursorAnimal = world[worldCursorPos].identity;
 		cursorAnimal = world[worldCursorPos].identity;
 		bool animalInSquare = false;
 		if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
 		{
 			unsigned int cursorAnimalSpecies = cursorAnimal / numberOfAnimalsPerSpecies;
-			// cursorAnimal = tempCursorAnimal;
 			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
-
 
 			std::string selectString( " [e] to select.");
 			if (selectedAnimal >= 0)
 			{
 
-				std::string selectString( " [e] to deselect.");
+				std::string selectString( " [e] to deselect. [k] save animal.");
 			}
 
 
@@ -3946,57 +4095,6 @@ void drawGameInterfaceText()
 		}
 
 
-		// print grabber states
-		bool holding = false;
-		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
-		{
-			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
-			{
-				if (animals[playerCreature].body[i].grabbedCreature >= 0)
-				{
-					std::string stringToPrint = std::string("Holding ") + animals[  animals[playerCreature].body[i].grabbedCreature ].displayName + std::string(". [f] to drop.");
-					if (animals[  animals[playerCreature].body[i].grabbedCreature ].isMachine)
-					{
-						stringToPrint += std::string(" [lmb, rmb] to use.");
-					}
-
-					printText2D( stringToPrint   , menuX, menuY, textSize);
-					menuY += spacing;
-					holding = true;
-				}
-
-			}
-		}
-		if (!holding)
-		{
-			printText2D(   std::string("[g] pick up") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
-		// else
-		// {
-		// 	printText2D(   std::string(" [f] to drop.") , menuX, menuY, textSize);
-		// 	menuY += spacing;
-		// }
-
-
-
-		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
-		menuY += spacing;
-
-
-		printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
-		menuY += spacing;
-
-
-
-
-		if (palette)
-		{
-			printText2D(   std::string("[lmb] add, [rmb] delete ") , menuX, menuY, textSize);
-			menuY += spacing;
-			printText2D(   std::string("[y] select next, [h] select last ") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
 
 
 
@@ -4260,11 +4358,11 @@ void communicationComputerCallback( int gunIndex, int shooterIndex)
 
 
 
-void hospitalCallback( int gunIndex, int shooterIndex)
-{
-	// ecologyComputerDisplay = !ecologyComputerDisplay;
-	palette = !palette;
-}
+// void hospitalCallback( int gunIndex, int shooterIndex)
+// {
+// 	// ecologyComputerDisplay = !ecologyComputerDisplay;
+// 	palette = !palette;
+// }
 
 
 
@@ -4561,7 +4659,7 @@ void setupHospitalComputer(int i)
 	setupExampleComputer(i);
 	std::string gunDescription = std::string("hospital");
 	strcpy( &animals[i].displayName[0] , gunDescription.c_str() );
-	animals[i].machineCallback = hospitalCallback;
+	animals[i].machineCallback = paletteCallback;
 }
 
 
@@ -5402,7 +5500,7 @@ void setupRandomWorld()
 
 	if (worldToLoad == WORLD_CALADAN)
 	{
-		raindrops = 0;
+		// raindrops = 0;
 		if (true)
 		{
 			// seed the prelim map with noise.
@@ -5544,14 +5642,14 @@ void tournamentController()
 
 	ZoneScoped;
 
-	if (tournamentCounter >= tournamentInterval )
-	{
-		tournamentCounter = 0;
-	}
-	else
-	{
-		tournamentCounter++;
-	}
+	// if (tournamentCounter >= tournamentInterval )
+	// {
+	// 	tournamentCounter = 0;
+	// }
+	// else
+	// {
+	// 	tournamentCounter++;
+	// }
 
 	if (adversary >= 0 && adversary < numberOfAnimals)
 	{
@@ -5635,21 +5733,40 @@ void tournamentController()
 	}
 }
 
+
+
+void seaLevelController()
+{
+	int seaLevelFreq = 1000;
+	float seaLevelPhase = sin((( modelFrameCount % seaLevelFreq ) / seaLevelFreq) * 2 * 3.141f  );
+
+	const float wavesize = 1.0f;
+	seaLevel = baseSeaLevel + (seaLevelPhase  * wavesize);
+}
+
+
 void model()
 {
 	auto start = std::chrono::steady_clock::now();
 
 	ZoneScoped;
 
+
+
 	if (!paused)
 	{
+
+		if (tournament)
+		{
+			tournamentController();
+		}
+
+
+		seaLevelController();
 		computeAllAnimalsOneTurn();
 		updateMap();
 	}
-	if (tournament)
-	{
-		tournamentController();
-	}
+
 	modelFrameCount++;
 	auto end = std::chrono::steady_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -5686,7 +5803,7 @@ void startSimulation()
 void save()
 {
 	std::ofstream out6(std::string("save/world").c_str());
-	out6.write( (char*)(world), sizeof(Square) *  worldSize);
+	out6.write( (char*)(world), sizeof(Square) *  worldSquareSize);
 	out6.close();
 
 	std::ofstream out7(std::string("save/animals").c_str());
@@ -5697,7 +5814,7 @@ void save()
 void load()
 {
 	std::ifstream in6(std::string("save/world").c_str());
-	in6.read( (char *)(&(world)), sizeof(Square) *  worldSize);
+	in6.read( (char *)(&(world)), sizeof(Square) *  worldSquareSize);
 	in6.close();
 
 	std::ifstream in7(std::string("save/animals").c_str());
