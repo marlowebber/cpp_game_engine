@@ -311,6 +311,13 @@ void threadInterface()
 				break;
 			}
 
+				case SDLK_u:
+			{
+
+				toggleInstructions();
+				break;
+			}
+
 			// case SDLK_n:
 			// {
 

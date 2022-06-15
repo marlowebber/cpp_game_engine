@@ -215,6 +215,7 @@ float sunXangle = 0.45f;
 float sunYangle = 0.45f;
 
 float fps = 1.0f;
+bool showInstructions = false;
 
 bool playerGrabState = false;
 bool playerInControl = true;
@@ -224,6 +225,7 @@ bool playerCanHear = true;
 bool playerCanSmell = true;
 bool palette = false;
 bool playerCanPickup = false;
+int playerCanPickupItem = -1;
 
 bool ecologyComputerDisplay = false;
 
@@ -2062,6 +2064,7 @@ void updateMap()
 
 
 			if (world[randomI].material == MATERIAL_NOTHING
+			        && world[randomI].terrain != MATERIAL_VOIDMETAL
 			        // && !materialBlocksMovement(world[randomI].wall)
 			   )
 			{
@@ -2203,10 +2206,10 @@ void decrementSelectedOrgan()
 
 
 
-void ecologyComputerCallback( int gunIndex, int shooterIndex)
-{
-	ecologyComputerDisplay = !ecologyComputerDisplay;
-}
+// void ecologyComputerCallback( int gunIndex, int shooterIndex)
+// {
+// 	ecologyComputerDisplay = !ecologyComputerDisplay;
+// }
 
 void communicationComputerCallback( int gunIndex, int shooterIndex)
 {
@@ -2351,34 +2354,34 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 }
 
 
-void trackerGlassesCallback( int gunIndex, int shooterIndex)
-{
-	// printf("example glasses callback\n");
-	if (visualizer == VISUALIZER_TRUECOLOR)
-	{
-		visualizer = VISUALIZER_TRACKS;
-	}
-	else
-	{
-		visualizer = VISUALIZER_TRUECOLOR;
-	}
+// void trackerGlassesCallback( int gunIndex, int shooterIndex)
+// {
+// 	// printf("example glasses callback\n");
+// 	if (visualizer == VISUALIZER_TRUECOLOR)
+// 	{
+// 		visualizer = VISUALIZER_TRACKS;
+// 	}
+// 	else
+// 	{
+// 		visualizer = VISUALIZER_TRUECOLOR;
+// 	}
 
-}
+// }
 
 
-void neuroGlassesCallback( int gunIndex, int shooterIndex)
-{
-	// printf("example glasses callback\n");
-	if (visualizer == VISUALIZER_TRUECOLOR)
-	{
-		visualizer = VISUALIZER_NEURALACTIVITY;
-	}
-	else
-	{
-		visualizer = VISUALIZER_TRUECOLOR;
-	}
+// void neuroGlassesCallback( int gunIndex, int shooterIndex)
+// {
+// 	// printf("example glasses callback\n");
+// 	if (visualizer == VISUALIZER_TRUECOLOR)
+// 	{
+// 		visualizer = VISUALIZER_NEURALACTIVITY;
+// 	}
+// 	else
+// 	{
+// 		visualizer = VISUALIZER_TRUECOLOR;
+// 	}
 
-}
+// }
 
 
 
@@ -2438,17 +2441,17 @@ void activateGrabbedMachine()
 								break;
 							}
 
-							case MACHINECALLBACK_NEUROGLASSES :
-							{
-								neuroGlassesCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
-								break;
-							}
+							// case MACHINECALLBACK_NEUROGLASSES :
+							// {
+							// 	neuroGlassesCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+							// 	break;
+							// }
 
-							case MACHINECALLBACK_TRACKERGLASSES :
-							{
-								trackerGlassesCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
-								break;
-							}
+							// case MACHINECALLBACK_TRACKERGLASSES :
+							// {
+							// 	trackerGlassesCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+							// 	break;
+							// }
 
 							case MACHINECALLBACK_LIGHTER :
 							{
@@ -2462,11 +2465,11 @@ void activateGrabbedMachine()
 								break;
 							}
 
-							case MACHINECALLBACK_ECOLOGYCOMPUTER :
-							{
-								ecologyComputerCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
-								break;
-							}
+							// case MACHINECALLBACK_ECOLOGYCOMPUTER :
+							// {
+							// 	ecologyComputerCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+							// 	break;
+							// }
 
 							case MACHINECALLBACK_MESSAGECOMPUTER :
 							{
@@ -2665,10 +2668,12 @@ void organs_all()
 						if (potentialGrab >= 0)
 						{
 							playerCanPickup = true;
+							playerCanPickupItem = potentialGrab;
 						}
 						else
 						{
 							playerCanPickup = false;
+							playerCanPickupItem = -1;
 						}
 
 					}
@@ -2694,6 +2699,23 @@ void organs_all()
 								{
 									palette = true;
 									healAllDamage(playerCreature);
+								}
+
+
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_ECOLOGYCOMPUTER)
+								{
+									ecologyComputerDisplay = true;
+								}
+
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_NEUROGLASSES )
+								{
+									visualizer = VISUALIZER_NEURALACTIVITY;
+								}
+
+								if (
+								    animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback ==   MACHINECALLBACK_TRACKERGLASSES  )
+								{
+									visualizer = VISUALIZER_TRACKS;
 								}
 							}
 
@@ -2805,17 +2827,35 @@ void organs_all()
 
 						if (  animals[animalIndex].body[cellIndex].signalIntensity  <= -1.0f)
 						{
-							// printf("animals[animalIndex].body[cellIndex].signalIntensity %f\n", animals[animalIndex].body[cellIndex].signalIntensity);
-
 							if (  animals[animals[playerCreature].body[cellIndex].grabbedCreature].isMachine  )
 							{
-
-// void (* machineCallback)(int, int)
 
 								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_HOSPITAL)
 								{
 									palette = false;
 								}
+
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_MESSAGECOMPUTER)
+								{
+									for (int i = 0; i < 5; ++i)
+									{
+										computerdisplays[i] = false;
+									}
+								}
+
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_ECOLOGYCOMPUTER)
+								{
+									ecologyComputerDisplay = false;
+								}
+
+								if ((animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_NEUROGLASSES ||
+								        animals[animals[playerCreature].body[cellIndex].grabbedCreature].machineCallback ==   MACHINECALLBACK_TRACKERGLASSES  )
+								{
+									visualizer = VISUALIZER_TRUECOLOR;
+								}
+
+
+
 							}
 
 
@@ -4169,11 +4209,9 @@ void displayComputerText()
 }
 
 
-
-void canPlayerPickup()
+void toggleInstructions()
 {
-
-
+	showInstructions = !showInstructions;
 }
 
 
@@ -4188,22 +4226,48 @@ void drawGameInterfaceText()
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
 	menuY += spacing;
 
-	std::string pauseString = std::string("[p] pause ");
-	if (paused)
+
+	if (showInstructions)
 	{
-		pauseString = std::string("[p] resume ");
+
+
+		printText2D(   std::string("[u] hide instructions"), menuX, menuY, textSize);
+		menuY += spacing;
+
+		printText2D(   std::string("[arrows] pan, [-,=] zoom"), menuX, menuY, textSize);
+		menuY += spacing;
+
+		std::string pauseString = std::string("[p] pause ");
+		if (paused)
+		{
+			pauseString = std::string("[p] resume ");
+		}
+
+		printText2D(   std::string("[i] load, [o] save, ") + pauseString, menuX, menuY, textSize);
+		menuY += spacing;
+
+		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
+		menuY += spacing;
+
+
+		if (playerCreature >= 0)
+		{
+			printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+		else
+		{
+			printText2D(   std::string("[r] spawn") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+
 	}
+	else
+	{
 
-	printText2D(   std::string("[i] load, [o] save, ") + pauseString, menuX, menuY, textSize);
-	menuY += spacing;
-
-	printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
-	menuY += spacing;
-
-
-	printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
-	menuY += spacing;
-
+		printText2D(   std::string("[u] instructions"), menuX, menuY, textSize);
+		menuY += spacing;
+	}
 
 
 	// print grabber states
@@ -4227,10 +4291,11 @@ void drawGameInterfaceText()
 
 		}
 	}
-	if (!holding && playerCanPickup)
+	if (!holding && playerCanPickup && playerCanPickupItem >= 0 && playerCanPickupItem < numberOfAnimals)
 	{
-		printText2D(   std::string("[g] pick up") , menuX, menuY, textSize);
+		printText2D(   std::string("[g] pick up ") + std::string(animals[playerCanPickupItem].displayName) , menuX, menuY, textSize);
 		menuY += spacing;
+
 	}
 
 
@@ -4388,10 +4453,10 @@ void drawGameInterfaceText()
 
 
 
-	// int menuX = 50;
-	// int menuY = 50;
-	// int textSize = 10;
-	// int spacing = 20;
+// int menuX = 50;
+// int menuY = 50;
+// int textSize = 10;
+// int spacing = 20;
 
 	if (printLogs)
 	{
@@ -4409,7 +4474,7 @@ void drawGameInterfaceText()
 
 
 
-	// draw edit palette
+// draw edit palette
 	if (palette)
 	{
 		drawPalette();
@@ -4799,6 +4864,11 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 		{
 			world[i].terrain = MATERIAL_VOIDMETAL;
 			// world[i].material = MATERIAL_NOTHING;
+			if (  !(world[i].wall == MATERIAL_NOTHING || world[i].wall == MATERIAL_WATER) )
+			{
+
+				world[i].wall = MATERIAL_NOTHING;
+			}
 			// world[i].wall = MATERIAL_NOTHING;
 		}
 
@@ -5846,10 +5916,10 @@ void tournamentController()
 void seaLevelController()
 {
 	int seaLevelFreq = 1000;
-	float seaLevelPhase = sin((( modelFrameCount % seaLevelFreq ) / seaLevelFreq) * 2 * 3.141f  );
+	// float seaLevelPhase = sin((( modelFrameCount % seaLevelFreq ) / seaLevelFreq) * 2 * 3.141f  );
 
 	const float wavesize = 1.0f;
-	seaLevel = baseSeaLevel + (seaLevelPhase  * wavesize);
+	seaLevel = baseSeaLevel + ( ((modelFrameCount % seaLevelFreq) / 20)  * wavesize);
 }
 
 

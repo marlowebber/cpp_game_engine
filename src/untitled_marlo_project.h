@@ -63,6 +63,7 @@ void rightClickCallback();
 
 void toggleErodingRain();
 void normalizeTerrainHeight();
+void toggleInstructions();
 
 
 #define VISUALIZER_TRUECOLOR           1001
