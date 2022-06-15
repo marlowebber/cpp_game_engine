@@ -145,8 +145,8 @@ const unsigned int numberOfAnimals = 10000;
 const unsigned int numberOfSpecies = 8;
 const unsigned int nNeighbours     = 8;
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs animals to make new cells.
-const float taxEnergyScale         = 0.0002f;        // a multiplier for how much it costs animals just to exist.
-const float movementEnergyScale    = 0.0002f;        // a multiplier for how much it costs animals to move.
+const float taxEnergyScale         = 0.00002f;        // a multiplier for how much it costs animals just to exist.
+const float movementEnergyScale    = 0.00002f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
 
@@ -1213,6 +1213,8 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
+	animalAppendCell( i, ORGAN_GONAD );
+	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
@@ -1747,7 +1749,10 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 
 			if (animals[animalIndex].body[cellIndex].worldPositionI == cellWorldPositionI)
 			{
-				return cellIndex;
+				if (animals[animalIndex].body[cellIndex].damage < 1.0f)
+				{
+					return cellIndex;
+				}
 			}
 		}
 	}
@@ -2267,6 +2272,7 @@ void organs_all()
 
 
 				if (cellWorldPositionI >= worldSquareSize) {continue;}
+				if (animals[animalIndex].body[cellWorldPositionI].damage > 1.0f) { continue;}
 
 				unsigned int organ = animals[animalIndex].body[cellIndex].organ;
 
@@ -4275,6 +4281,10 @@ void knifeCallback( int gunIndex, int shooterIndex )
 		{
 			animals[cursorAnimal].body[occupyingCell].damage += 0.3f;
 			spillBlood(worldCursorPos);
+			if (animals[cursorAnimal].body[occupyingCell].damage > 1.0f)
+			{
+				animals[cursorAnimal].damageReceived++;
+			}
 		}
 	}
 }
@@ -4321,6 +4331,10 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 
 						// eliminateCell(world[shootWorldPosition].identity, )
 						animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
+						if ((animals[world[shootWorldPosition].identity].body[shotOffNub] .damage) > 1.0f)
+						{
+							animals[world[shootWorldPosition].identity].damageReceived++;
+						}
 						spillBlood(shootWorldPosition);
 					}
 
@@ -5475,18 +5489,18 @@ void setupRandomWorld()
 					world[worldPositionI].wall = MATERIAL_ROCK;
 				}
 
-				// seagrass in the ocean
-				// float noiseScaleFactor = 0.005f;
-				// float fx = x * noiseScaleFactor;
-				// float fy = y * noiseScaleFactor;
-				// float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+				float noiseScaleFactor = 0.0025f;
+				float fx = x * noiseScaleFactor;
+				float fy = y * noiseScaleFactor;
+				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+				if (abs(noise) > 0.9f)
+				{
+					world[worldPositionI].wall = MATERIAL_ROCK;
+				}
 
 				if (world[worldPositionI].height < seaLevel)
 				{
-					// 	if (noise > 0.5f)
-					// 	{
 					world[worldPositionI].material = MATERIAL_GRASS;
-					// 	}
 				}
 			}
 			setupGameItems();
@@ -5545,7 +5559,15 @@ void tournamentController()
 		{
 			spawnAdversary(adversaryRespawnPos);
 		}
+		else
+		{
+			if (animals[adversary].position >= 0 && animals[adversary].position < worldSquareSize)
+			{
+				adversaryRespawnPos = animals[adversary].position;
+			}
+		}
 	}
+
 	if (respawnLowSpecies)
 	{
 		unsigned int totalpop = 0;
@@ -5594,12 +5616,9 @@ void tournamentController()
 
 		if (totalpop == 0 && adversary >= 0)
 		{
-
 			int j = 1;
-
-			for (int k = j + 1; k < numberOfAnimalsPerSpecies; ++k)
+			for (int k = j + 1; k < numberOfAnimals; ++k)
 			{
-
 				setupExampleAnimal2(j);
 				int domingo = spawnAnimal( 1,
 				                           animals[j],
