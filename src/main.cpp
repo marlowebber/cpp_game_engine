@@ -303,12 +303,20 @@ void threadInterface()
 				break;
 			}
 
-				case SDLK_n:
+			case SDLK_n:
 			{
 
 				toggleErodingRain();
 				break;
 			}
+
+			case SDLK_b:
+			{
+
+				normalizeTerrainHeight();
+				break;
+			}
+
 
 
 

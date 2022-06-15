@@ -2035,18 +2035,18 @@ void erodingRain(unsigned int worldPositionI)
 	 * *///
 
 	unsigned int position = worldPositionI;
-	bool saturation = 0.0f;
+	bool saturation = 0.5f;
 	float dropVolume = 1.0f;
 	Vec_f2 velocity = Vec_f2(0.0f, 0.0f);
 
-
+	world[worldPositionI].material = MATERIAL_FIRE;
 	unsigned int x = position % worldSize;
 	unsigned int y = position / worldSize;
 	Vec_f2 fposition = Vec_f2(x, y);
 
 	float friction = 0.1f;
-	float evaporationRate = 0.999f;
-	float rainStrength = 0.1f;
+	float evaporationRate = 0.9999f;
+	float rainStrength = 0.001f;
 
 	float rainTimestep = 0.1f;
 
@@ -2054,12 +2054,9 @@ void erodingRain(unsigned int worldPositionI)
 
 	// if (raindrops % 10000 == 0)
 	// {
-	// 	for (int i = 0; i < worldSquareSize; ++i)
-	// 	{
-	// 		/* code */
-	// 		computeLight(i, sunXangle, sunYangle);
 
-	// 	}
+
+	// 	// normalizeTerrainHeight();
 	// }
 
 	while (true)
@@ -2070,8 +2067,8 @@ void erodingRain(unsigned int worldPositionI)
 		if (position > worldSize + 1 && position < worldSquareSize - (worldSize + 1))
 		{
 
-			float xdrop =  (  world[position - 1].height - world[position + 1].height   ) * -1;
-			float ydrop = ( world[position - worldSize].height - world[position + worldSize].height ) * -1;
+			float xdrop =  (  world[position - 1].height - world[position + 1].height  *-1  );
+			float ydrop = ( world[position - worldSize].height - world[position + worldSize].height ) * 1;
 
 			// evaporate
 			dropVolume *= evaporationRate;
@@ -2083,26 +2080,34 @@ void erodingRain(unsigned int worldPositionI)
 			//sediment absorption
 			float magnitude_speed = sqrt((xdrop * xdrop) + (ydrop * ydrop));
 
-			float slope = 1.0f;
-			unsigned int xnext = fposition.x += velocity.x;
-			unsigned int ynext = fposition.y += velocity.y;
-			if (xnext < worldSquareSize && ynext < worldSquareSize)
+			// float slope = 1.0f;
+			// unsigned int xnext = fposition.x += velocity.x;
+			// unsigned int ynext = fposition.y += velocity.y;
+			// if (xnext < worldSquareSize && ynext < worldSquareSize)
+			// {
+			// 	unsigned int nextpos = (ynext * worldSize) + xnext;
+			// 	slope = world[position].height - world[nextpos].height;
+			// }
+
+
+			float equilibrium = dropVolume * magnitude_speed;
+			if (equilibrium < 0.0f) {equilibrium = 0.0f;}
+
+			float drivingForce = equilibrium - saturation;
+
+			float affect = drivingForce * rainStrength * rainTimestep;
+
+			float affectlimit = 0.1f;
+			if (abs(affect) >  affectlimit)
 			{
-				unsigned int nextpos = (ynext * worldSize) + xnext;
-				slope = world[position].height - world[nextpos].height;
+				affect *=  (affectlimit  / abs(affect));
 			}
 
+			saturation -= affect;
 
-			float equilibrium = dropVolume * magnitude_speed * slope;
-			if (equilibrium < 0.0f) {equilibrium = 0.0f;}
-			float drivingForce = equilibrium - saturation;
-			saturation += drivingForce * rainStrength * rainTimestep;
+			float deltaTerrain = dropVolume * affect;
 
-			float affect = dropVolume * drivingForce * rainStrength * rainTimestep;
-
-			// printf("affect %f total %f \n", affect, world[position].height);
-
-			world[position].height -= affect;
+			world[position].height += deltaTerrain;
 
 // void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
 			computeLight(position, sunXangle, sunYangle);
@@ -2129,7 +2134,6 @@ void erodingRain(unsigned int worldPositionI)
 
 
 
-			// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
 		}
 		else
@@ -2138,6 +2142,7 @@ void erodingRain(unsigned int worldPositionI)
 		}
 
 	}
+	// std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 	raindrops++;
 	// printf("rained! %u\n", raindrops);
@@ -5009,10 +5014,33 @@ void normalizeTerrainHeight()
 	}
 
 
+	// float ratio = minHeight * maxHeight ;
+	float heightRange =  maxHeight - minHeight ;
+
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 	{
 
-		world [ worldPositionI] .height =  (world [ worldPositionI] .height - minHeight) / (   maxHeight - minHeight  )  ;
+		world [ worldPositionI] .height =  (world [ worldPositionI] .height - minHeight) / (  heightRange )  ;
+
+
+
+
+
+		// world [ worldPositionI] .height = 0 + (world [ worldPositionI] .height * ratio);
+
+	}
+
+
+
+
+
+
+
+
+	for (int i = 0; i < worldSquareSize; ++i)
+	{
+		/* code */
+		computeLight(i, sunXangle, sunYangle);
 
 	}
 
@@ -5067,7 +5095,7 @@ void setupRandomWorld()
 			// printf("xratio %f  %f / %f \n", fef / kek, fef, kek);
 			world[worldPositionI].height = hDistance / hMax;
 
-			world[worldPositionI].height += noise * 0.5f;
+			// world[worldPositionI].height += noise * 0.5f;
 
 
 			// float incidentAngleSimilarity = 1.0f;
