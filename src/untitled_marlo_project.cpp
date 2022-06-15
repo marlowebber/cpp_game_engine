@@ -74,7 +74,6 @@
 
 #define numberOfOrganTypes        39 // the number limit of growable genes
 
-
 #define MARKER                    50
 
 #define MATERIAL_FOOD             60
@@ -245,6 +244,10 @@ int cameraTargetCreature = -1;
 unsigned int usPerFrame = 0;
 unsigned int populationCount = 0;
 unsigned int cameraFrameCount = 0;
+
+int baseSize = 100;
+int wallThickness = 8;
+int doorThickness = 16;
 
 
 unsigned int raindrops = 0;
@@ -1203,7 +1206,7 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_MEMORY_TX );
 	animalAppendCell( i, ORGAN_MUSCLE );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
-	animalAppendCell( i, ORGAN_LUNG );
+	animalAppendCell( i, ORGAN_GILL );
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
@@ -3957,10 +3960,15 @@ void displayComputerText()
 
 
 // First terminal is near the player at the start.  Explain how to pick up and use items. The player is given a pistol.
-// The second terminal contains a hospital and explains how anatomy works in the game. The player is encouraged to add a gill to themselves to allow breathing underwater.
+
+// The second terminal contains a hospital and explains how anatomy works in the game. The player is encouraged to add a gill to themselves to allow breathing underwater. It is located at the shoreline
+
 // The 4th terminal is under water in a teeming coral reef. It contains tracker glasses that allow the adversary to be identified and found.
+
 // The adversary is killed and life no longer has a source, but will continue existing where it does. The adversary drops neuro glasses that the player needs to edit brain connections.
+
 // If all life in the simulation is destroyed, a message will become available stating that the animals broke out into the real world and caused widespread disaster
+
 
 
 	if (computer1display)
@@ -4798,9 +4806,6 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 	unsigned int worldPositionX = worldPositionI % worldSize;
 	unsigned int worldPositionY = worldPositionI / worldSize;
 
-	int baseSize = 100;
-	int wallThickness = 8;
-	int doorThickness = 16;
 
 
 	for (unsigned int i = 0; i < worldSquareSize; ++i)
@@ -5048,10 +5053,10 @@ void spawnTournamentAnimals()
 			// printf("setting up animal %i\n", i);
 			unsigned int targetWorldPositionI = animals[adversary].position;//extremelyFastNumberFromZeroTo(worldSquareSize) - 1; //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 			int j = 1;
-			// setupExampleAnimal2(j);
+			setupExampleAnimal2(j);
 
 
-			loadParticlarAnimal(j, std::string("save/macrolongus_smigmanosa"));
+			// loadParticlarAnimal(j, std::string("save/macrolongus_smigmanosa"));
 
 			spawnAnimalIntoSlot(i,
 			                    animals[j],
@@ -5244,6 +5249,196 @@ void recomputeTerrainLighting()
 }
 
 
+void setupGameItems()
+{
+
+	// base 1
+
+
+
+
+	// get the highest point in the world.
+
+
+	unsigned int highestPointIndex = 0;
+	for (int k = 0; k < worldSquareSize; ++k)
+	{
+		if (world[k].height > highestPointIndex)
+		{
+			highestPointIndex = k;
+		}
+	}
+	unsigned int targetWorldPositionI =  highestPointIndex;//( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+
+
+	setupBuilding_playerBase(targetWorldPositionI);
+
+	int i = 1;
+	setupEcologyCompter( i);
+	spawnAnimalIntoSlot(3,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+
+targetWorldPositionI += 25;
+
+	unsigned int x = targetWorldPositionI % worldSize;
+	unsigned int y = targetWorldPositionI / worldSize;
+
+// camera
+	cameraPositionX = x;
+	cameraPositionY = y;
+
+
+	spawnPlayer();
+
+
+	// base 2
+	x = worldSize / 2;
+	y = worldSize / 2;
+
+
+
+	targetWorldPositionI = (y * worldSize) + x;
+
+	int k = 0;
+	while (true)
+	{	targetWorldPositionI ++; k++;
+		if (k > worldSize )
+		{
+			break;
+		}
+		if (targetWorldPositionI < worldSquareSize && k > 50)
+		{
+			if (world[targetWorldPositionI].wall != MATERIAL_WATER)
+			{
+				break;
+			}
+		}
+
+	}
+
+	setupBuilding_playerBase(targetWorldPositionI);
+
+
+
+	setupHospitalComputer(i);
+	spawnAnimalIntoSlot(5,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+
+
+
+
+
+
+
+
+
+	// base 3
+	// targetWorldPositionI += (400);
+
+	 x = worldSize / 2;
+	 y = worldSize / 2;
+
+
+
+	targetWorldPositionI = (y * worldSize) + x;
+
+	// int
+	 k = 0;
+	while (true)
+	{	targetWorldPositionI --; k++;
+		if (k > worldSize )
+		{
+			break;
+		}
+		if (targetWorldPositionI < worldSquareSize && k > 50)
+		{
+			if (world[targetWorldPositionI].wall == MATERIAL_WATER)
+			{
+				break;
+			}
+		}
+
+	}
+
+
+
+
+	setupBuilding_playerBase(targetWorldPositionI);
+
+	setupTrackerGlasses(i);
+	spawnAnimalIntoSlot(4,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+targetWorldPositionI += 25;
+	// int i = 1;
+	setupExampleGun(i);
+	spawnAnimalIntoSlot(2,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+	adversaryRespawnPos = targetWorldPositionI;// animals[playerCreature].position;
+
+	spawnAdversary();
+
+
+
+
+// 4
+
+	// targetWorldPositionI += (400);
+	// setupBuilding_playerBase(targetWorldPositionI);
+
+
+
+
+// 5
+
+	targetWorldPositionI = (baseSize * worldSize) +  extremelyFastNumberFromZeroTo(worldSquareSize - (baseSize * worldSize)) ; //+= (400) * worldSize;
+	setupBuilding_playerBase(targetWorldPositionI);
+
+
+	setupExampleKnife(i);
+	spawnAnimalIntoSlot(6,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+
+	targetWorldPositionI += 25;
+
+	setupExampleLighter(i);
+	spawnAnimalIntoSlot(7,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+
+
+
+// 6
+
+	targetWorldPositionI = (baseSize * worldSize) +  extremelyFastNumberFromZeroTo(worldSquareSize - (baseSize * worldSize)) ; //+= (400) * worldSize;
+
+	setupBuilding_playerBase(targetWorldPositionI);
+
+	setupNeuroGlasses(i);
+	spawnAnimalIntoSlot(8,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+
+
+
+
+
+
+
+}
+
 
 void setupRandomWorld()
 {
@@ -5389,6 +5584,10 @@ void setupRandomWorld()
 
 
 
+
+
+
+
 			// place items and terrain
 			for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 			{
@@ -5410,6 +5609,8 @@ void setupRandomWorld()
 				}
 
 			}
+
+			setupGameItems();
 
 		}
 
@@ -5626,157 +5827,6 @@ void setupRandomWorld()
 
 
 
-// 1
-		unsigned int targetWorldPositionX = 200 ;
-		unsigned int targetWorldPositionY = 200 ;
-		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-
-		setupBuilding_playerBase(targetWorldPositionI);
-
-		int i = 1;
-		setupExampleGun(i);
-		spawnAnimalIntoSlot(2,
-		                    animals[i],
-		                    targetWorldPositionI, false);
-
-
-
-
-
-// 2
-		targetWorldPositionI += (400);
-		// targetWorldPositionX = 200 ;
-		// targetWorldPositionY = 300 ;
-		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-
-		setupBuilding_playerBase(targetWorldPositionI);
-
-		// int i = 1;
-		// setupExampleComputer(i);
-
-
-		setupEcologyCompter( i);
-		spawnAnimalIntoSlot(3,
-		                    animals[i],
-		                    targetWorldPositionI, false);
-
-		animals[3].fAngle = 0.0f;
-
-
-
-
-
-
-// 3
-		targetWorldPositionI += (400);
-		// targetWorldPositionX = 200 ;
-		// targetWorldPositionY = 300 ;
-		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-
-		setupBuilding_playerBase(targetWorldPositionI);
-
-		// int i = 1;
-		// setupExampleGlasses(i);
-		setupTrackerGlasses(i);
-		spawnAnimalIntoSlot(4,
-		                    animals[i],
-		                    targetWorldPositionI, false);
-
-		// animals[3].fAngle = 0.0f;
-
-
-
-// 4
-
-		targetWorldPositionI += (400);
-		// targetWorldPositionX = 200 ;
-		// targetWorldPositionY = 300 ;
-		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-
-		setupBuilding_playerBase(targetWorldPositionI);
-
-		// int i = 1;
-		// setupExampleGlasses(i);
-		// setupTrackerGlasses(i)
-
-		setupHospitalComputer(i);
-		spawnAnimalIntoSlot(5,
-		                    animals[i],
-		                    targetWorldPositionI, false);
-
-		// animals[3].fAngle = 0.0f;
-
-
-
-
-// 5
-
-		targetWorldPositionI += (400);
-		// targetWorldPositionX = 200 ;
-		// targetWorldPositionY = 300 ;
-		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-
-		setupBuilding_playerBase(targetWorldPositionI);
-
-		// int i = 1;
-		// setupExampleGlasses(i);
-		// setupTrackerGlasses(i)
-
-		setupExampleKnife(i);
-		spawnAnimalIntoSlot(6,
-		                    animals[i],
-		                    targetWorldPositionI, false);
-
-
-		targetWorldPositionI += 25;
-
-		setupExampleLighter(i);
-		spawnAnimalIntoSlot(7,
-		                    animals[i],
-		                    targetWorldPositionI, false);
-
-
-
-
-// 6
-
-		targetWorldPositionI += (400);
-		// targetWorldPositionX = 200 ;
-		// targetWorldPositionY = 300 ;
-		// targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-
-		setupBuilding_playerBase(targetWorldPositionI);
-
-		// int i = 1;
-		// setupExampleGlasses(i);
-		// setupTrackerGlasses(i)
-
-		setupNeuroGlasses(i);
-		spawnAnimalIntoSlot(8,
-		                    animals[i],
-		                    targetWorldPositionI, false);
-
-
-
-
-
-
-
-
-		// spawn the player
-		spawnPlayer();
-
-		// spawn the adversary
-		// while (true)
-		// {
-		adversaryRespawnPos =  animals[playerCreature].position;//worldSquareSize / 2;
-		// 	if (world[adversaryRespawnPos].wall == MATERIAL_NOTHING)
-		// 	{
-		// 		break;
-		// 	}
-		// }
-
-		spawnAdversary();
 
 	}
 }
