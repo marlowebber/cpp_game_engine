@@ -1,3 +1,14 @@
+/home/marlo/Documents/cpp_game_engine/CMakeFiles/install/strip.dir
+/home/marlo/Documents/cpp_game_engine/CMakeFiles/install/local.dir
+/home/marlo/Documents/cpp_game_engine/CMakeFiles/install.dir
+/home/marlo/Documents/cpp_game_engine/CMakeFiles/list_install_components.dir
 /home/marlo/Documents/cpp_game_engine/CMakeFiles/rebuild_cache.dir
 /home/marlo/Documents/cpp_game_engine/CMakeFiles/edit_cache.dir
 /home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir
+/home/marlo/Documents/cpp_game_engine/tracy/CMakeFiles/install/strip.dir
+/home/marlo/Documents/cpp_game_engine/tracy/CMakeFiles/install/local.dir
+/home/marlo/Documents/cpp_game_engine/tracy/CMakeFiles/install.dir
+/home/marlo/Documents/cpp_game_engine/tracy/CMakeFiles/list_install_components.dir
+/home/marlo/Documents/cpp_game_engine/tracy/CMakeFiles/rebuild_cache.dir
+/home/marlo/Documents/cpp_game_engine/tracy/CMakeFiles/edit_cache.dir
+/home/marlo/Documents/cpp_game_engine/tracy/CMakeFiles/TracyClient.dir

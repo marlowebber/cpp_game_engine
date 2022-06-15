@@ -16,6 +16,9 @@
 #include <iostream>
 #include <fstream>
 
+#define TRACY_ENABLE
+
+
 #ifdef TRACY_ENABLE
 #include <Tracy.hpp>
 #endif
@@ -32,6 +35,8 @@
 #include "SimplexNoise.h"
 
 #include "TinyErode.h"
+
+
 
 #define MATERIAL_NOTHING           0
 #define ORGAN_MOUTH_VEG            1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
@@ -197,11 +202,13 @@ bool palette = false;
 bool ecologyComputerDisplay = false;
 
 
-bool computer1display = false;
-bool computer2display = false;
-bool computer3display = false;
-bool computer4display = false;
-bool computer5display = false;
+// bool computer1display = false;
+// bool computer2display = false;
+// bool computer3display = false;
+// bool computer4display = false;
+// bool computer5display = false;
+
+bool computerdisplays[5];
 
 float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
 float minimumEntropy = 0.1f;
@@ -226,7 +233,7 @@ unsigned int cameraPositionY = 0 ;
 unsigned int modelFrameCount = 0;
 
 int paletteMenuX = 200;
-int paletteMenuY = 500;
+int paletteMenuY = 50;
 int paletteTextSize = 10;
 int paletteSpacing = 20;
 
@@ -245,10 +252,10 @@ unsigned int usPerFrame = 0;
 unsigned int populationCount = 0;
 unsigned int cameraFrameCount = 0;
 
-int baseSize = 100;
-int wallThickness = 8;
-int doorThickness = 16;
-
+const int baseSize = 100;
+const int wallThickness = 8;
+const int doorThickness = 16;
+const unsigned int wallthickness = 8;
 
 unsigned int raindrops = 0;
 
@@ -393,7 +400,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_GONAD:
 	{
-		return std::string("A bulging testicle filled with potential offspring.");
+		return std::string("A sensitive gland filled with potential offspring.");
 	}
 	case ORGAN_MUSCLE:
 	{
@@ -912,8 +919,8 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].uPosY = 0;
 		animals[animalIndex].parentAmnesty = true;
 		animals[animalIndex].retired = true;
-		animals[animalIndex].canBreatheUnderwater = false;
-		animals[animalIndex].canBreatheAir = false;
+		animals[animalIndex].canBreatheUnderwater = true;
+		animals[animalIndex].canBreatheAir = true;
 		animals[animalIndex].cellsUsed = 0;
 		animals[animalIndex].identityColor = Color(RNG(), RNG(), RNG(), 1.0f);
 		if (animalIndex == adversary)
@@ -929,11 +936,8 @@ void resetAnimal(unsigned int animalIndex)
 		{
 			resetCell(animalIndex, cellLocalPositionI );
 		}
-
 	}
 }
-
-
 
 // check if a cell has an empty neighbour.
 bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)
@@ -1189,7 +1193,7 @@ void setupExampleAnimal2(int i)
 {
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
-
+	animalAppendCell( i, ORGAN_GILL );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EAR );
@@ -1206,7 +1210,6 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_MEMORY_TX );
 	animalAppendCell( i, ORGAN_MUSCLE );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
-	animalAppendCell( i, ORGAN_GILL );
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
@@ -1914,13 +1917,12 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		// highlight selected animal.
 		if (viewedAnimal == selectedAnimal)
 		{
-			displayColor =  addColor(displayColor, tint_selected);//filterColor(displayColor, tint_selected);
+			displayColor =  addColor(displayColor, tint_selected);
 		}
 
 	}
 	else
 	{
-
 		Color materialColor ;
 		if (world[worldI].material == MATERIAL_GRASS)
 		{
@@ -1931,25 +1933,16 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 			materialColor = materialColors(world[worldI].material);
 		}
 
-
-
 		// you can see the three material layers in order, wall then material then floor.
 		displayColor = filterColor( materialColors(world[worldI].terrain) ,  materialColor);
-
 		Color wallColor = addColor(materialColors(world[worldI].wall), tint_wall);
-
 		displayColor = filterColor( displayColor, wallColor  );
-
-
-		// }
-
 	}
 
 	displayColor = multiplyColor(displayColor, world[worldI].light);
 
 	return displayColor;
 }
-
 
 bool materialDegrades(unsigned int material)
 {
@@ -1962,273 +1955,23 @@ bool materialDegrades(unsigned int material)
 	return false;
 }
 
-
 float getNormalisedHeight(unsigned int worldPositionI)
 {
 	float answer =   world[worldPositionI].height / (worldSize);
 	return answer;
 }
 
-
 void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
 {
-
-	if (false)
-	{
-
-// calculate the angle difference between the plain and the incident light.
-
-		float xSimilarity = 0.0f;
-		float ySimilarity = 0.0f;
-
-		unsigned int xNeighbour = worldPositionI + 1;
-		if (xNeighbour < worldSquareSize)
-		{
-			float xAngle = world[worldPositionI].height - world[xNeighbour].height;
-			xSimilarity = 1.0 / ((xAngle - xLightAngle) + 1.0f);
-		}
-
-		// unsigned int yNeighbour = worldPositionI + worldSize;
-		// if (yNeighbour < worldSquareSize)
-		// {
-		// 	float yAngle = world[worldPositionI].height - world[yNeighbour].height;
-		// 	ySimilarity = 1.0 / (yAngle - yLightAngle)+1.0f;
-		// }
-
-		float brightness = xSimilarity ;//+ ySimilarity;
-
-		brightness *= 0.5f;
-
-		// brightness += 0.5f;
-
-		// printf("%f\n", brightness);
-
-		world[worldPositionI].light = multiplyColorByScalar(color_white, brightness);
-	}
-
-
-
-	if (true)
-	{
-
-// light = height
-
-		// if (doErodingRain)
-		// {
-		// 	printf("%f\n", world[worldPositionI].height);
-		// }
-		world[worldPositionI].light = multiplyColorByScalar(color_white, getNormalisedHeight(worldPositionI) );
-
-
-
-	}
-
+	world[worldPositionI].light = multiplyColorByScalar(color_white, getNormalisedHeight(worldPositionI) );
 }
-
-
-void erodingRain(unsigned int worldPositionI)
-{
-
-
-	/**
-	 *
-	 *
-	 *
-	 *
-	 *
-	 *
-	 * https://nickmcd.me/2020/04/10/simple-particle-based-hydraulic-erosion/
-	 *
-	 *
-	 *
-	 *
-	 *
-	 *     Spawn a particle at a random position on the surface
-	It moves / slides over the surface using normal classical mechanics (explained below)
-	Perform mass-transfer/ sedimentation between the surface and the particle (explained below)
-	Evaporate a part of the particle
-	If the particle is out of bounds or is too small, kill it
-	Repeat for however many particles you want.
-	 *
-	 *
-	 *
-	 *
-	 *
-	 * *///
-
-	unsigned int position = worldPositionI;
-	bool saturation = 0.5f;
-	float dropVolume = 1.0f;
-	Vec_f2 velocity = Vec_f2(0.0f, 0.0f);
-
-	// world[worldPositionI].material = MATERIAL_FIRE;
-	unsigned int x = position % worldSize;
-	unsigned int y = position / worldSize;
-
-
-
-	Vec_f2 fposition = Vec_f2(x, y);
-
-	float friction = 0.65f;
-	float evaporationRate = 0.999f;
-	float rainStrength = 10.0f;
-
-	float rainTimestep = 1.0f;
-
-	float maxSpeed = 2.0f;
-
-	// if (raindrops % 10000 == 0)
-	// {
-
-
-	// 	// normalizeTerrainHeight();
-	// }
-
-	bool tracer = false;
-	if (extremelyFastNumberFromZeroTo(1000) == 0)
-	{
-		tracer  = true;
-	}
-
-	while (true)
-	{
-
-		// computeLight(position, sunXangle, sunYangle);
-		// break;
-		if (position > worldSize + 1 && position < worldSquareSize - (worldSize + 1))
-		{
-			if (tracer)
-			{
-
-
-				// world[position].material = MATERIAL_FIRE;
-			}
-
-			float xdrop =  (  world[position - 1].height - world[position + 1].height ) * 1.0f;
-			float ydrop = ( world[position - worldSize].height - world[position + worldSize].height )  * 1.0f;
-
-			// evaporate
-			dropVolume *= evaporationRate;
-			if (dropVolume < 0.01f)
-			{
-				break;
-			}
-
-			//sediment absorption
-			float magnitude_speed = sqrt((xdrop * xdrop) + (ydrop * ydrop));
-
-			float slope = 1.0f;
-			unsigned int xnext = fposition.x += velocity.x;
-			unsigned int ynext = fposition.y += velocity.y;
-			if (xnext < worldSquareSize && ynext < worldSquareSize)
-			{
-				unsigned int nextpos = (ynext * worldSize) + xnext;
-				slope = world[position].height - world[nextpos].height;
-			}
-
-
-			float equilibrium = dropVolume * magnitude_speed * slope;
-			if (equilibrium < 0.0f) {equilibrium = 0.0f;}
-
-			float drivingForce = equilibrium - saturation;
-
-			float affect = drivingForce * rainStrength * rainTimestep;
-
-			float affectlimit = 0.1f;
-			if (abs(affect) >  affectlimit)
-			{
-				affect *=  (affectlimit  / abs(affect));
-			}
-
-			saturation -= affect;
-
-			float deltaTerrain = dropVolume * affect;
-
-
-// 			for (int n = 0; n < nNeighbours; ++n)
-// 			{
-// 				unsigned int neighbour = position + neighbourOffsets[n];
-// 				if (neighbour < worldSquareSize)
-// 				{
-
-// 					if (world[neighbour].height + deltaTerrain > 0.0f)
-// 					{
-// 						world[neighbour].height += deltaTerrain;
-// 					}
-// // void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
-// 					computeLight(neighbour, sunXangle, sunYangle);
-
-
-// 				}
-// 			}
-			if (world[position].height + deltaTerrain > 0.0f)
-			{
-				world[position].height += deltaTerrain;
-			}
-// void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
-			computeLight(position, sunXangle, sunYangle);
-
-
-
-			// printf(".");
-			// classical mechanics
-			velocity.x +=  xdrop * rainTimestep;
-			velocity.y +=  ydrop * rainTimestep;
-
-			velocity.x *= (1.0f - (rainTimestep * friction));
-			velocity.y *= (1.0f - (rainTimestep * friction));
-
-
-			float magnitude_velocity = sqrt((velocity.x * velocity.x) + (velocity.y * velocity.y));
-
-			if (magnitude_velocity > maxSpeed)
-			{
-				float reduction = maxSpeed / magnitude_velocity;
-				velocity.x *= reduction;
-				velocity.y *= reduction;
-			}
-
-			// if ( abs(velocity.x) > maxSpeed) { velocity.x *= (  abs(velocity.x)/maxSpeed  );}
-			// if ( abs(velocity.y) > maxSpeed) { velocity.y *= (  abs(velocity.y)/maxSpeed  );}
-
-			fposition.x += velocity.x * rainTimestep;
-			fposition.y += velocity.y * rainTimestep;
-
-			x = fposition.x;
-			y = fposition.y;
-
-			position = (worldSize * y) + x;
-
-
-
-
-		}
-		else
-		{
-			break;
-		}
-
-	}
-	// std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-	raindrops++;
-	// printf("rained! %u\n", raindrops);
-
-}
-
-
-void toggleErodingRain()
-{
-	doErodingRain = !doErodingRain;
-}
-
-
-
 
 
 
 void updateMap()
 {
+	ZoneScoped;
+
 	unsigned int mapUpdateFidelity = worldSquareSize / 25000;
 	for (unsigned int i = 0; i < mapUpdateFidelity; ++i)
 	{
@@ -2238,14 +1981,6 @@ void updateMap()
 		if (randomI < worldSquareSize)
 		{
 
-
-			if (doErodingRain)
-			{
-				erodingRain(randomI);
-
-				// computeLight(randomI, 0.45f, 0.45f  );
-
-			}
 
 			// slowly reduce pheromones over time.
 			if (world[randomI].pheromoneIntensity > 0.2f)
@@ -2258,42 +1993,23 @@ void updateMap()
 			}
 
 
-			// if (world[randomI].material == MATERIAL_NOTHING)
+
+			// if (world[randomI].height < seaLevel)
 			// {
-			// 	if (world[randomI].terrain == MATERIAL_ROCK ||  world[randomI].terrain == MATERIAL_WATER )
+			// 	if (world[randomI].wall == MATERIAL_NOTHING)
 			// 	{
-			// 		world[randomI].material = MATERIAL_GRASS;
+			// 		world[randomI].wall = MATERIAL_WATER;
 			// 	}
 			// }
-
-			// if (world[randomI].terrain == TERRAIN_LAVA)
+			// else
 			// {
-			// 	if (
-			// 	    world[randomI].material != MATERIAL_NOTHING
-			// 	    &&
-			// 	    world[randomI].material != MATERIAL_VOIDMETAL // voidmetal is indestructible
-
-			// 	)
+			// 	if (world[randomI].wall == MATERIAL_WATER)
 			// 	{
-			// 		world[randomI].material = MATERIAL_NOTHING;
+			// 		world[randomI].wall = MATERIAL_NOTHING;
 			// 	}
 			// }
 
 
-			if (world[randomI].height < seaLevel)
-			{
-				if (world[randomI].wall == MATERIAL_NOTHING)
-				{
-					world[randomI].wall = MATERIAL_WATER;
-				}
-			}
-			else
-			{
-				if (world[randomI].wall == MATERIAL_WATER)
-				{
-					world[randomI].wall = MATERIAL_NOTHING;
-				}
-			}
 
 			if (world[randomI].material == MATERIAL_FIRE)
 			{
@@ -2324,7 +2040,9 @@ void updateMap()
 			}
 
 
-			if (world[randomI].material == MATERIAL_NOTHING && world[randomI].wall == MATERIAL_NOTHING)
+			if (world[randomI].material == MATERIAL_NOTHING
+			        // && !materialBlocksMovement(world[randomI].wall)
+			   )
 			{
 
 				for (int i = 0; i < nNeighbours; ++i)
@@ -2355,26 +2073,6 @@ void updateMap()
 			{
 				world[randomI].material = MATERIAL_NOTHING;
 			}
-
-			if ( materialDegrades( world[randomI].wall) )
-			{
-				world[randomI].wall = MATERIAL_NOTHING;
-			}
-
-
-
-
-
-
-			// if (world[randomI].material == MATERIAL_BLOOD)
-			// {
-			// 	world[randomI].material = MATERIAL_NOTHING;
-			// }
-
-			// if (world[randomI].material == MATERIAL_BONE)
-			// {
-			// 	world[randomI].material = MATERIAL_NOTHING;
-			// }
 		}
 	}
 }
@@ -2417,65 +2115,36 @@ Vec_i2 getMousePositionRelativeToAnimal(unsigned int animalIndex)
 
 void paletteCallback()
 {
-	// printf("a\n");
 	// add the selected organ to the selected animal
 	if (selectedAnimal >= 0 && selectedAnimal < numberOfAnimals)
 	{
-		// printf("b\n");
 		if (paletteSelectedOrgan >= 0 && paletteSelectedOrgan < numberOfOrganTypes)
 		{
-
-
-			// printf("c\n");
-			// int newPosX = mousePositionX -   ( cameraPositionX  - animals[selectedAnimal].uPosX);
-			// int newPosY = mousePositionY -   ( cameraPositionY  - animals[selectedAnimal].uPosY);
-
 			Vec_i2 newpos = getMousePositionRelativeToAnimal(selectedAnimal);
-			// animalAppendCell()
-			// printf("appended cell to %i %i \n", newPosX, newPosY);
-
 			appendCell(selectedAnimal, paletteSelectedOrgan, newpos);
-
 		}
 	}
 }
 
-
-
 void paletteEraseAtMouse()
 {
-
 	if (selectedAnimal >= 0 && selectedAnimal < numberOfAnimals)
 	{
-		// int newPosX = mousePositionX -   ( cameraPositionX  - animals[selectedAnimal].uPosX);
-		// int newPosY = mousePositionY -   ( cameraPositionY  - animals[selectedAnimal].uPosY);
-
-
 		Vec_i2 newpos = getMousePositionRelativeToAnimal(selectedAnimal);
-
-
 		for (int i = 0; i < animals[selectedAnimal].cellsUsed; ++i)
 		{
 			if (animals[selectedAnimal].body[i].localPosX == newpos.x &&
-			        animals[selectedAnimal].body[i].localPosY == newpos.y
-
-			   )
+			        animals[selectedAnimal].body[i].localPosY == newpos.y )
 			{
-
 				eliminateCell(selectedAnimal, i);
-
 			}
 		}
-
 	}
-
 }
 
 
 void drawPalette()
 {
-
-
 	int closestValue = 1000;
 	unsigned int tempClosestToMouse = 0;
 
@@ -2487,21 +2156,8 @@ void drawPalette()
 		int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
 		int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
 
-		// int diffX = mousePositionX - paletteFinalX;
-		// int diffY = mousePositionY - paletteFinalY;
-
-		// int absoluteDistance = abs(diffX) + abs(diffY);
-
-		// if ( absoluteDistance < closestValue )
-		// {
-		// 	closestValue = absoluteDistance;
-		// 	tempClosestToMouse = i;
-		// }
-
-
 		if (i == paletteSelectedOrgan)
 		{
-
 			printText2D(  std::string("X ") +  tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
 		}
 		else
@@ -2510,18 +2166,6 @@ void drawPalette()
 			printText2D(   tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
 		}
 	}
-
-	// paletteSelectedOrgan= tempClosestToMouse;
-
-	// draw a white box under the selected one.
-
-	// unsigned int paletteX = paletteSelectedOrgan % paletteWidth;
-	// unsigned int paletteY = paletteSelectedOrgan / paletteWidth;
-
-	// int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
-	// int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
-
-	// drawTile( Vec_f2(paletteFinalX, paletteFinalY), color_brightred );
 }
 
 void incrementSelectedOrgan()
@@ -2540,21 +2184,10 @@ void activateGrabbedMachine()
 {
 	if (playerCreature >= 0 && playerInControl)
 	{
-
-		// if
 		if (palette)
 		{
-			// if (shift)
-			// {
-			// }
-			// else
-			// {
-
-
 			paletteCallback();
-			// }
 		}
-
 
 		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
 		{
@@ -2589,6 +2222,8 @@ void rightClickCallback ()
 // the animal is a grid of living cells that do different things. this function describes what they do each turn.
 void organs_all()
 {
+	ZoneScoped;
+
 	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 	{
 		unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
@@ -3323,6 +2958,9 @@ void spillBlood(unsigned int worldPositionI)
 
 void move_all()
 {
+
+	ZoneScoped;
+
 	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 	{
 		unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
@@ -3393,177 +3031,235 @@ void move_all()
 
 				if (! animals[animalIndex].isMachine)
 				{
-					if (world[newPosition].wall == MATERIAL_WATER )
+
+
+
+					bool isInWater = false;
+					bool isInAir = false;
+
+					if (world[newPosition].wall == MATERIAL_WATER ||
+					        world[newPosition].material == MATERIAL_WATER ||
+					        world[newPosition].terrain == MATERIAL_WATER
+					   )
 					{
-						if (! animals[animalIndex].canBreatheUnderwater )
+						// animals[animalIndex].damageReceived ++;
+						isInWater = true;
+					}
+
+
+
+					if (world[newPosition].wall != MATERIAL_WATER
+					   )
+					{
+						// animals[animalIndex].damageReceived ++;
+						isInAir = true;
+					}
+
+
+					bool canBreathe = false;
+
+					if (animals[animalIndex].canBreatheAir && isInAir)
+					{
+						canBreathe = true;
+					}
+
+					if (animals[animalIndex].canBreatheUnderwater && isInWater)
+					{
+						canBreathe = true;
+					}
+
+					if (!canBreathe)
+					{
+						animals[animalIndex].damageReceived ++;
+					}
+
+
+
+
+
+
+
+
+
+
+
+					// printf("!drowned\n");
+
+					// }
+					// else
+					// {
+
+
+					// 	// printf("!suffocated!\n");
+					// 	animals[animalIndex].damageReceived ++;
+					// }
+				}
+
+
+
+
+
+				if (false)
+				{
+					if (world[newPosition].temperature > animals[animalIndex].temp_limit_high)
+					{
+						animals[animalIndex].damageReceived += abs(world[newPosition].temperature  - animals[animalIndex].temp_limit_high);
+					}
+
+
+					if (world[newPosition].temperature < animals[animalIndex].temp_limit_low)
+					{
+						animals[animalIndex].damageReceived += abs(world[newPosition].temperature  - animals[animalIndex].temp_limit_low);
+					}
+				}
+
+			}
+
+
+			for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
+			{
+				if (taxIsByMass)
+				{
+					animals[animalIndex].energy -= taxEnergyScale *  organUpkeepCost(animals[animalIndex].body[cellIndex].organ); // * speciesEnergyOuts[speciesIndex] ;
+				}
+				bool okToStep = true;
+
+
+
+
+				int rotatedX = animals[animalIndex].body[cellIndex].localPosX * animals[animalIndex].fAngleCos - animals[animalIndex].body[cellIndex].localPosY * animals[animalIndex].fAngleSin;
+				int rotatedY = animals[animalIndex].body[cellIndex].localPosX * animals[animalIndex].fAngleSin + animals[animalIndex].body[cellIndex].localPosY * animals[animalIndex].fAngleCos ;
+
+				unsigned int cellWorldPositionX = animals[animalIndex].uPosX + rotatedX;
+				unsigned int cellWorldPositionY = animals[animalIndex].uPosY + rotatedY;
+				unsigned int cellWorldPositionI = ((cellWorldPositionY * worldSize) + (cellWorldPositionX)) % worldSquareSize;
+
+
+
+				if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
+				{
+					int targetLocalPositionI = isAnimalInSquare( world[cellWorldPositionI].identity, cellWorldPositionI);
+					if (targetLocalPositionI >= 0)
+					{
+						okToStep = false;
+
+						if (!animals[   world[cellWorldPositionI].identity  ].isMachine)
 						{
-							animals[animalIndex].damageReceived ++;
+
+							unsigned int fellowSpeciesIndex = (world[cellWorldPositionI].identity) / numberOfAnimalsPerSpecies;
+							if (fellowSpeciesIndex == speciesIndex)
+							{
+								animals[animalIndex].lastTouchedKin = world[cellWorldPositionI].identity;
+							}
+							else
+							{
+								animals[animalIndex].lastTouchedStranger = world[cellWorldPositionI].identity;
+							}
+
+							if (animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON ||
+							        animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE )
+							{
+								if (animals[animalIndex].parentAmnesty) // don't allow the animal to harm its parent until the amnesty period is over.
+								{
+									if (world[cellWorldPositionI].identity == animals[animalIndex].parentIdentity)
+									{
+										continue;
+									}
+								}
+
+								float defense = defenseAtWorldPoint(world[cellWorldPositionI].identity, cellWorldPositionI);
+
+								if (defense > 0)
+								{
+									animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage += 1.0f / defense;
+								}
+
+								if (defense == 0 || animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage > 1.0f )
+								{
+									animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].dead = true;
+
+									if (animals[world[cellWorldPositionI].identity].mass >= 1)
+									{
+										animals[world[cellWorldPositionI].identity].mass--;
+									}
+									animals[world[cellWorldPositionI].identity].damageReceived++;
+									okToStep = true;
+									animals[animalIndex].damageDone++;
+
+									// if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
+									// {
+									// 	world[cellWorldPositionI].material = MATERIAL_BLOOD;
+									// }
+
+									spillBlood(cellWorldPositionI);
+
+									speciesAttacksPerTurn[speciesIndex] ++;
+
+									if (animals[world[cellWorldPositionI].identity].energyDebt <= 0.0f) // if the animal can lose the limb, and create energetic food, before the debt is paid, infinite energy can be produced.
+									{
+										if (animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON)
+										{
+											if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
+											{
+												world[cellWorldPositionI].material = MATERIAL_FOOD;
+											}
+										}
+										if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE)
+										{
+											animals[animalIndex].energy += foodEnergy * energyScaleIn;
+										}
+
+									}
+								}
+							}
+							else if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_PARASITE )
+							{
+								float amount = (animals[world[cellWorldPositionI].identity].energy) / animalSquareSize;
+								animals[animalIndex].energy += amount;
+								animals[world[cellWorldPositionI].identity].energy -= amount;
+							}
 						}
 					}
 					else
 					{
-						if (! animals[animalIndex].canBreatheAir)
-						{
-							animals[animalIndex].damageReceived ++;
-						}
+						okToStep = true;
 					}
 				}
-
-
-				if (world[newPosition].temperature > animals[animalIndex].temp_limit_high)
+				if (okToStep)
 				{
-					animals[animalIndex].damageReceived += abs(world[newPosition].temperature  - animals[animalIndex].temp_limit_high);
-				}
 
-
-				if (world[newPosition].temperature < animals[animalIndex].temp_limit_low)
-				{
-					animals[animalIndex].damageReceived += abs(world[newPosition].temperature  - animals[animalIndex].temp_limit_low);
-				}
-
-
-				for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; ++cellIndex)                                      // place animalIndex on grid and attack / eat. add captured energy
-				{
-					if (taxIsByMass)
+					if (world[cellWorldPositionI].material == MATERIAL_NOTHING && world[cellWorldPositionI].identity == -1 && speciesIndex != 0)
 					{
-						animals[animalIndex].energy -= taxEnergyScale *  organUpkeepCost(animals[animalIndex].body[cellIndex].organ); // * speciesEnergyOuts[speciesIndex] ;
+						world[cellWorldPositionI].material = MATERIAL_GRASS;
+						world[cellWorldPositionI].grassColor = animals[animalIndex].identityColor;
 					}
-					bool okToStep = true;
 
 
-
-
-					int rotatedX = animals[animalIndex].body[cellIndex].localPosX * animals[animalIndex].fAngleCos - animals[animalIndex].body[cellIndex].localPosY * animals[animalIndex].fAngleSin;
-					int rotatedY = animals[animalIndex].body[cellIndex].localPosX * animals[animalIndex].fAngleSin + animals[animalIndex].body[cellIndex].localPosY * animals[animalIndex].fAngleCos ;
-
-					unsigned int cellWorldPositionX = animals[animalIndex].uPosX + rotatedX;
-					unsigned int cellWorldPositionY = animals[animalIndex].uPosY + rotatedY;
-					unsigned int cellWorldPositionI = ((cellWorldPositionY * worldSize) + (cellWorldPositionX)) % worldSquareSize;
-
-
-
-					if (world[cellWorldPositionI].identity >= 0 && world[cellWorldPositionI].identity != animalIndex && world[cellWorldPositionI].identity < numberOfAnimals)
-					{
-						int targetLocalPositionI = isAnimalInSquare( world[cellWorldPositionI].identity, cellWorldPositionI);
-						if (targetLocalPositionI >= 0)
-						{
-							okToStep = false;
-
-							if (!animals[   world[cellWorldPositionI].identity  ].isMachine)
-							{
-
-								unsigned int fellowSpeciesIndex = (world[cellWorldPositionI].identity) / numberOfAnimalsPerSpecies;
-								if (fellowSpeciesIndex == speciesIndex)
-								{
-									animals[animalIndex].lastTouchedKin = world[cellWorldPositionI].identity;
-								}
-								else
-								{
-									animals[animalIndex].lastTouchedStranger = world[cellWorldPositionI].identity;
-								}
-
-								if (animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON ||
-								        animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE )
-								{
-									if (animals[animalIndex].parentAmnesty) // don't allow the animal to harm its parent until the amnesty period is over.
-									{
-										if (world[cellWorldPositionI].identity == animals[animalIndex].parentIdentity)
-										{
-											continue;
-										}
-									}
-
-									float defense = defenseAtWorldPoint(world[cellWorldPositionI].identity, cellWorldPositionI);
-
-									if (defense > 0)
-									{
-										animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage += 1.0f / defense;
-									}
-
-									if (defense == 0 || animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage > 1.0f )
-									{
-										animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].dead = true;
-
-										if (animals[world[cellWorldPositionI].identity].mass >= 1)
-										{
-											animals[world[cellWorldPositionI].identity].mass--;
-										}
-										animals[world[cellWorldPositionI].identity].damageReceived++;
-										okToStep = true;
-										animals[animalIndex].damageDone++;
-
-										// if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
-										// {
-										// 	world[cellWorldPositionI].material = MATERIAL_BLOOD;
-										// }
-
-										spillBlood(cellWorldPositionI);
-
-										speciesAttacksPerTurn[speciesIndex] ++;
-
-										if (animals[world[cellWorldPositionI].identity].energyDebt <= 0.0f) // if the animal can lose the limb, and create energetic food, before the debt is paid, infinite energy can be produced.
-										{
-											if (animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON)
-											{
-												if (world[cellWorldPositionI].material == MATERIAL_NOTHING)
-												{
-													world[cellWorldPositionI].material = MATERIAL_FOOD;
-												}
-											}
-											if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE)
-											{
-												animals[animalIndex].energy += foodEnergy * energyScaleIn;
-											}
-
-										}
-									}
-								}
-								else if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_PARASITE )
-								{
-									float amount = (animals[world[cellWorldPositionI].identity].energy) / animalSquareSize;
-									animals[animalIndex].energy += amount;
-									animals[world[cellWorldPositionI].identity].energy -= amount;
-								}
-							}
-						}
-						else
-						{
-							okToStep = true;
-						}
-					}
-					if (okToStep)
+					world[cellWorldPositionI].identity = animalIndex;
+					world[cellWorldPositionI].occupyingCell = cellIndex;
+					if (trailUpdate)
 					{
 
-						if (world[cellWorldPositionI].material == MATERIAL_NOTHING && world[cellWorldPositionI].identity == -1 && animalIndex != playerCreature)
-						{
-							world[cellWorldPositionI].material = MATERIAL_GRASS;
-							world[cellWorldPositionI].grassColor = animals[animalIndex].identityColor;
-						}
-
-
-						world[cellWorldPositionI].identity = animalIndex;
-						world[cellWorldPositionI].occupyingCell = cellIndex;
-						if (trailUpdate)
-						{
-
-							world[cellWorldPositionI].trail    = dAngle;
-						}
-						animals[animalIndex].body[cellIndex].worldPositionI = cellWorldPositionI;
-
-
+						world[cellWorldPositionI].trail    = dAngle;
 					}
+					animals[animalIndex].body[cellIndex].worldPositionI = cellWorldPositionI;
+
+
 				}
 			}
-			else
-			{
-				animals[animalIndex].position =  animals[animalIndex].position % worldSquareSize;
-			}
+		}
+		else
+		{
+			animals[animalIndex].position =  animals[animalIndex].position % worldSquareSize;
 		}
 	}
 }
 
+
 void energy_all() // perform energies.
 {
+	ZoneScoped;
+
 	for (int i = 0; i < numberOfSpecies; ++i)
 	{
 		populationCountUpdates[i] = 0;
@@ -3599,63 +3295,63 @@ void energy_all() // perform energies.
 			}
 
 			bool execute = false;
-			if (animalIndex == playerCreature )
+			// if (animalIndex == playerCreature )
+			// {
+			// 	if (animals[animalIndex].damageReceived > animals[animalIndex].mass) // player can only be killed by MURDER
+			// 	{
+			// 		// printf("A machine or player was harmed until death! dmg %u mass %u\n", animals[animalIndex].damageReceived, animals[animalIndex].mass);
+			// 		execute = true;
+			// 	}
+			// }
+			// else
+			// {
+			if (!immortality && !animals[animalIndex].isMachine) // reasons an npc can die
 			{
-				if (animals[animalIndex].damageReceived > animals[animalIndex].mass) // player can only be killed by MURDER
+				if (speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) && animalIndex != playerCreature) // only kill off weak animals if there is some population.
+					if (animals[animalIndex].energy < 0.0f)
+					{
+						execute = true;
+						// printf("died of low energy!\n");
+					}
+				if (animals[animalIndex].age > animals[animalIndex].lifespan && animalIndex != playerCreature)
 				{
-					// printf("A machine or player was harmed until death! dmg %u mass %u\n", animals[animalIndex].damageReceived, animals[animalIndex].mass);
+					// printf("died of old age!\n");
+					execute = true;
+				}
+				if (animals[animalIndex].totalGonads == 0)
+				{
+					// printf("genitals exploded and died!\n");
+					execute = true;
+				}
+				if (animals[animalIndex].damageReceived > animals[animalIndex].mass)
+				{
+					// printf("murdered to death (or drowned)! dmg %u mass %u\n", animals[animalIndex].damageReceived,  animals[animalIndex].mass);
+					execute = true;
+				}
+				if (animals[animalIndex].mass <= 0)
+				{
+					// printf("banished for being massless!\n");
 					execute = true;
 				}
 			}
-			else
-			{
-				if (!immortality && !animals[animalIndex].isMachine && animalIndex) // reasons an npc can die
-				{
-					if (speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) ) // only kill off weak animals if there is some population.
-						if (animals[animalIndex].energy < 0.0f)
-						{
-							execute = true;
-							// printf("died of low energy!\n");
-						}
-					if (animals[animalIndex].age > animals[animalIndex].lifespan)
-					{
-						// printf("died of old age!\n");
-						execute = true;
-					}
-					if (animals[animalIndex].totalGonads == 0)
-					{
-						// printf("genitals exploded and died!\n");
-						execute = true;
-					}
-					if (animals[animalIndex].damageReceived > animals[animalIndex].mass)
-					{
-						// printf("murdered to death (or drowned)!\n");
-						execute = true;
-					}
-					if (animals[animalIndex].mass <= 0)
-					{
-						// printf("banished for being massless!\n");
-						execute = true;
-					}
-				}
-			}
+			// }
 			if (execute)
 			{
-				// printf("execute animal %u \n", animalIndex);
-				// ;
+				// // printf("execute animal %u \n", animalIndex);
+				// // ;
 
-				if (animalIndex == adversary && adversary >= 0)
-				{
-					// unsigned int adversaryPos = animals[adversary].position;
-					setupExampleAnimal2(adversary);
-					spawnAnimalIntoSlot( adversary, animals[adversary], adversaryRespawnPos, true  )  ;
+				// if (animalIndex == adversary && adversary >= 0)
+				// {
+				// 	// unsigned int adversaryPos = animals[adversary].position;
+				// 	setupExampleAnimal2(adversary);
+				// 	spawnAnimalIntoSlot( adversary, animals[adversary], adversaryRespawnPos, true  )  ;
 
 
-				}
-				else
-				{
-					killAnimal( animalIndex);
-				}
+				// }
+				// else
+				// {
+				killAnimal( animalIndex);
+				// }
 
 			}
 			if (tournament)
@@ -3745,6 +3441,8 @@ void viewAdversary()
 			cameraTargetCreature = playerCreature;
 		}
 	}
+
+	printf("%u\n", animals[adversary].position);
 }
 
 
@@ -3974,30 +3672,62 @@ void displayComputerText()
 
 
 
-	if (computer1display)
+	if (computerdisplays[0])
 	{
-		printText2D(   std::string(" ") , menuX, menuY, textSize);
-		menuY -= spacing;
-	}
 
-	if (computer2display)
-	{
-		printText2D(   std::string(" ") , menuX, menuY, textSize);
+
+		printText2D(   std::string("Animals are groups of tiles that move around. Each tile has a dedicated purpose.") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("Your body is made this way too. ") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("If your tiles are damaged, you will lose the tile's function,") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("which can include your sight or movement. ") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("Find the hospital terminal! You will need it to survive.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
-	if (computer3display)
+	else if (computerdisplays[1])
 	{
-		printText2D(   std::string(" ") , menuX, menuY, textSize);
+		printText2D(   std::string("Use the hospital to add a gill to your body. It will enable you to explore underwater.") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("Go there and find tracker glasses that you can use to detect the adversary.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
-	if (computer4display)
+	else if (computerdisplays[2])
 	{
-		printText2D(   std::string(" ") , menuX, menuY, textSize);
+		printText2D(   std::string("Activate the tracker glasses to see the trails that animals leave.") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("You will recognize the adversary by its white trial.") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("Take the weapon, find the adversary and kill it.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
-	if (computer5display)
+	else if (computerdisplays[3])
 	{
-		printText2D(   std::string(" ") , menuX, menuY, textSize);
+		printText2D(   std::string("Neuro glasses allow you to see the minute electrical activity of living flesh.") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("You can use them, in combination with the hospital, to edit the connection map of a living creature.") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+	}
+	else if (computerdisplays[4])
+	{
+		// printText2D(   std::string(" ") , menuX, menuY, textSize);
+		// menuY -= spacing;
+
+		printText2D(   std::string("Fire will destroy grass and spread quickly.") , menuX, menuY, textSize);
+		menuY -= spacing;
+
+		printText2D(   std::string("The knife can inflict damage precisely.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 
@@ -4053,6 +3783,12 @@ void drawGameInterfaceText()
 	// 	menuY -= spacing;
 	// }
 	// menuY -= spacing;
+
+	// 	printText2D(   std::string("DMG ") + std::to_string(animals[playerCreature].damageReceived ) , menuX, menuY, textSize);
+	// menuY += spacing;
+
+
+
 
 
 	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
@@ -4500,7 +4236,20 @@ void ecologyComputerCallback( int gunIndex, int shooterIndex)
 
 void communicationComputerCallback( int gunIndex, int shooterIndex)
 {
-	computer2display = !computer2display;
+
+	// computer2display = !computer2display;
+	// if (gunIndex >= 0 && shooterIndex == playerCreature)
+	// {
+	// 	computerdisplays[gunIndex] = !computerdisplays[gunIndex];
+	// }
+
+
+	if (gunIndex == 9) { computerdisplays[0] = !computerdisplays[0] ;}
+	if (gunIndex == 10) { computerdisplays[1] = !computerdisplays[1] ;}
+	if (gunIndex == 11) { computerdisplays[2] = !computerdisplays[2] ;}
+	if (gunIndex == 12 ) { computerdisplays[3] = !computerdisplays[3] ;}
+	if (gunIndex == 13) { computerdisplays[4] = !computerdisplays[4] ;}
+
 }
 
 
@@ -4946,24 +4695,27 @@ void adjustPlayerPos(Vec_f2 pos)
 }
 
 
-void spawnAdversary()
+void spawnAdversary(unsigned int targetWorldPositionI)
 {
 
+	adversary = numberOfAnimalsPerSpecies + 1; // adversary animal is a low number index in the 1th species. 0th is for players and machines.
+
+	// if (adversary == -1)
+	// {
 // printf("setting up animal %i\n", i);
-	unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize - 1); //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+	// unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize - 1); //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 	int j = 1;
 
 
-	adversary = numberOfAnimalsPerSpecies + 1; // adversary animal is a low number index in the 1th species. 0th is for players and machines.
 
 	setupExampleAnimal2(j);
 
 
-	animals[adversary].position = targetWorldPositionI;
-	animals[adversary].uPosX = targetWorldPositionI % worldSize;
-	animals[adversary].uPosY = targetWorldPositionI / worldSize;
-	animals[adversary].fPosX = animals[adversary].uPosX;
-	animals[adversary].fPosY = animals[adversary].uPosY;
+	// animals[adversary].position = targetWorldPositionI;
+	// animals[adversary].uPosX = targetWorldPositionI % worldSize;
+	// animals[adversary].uPosY = targetWorldPositionI / worldSize;
+	// animals[adversary].fPosX = animals[adversary].uPosX;
+	// animals[adversary].fPosY = animals[adversary].uPosY;
 
 
 
@@ -4980,7 +4732,7 @@ void spawnAdversary()
 	animals[adversary].fPosX = animals[adversary].uPosX;
 	animals[adversary].fPosY = animals[adversary].uPosY;
 
-
+	// }
 }
 
 
@@ -5007,7 +4759,7 @@ void spawnPlayer()
 
 		cameraTargetCreature = playerCreature;
 
-		printf("spawned player creature\n");
+		// printf("spawned player creature\n");
 
 
 		appendLog( std::string("Spawned the player.") );
@@ -5015,7 +4767,7 @@ void spawnPlayer()
 	else
 	{
 		killAnimal(playerCreature);
-		printf("suicided player creature\n");
+		// printf("suicided player creature\n");
 	}
 }
 
@@ -5322,7 +5074,7 @@ unsigned int getRandomPosition(bool underwater)
 
 
 			// if (allWater || allAir)
-			// {	
+			// {
 			// 	printf("gupta\n");
 			// }
 
@@ -5422,6 +5174,20 @@ void setupGameItems()
 
 	targetWorldPositionI += 25;
 
+
+
+	setupMessageComputer( i);
+	spawnAnimalIntoSlot(9,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+
+
+
+	targetWorldPositionI += 25 * worldSize;
+
+
+
 // camera
 	// cameraPositionX = x;
 	// cameraPositionY = y;
@@ -5455,7 +5221,16 @@ void setupGameItems()
 
 	// }
 
+
+
+	targetWorldPositionI =  getRandomPosition(true);
+	adversaryRespawnPos = targetWorldPositionI;// animals[playerCreature].position;
+	spawnAdversary(targetWorldPositionI);
+
+
 	targetWorldPositionI =  getRandomPosition(false);
+
+
 
 	setupBuilding_playerBase(targetWorldPositionI);
 
@@ -5463,6 +5238,15 @@ void setupGameItems()
 
 	setupHospitalComputer(i);
 	spawnAnimalIntoSlot(5,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+
+
+	targetWorldPositionI += 25 * worldSize;
+
+	setupMessageComputer( i);
+	spawnAnimalIntoSlot(10,
 	                    animals[i],
 	                    targetWorldPositionI, false);
 
@@ -5520,9 +5304,20 @@ void setupGameItems()
 	                    animals[i],
 	                    targetWorldPositionI, false);
 
-	adversaryRespawnPos = targetWorldPositionI;// animals[playerCreature].position;
 
-	spawnAdversary();
+
+
+
+
+	targetWorldPositionI += 25 * worldSize;
+
+	setupMessageComputer( i);
+	spawnAnimalIntoSlot(11,
+	                    animals[i],
+	                    targetWorldPositionI, false);
+
+
+
 
 
 
@@ -5591,67 +5386,28 @@ void setupRandomWorld()
 	resetAnimals();
 	resetGrid();
 
-
-
 	if (worldToLoad == WORLD_CALADAN)
 	{
-
-
 		raindrops = 0;
-		unsigned int wallthickness = 8;
-
-		if (false)
-		{
-			// create the preliminary (small) heightmap.
-			// for (unsigned int prelimPosition = 0; prelimPosition < prelimSquareSize; prelimPosition++)
-			// {
-			// 	unsigned int x = prelimPosition % prelimSize;
-			// 	unsigned int y = prelimPosition / prelimSize;
-
-
-			// 	float noiseScaleFactor = 0.0005f;
-			// 	float fx = x * noiseScaleFactor;
-			// 	float fy = y * noiseScaleFactor;
-
-
-			// 	float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
-
-			// }
-		}
-
-
-
-
-
 		if (true)
 		{
-
-
-
-
 			// seed the prelim map with noise.
-
 			float initWaterLevel = 1.0f;
 
 			for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
 			{
-
 				unsigned int x = pp % prelimSize;
 				unsigned int y = pp / prelimSize;
-
 
 				float hDistance = x;
 				float hMax = worldSize;
 				prelimMap[pp] = hDistance / hMax;
-
-
 
 				float noiseScaleFactor = 0.005f;
 				float fx = x * noiseScaleFactor;
 				float fy = y * noiseScaleFactor;
 				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
 				prelimMap[pp] += noise;
-
 
 				noiseScaleFactor = 0.05f;
 				fx = x * noiseScaleFactor;
@@ -5659,148 +5415,89 @@ void setupRandomWorld()
 				noise =   SimplexNoise::noise(fx, fy) * 0.1f;   // Get the noise value for the coordinate
 				prelimMap[pp] += noise;
 
-
 				noiseScaleFactor = 0.5f;
 				fx = x * noiseScaleFactor;
 				fy = y * noiseScaleFactor;
 				noise =   SimplexNoise::noise(fx, fy) * 0.01f;   // Get the noise value for the coordinate
 				prelimMap[pp] += noise;
 
-
-
 				prelimWater[pp] = initWaterLevel;
-
 			}
 
-
-
-
-
-
-			// TinyErode::Simulation simulation;
-
-
-// int w = 640;
-// int h = 480;
 			TinyErode::Simulation simulation(prelimSize, prelimSize);
-
-
-			// int w = 640;
-			// int h = 480;
-			// std::vector<float> height(prelimSize * prelimSize);
-			// std::vector<float> water(prelimSize * prelimSize, initWaterLevel);
 
 			simulation.SetMetersPerX(1000.0f / prelimSize);
 			simulation.SetMetersPerY(1000.0f / prelimSize);
 
-			int iterations = 256;
-
-			for (int i = 0; i < iterations; i++)
+			bool erode = false;
+			if (erode)
 			{
+				int iterations = 256;
 
-				printf("%i / %i\n", i, iterations);
 
-				// Determines where the water will flow.
-				simulation.ComputeFlowAndTilt(getHeight, getWater);
+				for (int i = 0; i < iterations; i++)
+				{
+					printf("%i / %i\n", i, iterations);
 
-				// Moves the water around the terrain based on the previous computed values.
-				simulation.TransportWater(addWater);
+					// Determines where the water will flow.
+					simulation.ComputeFlowAndTilt(getHeight, getWater);
 
-				// Where the magic happens. Soil is picked up from the terrain and height
-				// values are subtracted based on how much was picked up. Then the sediment
-				// moves along with the water and is later deposited.
-				simulation.TransportSediment(carryCapacity, deposition, erosion, addHeight);
+					// Moves the water around the terrain based on the previous computed values.
+					simulation.TransportWater(addWater);
 
-				// Due to heat, water is gradually evaported. This will also cause soil
-				// deposition since there is less water to carry soil.
-				simulation.Evaporate(addWater, evaporation);
+					// Where the magic happens. Soil is picked up from the terrain and height
+					// values are subtracted based on how much was picked up. Then the sediment
+					// moves along with the water and is later deposited.
+					simulation.TransportSediment(carryCapacity, deposition, erosion, addHeight);
+
+					// Due to heat, water is gradually evaported. This will also cause soil
+					// deposition since there is less water to carry soil.
+					simulation.Evaporate(addWater, evaporation);
+				}
+
+				// Drops all suspended sediment back into the terrain.
+				simulation.TerminateRainfall(addHeight);
 			}
-
-// Drops all suspended sediment back into the terrain.
-			simulation.TerminateRainfall(addHeight);
-
-
-
-
 			copyPrelimToRealMap();
-
 			normalizeTerrainHeight();
-
 			recomputeTerrainLighting();
-
-
-
-
-
-
 
 			// place items and terrain
 			for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 			{
-
-
 				unsigned int x = worldPositionI % worldSize;
 				unsigned int y = worldPositionI / worldSize;
-
-
 				world[worldPositionI].terrain = MATERIAL_ROCK;
-
-
-
 
 				// walls around the world edge
 				if (x < wallthickness || x > worldSize - wallthickness || y < wallthickness  || y > worldSize - wallthickness)
 				{
-					world[worldPositionI].material = MATERIAL_ROCK;
+					world[worldPositionI].wall = MATERIAL_ROCK;
 				}
 
-
-
-
-
 				// seagrass in the ocean
-				float noiseScaleFactor = 0.005f;
-				float fx = x * noiseScaleFactor;
-				float fy = y * noiseScaleFactor;
-				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
-				// prelimMap[pp] += noise;
+				// float noiseScaleFactor = 0.005f;
+				// float fx = x * noiseScaleFactor;
+				// float fy = y * noiseScaleFactor;
+				// float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
 
 				if (world[worldPositionI].height < seaLevel)
 				{
-
-					if (noise > 0.5f)
-					{
-
-						world[worldPositionI].material = MATERIAL_GRASS;
-
-					}
+					// 	if (noise > 0.5f)
+					// 	{
+					world[worldPositionI].material = MATERIAL_GRASS;
+					// 	}
 				}
-
-
-
 			}
-
 			setupGameItems();
-
 		}
 
-
-
-
-		// erode the heightmap.
-
-
 		// place the heightmap on the full size map.
-
 		if (false)
 		{
-
 			for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 			{
-
 				world[worldPositionI].temperature = 300.0f;
-
-
 				unsigned int x = worldPositionI % worldSize;
 				unsigned int y = worldPositionI / worldSize;
 
@@ -5810,58 +5507,12 @@ void setupRandomWorld()
 
 				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
 
-				// map -1,1 to 1,0
-				// noise += 1.0f;
-				// noise *= 0.5f;
-
-				// // printf("noise %f\n", noise);
-
-				// world[worldPositionI].height = noise;
-
-				// world[worldPositionI].height = 0.5f;
-				// float xratio = (x / worldSize);
-				// printf("xratio %f \n", xratio);
-				// printf("")
 				float hDistance = x;
 				float hMax = worldSize;
 
-				// printf("xratio %f  %f / %f \n", fef / kek, fef, kek);
 				world[worldPositionI].height = hDistance / hMax;
-
 				world[worldPositionI].height += noise * 0.5f;
-
-
 				world[worldPositionI].height *= worldSize / 2;
-
-
-				// float incidentAngleSimilarity = 1.0f;
-
-
-
-				// world[worldPositionI].light =  ;// multiplyColorByScalar(color_white, incidentAngleSimilarity)  ;//color_white;
-
-
-
-				// float ratio = x / worldSize;
-				// int maxHeight = 10;
-				// world[worldPositionI].height = maxHeight*ratio;
-
-
-				world[worldPositionI].terrain = MATERIAL_ROCK;
-
-
-
-				// if (x > worldSize / 2)
-				// {
-				// 	// world[worldPositionI].height = (RNG() * 0.5f ) + 0.5f;
-				// }
-				// else
-				// {
-
-				//
-				// 	// world[worldPositionI].height = 0.0f;//5.0f + RNG();
-				// }
-
 
 
 				// walls around the world edge
@@ -5869,140 +5520,16 @@ void setupRandomWorld()
 				{
 					world[worldPositionI].material = MATERIAL_ROCK;
 				}
-
-
-				// unsigned int x = worldPositionI % worldSize;
-
-				// float ratio = x / worldSize;
-
-				// int maxheightdiff = 5;
-
-				// world[worldPositionI].height = maxheightdiff * ratio;
-
-
-
-				// water
-				// unsigned int x = worldSize / 2 ;
-				// unsigned int y = worldSize / 2 ;
-				// int rocksize = 2500;
-				// for (int j = 0; j < rocksize; ++j)
-				// {
-				// 	for (int k = 0; k < rocksize; ++k)
-				// 	{
-				// 		unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-				// 		world[square].terrain = MATERIAL_WATER;
-				// 	}
-				// }
-
-
-
-			}
-
-		}
-
-
-
-
-
-	}
-
-
-
-
-
-
-
-
-
-
-	// spawn the example creature in the center field of view in an empty world.
-	if (worldToLoad == WORLD_EXAMPLECREATURE)
-	{
-		unsigned int wallthickness = 8;
-		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; ++worldPositionI)
-		{
-
-			world[worldPositionI].temperature = 300.0f;
-			world[worldPositionI].light = color_white;
-
-			world[worldPositionI].terrain = MATERIAL_ROCK;
-			// world[worldPositionI].material = MATERIAL_GRASS;
-
-			unsigned int x = worldPositionI % worldSize;
-			unsigned int y = worldPositionI / worldSize;
-			// walls around the world edge
-			if (x < wallthickness || x > worldSize - wallthickness || y < wallthickness  || y > worldSize - wallthickness)
-			{
-				world[worldPositionI].material = MATERIAL_ROCK;
 			}
 		}
-
-		// rock
-		for (int i = 0; i < 100; ++i)
-		{
-			unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-			unsigned int x = randompos % worldSize;
-			unsigned int y = randompos / worldSize;
-			int rocksize = 150;
-			for (int j = 0; j < rocksize; ++j)
-			{
-				for (int k = 0; k < rocksize; ++k)
-				{
-					unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-					world[square].wall = MATERIAL_ROCK;
-				}
-			}
-		}
-
-		// lava
-		// if (useLava)
-		// {
-		// 	for (int i = 0; i < 35; ++i)
-		// 	{
-		// 		unsigned int randompos = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-		// 		unsigned int x = randompos % worldSize;
-		// 		unsigned int y = randompos / worldSize;
-		// 		int rocksize = 250;
-		// 		for (int j = 0; j < rocksize; ++j)
-		// 		{
-		// 			for (int k = 0; k < rocksize; ++k)
-		// 			{
-		// 				unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-		// 				world[square].terrain = TERRAIN_LAVA;
-		// 			}
-		// 		}
-		// 	}
-		// }
-
-		// water
-		unsigned int x = worldSize / 2 ;
-		unsigned int y = worldSize / 2 ;
-		int rocksize = 2500;
-		for (int j = 0; j < rocksize; ++j)
-		{
-			for (int k = 0; k < rocksize; ++k)
-			{
-				unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-				world[square].wall = MATERIAL_WATER;
-			}
-		}
-
-
-		// items
-
-		if (mapViewOnly)
-		{
-			return;
-		}
-
-
-
-
 	}
 }
 
 void tournamentController()
 {
+
+	ZoneScoped;
+
 	if (tournamentCounter >= tournamentInterval )
 	{
 		tournamentCounter = 0;
@@ -6012,6 +5539,13 @@ void tournamentController()
 		tournamentCounter++;
 	}
 
+	if (adversary >= 0 && adversary < numberOfAnimals)
+	{
+		if (animals[adversary].retired)
+		{
+			spawnAdversary(adversaryRespawnPos);
+		}
+	}
 	if (respawnLowSpecies)
 	{
 		unsigned int totalpop = 0;
@@ -6074,6 +5608,8 @@ void tournamentController()
 				if (domingo >= 0)
 				{
 					paintAnimal(domingo);
+					animals[domingo].energy = animals[domingo].maxEnergy;
+					animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
 				}
 			}
 		}
@@ -6084,11 +5620,12 @@ void model()
 {
 	auto start = std::chrono::steady_clock::now();
 
+	ZoneScoped;
+
 	if (!paused)
 	{
 		computeAllAnimalsOneTurn();
 		updateMap();
-		// sprinkleFood();
 	}
 	if (tournament)
 	{
@@ -6123,8 +5660,6 @@ void modelSupervisor()
 
 void startSimulation()
 {
-
-	// setupLogs();
 	setupRandomWorld();
 	boost::thread t7{ modelSupervisor };
 }

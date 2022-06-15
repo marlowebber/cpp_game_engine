@@ -56,6 +56,52 @@ CMAKE_BINARY_DIR = /home/marlo/Documents/cpp_game_engine
 #=============================================================================
 # Targets provided globally by CMake.
 
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+
+.PHONY : list_install_components/fast
+
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
@@ -122,6 +168,19 @@ game: cmake_check_build_system
 game/fast:
 	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/build
 .PHONY : game/fast
+
+#=============================================================================
+# Target rules for targets named TracyClient
+
+# Build rule for target.
+TracyClient: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 TracyClient
+.PHONY : TracyClient
+
+# fast build rule for target.
+TracyClient/fast:
+	$(MAKE) -f tracy/CMakeFiles/TracyClient.dir/build.make tracy/CMakeFiles/TracyClient.dir/build
+.PHONY : TracyClient/fast
 
 src/SimplexNoise.o: src/SimplexNoise.cpp.o
 
@@ -339,15 +398,47 @@ src/utilities.cpp.s:
 	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/utilities.cpp.s
 .PHONY : src/utilities.cpp.s
 
+tracy/TracyClient.o: tracy/TracyClient.cpp.o
+
+.PHONY : tracy/TracyClient.o
+
+# target to build an object file
+tracy/TracyClient.cpp.o:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/tracy/TracyClient.cpp.o
+.PHONY : tracy/TracyClient.cpp.o
+
+tracy/TracyClient.i: tracy/TracyClient.cpp.i
+
+.PHONY : tracy/TracyClient.i
+
+# target to preprocess a source file
+tracy/TracyClient.cpp.i:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/tracy/TracyClient.cpp.i
+.PHONY : tracy/TracyClient.cpp.i
+
+tracy/TracyClient.s: tracy/TracyClient.cpp.s
+
+.PHONY : tracy/TracyClient.s
+
+# target to generate assembly for a file
+tracy/TracyClient.cpp.s:
+	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/tracy/TracyClient.cpp.s
+.PHONY : tracy/TracyClient.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... install/strip"
+	@echo "... install/local"
+	@echo "... install"
+	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... game"
+	@echo "... TracyClient"
 	@echo "... src/SimplexNoise.o"
 	@echo "... src/SimplexNoise.i"
 	@echo "... src/SimplexNoise.s"
@@ -372,6 +463,9 @@ help:
 	@echo "... src/utilities.o"
 	@echo "... src/utilities.i"
 	@echo "... src/utilities.s"
+	@echo "... tracy/TracyClient.o"
+	@echo "... tracy/TracyClient.i"
+	@echo "... tracy/TracyClient.s"
 .PHONY : help
 
 

@@ -176,6 +176,27 @@ CMakeFiles/game.dir/src/main.cpp.o
  /usr/local/include/SDL2/SDL_video.h
  /usr/local/include/SDL2/begin_code.h
  /usr/local/include/SDL2/close_code.h
+ tracy/Tracy.hpp
+ tracy/client/TracyCallstack.h
+ tracy/client/TracyCallstack.hpp
+ tracy/client/TracyFastVector.hpp
+ tracy/client/TracyLock.hpp
+ tracy/client/TracyProfiler.hpp
+ tracy/client/TracyScoped.hpp
+ tracy/client/TracySysTime.hpp
+ tracy/client/tracy_SPSCQueue.h
+ tracy/client/tracy_concurrentqueue.h
+ tracy/client/tracy_rpmalloc.hpp
+ tracy/common/TracyAlign.hpp
+ tracy/common/TracyAlloc.hpp
+ tracy/common/TracyApi.h
+ tracy/common/TracyColor.hpp
+ tracy/common/TracyForceInline.hpp
+ tracy/common/TracyMutex.hpp
+ tracy/common/TracyProtocol.hpp
+ tracy/common/TracyQueue.hpp
+ tracy/common/TracySystem.hpp
+ tracy/common/TracyUwp.hpp
 CMakeFiles/game.dir/src/menus.cpp.o
  /home/marlo/Documents/cpp_game_engine/src/game.h
  /home/marlo/Documents/cpp_game_engine/src/graphics.h
@@ -356,6 +377,27 @@ CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o
  /usr/local/include/SDL2/SDL_video.h
  /usr/local/include/SDL2/begin_code.h
  /usr/local/include/SDL2/close_code.h
+ tracy/Tracy.hpp
+ tracy/client/TracyCallstack.h
+ tracy/client/TracyCallstack.hpp
+ tracy/client/TracyFastVector.hpp
+ tracy/client/TracyLock.hpp
+ tracy/client/TracyProfiler.hpp
+ tracy/client/TracyScoped.hpp
+ tracy/client/TracySysTime.hpp
+ tracy/client/tracy_SPSCQueue.h
+ tracy/client/tracy_concurrentqueue.h
+ tracy/client/tracy_rpmalloc.hpp
+ tracy/common/TracyAlign.hpp
+ tracy/common/TracyAlloc.hpp
+ tracy/common/TracyApi.h
+ tracy/common/TracyColor.hpp
+ tracy/common/TracyForceInline.hpp
+ tracy/common/TracyMutex.hpp
+ tracy/common/TracyProtocol.hpp
+ tracy/common/TracyQueue.hpp
+ tracy/common/TracySystem.hpp
+ tracy/common/TracyUwp.hpp
 CMakeFiles/game.dir/src/utilities.cpp.o
  /home/marlo/Documents/cpp_game_engine/src/utilities.cpp
  /home/marlo/Documents/cpp_game_engine/src/utilities.h
@@ -409,3 +451,59 @@ CMakeFiles/game.dir/src/utilities.cpp.o
  /usr/local/include/SDL2/SDL_video.h
  /usr/local/include/SDL2/begin_code.h
  /usr/local/include/SDL2/close_code.h
+CMakeFiles/game.dir/tracy/TracyClient.cpp.o
+ /home/marlo/Documents/cpp_game_engine/tracy/TracyC.h
+ /home/marlo/Documents/cpp_game_engine/tracy/TracyClient.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyAlloc.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyArmCpuTable.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyCallstack.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyCallstack.h
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyCallstack.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyDebug.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyDxt1.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyDxt1.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyFastVector.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyProfiler.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyProfiler.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyRingBuffer.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyScoped.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyStringHelpers.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracySysTime.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracySysTime.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracySysTrace.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracySysTrace.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/TracyThread.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/tracy_SPSCQueue.h
+ /home/marlo/Documents/cpp_game_engine/tracy/client/tracy_concurrentqueue.h
+ /home/marlo/Documents/cpp_game_engine/tracy/client/tracy_rpmalloc.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/client/tracy_rpmalloc.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyAlign.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyAlloc.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyApi.h
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyForceInline.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyMutex.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyProtocol.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyQueue.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracySocket.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracySocket.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyStackFrames.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyStackFrames.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracySystem.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracySystem.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyUwp.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/TracyYield.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/tracy_lz4.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/common/tracy_lz4.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/alloc.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/backtrace.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/config.h
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/dwarf.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/elf.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/fileline.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/filenames.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/internal.hpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/macho.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/mmapio.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/posix.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/sort.cpp
+ /home/marlo/Documents/cpp_game_engine/tracy/libbacktrace/state.cpp

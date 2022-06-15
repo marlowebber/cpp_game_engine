@@ -6,6 +6,12 @@
 #include "menus.h"
 #include "untitled_marlo_project.h"
 
+
+#ifdef TRACY_ENABLE
+#include <Tracy.hpp>
+#endif
+
+
 // bool paused = false;
 bool flagQuit = false;
 
@@ -28,6 +34,8 @@ void quit ()
 
 void threadInterface()
 {
+
+	    ZoneScoped;
 
 #ifdef THREAD_TIMING
 	auto start = std::chrono::steady_clock::now();
@@ -303,19 +311,19 @@ void threadInterface()
 				break;
 			}
 
-			case SDLK_n:
-			{
+			// case SDLK_n:
+			// {
 
-				toggleErodingRain();
-				break;
-			}
+			// 	toggleErodingRain();
+			// 	break;
+			// }
 
-			case SDLK_b:
-			{
+			// case SDLK_b:
+			// {
 
-				normalizeTerrainHeight();
-				break;
-			}
+			// 	normalizeTerrainHeight();
+			// 	break;
+			// }
 
 
 

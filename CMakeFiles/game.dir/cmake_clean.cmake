@@ -7,6 +7,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/game.dir/src/neuro.cpp.o"
   "CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o"
   "CMakeFiles/game.dir/src/utilities.cpp.o"
+  "CMakeFiles/game.dir/tracy/TracyClient.cpp.o"
   "game"
   "game.pdb"
 )

@@ -14,6 +14,14 @@ find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem thread)
 
+# set options before add_subdirectory
+# available options : TRACY_ENABLE , TRACY_ON_DEMAND , TRACY_NO_BROADCAST ,
+# TRACY_NO_CODE_TRANSFER , ...
+option ( TRACY_ENABLE "" ON)
+option ( TRACY_ON_DEMAND "" ON)
+add_subdirectory ( tracy ) # target : TracyClient or alias Tracy :: TracyClient
+
+
 # Define the framework files.
 set(SRCS
 	src/game.h
@@ -33,6 +41,8 @@ set(SRCS
 	src/untitled_marlo_project.h
 	src/SimplexNoise.cpp
 	src/SimplexNoise.h
+	tracy/TracyClient.cpp
+	tracy/Tracy.hpp
 )
 
 link_directories(
@@ -49,7 +59,9 @@ include_directories (
 add_executable(game ${SRCS} )
 
 target_link_libraries (
+
 	game
+    Tracy::TracyClient 
 	OpenMP::OpenMP_CXX
 	${CMAKE_SOURCE_DIR}/fann/src/libfann.a
 	${SDL2_LIBRARIES}
