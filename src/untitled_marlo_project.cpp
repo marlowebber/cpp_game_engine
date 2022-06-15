@@ -4044,19 +4044,31 @@ void drawGameInterfaceText()
 	// menuY -= spacing;
 
 
-	// printText2D(   std::string("Zoom ") + std::to_string(viewZoom ) , menuX, menuY, textSize);
-	// menuY -= spacing;
+	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
+	menuY += spacing;
 
 
-	// printText2D(   std::string("Mouse X ") + std::to_string(mousePositionX ) + std::string(" Y ") + std::to_string(mousePositionY) , menuX, menuY, textSize);
-	// menuY -= spacing;
+
+
+	// printText2D(   std::string("zoom ") + std::to_string(viewZoom )+  std::string(", pan X ") + std::to_string(viewPanX ) + std::string(", pan Y ") + std::to_string(viewPanY )  , menuX, menuY, textSize);
+	// menuY += spacing;
+
 
 
 	int cursorPosX = cameraPositionX +  mousePositionX ;
 	int cursorPosY = cameraPositionY + mousePositionY;
+
+
+
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 	if (worldCursorPos < worldSquareSize)
 	{
+
+
+		printText2D(   std::string("x ") + std::to_string(cursorPosX ) + std::string(" y ") + std::to_string(cursorPosY) + std::string(" height ") + std::to_string(world[worldCursorPos].height) , menuX, menuY, textSize);
+		menuY += spacing;
+
+
 		// int tempCursorAnimal = world[worldCursorPos].identity;
 		cursorAnimal = world[worldCursorPos].identity;
 		bool animalInSquare = false;
@@ -4263,10 +4275,6 @@ void drawGameInterfaceText()
 		menuY += spacing;
 
 	}
-
-	printText2D(   std::string("FPS ") + std::to_string(fps ) , menuX, menuY, textSize);
-	menuY += spacing;
-
 
 
 
@@ -5060,14 +5068,12 @@ void normalizeTerrainHeight()
 
 	float maxHeight = 0.0f;
 	float minHeight = 0.0f;
-
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 	{
 		if (world[worldPositionI].height > maxHeight)
 		{
 			maxHeight = world[worldPositionI].height;
 		}
-
 		if (world[worldPositionI].height < minHeight)
 		{
 			minHeight = world[worldPositionI].height;
@@ -5075,30 +5081,41 @@ void normalizeTerrainHeight()
 	}
 
 
-	// float ratio = minHeight * maxHeight ;
+
+
+
 	float heightRange =  maxHeight - minHeight ;
 
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 	{
-
 		world [ worldPositionI] .height =  ((world [ worldPositionI] .height - minHeight) / (  heightRange )  ) * (worldSize);
+	}
 
 
-		// float amount =  world [ worldPositionI] .height / heightRange;
-
-		// world [ worldPositionI] .height -= minHeight;
-
-		// world [ worldPositionI] .height *= amount;
 
 
-		// world [ worldPositionI] .height = 0 + (world [ worldPositionI] .height * ratio);
-
+	float postMaxHeight = 0.0f;
+	float postMinHeight = 0.0f;
+	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+	{
+		if (world[worldPositionI].height > postMaxHeight)
+		{
+			postMaxHeight = world[worldPositionI].height;
+		}
+		if (world[worldPositionI].height < postMinHeight)
+		{
+			postMinHeight = world[worldPositionI].height;
+		}
 	}
 
 
 
 
 
+
+
+
+	printf("Terrain normalized. Pre max %f, min %f | Post max %f, min %f\n", maxHeight, minHeight, postMaxHeight, postMinHeight);
 
 
 
@@ -5189,13 +5206,42 @@ void copyPrelimToRealMap()
 
 
 
-unsigned int pixelsPer = worldSize / prelimSize;
+	unsigned int pixelsPer = worldSize / prelimSize;
 
+
+	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+	{
+		/* code */
+
+		unsigned int x = worldPositionI % worldSize;
+		unsigned int y = worldPositionI / worldSize;
+
+		unsigned int px = x / pixelsPer;
+		unsigned int py = y / pixelsPer;
+
+		unsigned int prelimSampleIndex = (prelimSize * py) + px;
+
+		world[worldPositionI].height = prelimMap[prelimSampleIndex] ;
+	}
 
 
 }
 
 
+
+void recomputeTerrainLighting()
+{
+	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+	{
+
+		computeLight( worldPositionI, sunXangle, sunYangle);
+
+		if (world[worldPositionI].height < seaLevel)
+		{
+			world[worldPositionI].wall = MATERIAL_WATER;
+		}
+	}
+}
 
 
 
@@ -5242,6 +5288,54 @@ void setupRandomWorld()
 
 
 
+			// seed the prelim map with noise.
+
+			float initWaterLevel = 1.0f;
+
+			for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
+			{
+
+				unsigned int x = pp % prelimSize;
+				unsigned int y = pp / prelimSize;
+
+
+				float hDistance = x;
+				float hMax = worldSize;
+				prelimMap[pp] = hDistance / hMax;
+
+
+
+				float noiseScaleFactor = 0.005f;
+				float fx = x * noiseScaleFactor;
+				float fy = y * noiseScaleFactor;
+				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+				prelimMap[pp] += noise;
+
+
+				noiseScaleFactor = 0.05f;
+				fx = x * noiseScaleFactor;
+				fy = y * noiseScaleFactor;
+				noise =   SimplexNoise::noise(fx, fy) * 0.1f;   // Get the noise value for the coordinate
+				prelimMap[pp] += noise;
+
+
+				noiseScaleFactor = 0.5f;
+				fx = x * noiseScaleFactor;
+				fy = y * noiseScaleFactor;
+				noise =   SimplexNoise::noise(fx, fy) * 0.01f;   // Get the noise value for the coordinate
+				prelimMap[pp] += noise;
+
+
+
+				prelimWater[pp] = initWaterLevel;
+
+			}
+
+
+
+
+
+
 			// TinyErode::Simulation simulation;
 
 
@@ -5249,7 +5343,7 @@ void setupRandomWorld()
 // int h = 480;
 			TinyErode::Simulation simulation(prelimSize, prelimSize);
 
-			float initWaterLevel = 1.0f;
+
 			// int w = 640;
 			// int h = 480;
 			// std::vector<float> height(prelimSize * prelimSize);
@@ -5258,9 +5352,12 @@ void setupRandomWorld()
 			simulation.SetMetersPerX(1000.0f / prelimSize);
 			simulation.SetMetersPerY(1000.0f / prelimSize);
 
+			int iterations = 256;
 
+			for (int i = 0; i < iterations; i++)
+			{
 
-			for (int i = 0; i < 1024; i++) {
+				printf("%i / %i\n", i, iterations);
 
 				// Determines where the water will flow.
 				simulation.ComputeFlowAndTilt(getHeight, getWater);
@@ -5280,6 +5377,39 @@ void setupRandomWorld()
 
 // Drops all suspended sediment back into the terrain.
 			simulation.TerminateRainfall(addHeight);
+
+
+
+
+			copyPrelimToRealMap();
+
+			normalizeTerrainHeight();
+
+			recomputeTerrainLighting();
+
+
+
+			// place items and terrain
+			for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+			{
+
+
+				unsigned int x = worldPositionI % worldSize;
+				unsigned int y = worldPositionI / worldSize;
+
+
+				world[worldPositionI].terrain = MATERIAL_ROCK;
+
+
+
+
+				// walls around the world edge
+				if (x < wallthickness || x > worldSize - wallthickness || y < wallthickness  || y > worldSize - wallthickness)
+				{
+					world[worldPositionI].material = MATERIAL_ROCK;
+				}
+
+			}
 
 		}
 
@@ -5399,19 +5529,9 @@ void setupRandomWorld()
 
 		}
 
-		normalizeTerrainHeight();
 
 
-		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
-		{
 
-			computeLight( worldPositionI, sunXangle, sunYangle);
-
-			if (world[worldPositionI].height < seaLevel)
-			{
-				world[worldPositionI].wall = MATERIAL_WATER;
-			}
-		}
 
 	}
 

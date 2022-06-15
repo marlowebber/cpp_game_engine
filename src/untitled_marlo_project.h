@@ -5,8 +5,8 @@ void startSimulation();
 void model();
 void camera();
 
-const int prelimSize = 512;
-const int worldSize = 512;
+const int prelimSize = 256;
+const int worldSize = 4096;
 
 extern unsigned int cameraPositionX ;
 extern unsigned int cameraPositionY ;
