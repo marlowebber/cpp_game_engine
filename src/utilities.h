@@ -81,6 +81,7 @@ const Color color_peach       = Color(	1.0, 0.375, 0.250, 1.0f);
 const Color color_peach_light = Color(0.950, 0.681, 0.627, 1.0f);
 
 
+const Color color_blue_thirdClear = Color(0.1, 0.35, 1.0, 0.35f);
 
 
 

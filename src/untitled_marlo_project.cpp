@@ -1777,7 +1777,7 @@ Color materialColors(unsigned int material)
 	case MATERIAL_GLASS:
 		return color_lightblue;
 	case MATERIAL_WATER:
-		return color_darkblue;
+		return color_blue_thirdClear;
 	case MATERIAL_FIRE:
 		return color_orange;
 	}
@@ -1935,7 +1935,10 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 
 		// you can see the three material layers in order, wall then material then floor.
 		displayColor = filterColor( materialColors(world[worldI].terrain) ,  materialColor);
-		displayColor = filterColor( displayColor,  addColor(materialColors(world[worldI].wall), tint_wall) );
+
+		Color wallColor = addColor(materialColors(world[worldI].wall), tint_wall);
+
+		displayColor = filterColor( displayColor, wallColor  );
 
 
 		// }
@@ -4826,16 +4829,16 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
 		{
 			world[i].terrain = MATERIAL_VOIDMETAL;
-			world[i].material = MATERIAL_NOTHING;
-			world[i].wall = MATERIAL_NOTHING;
+			// world[i].material = MATERIAL_NOTHING;
+			// world[i].wall = MATERIAL_NOTHING;
 		}
 
 
-		if (abs(xdiff) < baseSize * 1.5 && abs(ydiff) < baseSize * 1.5)
-		{
+		// if (abs(xdiff) < baseSize * 1.5 && abs(ydiff) < baseSize * 1.5)
+		// {
 
-			world[i].wall = MATERIAL_NOTHING;
-		}
+		// 	world[i].wall = MATERIAL_NOTHING;
+		// }
 
 
 		// make walls around it
@@ -5249,6 +5252,127 @@ void recomputeTerrainLighting()
 }
 
 
+
+
+unsigned int getRandomPosition(bool underwater)
+{
+
+
+	// unsigned int maxTries = 1000;
+	// unsigned int triesSoFar  = 0;
+	while (true)
+	{
+		// triesSoFar ++;
+		// if (triesSoFar > maxTries)
+		// {
+		// 	return -1;
+		// }
+
+		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+
+
+		unsigned int x = randomI % worldSize;
+		unsigned int y = randomI / worldSize;
+
+		if (x > baseSize && x < (worldSize - baseSize) && y > baseSize && y < (worldSize - baseSize))
+		{
+
+
+			bool allAir = true;
+			bool allWater = true;
+			for (int dy = -(baseSize / 2); dy < baseSize / 2; ++dy)
+			{
+
+
+				for (int dx = -(baseSize / 2); dx < baseSize / 2; ++dx)
+				{
+					unsigned int baseCheckI = ((y + dy) * worldSize  ) + (x + dx) ;
+
+					// if (underwater)
+					// {
+					if (world[baseCheckI].wall == MATERIAL_NOTHING)
+					{
+						allWater = false;
+					}
+					// }
+					// else
+					// {
+					if (world[baseCheckI].wall == MATERIAL_WATER)
+					{
+						allAir = false;
+					}
+					// }
+
+
+
+					if (world[baseCheckI].wall == MATERIAL_VOIDMETAL)
+					{
+						allAir = false;
+						allWater = false;
+					}
+
+
+
+
+
+				}
+
+
+			}
+
+
+			// if (allWater || allAir)
+			// {	
+			// 	printf("gupta\n");
+			// }
+
+
+
+			if (underwater)
+			{
+				if (allWater)
+				{
+					return randomI;
+					// break;
+				}
+			}
+
+			else
+			{
+				if (allAir)
+				{
+					return randomI;
+				}
+			}
+
+
+
+
+
+
+		}
+
+
+
+
+	}
+
+
+
+
+
+
+
+	if (underwater)
+	{
+
+	}
+
+
+
+}
+
+
 void setupGameItems()
 {
 
@@ -5260,16 +5384,31 @@ void setupGameItems()
 	// get the highest point in the world.
 
 
-	unsigned int highestPointIndex = 0;
-	for (int k = 0; k < worldSquareSize; ++k)
-	{
-		if (world[k].height > highestPointIndex)
-		{
-			highestPointIndex = k;
-		}
-	}
-	unsigned int targetWorldPositionI =  highestPointIndex;//( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+	// unsigned int highestPointIndex = 0;
+	// for (int k = 0; k < worldSquareSize; ++k)
+	// {
 
+	// 	unsigned int x = k % worldSize;
+	// 	unsigned int y = k / worldSize;
+
+	// 	if (x > baseSize && x < (worldSize - baseSize) && y > baseSize && y < (worldSize - baseSize))
+	// 	{
+
+	// 		if (world[k].height > highestPointIndex)
+	// 		{
+	// 			highestPointIndex = k;
+	// 		}
+	// 	}
+	// }
+	unsigned int targetWorldPositionI =  getRandomPosition(false);
+
+// highestPointIndex;//( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+
+	// unsigned int x = targetWorldPositionI % worldSize;
+	// unsigned int y = targetWorldPositionI / worldSize;
+
+
+// if ( )
 
 
 	setupBuilding_playerBase(targetWorldPositionI);
@@ -5281,43 +5420,42 @@ void setupGameItems()
 	                    targetWorldPositionI, false);
 
 
-targetWorldPositionI += 25;
-
-	unsigned int x = targetWorldPositionI % worldSize;
-	unsigned int y = targetWorldPositionI / worldSize;
+	targetWorldPositionI += 25;
 
 // camera
-	cameraPositionX = x;
-	cameraPositionY = y;
+	// cameraPositionX = x;
+	// cameraPositionY = y;
 
 
 	spawnPlayer();
 
 
 	// base 2
-	x = worldSize / 2;
-	y = worldSize / 2;
+	// x = worldSize / 2;
+	// y = worldSize / 2;
 
 
 
-	targetWorldPositionI = (y * worldSize) + x;
+	// targetWorldPositionI = (y * worldSize) + x;
 
-	int k = 0;
-	while (true)
-	{	targetWorldPositionI ++; k++;
-		if (k > worldSize )
-		{
-			break;
-		}
-		if (targetWorldPositionI < worldSquareSize && k > 50)
-		{
-			if (world[targetWorldPositionI].wall != MATERIAL_WATER)
-			{
-				break;
-			}
-		}
+	// int k = 0;
+	// while (true)
+	// {	targetWorldPositionI ++; k++;
+	// 	if (k > worldSize )
+	// 	{
+	// 		break;
+	// 	}
+	// 	if (targetWorldPositionI < worldSquareSize && k > ( worldSize / 4) )
+	// 	{
+	// 		if (world[targetWorldPositionI].wall != MATERIAL_WATER)
+	// 		{
+	// 			break;
+	// 		}
+	// 	}
 
-	}
+	// }
+
+	targetWorldPositionI =  getRandomPosition(false);
 
 	setupBuilding_playerBase(targetWorldPositionI);
 
@@ -5337,36 +5475,36 @@ targetWorldPositionI += 25;
 
 
 
-	// base 3
-	// targetWorldPositionI += (400);
+	// // base 3
+	// // targetWorldPositionI += (400);
 
-	 x = worldSize / 2;
-	 y = worldSize / 2;
-
-
-
-	targetWorldPositionI = (y * worldSize) + x;
-
-	// int
-	 k = 0;
-	while (true)
-	{	targetWorldPositionI --; k++;
-		if (k > worldSize )
-		{
-			break;
-		}
-		if (targetWorldPositionI < worldSquareSize && k > 50)
-		{
-			if (world[targetWorldPositionI].wall == MATERIAL_WATER)
-			{
-				break;
-			}
-		}
-
-	}
+	// x = worldSize / 2;
+	// y = worldSize / 2;
 
 
 
+	// targetWorldPositionI = (y * worldSize) + x;
+
+	// // int
+	// k = 0;
+	// while (true)
+	// {	targetWorldPositionI --; k++;
+	// 	if (k > worldSize )
+	// 	{
+	// 		break;
+	// 	}
+	// 	if (targetWorldPositionI < worldSquareSize && k > ( worldSize / 4))
+	// 	{
+	// 		if (world[targetWorldPositionI].wall == MATERIAL_WATER)
+	// 		{
+	// 			break;
+	// 		}
+	// 	}
+
+	// }
+
+
+	targetWorldPositionI =  getRandomPosition(true);
 
 	setupBuilding_playerBase(targetWorldPositionI);
 
@@ -5375,7 +5513,7 @@ targetWorldPositionI += 25;
 	                    animals[i],
 	                    targetWorldPositionI, false);
 
-targetWorldPositionI += 25;
+	targetWorldPositionI += 25;
 	// int i = 1;
 	setupExampleGun(i);
 	spawnAnimalIntoSlot(2,
@@ -5399,7 +5537,12 @@ targetWorldPositionI += 25;
 
 // 5
 
-	targetWorldPositionI = (baseSize * worldSize) +  extremelyFastNumberFromZeroTo(worldSquareSize - (baseSize * worldSize)) ; //+= (400) * worldSize;
+	// targetWorldPositionI = (baseSize * worldSize) +  extremelyFastNumberFromZeroTo(worldSquareSize - (baseSize * worldSize)) ; //+= (400) * worldSize;
+
+
+
+	targetWorldPositionI =  getRandomPosition(true);
+
 	setupBuilding_playerBase(targetWorldPositionI);
 
 
@@ -5421,7 +5564,10 @@ targetWorldPositionI += 25;
 
 // 6
 
-	targetWorldPositionI = (baseSize * worldSize) +  extremelyFastNumberFromZeroTo(worldSquareSize - (baseSize * worldSize)) ; //+= (400) * worldSize;
+	// targetWorldPositionI = (baseSize * worldSize) +  extremelyFastNumberFromZeroTo(worldSquareSize - (baseSize * worldSize)) ; //+= (400) * worldSize;
+
+
+	targetWorldPositionI =  getRandomPosition(true);
 
 	setupBuilding_playerBase(targetWorldPositionI);
 
@@ -5607,6 +5753,30 @@ void setupRandomWorld()
 				{
 					world[worldPositionI].material = MATERIAL_ROCK;
 				}
+
+
+
+
+
+				// seagrass in the ocean
+				float noiseScaleFactor = 0.005f;
+				float fx = x * noiseScaleFactor;
+				float fy = y * noiseScaleFactor;
+				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+				// prelimMap[pp] += noise;
+
+				if (world[worldPositionI].height < seaLevel)
+				{
+
+					if (noise > 0.5f)
+					{
+
+						world[worldPositionI].material = MATERIAL_GRASS;
+
+					}
+				}
+
+
 
 			}
 
