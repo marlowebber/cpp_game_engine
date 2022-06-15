@@ -31,6 +31,8 @@
 
 #include "SimplexNoise.h"
 
+#include "TinyErode.h"
+
 #define MATERIAL_NOTHING           0
 #define ORGAN_MOUTH_VEG            1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
 #define ORGAN_MOUTH_SCAVENGE       2
@@ -95,7 +97,7 @@
 #define WORLD_EXAMPLECREATURE 2
 #define WORLD_CALADAN 3
 
-const float seaLevel = 0.5f * worldSize/2; 
+const float seaLevel = 0.5f * worldSize;
 
 unsigned int worldToLoad = WORLD_CALADAN;
 
@@ -122,6 +124,12 @@ const bool useTimers             = false;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = false;
 const bool mapViewOnly           = false;
+
+
+const unsigned int prelimSquareSize = prelimSize * prelimSize;
+float prelimMap[prelimSquareSize];
+float prelimWater[prelimSquareSize];
+
 
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
@@ -1950,8 +1958,8 @@ bool materialDegrades(unsigned int material)
 
 
 float getNormalisedHeight(unsigned int worldPositionI)
-{	
-	float answer=   world[worldPositionI].height / (worldSize/2);
+{
+	float answer =   world[worldPositionI].height / (worldSize);
 	return answer;
 }
 
@@ -2003,7 +2011,7 @@ void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAn
 		// {
 		// 	printf("%f\n", world[worldPositionI].height);
 		// }
-		world[worldPositionI].light = multiplyColorByScalar(color_white,getNormalisedHeight(worldPositionI) );
+		world[worldPositionI].light = multiplyColorByScalar(color_white, getNormalisedHeight(worldPositionI) );
 
 
 
@@ -2055,13 +2063,13 @@ void erodingRain(unsigned int worldPositionI)
 
 	Vec_f2 fposition = Vec_f2(x, y);
 
-	float friction = 0.1f;
+	float friction = 0.65f;
 	float evaporationRate = 0.999f;
-	float rainStrength = 1.0f;
+	float rainStrength = 10.0f;
 
-	float rainTimestep = 0.5f;
+	float rainTimestep = 1.0f;
 
-	float maxSpeed = 10.0f;
+	float maxSpeed = 2.0f;
 
 	// if (raindrops % 10000 == 0)
 	// {
@@ -2070,6 +2078,12 @@ void erodingRain(unsigned int worldPositionI)
 	// 	// normalizeTerrainHeight();
 	// }
 
+	bool tracer = false;
+	if (extremelyFastNumberFromZeroTo(1000) == 0)
+	{
+		tracer  = true;
+	}
+
 	while (true)
 	{
 
@@ -2077,9 +2091,15 @@ void erodingRain(unsigned int worldPositionI)
 		// break;
 		if (position > worldSize + 1 && position < worldSquareSize - (worldSize + 1))
 		{
+			if (tracer)
+			{
 
-			float xdrop =  (  world[position - 1].height - world[position + 1].height ) * -1.0f;
-			float ydrop = ( world[position - worldSize].height - world[position + worldSize].height )  * -1.0f;
+
+				// world[position].material = MATERIAL_FIRE;
+			}
+
+			float xdrop =  (  world[position - 1].height - world[position + 1].height ) * 1.0f;
+			float ydrop = ( world[position - worldSize].height - world[position + worldSize].height )  * 1.0f;
 
 			// evaporate
 			dropVolume *= evaporationRate;
@@ -2118,10 +2138,30 @@ void erodingRain(unsigned int worldPositionI)
 
 			float deltaTerrain = dropVolume * affect;
 
-			world[position].height += deltaTerrain;
 
+// 			for (int n = 0; n < nNeighbours; ++n)
+// 			{
+// 				unsigned int neighbour = position + neighbourOffsets[n];
+// 				if (neighbour < worldSquareSize)
+// 				{
+
+// 					if (world[neighbour].height + deltaTerrain > 0.0f)
+// 					{
+// 						world[neighbour].height += deltaTerrain;
+// 					}
+// // void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
+// 					computeLight(neighbour, sunXangle, sunYangle);
+
+
+// 				}
+// 			}
+			if (world[position].height + deltaTerrain > 0.0f)
+			{
+				world[position].height += deltaTerrain;
+			}
 // void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
 			computeLight(position, sunXangle, sunYangle);
+
 
 
 			// printf(".");
@@ -2131,6 +2171,16 @@ void erodingRain(unsigned int worldPositionI)
 
 			velocity.x *= (1.0f - (rainTimestep * friction));
 			velocity.y *= (1.0f - (rainTimestep * friction));
+
+
+			float magnitude_velocity = sqrt((velocity.x * velocity.x) + (velocity.y * velocity.y));
+
+			if (magnitude_velocity > maxSpeed)
+			{
+				float reduction = maxSpeed / magnitude_velocity;
+				velocity.x *= reduction;
+				velocity.y *= reduction;
+			}
 
 			// if ( abs(velocity.x) > maxSpeed) { velocity.x *= (  abs(velocity.x)/maxSpeed  );}
 			// if ( abs(velocity.y) > maxSpeed) { velocity.y *= (  abs(velocity.y)/maxSpeed  );}
@@ -5031,7 +5081,7 @@ void normalizeTerrainHeight()
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 	{
 
-		world [ worldPositionI] .height =  ((world [ worldPositionI] .height - minHeight) / (  heightRange )  ) * (worldSize/2);
+		world [ worldPositionI] .height =  ((world [ worldPositionI] .height - minHeight) / (  heightRange )  ) * (worldSize);
 
 
 		// float amount =  world [ worldPositionI] .height / heightRange;
@@ -5064,6 +5114,91 @@ void normalizeTerrainHeight()
 
 
 
+
+
+
+// tinyerode stuff
+
+auto getHeight = [](int x, int y) -> float {
+
+	unsigned int address = (y * prelimSize) + x;
+
+	return  prelimMap[address];  ///* return height value at (x, y) */ 0.0f;
+};
+
+auto addHeight = [](int x, int y, float deltaHeight) {
+	unsigned int address = (y * prelimSize) + x;
+
+	prelimMap[address] += deltaHeight ;   /* add 'deltaHeight' to the location (x, y) */
+};
+
+
+auto getWater = [](int x, int y) -> float {
+	unsigned int address = (y * prelimSize) + x;
+
+	return  prelimWater[address]; //	return /* return water level at (x, y) */ return 0.0f;
+};
+
+auto addWater = [](int x, int y, float deltaWater) -> float {
+
+	/* Note: 'deltaWater' can be negative. */
+
+
+	unsigned int address = (y * prelimSize) + x;
+
+	// return
+
+	float previousWaterLevel =  prelimWater[address]; //1.0f;
+
+	prelimWater[address] += deltaWater;
+
+	if (prelimWater[address] < 0.0f)
+	{
+		prelimWater[address]  = 0.0f;
+	}
+
+	/* The function returns the new water level. It shuold not
+	 * fall below zero. */
+
+
+	return std::max(0.0f, previousWaterLevel + deltaWater);
+};
+
+
+auto carryCapacity = [](int x, int y) -> float {
+	return 0.1;
+};
+
+auto deposition = [](int x, int y) -> float {
+	return 0.1;
+};
+
+auto erosion = [](int x, int y) -> float {
+	return 0.1;
+};
+
+auto evaporation = [](int x, int y) -> float {
+	return 0.1;
+};
+
+
+
+
+void copyPrelimToRealMap()
+{
+
+
+
+unsigned int pixelsPer = worldSize / prelimSize;
+
+
+
+}
+
+
+
+
+
 void setupRandomWorld()
 {
 	resetAnimals();
@@ -5077,118 +5212,206 @@ void setupRandomWorld()
 
 		raindrops = 0;
 		unsigned int wallthickness = 8;
-		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+
+		if (false)
+		{
+			// create the preliminary (small) heightmap.
+			// for (unsigned int prelimPosition = 0; prelimPosition < prelimSquareSize; prelimPosition++)
+			// {
+			// 	unsigned int x = prelimPosition % prelimSize;
+			// 	unsigned int y = prelimPosition / prelimSize;
+
+
+			// 	float noiseScaleFactor = 0.0005f;
+			// 	float fx = x * noiseScaleFactor;
+			// 	float fy = y * noiseScaleFactor;
+
+
+			// 	float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+
+			// }
+		}
+
+
+
+
+
+		if (true)
 		{
 
-			world[worldPositionI].temperature = 300.0f;
-
-
-			unsigned int x = worldPositionI % worldSize;
-			unsigned int y = worldPositionI / worldSize;
-
-			float noiseScaleFactor = 0.0005f;
-			float fx = x * noiseScaleFactor;
-			float fy = y * noiseScaleFactor;
-
-			float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
-
-			// map -1,1 to 1,0
-			// noise += 1.0f;
-			// noise *= 0.5f;
-
-			// // printf("noise %f\n", noise);
-
-			// world[worldPositionI].height = noise;
-
-			// world[worldPositionI].height = 0.5f;
-			// float xratio = (x / worldSize);
-			// printf("xratio %f \n", xratio);
-			// printf("")
-			float hDistance = x;
-			float hMax = worldSize;
-
-			// printf("xratio %f  %f / %f \n", fef / kek, fef, kek);
-			world[worldPositionI].height = hDistance / hMax;
-
-			world[worldPositionI].height += noise * 0.5f;
-
-
-			world[worldPositionI].height *= worldSize / 2;
-
-
-			// float incidentAngleSimilarity = 1.0f;
 
 
 
-			// world[worldPositionI].light =  ;// multiplyColorByScalar(color_white, incidentAngleSimilarity)  ;//color_white;
+			// TinyErode::Simulation simulation;
 
 
-			computeLight( worldPositionI, sunXangle, sunYangle);
+// int w = 640;
+// int h = 480;
+			TinyErode::Simulation simulation(prelimSize, prelimSize);
+
+			float initWaterLevel = 1.0f;
+			// int w = 640;
+			// int h = 480;
+			// std::vector<float> height(prelimSize * prelimSize);
+			// std::vector<float> water(prelimSize * prelimSize, initWaterLevel);
+
+			simulation.SetMetersPerX(1000.0f / prelimSize);
+			simulation.SetMetersPerY(1000.0f / prelimSize);
 
 
 
-			// float ratio = x / worldSize;
-			// int maxHeight = 10;
-			// world[worldPositionI].height = maxHeight*ratio;
+			for (int i = 0; i < 1024; i++) {
 
+				// Determines where the water will flow.
+				simulation.ComputeFlowAndTilt(getHeight, getWater);
 
-			world[worldPositionI].terrain = MATERIAL_ROCK;
+				// Moves the water around the terrain based on the previous computed values.
+				simulation.TransportWater(addWater);
 
-			if (world[worldPositionI].height < seaLevel)
-			{
-				world[worldPositionI].wall = MATERIAL_WATER;
+				// Where the magic happens. Soil is picked up from the terrain and height
+				// values are subtracted based on how much was picked up. Then the sediment
+				// moves along with the water and is later deposited.
+				simulation.TransportSediment(carryCapacity, deposition, erosion, addHeight);
+
+				// Due to heat, water is gradually evaported. This will also cause soil
+				// deposition since there is less water to carry soil.
+				simulation.Evaporate(addWater, evaporation);
 			}
 
-			// if (x > worldSize / 2)
-			// {
-			// 	// world[worldPositionI].height = (RNG() * 0.5f ) + 0.5f;
-			// }
-			// else
-			// {
-
-			// 	
-			// 	// world[worldPositionI].height = 0.0f;//5.0f + RNG();
-			// }
-
-
-
-			// walls around the world edge
-			if (x < wallthickness || x > worldSize - wallthickness || y < wallthickness  || y > worldSize - wallthickness)
-			{
-				world[worldPositionI].material = MATERIAL_ROCK;
-			}
-
-
-			// unsigned int x = worldPositionI % worldSize;
-
-			// float ratio = x / worldSize;
-
-			// int maxheightdiff = 5;
-
-			// world[worldPositionI].height = maxheightdiff * ratio;
-
-
-
-			// water
-			// unsigned int x = worldSize / 2 ;
-			// unsigned int y = worldSize / 2 ;
-			// int rocksize = 2500;
-			// for (int j = 0; j < rocksize; ++j)
-			// {
-			// 	for (int k = 0; k < rocksize; ++k)
-			// 	{
-			// 		unsigned int square = ( (y + j) * worldSize ) + ( x + k );
-			// 		world[square].terrain = MATERIAL_WATER;
-			// 	}
-			// }
-
-
+// Drops all suspended sediment back into the terrain.
+			simulation.TerminateRainfall(addHeight);
 
 		}
 
 
 
+
+		// erode the heightmap.
+
+
+		// place the heightmap on the full size map.
+
+		if (false)
+		{
+
+			for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+			{
+
+				world[worldPositionI].temperature = 300.0f;
+
+
+				unsigned int x = worldPositionI % worldSize;
+				unsigned int y = worldPositionI / worldSize;
+
+				float noiseScaleFactor = 0.0005f;
+				float fx = x * noiseScaleFactor;
+				float fy = y * noiseScaleFactor;
+
+				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+
+				// map -1,1 to 1,0
+				// noise += 1.0f;
+				// noise *= 0.5f;
+
+				// // printf("noise %f\n", noise);
+
+				// world[worldPositionI].height = noise;
+
+				// world[worldPositionI].height = 0.5f;
+				// float xratio = (x / worldSize);
+				// printf("xratio %f \n", xratio);
+				// printf("")
+				float hDistance = x;
+				float hMax = worldSize;
+
+				// printf("xratio %f  %f / %f \n", fef / kek, fef, kek);
+				world[worldPositionI].height = hDistance / hMax;
+
+				world[worldPositionI].height += noise * 0.5f;
+
+
+				world[worldPositionI].height *= worldSize / 2;
+
+
+				// float incidentAngleSimilarity = 1.0f;
+
+
+
+				// world[worldPositionI].light =  ;// multiplyColorByScalar(color_white, incidentAngleSimilarity)  ;//color_white;
+
+
+
+				// float ratio = x / worldSize;
+				// int maxHeight = 10;
+				// world[worldPositionI].height = maxHeight*ratio;
+
+
+				world[worldPositionI].terrain = MATERIAL_ROCK;
+
+
+
+				// if (x > worldSize / 2)
+				// {
+				// 	// world[worldPositionI].height = (RNG() * 0.5f ) + 0.5f;
+				// }
+				// else
+				// {
+
+				//
+				// 	// world[worldPositionI].height = 0.0f;//5.0f + RNG();
+				// }
+
+
+
+				// walls around the world edge
+				if (x < wallthickness || x > worldSize - wallthickness || y < wallthickness  || y > worldSize - wallthickness)
+				{
+					world[worldPositionI].material = MATERIAL_ROCK;
+				}
+
+
+				// unsigned int x = worldPositionI % worldSize;
+
+				// float ratio = x / worldSize;
+
+				// int maxheightdiff = 5;
+
+				// world[worldPositionI].height = maxheightdiff * ratio;
+
+
+
+				// water
+				// unsigned int x = worldSize / 2 ;
+				// unsigned int y = worldSize / 2 ;
+				// int rocksize = 2500;
+				// for (int j = 0; j < rocksize; ++j)
+				// {
+				// 	for (int k = 0; k < rocksize; ++k)
+				// 	{
+				// 		unsigned int square = ( (y + j) * worldSize ) + ( x + k );
+				// 		world[square].terrain = MATERIAL_WATER;
+				// 	}
+				// }
+
+
+
+			}
+
+		}
+
 		normalizeTerrainHeight();
+
+
+		for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+		{
+
+			computeLight( worldPositionI, sunXangle, sunYangle);
+
+			if (world[worldPositionI].height < seaLevel)
+			{
+				world[worldPositionI].wall = MATERIAL_WATER;
+			}
+		}
 
 	}
 

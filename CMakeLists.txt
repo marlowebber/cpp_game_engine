@@ -28,6 +28,7 @@ set(SRCS
 	src/utilities.cpp
 	src/neuro.cpp
 	src/neuro.h
+	src/TinyErode.h
 	src/untitled_marlo_project.cpp
 	src/untitled_marlo_project.h
 	src/SimplexNoise.cpp
