@@ -9,6 +9,7 @@ project(game)
 # To make a debug build
 set(CMAKE_CXX_FLAGS "-g")
 
+
 find_package(OpenMP REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)

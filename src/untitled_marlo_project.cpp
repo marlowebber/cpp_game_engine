@@ -54,30 +54,29 @@
 #define ORGAN_ADDLIFESPAN          13
 #define ORGAN_NEURON               15
 #define ORGAN_BIASNEURON           16    // can be thought of as ORGAN_SENSOR_CONSTANTVALUE
-#define ORGAN_SENSOR_TIMER         17
-#define ORGAN_SENSOR_BODYANGLE	   18
-#define ORGAN_SENSOR_TRACKER       19
-#define ORGAN_SPEAKER              20
-#define ORGAN_SENSOR_EAR           21
-#define ORGAN_MUSCLE_STRAFE        22
-#define ORGAN_SENSOR_PHEROMONE     23
-#define ORGAN_EMITTER_PHEROMONE    24
-#define ORGAN_MEMORY_RX            25
-#define ORGAN_MEMORY_TX            26
-#define ORGAN_GILL                 27
-#define ORGAN_LUNG                 28
-#define ORGAN_SENSOR_HUNGER        29
-#define ORGAN_SENSOR_AGE           30
-#define ORGAN_SENSOR_LAST_STRANGER 31
-#define ORGAN_SENSOR_LAST_KIN      32
-#define ORGAN_SENSOR_PARENT        33
-#define ORGAN_SENSOR_BIRTHPLACE    34
-#define ORGAN_SENSOR_TOUCH         35
-#define ORGAN_COLDADAPT            36
-#define ORGAN_HEATADAPT            37
-#define ORGAN_GRABBER              38
+#define ORGAN_SENSOR_BODYANGLE	   17
+#define ORGAN_SENSOR_TRACKER       18
+#define ORGAN_SPEAKER              19
+#define ORGAN_SENSOR_EAR           20
+#define ORGAN_MUSCLE_STRAFE        21
+#define ORGAN_SENSOR_PHEROMONE     22
+#define ORGAN_EMITTER_PHEROMONE    23
+#define ORGAN_MEMORY_RX            24
+#define ORGAN_MEMORY_TX            25
+#define ORGAN_GILL                 26
+#define ORGAN_LUNG                 27
+#define ORGAN_SENSOR_HUNGER        28
+#define ORGAN_SENSOR_AGE           29
+#define ORGAN_SENSOR_LAST_STRANGER 30
+#define ORGAN_SENSOR_LAST_KIN      31
+#define ORGAN_SENSOR_PARENT        32
+#define ORGAN_SENSOR_BIRTHPLACE    33
+#define ORGAN_SENSOR_TOUCH         34
+#define ORGAN_COLDADAPT            35
+#define ORGAN_HEATADAPT            36
+#define ORGAN_GRABBER              37
 
-#define numberOfOrganTypes        39 // the number limit of growable genes
+#define numberOfOrganTypes        38 // the number limit of growable genes
 
 #define MARKER                    50
 
@@ -302,8 +301,8 @@ struct Cell
 {
 	unsigned int organ;
 	float signalIntensity;
-	float timerFreq;
-	float timerPhase;  // also used as memory state
+	// float timerFreq;
+	// float timerPhase;  // also used as memory state
 	Color color;
 	unsigned int speakerChannel;
 	int eyeLookX;
@@ -359,7 +358,6 @@ struct Animal
 	float lastfposy;
 
 	bool isMachine;
-	// void (* machineCallback)(int, int);
 	unsigned int machineCallback;
 };
 
@@ -1059,7 +1057,7 @@ bool organIsASensor(unsigned int organ)
 	if (
 	    organ == ORGAN_SENSOR_EYE ||
 	    organ == ORGAN_SENSOR_TOUCH ||
-	    organ == ORGAN_SENSOR_TIMER ||
+	    // organ == ORGAN_SENSOR_TIMER ||
 	    organ == ORGAN_SENSOR_BODYANGLE ||
 	    organ == ORGAN_SENSOR_TRACKER      ||
 	    organ == ORGAN_SENSOR_EAR        ||
@@ -1593,15 +1591,15 @@ void mutateAnimal(unsigned int animalIndex)
 				}
 			}
 
-			else if (auxMutation == 2)
-			{
-				// mutate a timers freq
-				int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_TIMER);
-				if (mutantCell >= 0 && mutantCell < animalSquareSize)
-				{
-					animals[animalIndex].genes[mutantCell].timerFreq += RNG() - 0.5f * 0.1;
-				}
-			}
+			// else if (auxMutation == 2)
+			// {
+			// 	// mutate a timers freq
+			// 	int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_TIMER);
+			// 	if (mutantCell >= 0 && mutantCell < animalSquareSize)
+			// 	{
+			// 		animals[animalIndex].genes[mutantCell].timerFreq += RNG() - 0.5f * 0.1;
+			// 	}
+			// }
 			else if (auxMutation == 3)
 			{
 				// mutate a speaker channel
@@ -1845,8 +1843,8 @@ Color organColors(unsigned int organ)
 		return color_brains3;
 	case ORGAN_BIASNEURON           :
 		return color_brains4;
-	case ORGAN_SENSOR_TIMER         :
-		return color_yellow;
+	// case ORGAN_SENSOR_TIMER         :
+	// 	return color_yellow;
 	case ORGAN_SENSOR_BODYANGLE	    :
 		return color_tan;
 	case ORGAN_SENSOR_TRACKER       :
@@ -2965,6 +2963,7 @@ void organs_all()
 				case ORGAN_MEMORY_TX:
 				{
 					// sum inputs. if exceeding a threshold, find a corresponding memory RX cell and copy it the input sum.
+					// because nothing else is altering its signal intensity, it will keep that value until changed again.
 					animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 					for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 					{
@@ -3169,16 +3168,6 @@ void organs_all()
 					break;
 				}
 
-				case ORGAN_SENSOR_TIMER:
-				{
-					animals[animalIndex].body[cellIndex].signalIntensity = 0;
-					// if (useTimers)
-					// {
-					animals[animalIndex].body[cellIndex].timerPhase += animals[animalIndex].body[cellIndex].timerFreq;
-					animals[animalIndex].body[cellIndex].signalIntensity = sin(animals[animalIndex].body[cellIndex].timerPhase);
-					// }
-					break;
-				}
 
 				case ORGAN_NEURON:
 				{
