@@ -75,6 +75,7 @@
 #define ORGAN_COLDADAPT            35
 #define ORGAN_HEATADAPT            36
 #define ORGAN_GRABBER              37
+#define ORGAN_SENSOR_PAIN          38
 
 #define numberOfOrganTypes        38 // the number limit of growable genes
 
@@ -1068,7 +1069,8 @@ bool organIsASensor(unsigned int organ)
 	    organ == ORGAN_SENSOR_HUNGER ||
 	    organ == ORGAN_SENSOR_AGE ||
 	    organ == ORGAN_SENSOR_BIRTHPLACE ||
-	    organ == ORGAN_SENSOR_PARENT
+	    organ == ORGAN_SENSOR_PARENT ||
+	    organ == ORGAN_SENSOR_PAIN
 	)
 	{
 		return true;
@@ -2180,7 +2182,7 @@ int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPosition
 			}
 		}
 	}
-	return nBones * nBones;
+	return nBones;
 }
 
 float fast_sigmoid(float in)
@@ -2326,6 +2328,38 @@ void spillBlood(unsigned int worldPositionI)
 }
 
 
+// return true if you blow the limb off, false if its still attached.
+bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount)
+{
+	unsigned int cellWorldPositionI = animals[animalIndex].body[cellIndex].worldPositionI;
+
+	float defense = defenseAtWorldPoint(world[cellWorldPositionI].identity, cellWorldPositionI);
+
+	if (defense > 0)
+	{
+		amount = amount / defense;
+	}
+
+
+	animals[animalIndex].body[cellIndex].damage += amount;
+	spillBlood(cellWorldPositionI);
+
+	int painCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PAIN);
+	if (painCell >= 0)
+	{
+		animals[animalIndex].body[painCell].signalIntensity += amount;
+	}
+
+	if (animals[animalIndex].body[cellIndex].damage > 1.0f)
+	{
+		animals[animalIndex].damageReceived++;
+		animals[animalIndex].mass--;
+		return true;
+	}
+	return false;
+}
+
+
 void knifeCallback( int gunIndex, int shooterIndex )
 {
 	int cursorPosX = cameraPositionX +  mousePositionX ;
@@ -2337,12 +2371,7 @@ void knifeCallback( int gunIndex, int shooterIndex )
 		int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
 		if ( occupyingCell >= 0)
 		{
-			animals[cursorAnimal].body[occupyingCell].damage += 0.3f;
-			spillBlood(worldCursorPos);
-			if (animals[cursorAnimal].body[occupyingCell].damage > 1.0f)
-			{
-				animals[cursorAnimal].damageReceived++;
-			}
+			hurtAnimal(cursorAnimal, occupyingCell, 0.3f);
 		}
 	}
 }
@@ -2388,12 +2417,13 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 					{
 
 						// eliminateCell(world[shootWorldPosition].identity, )
-						animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
-						if ((animals[world[shootWorldPosition].identity].body[shotOffNub] .damage) > 1.0f)
-						{
-							animals[world[shootWorldPosition].identity].damageReceived++;
-						}
-						spillBlood(shootWorldPosition);
+						// animals[world[shootWorldPosition].identity].body[shotOffNub] .damage += 0.5 + RNG();
+						// if ((animals[world[shootWorldPosition].identity].body[shotOffNub] .damage) > 1.0f)
+						// {
+						// 	animals[world[shootWorldPosition].identity].damageReceived++;
+						// }
+						// spillBlood(shootWorldPosition);
+						hurtAnimal(world[shootWorldPosition].identity, shotOffNub, 0.35f + RNG());
 					}
 
 				}
@@ -2930,6 +2960,11 @@ void organs_all()
 					}
 					break;
 
+				}
+
+				case ORGAN_SENSOR_PAIN:
+				{
+					animals[animalIndex].body[cellIndex].signalIntensity *= 0.95f;
 				}
 
 				case ORGAN_SENSOR_HUNGER:
@@ -3660,22 +3695,25 @@ void move_all()
 									}
 								}
 
-								float defense = defenseAtWorldPoint(world[cellWorldPositionI].identity, cellWorldPositionI);
 
-								if (defense > 0)
+
+								// if (defense == 0 || animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage > 1.0f )
+								// {
+
+
+// void hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount)
+								bool meatAvailable = hurtAnimal(world[cellWorldPositionI].identity , targetLocalPositionI, 1.0f );
+
+								// animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].dead = true;
+
+								// if (animals[world[cellWorldPositionI].identity].mass >= 1)
+								// {
+								// 	animals[world[cellWorldPositionI].identity].mass--;
+								// }
+								// animals[world[cellWorldPositionI].identity].damageReceived++;
+
+								if (meatAvailable)
 								{
-									animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage += 1.0f / defense;
-								}
-
-								if (defense == 0 || animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].damage > 1.0f )
-								{
-									animals[world[cellWorldPositionI].identity].body[targetLocalPositionI].dead = true;
-
-									if (animals[world[cellWorldPositionI].identity].mass >= 1)
-									{
-										animals[world[cellWorldPositionI].identity].mass--;
-									}
-									animals[world[cellWorldPositionI].identity].damageReceived++;
 									okToStep = true;
 									animals[animalIndex].damageDone++;
 
@@ -3683,8 +3721,6 @@ void move_all()
 									// {
 									// 	world[cellWorldPositionI].material = MATERIAL_BLOOD;
 									// }
-
-									spillBlood(cellWorldPositionI);
 
 									speciesAttacksPerTurn[speciesIndex] ++;
 
@@ -3704,10 +3740,16 @@ void move_all()
 
 									}
 								}
+								// }
 							}
 							else if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_PARASITE )
 							{
 								float amount = (animals[world[cellWorldPositionI].identity].energy) / animalSquareSize;
+
+								float defense = defenseAtWorldPoint(world[cellWorldPositionI].identity, cellWorldPositionI);
+
+								amount = amount / defense;
+
 								animals[animalIndex].energy += amount;
 								animals[world[cellWorldPositionI].identity].energy -= amount;
 							}
@@ -5344,10 +5386,10 @@ void recomputeTerrainLighting()
 		{
 			world[worldPositionI].wall = MATERIAL_WATER;
 
-			float depth = (seaLevel-world[worldPositionI].height);
+			float depth = (seaLevel - world[worldPositionI].height);
 
-			float brightness = (1/(1+ (depth/(worldSize/8))) );
-			if (brightness < 0.2f) { brightness=0.2f;}
+			float brightness = (1 / (1 + (depth / (worldSize / 8))) );
+			if (brightness < 0.2f) { brightness = 0.2f;}
 			world[worldPositionI].light = multiplyColorByScalar(world[worldPositionI].light, brightness   );
 		}
 	}
