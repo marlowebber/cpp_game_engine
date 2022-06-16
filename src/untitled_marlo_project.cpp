@@ -1984,10 +1984,72 @@ float getNormalisedHeight(unsigned int worldPositionI)
 
 void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
 {
-	world[worldPositionI].light = multiplyColorByScalar(color_white, getNormalisedHeight(worldPositionI) );
+
+
+	if (worldPositionI + worldSize < worldSquareSize)
+	{
+		float xSurfaceAngle = world[worldPositionI].height - world[worldPositionI + 1].height ;
+		float ySurfaceAngle = world[worldPositionI].height - world[worldPositionI + worldSize].height ;
+
+		float xSurfaceDifference = (xLightAngle - xSurfaceAngle);
+		float ySurfaceDifference = (yLightAngle - ySurfaceAngle);
+
+		float brightness = 1.0f - ((xSurfaceDifference + ySurfaceDifference) / (2.0f * 3.14f));
+
+		// printf("%f\n", brightness);
+
+		world[worldPositionI].light = multiplyColorByScalar(color_white, brightness);
+	}
 }
 
 
+void smoothSquare(unsigned int worldPositionI, float strength)
+{
+	float avg = world[worldPositionI].height;
+	unsigned int count = 1;
+	for (int n = 0; n < nNeighbours; ++n)
+	{
+		unsigned int neighbour = worldPositionI + neighbourOffsets[n];
+		if (neighbour < worldSquareSize)
+		{
+			avg += world[neighbour].height;
+			count ++;
+		}
+	}
+
+	avg = avg / count;
+
+	for (int n = 0; n < nNeighbours; ++n)
+	{
+		unsigned int neighbour = worldPositionI + neighbourOffsets[n];
+		if (neighbour < worldSquareSize)
+		{
+			world[neighbour].height += (avg - world[neighbour].height) * strength;
+		}
+	}
+}
+
+void smoothHeightMap(unsigned int passes, float strength)
+{
+	for (int pass = 0; pass < passes ; ++pass)
+	{
+
+		for (unsigned int i = 0; i < worldSquareSize; ++i)
+		{
+			smoothSquare(i,  strength);
+		}
+
+		for (unsigned int i = worldSquareSize - 1; i > 0; --i)
+		{
+			smoothSquare(i,  strength);
+		}
+	}
+
+
+
+
+
+}
 
 void updateMap()
 {
@@ -2096,7 +2158,9 @@ void updateMap()
 				world[randomI].material = MATERIAL_NOTHING;
 			}
 		}
+
 	}
+
 }
 
 int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPositionI)
@@ -5738,6 +5802,11 @@ void setupRandomWorld()
 				simulation.TerminateRainfall(addHeight);
 			}
 			copyPrelimToRealMap();
+
+
+			smoothHeightMap( 5, 0.5f );
+
+
 			normalizeTerrainHeight();
 			recomputeTerrainLighting();
 
@@ -5904,9 +5973,17 @@ void tournamentController()
 
 void seaLevelController()
 {
-	int seaLevelFreq = 1000;
+
+	// int dayLength = 2500;
+
+	// float dayPhase = (modelFrameCount % dayLength) / dayLength;
+
+	// sunXangle = dayPhase * 2 * 3.14f;
+
 	// float seaLevelPhase = sin((( modelFrameCount % seaLevelFreq ) / seaLevelFreq) * 2 * 3.141f  );
 
+
+	int seaLevelFreq = 1000;
 	const float wavesize = 1.0f;
 	seaLevel = baseSeaLevel + ( ((modelFrameCount % seaLevelFreq) / 20)  * wavesize);
 }

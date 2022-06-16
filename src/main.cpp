@@ -35,7 +35,7 @@ void quit ()
 void threadInterface()
 {
 
-	    ZoneScoped;
+	ZoneScoped;
 
 #ifdef THREAD_TIMING
 	auto start = std::chrono::steady_clock::now();
@@ -311,7 +311,7 @@ void threadInterface()
 				break;
 			}
 
-				case SDLK_u:
+			case SDLK_u:
 			{
 
 				toggleInstructions();
@@ -325,12 +325,13 @@ void threadInterface()
 			// 	break;
 			// }
 
-			// case SDLK_b:
-			// {
+			case SDLK_b:
+			{
 
-			// 	normalizeTerrainHeight();
-			// 	break;
-			// }
+
+				recomputeTerrainLighting();
+				break;
+			}
 
 
 

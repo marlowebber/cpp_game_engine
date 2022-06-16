@@ -65,6 +65,7 @@ void toggleErodingRain();
 void normalizeTerrainHeight();
 void toggleInstructions();
 
+void recomputeTerrainLighting();
 
 #define VISUALIZER_TRUECOLOR           1001
 #define VISUALIZER_TRACKS              1003
