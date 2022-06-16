@@ -210,8 +210,8 @@ unsigned int adversaryRespawnPos;
 int selectedAnimal = -1;
 int cursorAnimal = -1;
 
-float sunXangle = 0.45f;
-float sunYangle = 0.45f;
+float sunXangle = 0.65f;
+float sunYangle = 0.65f;
 
 float fps = 1.0f;
 bool showInstructions = false;
@@ -1997,6 +1997,7 @@ void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAn
 		float brightness = 1.0f - ((xSurfaceDifference + ySurfaceDifference) / (2.0f * 3.14f));
 
 		// printf("%f\n", brightness);
+		if (brightness < 0.2f) { brightness = 0.2f;}
 
 		world[worldPositionI].light = multiplyColorByScalar(color_white, brightness);
 	}
@@ -5342,6 +5343,12 @@ void recomputeTerrainLighting()
 		if (world[worldPositionI].height < seaLevel)
 		{
 			world[worldPositionI].wall = MATERIAL_WATER;
+
+			float depth = (seaLevel-world[worldPositionI].height);
+
+			float brightness = (1/(1+ (depth/(worldSize/8))) );
+			if (brightness < 0.2f) { brightness=0.2f;}
+			world[worldPositionI].light = multiplyColorByScalar(world[worldPositionI].light, brightness   );
 		}
 	}
 }
