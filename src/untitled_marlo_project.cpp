@@ -18,6 +18,10 @@
 
 #define TRACY_ENABLE
 
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string>
+#include <fstream>
 
 #ifdef TRACY_ENABLE
 #include <Tracy.hpp>
@@ -35,8 +39,6 @@
 #include "SimplexNoise.h"
 
 #include "TinyErode.h"
-
-
 
 #define MATERIAL_NOTHING           0
 #define ORGAN_MOUTH_VEG            1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
@@ -100,14 +102,6 @@
 #define MATERIAL_DUST    76
 #define MATERIAL_GRAVEL  78
 
-
-#define CONDITION_GREATER         41
-#define CONDITION_EQUAL           42
-#define CONDITION_LESS            43
-
-#define WORLD_EXAMPLECREATURE 2
-#define WORLD_CALADAN 3
-
 #define MACHINECALLBACK_PISTOL           100
 #define MACHINECALLBACK_KNIFE            101
 #define MACHINECALLBACK_HOSPITAL         102
@@ -116,9 +110,6 @@
 #define MACHINECALLBACK_NEUROGLASSES     105
 #define MACHINECALLBACK_ECOLOGYCOMPUTER  106
 #define MACHINECALLBACK_LIGHTER          107
-
-const float baseSeaLevel = 0.5f * worldSize;;
-float seaLevel = baseSeaLevel ;//0.5f * worldSize;
 
 
 #define NUMBER_OF_CONNECTIONS 8
@@ -139,11 +130,13 @@ const bool setOrSteerAngle       = true;
 const bool printLogs             = false;
 
 
-const unsigned int prelimSquareSize = prelimSize * prelimSize;
 
+
+const float baseLungCapacity = 1.0f;
+// const float baseSeaLevel = 0.5f * worldSize;;
+const unsigned int prelimSquareSize = prelimSize * prelimSize;
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
-
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const unsigned int animalSquareSize      = 128;
 const unsigned int worldSquareSize       = worldSize * worldSize;
@@ -155,30 +148,20 @@ const float taxEnergyScale         = 0.00002f;        // a multiplier for how mu
 const float movementEnergyScale    = 0.00002f;        // a multiplier for how much it costs animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
-
 const float neuralNoise = 0.1f;
-
 const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 50000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 const float musclePower = 40.0f;
 const float thresholdOfBoredom = 0.1f;
-
 const unsigned int displayNameSize = 32;
-
 const unsigned int numberOfSpeakerChannels = 16;
-
 const float const_pi = 3.1415f;
-
-
 const unsigned int baseSize = 100;
 const unsigned int wallThickness = 8;
 const unsigned int doorThickness = 16;
-
 const unsigned int nLogs = 32;
 const unsigned int logLength = 64;
-
-
 const int neighbourOffsets[] =
 {
 	- 1,
@@ -191,92 +174,90 @@ const int neighbourOffsets[] =
 	+worldSize - 1
 };
 
-unsigned int worldToLoad = WORLD_CALADAN;
 
-int visualizer = VISUALIZER_TRUECOLOR;
 
-float postMaxHeight = 0.0f;
-float postMinHeight = 0.0f;
 
-float prelimMap[prelimSquareSize];
-float prelimWater[prelimSquareSize];
 
-unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
-bool lockfps               = false;
-
-bool paused = false;
-
-int mousePositionX =  -430;
-int mousePositionY =  330;
-
-// float fmousePositionX = mousePositionX;
-// float fmousePositionY = mousePositionY;
-
-unsigned int adversaryRespawnPos;
-
-int selectedAnimal = -1;
-int cursorAnimal = -1;
-
-float sunXangle = 0.35f;
-float sunYangle = 0.35f;
-
-float fps = 1.0f;
-bool showInstructions = false;
-
+// these variables are how the player drives their character, and what they get back from it.
 bool playerGrabState = false;
-bool playerInControl = true;
-int playerCreature = -1;
 bool playerCanSee = true;
 bool playerCanHear = true;
 bool playerCanSmell = true;
 bool palette = false;
 bool playerCanPickup = false;
 int playerCanPickupItem = -1;
+bool lockfps           = true;
+bool paused = false;
+int mousePositionX =  -430;
+int mousePositionY =  330;
 
+
+
+
+// these variables govern the display of menus and other texts.
+bool showInstructions = false;
 bool ecologyComputerDisplay = false;
-
 bool mainMenu = true;
-
-float biome_marine = seaLevel + (worldSize / 20);
-float biome_coastal = seaLevel + (worldSize / 3);
-
-
+int visualizer = VISUALIZER_TRUECOLOR;
 bool computerdisplays[5];
-
-float energyScaleIn             = 1.0f;            // a multiplier for how much energy is gained from food and light.
-float minimumEntropy = 0.1f;
-
-float speakerChannels[numberOfSpeakerChannels];
-float speakerChannelsLastTurn[numberOfSpeakerChannels];
-
-int finalMenuY = 0;
-
-unsigned int cameraPositionX = 0 ;
-unsigned int cameraPositionY = 0 ;
-unsigned int modelFrameCount = 0;
-
+char logs[logLength][nLogs];
 int paletteMenuX = 200;
 int paletteMenuY = 50;
 int paletteTextSize = 10;
 int paletteSpacing = 20;
-
 unsigned int paletteSelectedOrgan = 0;
 unsigned int paletteWidth = 3;
 
 
+
+// these are the parameters that set up the physical geography of the world.
+const float seaLevel =  0.5f * worldSize;;;
+const float biome_marine  = seaLevel + (worldSize / 20);
+const float biome_coastal = seaLevel + (worldSize / 3);
+const float sunXangle = 0.35f;
+const float sunYangle = 0.35f;
+float prelimMap[prelimSquareSize];
+float prelimWater[prelimSquareSize];
+unsigned int worldCreationStage = 0;
+
+
+
+// these variables keep track of the main characters in the game world.
+int playerCreature = -1;
 int championScore = 0;
 float championEnergyScore = 0.0f;
-
 int adversary = -1;
+unsigned int adversaryRespawnPos;
+int selectedAnimal = -1;
+int cursorAnimal = -1;
+unsigned int playerRespawnPos;
 
+
+// camera view
+unsigned int cameraPositionX = 0 ;
+unsigned int cameraPositionY = 0 ;
 int cameraTargetCreature = -1;
+
+
+// telemetry of the game's performance
+unsigned int modelFrameCount = 0;
 unsigned int usPerFrame = 0;
+float fps = 1.0f;
 
-float baseLungCapacity = 1.0f;
-char logs[logLength][nLogs];
 
-unsigned int worldCreationStage = 0;
+unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
+
+
+
+
+
+
+
+
+
+
+
 
 void appendLog( std::string input)
 {
@@ -304,6 +285,9 @@ struct Square
 };
 
 struct Square world[worldSquareSize];
+float speakerChannels[numberOfSpeakerChannels];
+float speakerChannelsLastTurn[numberOfSpeakerChannels];
+
 
 struct Connection
 {
@@ -517,11 +501,11 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_SENSOR_LAST_STRANGER:
 	{
-		return std::string("A part of the brain which contains a memory of meeting an unknown animal.");
+		return std::string("A part of the brain which remembers meeting a stranger.");
 	}
 	case ORGAN_SENSOR_LAST_KIN:
 	{
-		return std::string("A part of the brain which contains a memory of the animal's peer.");
+		return std::string("A part of the brain which carries the memory of a friend.");
 	}
 	case ORGAN_SENSOR_PARENT:
 	{
@@ -1284,20 +1268,7 @@ void setupExampleAnimal2(int i)
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
 	animalAppendCell( i, ORGAN_GILL );
-	animalAppendCell( i, ORGAN_SENSOR_EYE );
-	animalAppendCell( i, ORGAN_SENSOR_EYE );
-	animalAppendCell( i, ORGAN_SENSOR_EAR );
-	animalAppendCell( i, ORGAN_SENSOR_PHEROMONE );
-	animalAppendCell( i, ORGAN_SENSOR_TRACKER );
-	animalAppendCell( i, ORGAN_SENSOR_TOUCH );
-	animalAppendCell( i, ORGAN_SENSOR_BODYANGLE );
-	animalAppendCell( i, ORGAN_MEMORY_RX );
 	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_MEMORY_TX );
 	animalAppendCell( i, ORGAN_MUSCLE );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
 	animalAppendCell( i, ORGAN_LIVER );
@@ -1305,7 +1276,6 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
@@ -3162,7 +3132,7 @@ void lighterCallback( int gunIndex, int shooterIndex )
 // occurs whenever a left click is received.
 void activateGrabbedMachine()
 {
-	if (playerCreature >= 0 && playerInControl)
+	if (playerCreature >= 0)
 	{
 		// if (palette)
 		// {
@@ -4057,7 +4027,7 @@ void organs_all()
 				{
 					if (world[cellWorldPositionI].material == MATERIAL_GRASS)
 					{
-						animals[animalIndex].energy += grassEnergy * energyScaleIn;
+						animals[animalIndex].energy += grassEnergy ;
 						world[cellWorldPositionI].material = MATERIAL_NOTHING;
 					}
 					break;
@@ -4067,7 +4037,7 @@ void organs_all()
 				{
 					if (world[cellWorldPositionI].material == MATERIAL_FOOD)
 					{
-						animals[animalIndex].energy += foodEnergy * energyScaleIn;
+						animals[animalIndex].energy += foodEnergy ;
 						world[cellWorldPositionI].material = MATERIAL_NOTHING;
 					}
 					break;
@@ -4466,7 +4436,7 @@ void move_all()
 										}
 										if (animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE)
 										{
-											animals[animalIndex].energy += foodEnergy * energyScaleIn;
+											animals[animalIndex].energy += foodEnergy ;
 										}
 
 									}
@@ -4764,7 +4734,7 @@ void camera()
 
 	// if the player doesn't have any eyes, don't draw anything!
 
-	if (playerCreature >= 0 && cameraTargetCreature == playerCreature && playerInControl)
+	if (playerCreature >= 0 && cameraTargetCreature == playerCreature)
 	{
 		int playerEye = getRandomCellOfType(playerCreature, ORGAN_SENSOR_EYE);
 		if (playerEye >= 0)
@@ -5998,15 +5968,15 @@ void spawnPlayer()
 {
 	if (playerCreature == -1)
 	{
-		unsigned int targetWorldPositionX = cameraPositionX ;
-		unsigned int targetWorldPositionY = cameraPositionY ;
+		// unsigned int targetWorldPositionX = cameraPositionX ;
+		// unsigned int targetWorldPositionY = cameraPositionY ;
 
 		// fmousePositionX = cameraPositionX;
-		// fmousePositionY = cameraPositionY;
-		mousePositionX = cameraPositionX;
-		mousePositionY = cameraPositionY;
+		// // fmousePositionY = cameraPositionY;
+		// mousePositionX = cameraPositionX;
+		// mousePositionY = cameraPositionY;
 
-		unsigned int targetWorldPositionI = ( targetWorldPositionY * worldSize ) + targetWorldPositionX;
+		unsigned int targetWorldPositionI =  playerRespawnPos;//( targetWorldPositionY * worldSize ) + targetWorldPositionX;
 		int i = 1;
 		setupExampleHuman(i);
 
@@ -6122,8 +6092,8 @@ void normalizeTerrainHeight()
 
 
 
-	postMaxHeight = 0.0f;
-	postMinHeight = 0.0f;
+	float postMaxHeight = 0.0f;
+	float postMinHeight = 0.0f;
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 	{
 		if (world[worldPositionI].height > postMaxHeight)
@@ -6493,7 +6463,7 @@ void setupGameItems()
 	targetWorldPositionI += 25 * worldSize;
 
 
-
+	playerRespawnPos = targetWorldPositionI;
 // camera
 	// cameraPositionX = x;
 	// cameraPositionY = y;
@@ -7007,11 +6977,6 @@ void tournamentController()
 						animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
 					}
 
-
-					for (int cellIndex = 0; cellIndex < animals[domingo].cellsUsed; ++cellIndex)
-					{
-						animals[domingo].body[cellIndex].signalIntensity = RNG() * 100.0f;
-					}
 				}
 			}
 
@@ -7032,10 +6997,6 @@ void tournamentController()
 						animals[domingo].energy = animals[domingo].maxEnergy;
 						animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
 					}
-					for (int cellIndex = 0; cellIndex < animals[domingo].cellsUsed; ++cellIndex)
-					{
-						animals[domingo].body[cellIndex].signalIntensity = RNG() * 100.0f;
-					}
 				}
 			}
 
@@ -7047,22 +7008,22 @@ void tournamentController()
 
 
 
-void seaLevelController()
-{
+// void seaLevelController()
+// {
 
-	// int dayLength = 2500;
+// 	// int dayLength = 2500;
 
-	// float dayPhase = (modelFrameCount % dayLength) / dayLength;
+// 	// float dayPhase = (modelFrameCount % dayLength) / dayLength;
 
-	// sunXangle = dayPhase * 2 * 3.14f;
+// 	// sunXangle = dayPhase * 2 * 3.14f;
 
-	// float seaLevelPhase = sin((( modelFrameCount % seaLevelFreq ) / seaLevelFreq) * 2 * 3.141f  );
+// 	// float seaLevelPhase = sin((( modelFrameCount % seaLevelFreq ) / seaLevelFreq) * 2 * 3.141f  );
 
 
-	int seaLevelFreq = 5000;
-	const float wavesize = 1.0f;
-	seaLevel = baseSeaLevel + ( ((modelFrameCount % seaLevelFreq) / 20)  * wavesize);
-}
+// 	int seaLevelFreq = 5000;
+// 	const float wavesize = 1.0f;
+// 	seaLevel = baseSeaLevel + ( ((modelFrameCount % seaLevelFreq) / 20)  * wavesize);
+// }
 
 
 void model()
@@ -7081,7 +7042,7 @@ void model()
 
 
 
-		seaLevelController();
+		// seaLevelController();
 		computeAllAnimalsOneTurn();
 		updateMap();
 	}
@@ -7115,6 +7076,11 @@ void modelSupervisor()
 
 
 
+inline bool exists_test3 (const std::string& name) 
+{
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
 
 
 
@@ -7127,6 +7093,12 @@ void drawMainMenuText()
 	int menuY = 50;
 	int textSize = 10;
 	int spacing = 20;
+
+	bool saveExists = false;
+	if (exists_test3(std::string("save/animals")) && exists_test3(std::string("save/world")) )
+	{
+saveExists = true;
+	}
 
 
 

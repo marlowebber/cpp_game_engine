@@ -228,14 +228,14 @@ void threadInterface()
 
 				if (playerCreature >= 0)
 				{
-					if (playerInControl)
-					{
+					// if (playerInControl)
+					// {
 						// unsigned int destination = getPlayerDestination();
 						// destination += 1;
 						// setPlayerDestination(destination);
 
 						adjustPlayerPos(Vec_f2(playerSpeed, 0.0f));
-					}
+					// }
 				}
 				else
 				{
@@ -253,14 +253,14 @@ void threadInterface()
 
 				if (playerCreature >= 0)
 				{
-					if (playerInControl)
-					{
+					// if (playerInControl)
+					// {
 						// unsigned int destination = getPlayerDestination();
 						// destination -= worldSize;
 						// setPlayerDestination(destination);
 
 						adjustPlayerPos(Vec_f2(0.0f, -playerSpeed));
-					}
+					// }
 				}
 				else
 				{
@@ -282,12 +282,12 @@ void threadInterface()
 
 				if (playerCreature >= 0)
 				{
-					if (playerInControl)
-					{
+					// if (playerInControl)
+					// {
 						// unsigned int destination = getPlayerDestination();
 						// destination -= 1;
 						adjustPlayerPos(Vec_f2(-playerSpeed, 0.0f));
-					}
+					// }
 				}
 				else
 				{
@@ -303,14 +303,15 @@ void threadInterface()
 			case SDLK_w: // w
 			{
 				if (playerCreature >= 0)
-				{	if (playerInControl)
-					{
+				{
+					// if (playerInControl)
+				// 	{
 						// unsigned int destination = getPlayerDestination();
 						// destination += worldSize;
 						// setPlayerDestination(destination);
 
 						adjustPlayerPos(Vec_f2(0.0f, playerSpeed));
-					}
+					// }
 				}
 				else
 				{
@@ -322,12 +323,12 @@ void threadInterface()
 				break;
 			}
 
-			case SDLK_c: // w
-			{
-				playerInControl = !playerInControl;
-				break;
-			}
-			// case SDLK_i: // w
+			// case SDLK_c: // w
+			// {
+			// 	playerInControl = !playerInControl;
+			// 	break;
+			// }
+			// // case SDLK_i: // w
 			// {
 			// 	load();
 			// 	break;
