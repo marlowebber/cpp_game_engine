@@ -120,7 +120,6 @@ const bool immortality           = false;
 const bool doReproduction        = true;
 const bool doMuscles             = true;
 const bool growingCostsEnergy    = true;
-const bool tournament            = true;
 const bool taxIsByMass           = true;
 const bool threading             = true;
 const bool cameraFollowsChampion = false;
@@ -153,7 +152,7 @@ const float grassEnergy            = 0.3f;         // how much you get from eati
 const float neuralNoise = 0.1f;
 
 const float liverStorage = 20.0f;
-const unsigned int baseLifespan = 5000;
+const unsigned int baseLifespan = 50000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 const float musclePower = 40.0f;
 const float thresholdOfBoredom = 0.1f;
@@ -165,10 +164,9 @@ const unsigned int numberOfSpeakerChannels = 16;
 const float const_pi = 3.1415f;
 
 
-const int baseSize = 100;
-const int wallThickness = 8;
-const int doorThickness = 16;
-const unsigned int wallthickness = 8;
+const unsigned int baseSize = 100;
+const unsigned int wallThickness = 8;
+const unsigned int doorThickness = 16;
 
 const unsigned int nLogs = 32;
 const unsigned int logLength = 64;
@@ -254,6 +252,7 @@ unsigned int paletteWidth = 3;
 
 
 int championScore = 0;
+float championEnergyScore = 0.0f;
 
 int adversary = -1;
 
@@ -1246,7 +1245,62 @@ void resetAnimals()
 	int j = 1;
 	setupExampleAnimal2(j);
 	champion = animals[j];
-	championScore = 1;
+	championScore = 0;
+}
+
+
+Vec_f2 getTerrainSlope(unsigned int worldPositionI)
+{
+
+	float xSurfaceAngle = world[worldPositionI].height - world[worldPositionI + 1].height ;
+	float ySurfaceAngle = world[worldPositionI].height - world[worldPositionI + worldSize].height ;
+
+	return Vec_f2(xSurfaceAngle, ySurfaceAngle);
+
+}
+
+
+Color whatColorIsTheRock(unsigned int worldPositionI)
+{
+	Color rockColor = color_grey;
+	Vec_f2 slope = getTerrainSlope(worldPositionI);
+	float grade = sqrt( (slope.x * slope.x) +  (slope.y * slope.y)  );
+	float colorNoise = (((RNG() - 0.5f) + 0.5f) * 0.8f) ; // map -1,1 to 0,0.8
+
+	// printf("height %f, grade %f \n", world[worldPositionI].height, grade);
+
+	if (height < seaLevel * 1.5  )
+	{
+		if (grade < 1.0f)
+		{
+			rockColor = multiplyColorByScalar (  color_brown,  colorNoise );
+		}
+		else  if (grade < 2.5f)
+		{
+			rockColor = multiplyColorByScalar (  color_lightbrown,  colorNoise );
+		}
+		else
+		{
+			rockColor = multiplyColorByScalar (  color_tan,  colorNoise );
+		}
+	}
+	else
+	{
+		if (grade < 1.0f)
+		{
+			rockColor = multiplyColorByScalar (  color_darkgrey, colorNoise );
+		}
+		else if (grade < 2.5f)
+		{
+			rockColor = multiplyColorByScalar (  color_grey,  colorNoise );
+		}
+		else
+		{
+			rockColor = multiplyColorByScalar (  color_lightgrey,  colorNoise );
+		}
+	}
+	return rockColor;
+
 }
 
 void resetGrid()
@@ -1261,7 +1315,7 @@ void resetGrid()
 		world[i].light = color_white;
 		world[i].pheromoneIntensity = 0.0f;
 		world[i].pheromoneChannel = -1;
-		world[i].grassColor = color_green;
+		world[i].grassColor =  color_green;
 	}
 }
 
@@ -2356,7 +2410,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	else
 	{
 		Color materialColor ;
-		if (world[worldI].material == MATERIAL_GRASS)
+		if (world[worldI].material == MATERIAL_GRASS || world[worldI].terrain == MATERIAL_ROCK )
 		{
 			materialColor = world[worldI].grassColor;
 		}
@@ -2393,17 +2447,19 @@ float getNormalisedHeight(unsigned int worldPositionI)
 	return answer;
 }
 
+
 void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
 {
+
+	Vec_f2 slope = getTerrainSlope( worldPositionI);
+
+
+	float xSurfaceDifference = (xLightAngle - slope.x);
+	float ySurfaceDifference = (yLightAngle - slope.y);
 
 
 	if (worldPositionI + worldSize < worldSquareSize)
 	{
-		float xSurfaceAngle = world[worldPositionI].height - world[worldPositionI + 1].height ;
-		float ySurfaceAngle = world[worldPositionI].height - world[worldPositionI + worldSize].height ;
-
-		float xSurfaceDifference = (xLightAngle - xSurfaceAngle);
-		float ySurfaceDifference = (yLightAngle - ySurfaceAngle);
 
 		float brightness = 1.0f - ((xSurfaceDifference + ySurfaceDifference) / (2.0f * 3.14f));
 
@@ -2535,30 +2591,50 @@ void updateMap()
 			}
 
 
-			if (world[randomI].material == MATERIAL_NOTHING
-			        && world[randomI].terrain != MATERIAL_VOIDMETAL
-			        // && !materialBlocksMovement(world[randomI].wall)
-			   )
+
+			if (
+
+			    world[randomI].material == MATERIAL_GRASS
+
+			    // && !materialBlocksMovement(world[randomI].wall)
+			)
 			{
 
-				for (int i = 0; i < nNeighbours; ++i)
+				for (int n = 0; n < nNeighbours; ++n)
 				{
-					unsigned int neighbour = randomI + neighbourOffsets[i];
+					unsigned int neighbour = randomI + neighbourOffsets[n];
 					if (neighbour < worldSquareSize)
 					{
-						if (world[neighbour].material == MATERIAL_GRASS)
+						if (world[neighbour].material == MATERIAL_NOTHING
+						        && world[neighbour].terrain != MATERIAL_VOIDMETAL)
 						{
-							world[randomI].material = MATERIAL_GRASS;
 
-							world[randomI].grassColor = world[neighbour].grassColor;
+							// grow speed proportional to light
+							float growthChance =  0.0f;
 
-							world[randomI].grassColor.r += (RNG() - 0.5f) * 0.1f;
-							world[randomI].grassColor.g += (RNG() - 0.5f) * 0.1f;
-							world[randomI].grassColor.b += (RNG() - 0.5f) * 0.1f;
+							growthChance += world[neighbour].light.r;
+							growthChance += world[neighbour].light.g;
+							growthChance += world[neighbour].light.b;
 
-							world[randomI].grassColor = clampColor(world[randomI].grassColor);
+							growthChance *= 0.3f;
 
+							growthChance *= world[neighbour].light.a;
 
+							if (RNG() < growthChance)
+
+							{
+
+								world[randomI].material = MATERIAL_GRASS;
+
+								world[randomI].grassColor = world[neighbour].grassColor;
+
+								world[randomI].grassColor.r += (RNG() - 0.5f) * 0.1f;
+								world[randomI].grassColor.g += (RNG() - 0.5f) * 0.1f;
+								world[randomI].grassColor.b += (RNG() - 0.5f) * 0.1f;
+
+								world[randomI].grassColor = clampColor(world[randomI].grassColor);
+
+							}
 						}
 					}
 				}
@@ -4172,11 +4248,13 @@ void move_all()
 				if (okToStep)
 				{
 
-					if (world[cellWorldPositionI].material == MATERIAL_NOTHING && world[cellWorldPositionI].identity == -1 && speciesIndex != 0)
+					if (world[cellWorldPositionI].identity == -1 && speciesIndex != 0)
 					{
-						world[cellWorldPositionI].material = MATERIAL_GRASS;
-						world[cellWorldPositionI].grassColor =  addColor( color_green , multiplyColorByScalar(animals[animalIndex].identityColor, 0.35f ));//
-
+						if (world[cellWorldPositionI].material == MATERIAL_NOTHING || world[cellWorldPositionI].material == MATERIAL_GRASS)
+						{
+							world[cellWorldPositionI].material = MATERIAL_GRASS;
+							world[cellWorldPositionI].grassColor =  addColor( color_green , multiplyColorByScalar(animals[animalIndex].identityColor, 0.5f ));//
+						}
 
 					}
 
@@ -4296,19 +4374,43 @@ void energy_all() // perform energies.
 				// }
 				// else
 				// {
-				killAnimal( animalIndex);
-				// }
+				if (animalIndex != adversary)
+				{
+					killAnimal( animalIndex);
+				}
 
 			}
-			if (tournament)
+			// if (tournament)
+			// {
+
+			bool nominate = false;
+
+			int animalScore = animals[animalIndex].damageDone + animals[animalIndex].damageReceived  + animals[animalIndex].numberOfTimesReproduced ;
+
+			if (animalIndex != playerCreature && speciesIndex > 0) // player & player species cannot be nominated
 			{
-				int animalScore = animals[animalIndex].damageDone + animals[animalIndex].damageReceived  + animals[animalIndex].numberOfTimesReproduced ;
 				if ( animalScore > championScore)
 				{
-					championScore = animalScore;
-					champion = animals[animalIndex];
+					nominate = true;
+				}
+				else if (animalScore == championScore)
+				{
+					if (animals[animalIndex].energy > championEnergyScore)
+					{
+						nominate = true;
+					}
 				}
 			}
+
+
+			if (nominate)
+			{
+				championScore = animalScore;
+				championEnergyScore = animals[animalIndex].energy;
+				champion = animals[animalIndex];
+			}
+
+			// }
 		}
 	}
 	for (int i = 0; i < numberOfSpecies; ++i)
@@ -4376,19 +4478,33 @@ void selectCursorAnimal()
 
 void viewAdversary()
 {
-	if (adversary >= 0 && playerCreature >= 0)
+
+
+	if (cameraTargetCreature == adversary)
 	{
-		if (cameraTargetCreature == playerCreature)
+		if (playerCreature >= 0)
 		{
-			cameraTargetCreature = adversary;
-		}
-		else
-		{
+			// if (cameraTargetCreature == playerCreature)
+			// {
 			cameraTargetCreature = playerCreature;
 		}
 	}
+	else
+	{
+		if (adversary >= 0)
+		{
+			// if (cameraTargetCreature == playerCreature)
+			// {
+			cameraTargetCreature = adversary;
+			// }
+			// else
+			// {
+			// 	cameraTargetCreature = playerCreature;
+			// }
+		}
+	}
 
-	printf("%u\n", animals[adversary].position);
+	// printf("%u\n", animals[adversary].position);
 }
 
 
@@ -4632,6 +4748,18 @@ void displayComputerText()
 		menuY -= spacing;
 
 
+
+
+		printText2D(   std::string("Grass energy: ") + std::to_string(grassEnergy)  + std::string(", meat energy: ") + std::to_string(foodEnergy)   , menuX, menuY, textSize);
+		menuY -= spacing;
+
+
+		printText2D(   std::string("Resting tax: ") + std::to_string(taxEnergyScale)  + std::string(", movement tax: ") + std::to_string(movementEnergyScale) + std::string(", growth tax: ") + std::to_string(growthEnergyScale)   , menuX, menuY, textSize);
+		menuY -= spacing;
+
+
+
+
 	}
 
 
@@ -4834,7 +4962,6 @@ void drawGameInterfaceText()
 			std::string selectString( " [e] to select.");
 			if (selectedAnimal >= 0)
 			{
-
 				std::string selectString( " [e] to deselect. [k] save animal.");
 			}
 
@@ -5499,11 +5626,12 @@ void spawnAdversary(unsigned int targetWorldPositionI)
 	// {
 // printf("setting up animal %i\n", i);
 	// unsigned int targetWorldPositionI = extremelyFastNumberFromZeroTo(worldSquareSize - 1); //( targetWorldPositionY * worldSize ) + targetWorldPositionX;
-	int j = 1;
+	// int j = 1;
 
 
 
-	setupExampleAnimal2(j);
+	// setupExampleAnimal2(j);
+
 
 
 	// animals[adversary].position = targetWorldPositionI;
@@ -5516,8 +5644,8 @@ void spawnAdversary(unsigned int targetWorldPositionI)
 
 	// loadParticlarAnimal(j, std::string("save/macrolongus_smigmanosa"));
 	spawnAnimalIntoSlot(adversary,
-	                    animals[j],
-	                    targetWorldPositionI, true);
+	                    champion,
+	                    targetWorldPositionI, false);
 
 
 
@@ -6182,6 +6310,26 @@ void setupGameItems()
 }
 
 
+
+
+
+
+void applyPretties()
+{
+
+
+	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+	{
+		if (  world[worldPositionI].terrain == MATERIAL_ROCK )
+		{
+
+			world[worldPositionI].grassColor = whatColorIsTheRock(worldPositionI);
+
+		}
+
+	}
+}
+
 void setupRandomWorld()
 {
 	resetAnimals();
@@ -6225,14 +6373,17 @@ void setupRandomWorld()
 				prelimWater[pp] = initWaterLevel;
 			}
 
-			TinyErode::Simulation simulation(prelimSize, prelimSize);
 
-			simulation.SetMetersPerX(1000.0f / prelimSize);
-			simulation.SetMetersPerY(1000.0f / prelimSize);
 
 			bool erode = false;
 			if (erode)
 			{
+
+				TinyErode::Simulation simulation(prelimSize, prelimSize);
+
+				simulation.SetMetersPerX(1000.0f / prelimSize);
+				simulation.SetMetersPerY(1000.0f / prelimSize);
+
 				int iterations = 256;
 
 
@@ -6276,7 +6427,7 @@ void setupRandomWorld()
 				world[worldPositionI].terrain = MATERIAL_ROCK;
 
 				// walls around the world edge
-				if (x < wallthickness || x > worldSize - wallthickness || y < wallthickness  || y > worldSize - wallthickness)
+				if (x < wallThickness || x > worldSize - wallThickness || y < wallThickness  || y > worldSize - wallThickness)
 				{
 					world[worldPositionI].wall = MATERIAL_ROCK;
 				}
@@ -6295,39 +6446,14 @@ void setupRandomWorld()
 					world[worldPositionI].material = MATERIAL_GRASS;
 				}
 			}
+
+
+			applyPretties();
+
 			setupGameItems();
 		}
 
-		// place the heightmap on the full size map.
-		if (false)
-		{
-			for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
-			{
-				world[worldPositionI].temperature = 300.0f;
-				unsigned int x = worldPositionI % worldSize;
-				unsigned int y = worldPositionI / worldSize;
 
-				float noiseScaleFactor = 0.0005f;
-				float fx = x * noiseScaleFactor;
-				float fy = y * noiseScaleFactor;
-
-				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
-
-				float hDistance = x;
-				float hMax = worldSize;
-
-				world[worldPositionI].height = hDistance / hMax;
-				world[worldPositionI].height += noise * 0.5f;
-				world[worldPositionI].height *= worldSize / 2;
-
-
-				// walls around the world edge
-				if (x < wallthickness || x > worldSize - wallthickness || y < wallthickness  || y > worldSize - wallthickness)
-				{
-					world[worldPositionI].material = MATERIAL_ROCK;
-				}
-			}
-		}
 	}
 }
 
@@ -6345,6 +6471,12 @@ void tournamentController()
 	// 	tournamentCounter++;
 	// }
 
+
+	if (adversary < 0)
+	{
+		spawnAdversary(adversaryRespawnPos);
+	}
+
 	if (adversary >= 0 && adversary < numberOfAnimals)
 	{
 		if (animals[adversary].retired)
@@ -6356,8 +6488,34 @@ void tournamentController()
 			if (animals[adversary].position >= 0 && animals[adversary].position < worldSquareSize)
 			{
 				adversaryRespawnPos = animals[adversary].position;
+
+				unsigned int adversaryRespawnPosX = adversaryRespawnPos % worldSize;
+				unsigned int adversaryRespawnPosY = adversaryRespawnPos / worldSize;
+
+				if (adversaryRespawnPosX < baseSize)
+				{
+					adversaryRespawnPosX = baseSize;
+				}
+				else if (adversaryRespawnPosX > worldSize - baseSize )
+				{
+					adversaryRespawnPosX = worldSize - baseSize;
+				}
+
+				if (adversaryRespawnPosY < baseSize)
+				{
+					adversaryRespawnPosY = baseSize;
+				}
+				else if (adversaryRespawnPosY > worldSize - baseSize )
+				{
+					adversaryRespawnPosY = worldSize - baseSize;
+				}
+
+				adversaryRespawnPos = (adversaryRespawnPosY * worldSize ) + adversaryRespawnPosX;
+
+
 			}
 		}
+
 	}
 
 	if (respawnLowSpecies)
@@ -6408,8 +6566,12 @@ void tournamentController()
 
 		if (totalpop == 0 && adversary >= 0)
 		{
+
+			// life went extinct but the adversary is still alive. Spawn a bunch more stuff to get it going again.
+
+			// spawn lots of the example animal
 			int j = 1;
-			for (int k = j + 1; k < numberOfAnimals; ++k)
+			for (int k = j + 1; k < numberOfAnimals / 2; ++k)
 			{
 				setupExampleAnimal2(j);
 				int domingo = spawnAnimal( 1,
@@ -6423,6 +6585,26 @@ void tournamentController()
 					animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
 				}
 			}
+
+			// spawn lots of the champion
+			j = 1;
+			for (int k = (numberOfAnimals / 2) + 1; k < numberOfAnimals; ++k)
+			{
+				// setupExampleAnimal2(j);
+				int domingo = spawnAnimal( 1,
+				                           champion,
+				                           animals[adversary].position, true);
+
+				if (domingo >= 0)
+				{
+					paintAnimal(domingo);
+					animals[domingo].energy = animals[domingo].maxEnergy;
+					animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
+				}
+			}
+
+
+
 		}
 	}
 }
@@ -6458,10 +6640,9 @@ void model()
 	if (!paused)
 	{
 
-		if (tournament)
-		{
-			tournamentController();
-		}
+
+		tournamentController();
+
 
 
 		seaLevelController();
@@ -6499,6 +6680,11 @@ void modelSupervisor()
 void startSimulation()
 {
 	setupRandomWorld();
+
+	int j = 1;
+	setupExampleAnimal2(j);
+	champion = animals[j];
+
 	boost::thread t7{ modelSupervisor };
 }
 

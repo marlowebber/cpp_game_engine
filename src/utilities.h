@@ -65,6 +65,9 @@ const Color color_offwhite           = Color( 0.9f, 1.0f, 0.8f, 1.0f );
 const Color color_puce               = Color(0.48, 0.204, 0.134, 1.0f);
 const Color color_tan           = Color(0.910, 0.815, 0.673, 1.0f);
 
+const Color color_lightbrown           = Color(0.5, 0.4, 0.3, 1.0f);
+
+
 const Color color_muscles1     = Color(0.710, 0.140, 0.09, 1.0f);
 const Color color_muscles2     = Color(0.780, 0.120, 0.0468, 1.0f);
 
