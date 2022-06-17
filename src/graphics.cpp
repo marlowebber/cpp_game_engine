@@ -20,7 +20,7 @@ float viewPanY = 0.0f;
 float energyColorGrid[bufferSize];
 unsigned int colorGridCursor = 0; // keeps track of how many verts to draw this turn.
 
-float viewZoomSetpoint = 1000.0f;
+float viewZoomSetpoint = 250.0f;
 float viewPanSetpointX = 0.0f;
 float viewPanSetpointY = 0.0f;
 float cameraTrackingResponse = 10;

@@ -1367,7 +1367,7 @@ void detailTerrain(unsigned int worldPositionI)
 
 	if ( world[worldPositionI]. height < biome_marine)
 	{
-		if (grade < 2.5f)
+		if (grade < 5.0f)
 		{
 			// rockColor = multiplyColorByScalar (  color_tan,  colorNoise );
 			world[worldPositionI].terrain = MATERIAL_SAND;
@@ -1406,13 +1406,15 @@ void detailTerrain(unsigned int worldPositionI)
 
 		if (grade < 2.5f)
 		{
-			// rockColor = multiplyColorByScalar (  color_lightgrey, colorNoise );
-			world[worldPositionI].terrain = MATERIAL_DUST;
+			// rockColor = multiplyColorByScalar (  color_grey,  colorNoise );
+			world[worldPositionI].terrain = MATERIAL_GRAVEL;
+
 		}
 		else if (grade < 5.0f)
 		{
-			// rockColor = multiplyColorByScalar (  color_grey,  colorNoise );
-			world[worldPositionI].terrain = MATERIAL_GRAVEL;
+			// rockColor = multiplyColorByScalar (  color_lightgrey, colorNoise );
+			world[worldPositionI].terrain = MATERIAL_DUST;
+
 		}
 		else
 		{
@@ -2377,8 +2379,6 @@ bool materialSupportsGrowth(unsigned int material)
 	    material == MATERIAL_SAND   ||
 	    material == MATERIAL_DIRT   ||
 	    material == MATERIAL_SOIL   ||
-	    material == MATERIAL_BASALT ||
-	    material == MATERIAL_DUST   ||
 	    material == MATERIAL_GRAVEL
 
 
@@ -5110,40 +5110,7 @@ void drawGameInterfaceText()
 		printText2D(   std::string("[u] hide instructions"), menuX, menuY, textSize);
 		menuY += spacing;
 
-		printText2D(   std::string("[esc] quit"), menuX, menuY, textSize);
-		menuY += spacing;
 
-
-		printText2D(   std::string("[arrows] pan, [-,=] zoom"), menuX, menuY, textSize);
-		menuY += spacing;
-
-		std::string pauseString = std::string("[p] pause ");
-		if (paused)
-		{
-			pauseString = std::string("[p] resume ");
-		}
-
-		printText2D(   std::string("[l] limit frame rate"), menuX, menuY, textSize);
-		menuY += spacing;
-
-
-		printText2D(   std::string("[o] save, ") + pauseString, menuX, menuY, textSize);
-		menuY += spacing;
-
-		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
-		menuY += spacing;
-
-
-		if (playerCreature >= 0)
-		{
-			printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
-		else
-		{
-			printText2D(   std::string("[r] spawn") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
 
 	}
 	else
@@ -5382,6 +5349,8 @@ void drawGameInterfaceText()
 
 
 
+
+
 // int menuX = 50;
 // int menuY = 50;
 // int textSize = 10;
@@ -5401,6 +5370,49 @@ void drawGameInterfaceText()
 
 	}
 
+
+	if (showInstructions)
+	{
+
+		menuY += spacing;
+		printText2D(   std::string("[esc] quit"), menuX, menuY, textSize);
+		menuY += spacing;
+
+
+		printText2D(   std::string("[arrows] pan, [-,=] zoom"), menuX, menuY, textSize);
+		menuY += spacing;
+
+		std::string pauseString = std::string("[p] pause ");
+		if (paused)
+		{
+			pauseString = std::string("[p] resume ");
+		}
+
+		printText2D(   std::string("[l] limit frame rate"), menuX, menuY, textSize);
+		menuY += spacing;
+
+
+		printText2D(   std::string("[o] save, ") + pauseString, menuX, menuY, textSize);
+		menuY += spacing;
+
+		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
+		menuY += spacing;
+
+
+		if (playerCreature >= 0)
+		{
+			printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
+			menuY += spacing;
+
+			printText2D(   std::string("Explore to find useful items.") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+		else
+		{
+			printText2D(   std::string("[r] spawn") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+	}
 
 
 // draw edit palette
@@ -5773,6 +5785,8 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 	unsigned int worldPositionY = worldPositionI / worldSize;
 
 
+	float avgHeight = 0.0f;
+	unsigned int tally = 0;
 
 	for (unsigned int i = 0; i < worldSquareSize; ++i)
 	{
@@ -5791,6 +5805,10 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 		// set all the tiles around the position to a floor tile
 		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
 		{
+
+			avgHeight += world[i].height;
+			tally++;
+
 			world[i].terrain = MATERIAL_VOIDMETAL;
 			// world[i].material = MATERIAL_NOTHING;
 			if (  !(world[i].wall == MATERIAL_NOTHING || world[i].wall == MATERIAL_WATER) )
@@ -5841,6 +5859,26 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 
 	}
 
+
+	avgHeight = avgHeight / tally;
+	for (unsigned int i = 0; i < worldSquareSize; ++i)
+	{
+		int x = i % worldSize;
+		int y = i / worldSize;
+
+
+
+
+		int xdiff = x - worldPositionX;
+		int ydiff = y - worldPositionY;
+
+		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
+		{
+			world[i].height = avgHeight;
+		}
+
+
+	}
 
 	cameraPositionX  = worldPositionX;
 	cameraPositionY = worldPositionY;
@@ -5972,6 +6010,7 @@ void spawnPlayer()
 		int i = 1;
 		setupExampleHuman(i);
 
+
 		playerCreature = 0;
 		spawnAnimalIntoSlot(playerCreature,
 		                    animals[i],
@@ -5980,6 +6019,15 @@ void spawnPlayer()
 		cameraTargetCreature = playerCreature;
 
 		// printf("spawned player creature\n");
+
+		int randomLung = getRandomCellOfType(playerCreature, ORGAN_LUNG);
+		if (randomLung >= 0)
+		{
+			animals[playerCreature].body[randomLung].signalIntensity = baseLungCapacity;
+		}
+
+		animals[playerCreature].energy = animals[playerCreature].maxEnergy;
+		animals[playerCreature].damageReceived = 0;
 
 
 		appendLog( std::string("Spawned the player.") );
@@ -6224,8 +6272,21 @@ void recomputeTerrainLighting()
 
 			float brightness = (1 / (1 + (depth / (worldSize / 8))) );
 			if (brightness < 0.2f) { brightness = 0.2f;}
+
+
+
 			world[worldPositionI].light = multiplyColorByScalar(world[worldPositionI].light, brightness   );
 		}
+
+
+		float steps = 8;
+		float b = world[worldPositionI].light.a * steps;//100.0f;
+
+		int ib = b;
+
+		float betoot=  (ib / steps);
+
+		world[worldPositionI].light.a =betoot;
 	}
 }
 
@@ -6759,9 +6820,6 @@ void setupRandomWorld()
 	normalizeTerrainHeight();
 
 
-	worldCreationStage++;
-
-	recomputeTerrainLighting();
 
 
 
@@ -6804,6 +6862,11 @@ void setupRandomWorld()
 
 	setupGameItems();
 	// }
+
+
+	worldCreationStage++;
+
+	recomputeTerrainLighting();
 
 	worldCreationStage++;
 
@@ -7124,16 +7187,16 @@ void drawMainMenuText()
 		break;
 
 	case 7:
-		printText2D(   std::string("compute terrain lighting "), menuX, menuY, textSize);
+		printText2D(   std::string("place terrain materials "), menuX, menuY, textSize);
 		// menuY += spacing;
 		break;
 
 	case 8:
-		printText2D(   std::string("place terrain materials "), menuX, menuY, textSize);
+		printText2D(   std::string("place game items "), menuX, menuY, textSize);
 		// menuY += spacing;
 		break;
 	case 9:
-		printText2D(   std::string("place game items "), menuX, menuY, textSize);
+		printText2D(   std::string("compute terrain lighting "), menuX, menuY, textSize);
 		// menuY += spacing;
 		break;
 	case 10:
