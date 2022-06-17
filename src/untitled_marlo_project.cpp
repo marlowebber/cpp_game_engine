@@ -1520,18 +1520,135 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 }
 
 
-#define MUTATIONS_START           10001
+
+
+
+
+
+#define MUTATION_CONNECTIONWEIGHT 10006
+#define MUTATION_ALTERBIAS        10007
+#define MUTATION_SKINCOLOR        10009
+
+
+#define MUTATION_SWITCHCONNECTION 10004
+#define MUTATION_RECONNECT        10005
+
+
+#define MUTATION_MOVECELL         10008
+#define MUTATION_EYELOOK          10011
+
 
 #define MUTATION_ERASEORGAN       10002
 #define MUTATION_ADDORGAN         10003
-#define MUTATION_SWITCHCONNECTION 10004
-#define MUTATION_RECONNECT        10005
-#define MUTATION_CONNECTIONWEIGHT 10006
-#define MUTATION_ALTERBIAS        10007
-#define MUTATION_MOVECELL         10008
-
-#define MUTATION_SKINCOLOR        10009
 #define MUTATION_SPEAKERCHANNEL   10010
+
+
+
+
+
+
+
+void mutateAnimalComprehensive(unsigned int animalIndex)
+{
+
+
+	// some mutations are chosen more commonly than others. They are classed into groups, and each group is associated with a normalized likelyhood of occurring.
+	// the reason for this is that the development of the brain must always occur faster and in more detail than the development of the body, or else intelligent behavior can never arise.
+	float group1Probability = 1.0f;
+	float group2Probability = 0.25f;
+	float group3Probability = 0.0625f;
+	float group4Probability = 0.03125f;
+
+	float sum = group1Probability + group2Probability + group3Probability + group4Probability;
+
+	float groupChoice = RNG() * sum;
+
+	int group = 0;
+
+	if (groupChoice < group1Probability ) // chosen group 1
+	{
+		group = 1;
+	}
+	else if (groupChoice > (group1Probability) &&  groupChoice < (group1Probability + group2Probability) ) // chosen group 2
+	{
+		group = 2;
+	}
+	else if (groupChoice > (group1Probability + group2Probability) &&  groupChoice < (group1Probability + group2Probability + group3Probability) ) // chosen group 3
+	{
+		group = 3;
+	}
+	else if (groupChoice > (group1Probability + group2Probability + group3Probability) &&  groupChoice < (sum) ) // chosen group 4
+	{
+		group = 4;
+	}
+
+
+	// choose a mutation from the group randomly.
+	int mutation = MATERIAL_NOTHING;
+	if (group == 1)
+	{
+		int mutationChoice = extremelyFastNumberFromZeroTo(2);
+
+		if (mutationChoice == 0)
+		{
+			mutation = MUTATION_CONNECTIONWEIGHT;
+		}
+		else if (mutationChoice == 1)
+		{
+			mutation = MUTATION_ALTERBIAS;
+		}
+		else if (mutationChoice == 2)
+		{
+			mutation = MUTATION_SKINCOLOR;
+		}
+	}
+	else if (group == 2)
+	{
+		int mutationChoice = extremelyFastNumberFromZeroTo(1);
+
+		if (mutationChoice == 0)
+		{
+			mutation = MUTATION_SWITCHCONNECTION;
+		}
+		else if (mutationChoice == 1)
+		{
+			mutation = MUTATION_RECONNECT;
+		}
+	}
+	else if (group == 3)
+	{
+		int mutationChoice = extremelyFastNumberFromZeroTo(1);
+
+		if (mutationChoice == 0)
+		{
+			mutation = MUTATION_MOVECELL;
+		}
+		else if (mutationChoice == 1)
+		{
+			mutation = MUTATION_EYELOOK;
+		}
+	}
+	else if (group == 4)
+	{
+		int mutationChoice = extremelyFastNumberFromZeroTo(1);
+
+		if (mutationChoice == 0)
+		{
+			mutation = MUTATION_ERASEORGAN;
+		}
+		else if (mutationChoice == 1)
+		{
+			mutation = MUTATION_ADDORGAN;
+		}
+		else if (mutationChoice == 2)
+		{
+			mutation = MUTATION_SPEAKERCHANNEL;
+		}
+	}
+
+
+
+}
 
 
 
@@ -1706,7 +1823,7 @@ void mutateAnimal(unsigned int animalIndex)
 				if (occupiedChannel >= 0 && occupiedChannel < numberOfSpeakerChannels)
 				{
 					int increment = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels);
-					modifyChannel(animalIndex, occupiedChannel,increment);
+					modifyChannel(animalIndex, occupiedChannel, increment);
 				}
 
 
