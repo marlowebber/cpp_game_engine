@@ -14,6 +14,10 @@
 
 // bool paused = false;
 bool flagQuit = false;
+bool flagCreate = false;
+bool flagLoad = false;
+bool flagReady = false;
+bool flagReturn = false;
 
 int mouseX;
 int mouseY;
@@ -22,12 +26,55 @@ float panSpeed = 0.1f;
 
 float playerSpeed = 0.3f;
 
+
 void quit ()
 {
 	shutdownGraphics();
 	cleanupText2D();
 	SDL_Quit();
 	flagQuit = true;
+}
+
+
+
+
+void threadMainMenuInterface()
+{
+
+
+	SDL_Event event;
+	while ( SDL_PollEvent( &event ) )
+	{
+		switch ( event.type )
+		{
+
+		case SDL_KEYDOWN:
+		{
+
+			switch ( event.key.keysym.sym )
+			{
+			case SDLK_j:
+				flagCreate = true;
+				break;
+
+			case SDLK_i:
+				flagLoad = true;
+				break;
+
+			case SDLK_ESCAPE:
+				quit();
+				return;
+
+			}
+
+		}
+
+
+		}
+	}
+
+
+
 }
 
 
@@ -280,11 +327,11 @@ void threadInterface()
 				playerInControl = !playerInControl;
 				break;
 			}
-			case SDLK_i: // w
-			{
-				load();
-				break;
-			}
+			// case SDLK_i: // w
+			// {
+			// 	load();
+			// 	break;
+			// }
 			case SDLK_o: // w
 			{
 				save();
@@ -336,8 +383,11 @@ void threadInterface()
 
 
 
+
 			case SDLK_ESCAPE:
-				quit();
+				// quit();
+				flagReturn = true;
+				return;
 			}
 			break;
 		}
@@ -418,33 +468,40 @@ void threadInterface()
 
 // drawTestCoordinate (mouseX, mouseY) ;
 
-			int prevMouseX = mouseX;
-			int prevMouseY = mouseY;
+			// int prevMouseX = mouseX;
+			// int prevMouseY = mouseY;
 
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
 
-			float deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) * (viewZoom / 380.0f);
-			float deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) * (viewZoom / 380.0f) ;
+			// float deltaMouseX = ((mouseX - prevMouseX) / viewportScaleFactorX ) * (viewZoom / 380.0f);
+			// float deltaMouseY = (-1 * (mouseY - prevMouseY) / viewportScaleFactorY  ) * (viewZoom / 380.0f) ;
 
 
-			fmousePositionX += deltaMouseX  ;
-			fmousePositionY += deltaMouseY  ;
+			// fmousePositionX += deltaMouseX  ;
+			// fmousePositionY += deltaMouseY  ;
 
-			mousePositionX = fmousePositionX;
-			mousePositionY = fmousePositionY;
-
-
-			if ( draggedMenu != nullptr)
-			{
+			// mousePositionX = fmousePositionX;
+			// mousePositionY = fmousePositionY;
 
 
 
-				rebaseMenu (draggedMenu, deltaMouseX, deltaMouseY);
+
+			Vec_f2 mouseWorldPos = transformScreenPositionToWorld( Vec_f2( mouseX, mouseY ) );
+			mousePositionX = mouseWorldPos.x;
+			mousePositionY = mouseWorldPos.y;
+
+
+			// if ( draggedMenu != nullptr)
+			// {
 
 
 
-			}
+			// 	rebaseMenu (draggedMenu, deltaMouseX, deltaMouseY);
+
+
+
+			// }
 
 			// worldMousePos = transformScreenPositionToWorld( b2Vec2(mouseX, mouseY) );
 
@@ -465,27 +522,58 @@ void threadInterface()
 #endif
 }
 
+
+
+void setFlagReady()
+{
+	flagReady = true;
+}
+
+
 int main( int argc, char * argv[] )
 {
 	setupGraphics();
-	initializeGame();
-	setupMenus();
 
-	for ( ;; )
+	setupExtremelyFastNumberGenerators();
+	initText2D();
+
+	worldCreationStage = 0;
+
+	for (;;)
 	{
-		// you can start your threads like this:
-		boost::thread t2{ threadInterface };
-		// boost::thread t3{ threadPhysics };
-		boost::thread t3{ threadGame };
 
-		// graphics only works in this thread, because it is the process the SDL context was created in.
-		threadGraphics();
+		flagCreate = false;
+		flagReady = false;
+		flagQuit = false;
+		flagLoad = false;
+
+		mainMenuDraw();
+		threadMainMenuInterface();
+
+		if (flagCreate)
+		{
+			flagCreate = false;
+			flagReady = false;
+			boost::thread t7{ setupRandomWorld }; // takes ages, so run it in a thread and print progress statements.
+			// ();
+		}
+
+		if (flagLoad)
+		{
+			flagLoad = false;
+			// load();
+			flagReady = false;
+			            boost::thread t7{ load };
+		}
 
 
+		if (flagReady)
+		{
+			flagReady = false;
+			startSimulation();
+			worldCreationStage = 0;
+		}
 
-		// you can have this thread wait for another to end by saying:
-		t2.join();
-		t3.join();
 
 		if (flagQuit)
 		{

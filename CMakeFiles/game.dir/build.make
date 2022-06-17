@@ -70,22 +70,9 @@ CMakeFiles/game.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/game.dir/src/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/marlo/Documents/cpp_game_engine/src/main.cpp -o CMakeFiles/game.dir/src/main.cpp.s
 
-CMakeFiles/game.dir/src/game.cpp.o: CMakeFiles/game.dir/flags.make
-CMakeFiles/game.dir/src/game.cpp.o: src/game.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/game.dir/src/game.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/game.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/game.cpp
-
-CMakeFiles/game.dir/src/game.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/game.dir/src/game.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/marlo/Documents/cpp_game_engine/src/game.cpp > CMakeFiles/game.dir/src/game.cpp.i
-
-CMakeFiles/game.dir/src/game.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/game.dir/src/game.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/marlo/Documents/cpp_game_engine/src/game.cpp -o CMakeFiles/game.dir/src/game.cpp.s
-
 CMakeFiles/game.dir/src/graphics.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/graphics.cpp.o: src/graphics.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/game.dir/src/graphics.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/game.dir/src/graphics.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/graphics.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/graphics.cpp
 
 CMakeFiles/game.dir/src/graphics.cpp.i: cmake_force
@@ -98,7 +85,7 @@ CMakeFiles/game.dir/src/graphics.cpp.s: cmake_force
 
 CMakeFiles/game.dir/src/menus.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/menus.cpp.o: src/menus.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/game.dir/src/menus.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/game.dir/src/menus.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/menus.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/menus.cpp
 
 CMakeFiles/game.dir/src/menus.cpp.i: cmake_force
@@ -111,7 +98,7 @@ CMakeFiles/game.dir/src/menus.cpp.s: cmake_force
 
 CMakeFiles/game.dir/src/utilities.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/utilities.cpp.o: src/utilities.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/game.dir/src/utilities.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/game.dir/src/utilities.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/utilities.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/utilities.cpp
 
 CMakeFiles/game.dir/src/utilities.cpp.i: cmake_force
@@ -124,7 +111,7 @@ CMakeFiles/game.dir/src/utilities.cpp.s: cmake_force
 
 CMakeFiles/game.dir/src/neuro.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/neuro.cpp.o: src/neuro.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/game.dir/src/neuro.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/game.dir/src/neuro.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/neuro.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/neuro.cpp
 
 CMakeFiles/game.dir/src/neuro.cpp.i: cmake_force
@@ -137,7 +124,7 @@ CMakeFiles/game.dir/src/neuro.cpp.s: cmake_force
 
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o: src/untitled_marlo_project.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/untitled_marlo_project.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/untitled_marlo_project.cpp
 
 CMakeFiles/game.dir/src/untitled_marlo_project.cpp.i: cmake_force
@@ -150,7 +137,7 @@ CMakeFiles/game.dir/src/untitled_marlo_project.cpp.s: cmake_force
 
 CMakeFiles/game.dir/src/SimplexNoise.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/src/SimplexNoise.cpp.o: src/SimplexNoise.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/game.dir/src/SimplexNoise.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/game.dir/src/SimplexNoise.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/src/SimplexNoise.cpp.o -c /home/marlo/Documents/cpp_game_engine/src/SimplexNoise.cpp
 
 CMakeFiles/game.dir/src/SimplexNoise.cpp.i: cmake_force
@@ -163,7 +150,7 @@ CMakeFiles/game.dir/src/SimplexNoise.cpp.s: cmake_force
 
 CMakeFiles/game.dir/tracy/TracyClient.cpp.o: CMakeFiles/game.dir/flags.make
 CMakeFiles/game.dir/tracy/TracyClient.cpp.o: tracy/TracyClient.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/game.dir/tracy/TracyClient.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/game.dir/tracy/TracyClient.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/game.dir/tracy/TracyClient.cpp.o -c /home/marlo/Documents/cpp_game_engine/tracy/TracyClient.cpp
 
 CMakeFiles/game.dir/tracy/TracyClient.cpp.i: cmake_force
@@ -177,7 +164,6 @@ CMakeFiles/game.dir/tracy/TracyClient.cpp.s: cmake_force
 # Object files for target game
 game_OBJECTS = \
 "CMakeFiles/game.dir/src/main.cpp.o" \
-"CMakeFiles/game.dir/src/game.cpp.o" \
 "CMakeFiles/game.dir/src/graphics.cpp.o" \
 "CMakeFiles/game.dir/src/menus.cpp.o" \
 "CMakeFiles/game.dir/src/utilities.cpp.o" \
@@ -190,7 +176,6 @@ game_OBJECTS = \
 game_EXTERNAL_OBJECTS =
 
 game: CMakeFiles/game.dir/src/main.cpp.o
-game: CMakeFiles/game.dir/src/game.cpp.o
 game: CMakeFiles/game.dir/src/graphics.cpp.o
 game: CMakeFiles/game.dir/src/menus.cpp.o
 game: CMakeFiles/game.dir/src/utilities.cpp.o
@@ -212,7 +197,7 @@ game: /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so
 game: /usr/lib/x86_64-linux-gnu/libpthread.so
 game: /usr/lib/x86_64-linux-gnu/libboost_atomic.so.1.71.0
 game: CMakeFiles/game.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX executable game"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable game"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/game.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

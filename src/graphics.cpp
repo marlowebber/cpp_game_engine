@@ -125,7 +125,7 @@ float colorAmplitude(Color a )
 	c      += a.b;
 	c      *= a.a;
 
-	c = c/3.0f ; // because there are 3 color components, normalise the result to 1.
+	c = c / 3.0f ; // because there are 3 color components, normalise the result to 1.
 
 	return c;
 }
@@ -157,6 +157,114 @@ void shutdownGraphics()
 }
 
 
+
+
+
+
+
+
+
+
+
+const unsigned int mapsize = 10;
+const float tileHeight =  1.0f;
+const float tileWidth = 0.5f;
+unsigned int heightmap[mapsize * mapsize];
+
+
+Vec_f2 worldToIsometric( Vec_f2 input )
+{
+	// https://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
+	// screenX = (cellX * tile_width  / 2) + (cellY * tile_width  / 2)
+	// screenY = (cellY * tile_height / 2) - (cellX * tile_height / 2)
+
+	return Vec_f2(
+	           (input.x * tileWidth  / 2) + (input.y * tileWidth  / 2)
+	           ,
+	           (input.y * tileHeight  / 2) + (input.x * tileHeight  / 2)
+	       );
+}
+
+
+void drawIsometricTile( Vec_f2 position , Color finalColor)
+{
+	Vec_f2 isometricPos = worldToIsometric( position );
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + 0.0f,            isometricPos.y +  -(tileHeight / 2)));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + 0.0f,            isometricPos.y +  (tileHeight / 2)));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + -(tileWidth / 2), isometricPos.y +  0.0f));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + 0.0f,            isometricPos.y + -(tileHeight / 2)));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + 0.0f,            isometricPos.y + (tileHeight / 2)));
+	vertToBuffer(finalColor, Vec_f2( isometricPos.x + (tileWidth / 2), isometricPos.y + 0.0f));
+}
+
+
+
+void drawTile( Vec_f2 position , Color finalColor)
+{
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    tileWidth          , position.y -     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    tileWidth          , position.y +     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    tileWidth          , position.y +     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    tileWidth          , position.y -     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    tileWidth          , position.y +     tileWidth            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    tileWidth          , position.y -     tileWidth            ) );
+}
+
+
+void drawLine(  Vec_f2 a, Vec_f2 b, float thickness, Color finalColor )
+{
+
+
+
+
+
+}
+
+
+void drawPointerTriangle( Vec_f2 position , Color finalColor, float angle)
+{
+
+
+
+
+	// one triangle
+
+
+	Vec_f2 pointA = Vec_f2 (  position.x -    (tileWidth / 2)          , position.y -     tileWidth            );
+	Vec_f2 pointB = Vec_f2 (  position.x +    (tileWidth / 2)          , position.y -     tileWidth            );
+	Vec_f2 pointC = Vec_f2 (  position.x                              , position.y +     tileWidth            ) ;
+
+
+// Vec_f2
+	pointA = rotatePointPrecomputed( position, sin(angle), cos(angle), pointA);
+	pointB = rotatePointPrecomputed( position, sin(angle), cos(angle), pointB);
+	pointC = rotatePointPrecomputed( position, sin(angle), cos(angle), pointC);
+
+
+	vertToBuffer ( finalColor, pointA ); // A
+	vertToBuffer ( finalColor, pointB ); // B
+	vertToBuffer ( finalColor, pointC ); // C
+
+
+	// vertToBuffer ( finalColor, Vec_f2 (  position.x -    (tileWidth/10)          , position.y -     tileWidth            ) ); // A
+	// vertToBuffer ( finalColor, Vec_f2 (  position.x +    (tileWidth/10)          , position.y +     tileWidth            ) ); // B
+	// vertToBuffer ( finalColor, Vec_f2 (  position.x +    (tileWidth/10)          , position.y -     tileWidth            ) ); // D
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #define BUFFER_DURATION 1 // Length of the buffer in seconds
 #define FREQUENCY 48000 // Samples per second
 #define BUFFER_LEN (BUFFER_DURATION*FREQUENCY) // Samples in the buffer
@@ -169,7 +277,7 @@ void play_buffer(void* userdata, unsigned char* stream, int len) ;
 // // If the sound card doesn't support this format, SDL handles the
 // // conversions seemlessly for us
 SDL_AudioSpec spec = {
-	.freq = FREQUENCY, 
+	.freq = FREQUENCY,
 	.format = AUDIO_S16SYS, // Signed 16 bit integer format
 	.channels = 1,
 	.samples = 4096, // The size of each "chunk"
@@ -186,18 +294,18 @@ void play_buffer(void* userdata, unsigned char* stream, int len) {
 	// This fills the stream with the silence value (almost always just 0)
 	// SDL implements the standard library (SDL_memset, SDL_memcpy etc.) to support more platforms
 	SDL_memset(stream, spec.silence, len);
-	
+
 	// Dividing the stream size by 2 gives us the real length of the buffer (our format is 2 bytes per sample)
 	len /= 2;
 	// Prevent overflows (if we get to the end of the sound buffer, we don't want to read beyond it)
-	len = (buffer_pos+len < BUFFER_LEN ? len : BUFFER_LEN-buffer_pos);
+	len = (buffer_pos + len < BUFFER_LEN ? len : BUFFER_LEN - buffer_pos);
 
 	// If we are at the end of the buffer, keep the silence and return
 	if (len == 0) return;
 
 	// // Copy the samples from the current position in the buffer to the stream
 	// // Notice that the length gets multiplied back by 2 because we need to specify the length IN BYTES
-	SDL_memcpy(stream, buffer+buffer_pos, len*2);
+	SDL_memcpy(stream, buffer + buffer_pos, len * 2);
 
 	// // Move the buffer position
 	buffer_pos += len;
@@ -235,7 +343,7 @@ void play_buffer(void* userdata, unsigned char* stream, int len) {
 void setupGraphics()
 {
 	int sdl_error_code = SDL_Init( SDL_INIT_VIDEO );
-		// | SDL_INIT_AUDIO);
+	// | SDL_INIT_AUDIO);
 
 	// std::cout << SDL_GetError() << '\n';
 
@@ -245,9 +353,9 @@ void setupGraphics()
 	// SDL_AudioDeviceID dev = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
 
 
-	// for (int i = 0; i < BUFFER_LEN; i++) 
+	// for (int i = 0; i < BUFFER_LEN; i++)
 	// {
- //        buffer[i] = sin(i * 440 * 3.1415 * 2 / FREQUENCY);
+//        buffer[i] = sin(i * 440 * 3.1415 * 2 / FREQUENCY);
 
 	// }
 
@@ -255,7 +363,7 @@ void setupGraphics()
 	// SDL_PauseAudioDevice(dev, 0);
 
 
-	
+
 
 
 
@@ -480,6 +588,17 @@ void addExamplePanelToBuffer()
 	vertToBuffer(color_lightblue, Vec_f2(250.0f, 0.0f));
 }
 
+
+void mainMenuDraw()
+{
+	preDraw();
+
+	prepareForMenuDraw();
+	drawMainMenuText();
+
+	postDraw();
+}
+
 void threadGraphics()
 {
 	preDraw();
@@ -487,7 +606,12 @@ void threadGraphics()
 	prepareForWorldDraw ();
 
 
-	gameGraphics();
+	camera();
+
+	if (lockfps)
+	{
+		model();
+	}
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
 	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
@@ -511,21 +635,21 @@ void threadGraphics()
 
 Vec_f2 GetOGLPos(int x, int y)
 {
-    GLint viewport[4];
-    GLdouble modelview[16];
-    GLdouble projection[16];
-    GLfloat winX, winY, winZ;
-    GLdouble posX, posY, posZ;
- 
-    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-    glGetDoublev( GL_PROJECTION_MATRIX, projection );
-    glGetIntegerv( GL_VIEWPORT, viewport );
- 
-    winX = (float)x;
-    winY = (float)viewport[3] - (float)y;
-    glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
- 
-    gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
- 
-    return Vec_f2(posX, posY);
+	GLint viewport[4];
+	GLdouble modelview[16];
+	GLdouble projection[16];
+	GLfloat winX, winY, winZ;
+	GLdouble posX, posY, posZ;
+
+	glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
+	glGetDoublev( GL_PROJECTION_MATRIX, projection );
+	glGetIntegerv( GL_VIEWPORT, viewport );
+
+	winX = (float)x;
+	winY = (float)viewport[3] - (float)y;
+	glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+
+	gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+
+	return Vec_f2(posX, posY);
 }

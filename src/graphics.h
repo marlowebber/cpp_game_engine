@@ -1,7 +1,9 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#include "game.h"
+// #include "game.h"
+
+#include "utilities.h"
 
 #define PRIMITIVE_RESTART 0xffff
 
@@ -77,6 +79,14 @@ void insertPrimitiveRestart ();
 
 void threadGraphics();
 
+
+void mainMenuDraw();
+
+void drawIsometricTile( Vec_f2 position , Color finalColor);
+
+void drawTile( Vec_f2 position , Color finalColor);
+
+void drawPointerTriangle( Vec_f2 position , Color finalColor, float angle);
 
 
 Vec_f2 GetOGLPos(int x, int y);

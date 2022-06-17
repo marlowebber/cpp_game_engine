@@ -209,33 +209,6 @@ src/SimplexNoise.cpp.s:
 	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/SimplexNoise.cpp.s
 .PHONY : src/SimplexNoise.cpp.s
 
-src/game.o: src/game.cpp.o
-
-.PHONY : src/game.o
-
-# target to build an object file
-src/game.cpp.o:
-	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/game.cpp.o
-.PHONY : src/game.cpp.o
-
-src/game.i: src/game.cpp.i
-
-.PHONY : src/game.i
-
-# target to preprocess a source file
-src/game.cpp.i:
-	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/game.cpp.i
-.PHONY : src/game.cpp.i
-
-src/game.s: src/game.cpp.s
-
-.PHONY : src/game.s
-
-# target to generate assembly for a file
-src/game.cpp.s:
-	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/game.cpp.s
-.PHONY : src/game.cpp.s
-
 src/graphics.o: src/graphics.cpp.o
 
 .PHONY : src/graphics.o
@@ -442,9 +415,6 @@ help:
 	@echo "... src/SimplexNoise.o"
 	@echo "... src/SimplexNoise.i"
 	@echo "... src/SimplexNoise.s"
-	@echo "... src/game.o"
-	@echo "... src/game.i"
-	@echo "... src/game.s"
 	@echo "... src/graphics.o"
 	@echo "... src/graphics.i"
 	@echo "... src/graphics.s"

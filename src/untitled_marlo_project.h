@@ -28,6 +28,9 @@ extern  int playerCreature ;
 
 extern bool shift;
 
+extern bool mainMenu;
+extern unsigned int worldCreationStage;
+
 void spawnPlayer();
 
 void save();
@@ -66,6 +69,13 @@ void normalizeTerrainHeight();
 void toggleInstructions();
 
 void recomputeTerrainLighting();
+
+void gameGraphics();
+
+void setupRandomWorld();
+
+
+void drawMainMenuText();
 
 #define VISUALIZER_TRUECOLOR           1001
 #define VISUALIZER_TRACKS              1003

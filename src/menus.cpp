@@ -55,7 +55,7 @@ void exampleMenuCallback(void * userData)
 
 Vec_f2 transformScreenPositionToWorld( Vec_f2 screen )
 {
-    float worldX =       ( ((screen.x - (width / 2))) * (viewZoom  ) / 96) + viewPanX ;
+    float worldX =           ( ((screen.x - (width / 2)))  * (viewZoom  ) / 96) + viewPanX ;
     float worldY =     -1 *  ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
     return Vec_f2  (worldX, worldY);
 }
@@ -715,7 +715,7 @@ void resetMenus ()
         }
     }
     menus.clear();
-    rebuildMenus();
+    // rebuildMenus();
 }
 
 void editUserDataCallback ()
@@ -900,6 +900,5 @@ int checkMenus (int mouseX, int mouseY)
 void setupMenus()
 {
     resetMenus();
-    initText2D();
 }
 

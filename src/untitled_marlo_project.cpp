@@ -93,6 +93,13 @@
 #define MATERIAL_GLASS            69
 #define MATERIAL_WATER            70
 #define MATERIAL_FIRE              71
+#define MATERIAL_SAND    72
+#define MATERIAL_DIRT    73
+#define MATERIAL_SOIL    74
+#define MATERIAL_BASALT  75
+#define MATERIAL_DUST    76
+#define MATERIAL_GRAVEL  78
+
 
 #define CONDITION_GREATER         41
 #define CONDITION_EQUAL           42
@@ -188,6 +195,8 @@ unsigned int worldToLoad = WORLD_CALADAN;
 
 int visualizer = VISUALIZER_TRUECOLOR;
 
+float postMaxHeight = 0.0f;
+float postMinHeight = 0.0f;
 
 float prelimMap[prelimSquareSize];
 float prelimWater[prelimSquareSize];
@@ -201,16 +210,16 @@ bool paused = false;
 int mousePositionX =  -430;
 int mousePositionY =  330;
 
-float fmousePositionX = mousePositionX;
-float fmousePositionY = mousePositionY;
+// float fmousePositionX = mousePositionX;
+// float fmousePositionY = mousePositionY;
 
 unsigned int adversaryRespawnPos;
 
 int selectedAnimal = -1;
 int cursorAnimal = -1;
 
-float sunXangle = 0.65f;
-float sunYangle = 0.65f;
+float sunXangle = 0.35f;
+float sunYangle = 0.35f;
 
 float fps = 1.0f;
 bool showInstructions = false;
@@ -226,6 +235,11 @@ bool playerCanPickup = false;
 int playerCanPickupItem = -1;
 
 bool ecologyComputerDisplay = false;
+
+bool mainMenu = true;
+
+float biome_marine = seaLevel + (worldSize / 20);
+float biome_coastal = seaLevel + (worldSize / 3);
 
 
 bool computerdisplays[5];
@@ -259,9 +273,10 @@ int adversary = -1;
 int cameraTargetCreature = -1;
 unsigned int usPerFrame = 0;
 
-
+float baseLungCapacity = 1.0f;
 char logs[logLength][nLogs];
 
+unsigned int worldCreationStage = 0;
 
 void appendLog( std::string input)
 {
@@ -311,7 +326,7 @@ struct Cell
 	int localPosY;
 	unsigned int worldPositionI;
 	float damage;
-	bool dead;
+	// bool dead;
 	int grabbedCreature;
 	Connection connections[NUMBER_OF_CONNECTIONS];
 };
@@ -344,8 +359,8 @@ struct Animal
 	bool parentAmnesty;
 	unsigned int totalMuscle;
 	unsigned int totalGonads;
-	bool canBreatheUnderwater;
-	bool canBreatheAir;
+	// bool canBreatheUnderwater;
+	// bool canBreatheAir;
 	unsigned int lastTouchedStranger;
 	unsigned int lastTouchedKin;
 	unsigned int cellsUsed;
@@ -575,6 +590,32 @@ std::string tileDescriptions(unsigned int tile)
 	}
 
 
+	case MATERIAL_SAND:
+	{
+		return std::string("Fine-grained sand.");
+	}
+	case MATERIAL_DIRT:
+	{
+		return std::string("Dry sandy dirt.");
+	}
+	case MATERIAL_SOIL:
+	{
+		return std::string("Rich living soil.");
+	}
+	case MATERIAL_BASALT:
+	{
+		return std::string("Hard volcanic rock.");
+	}
+	case MATERIAL_DUST:
+	{
+		return std::string("Dry alkaline dust.");
+	}
+	case MATERIAL_GRAVEL:
+	{
+		return std::string("Scattered rubble.");
+	}
+
+
 	}
 	return std::string("You don't know what this is.");
 }
@@ -771,6 +812,41 @@ std::string tileShortNames(unsigned int tile)
 	{
 		return std::string("Water.");
 	}
+
+
+
+
+// #define MATERIAL_SAND
+// #define MATERIAL_DIRT
+// #define MATERIAL_SOIL
+// #define MATERIAL_BASALT
+// #define MATERIAL_DUST
+// #define MATERIAL_GRAVEL
+
+	case MATERIAL_SAND:
+	{
+		return std::string("Sand.");
+	}
+	case MATERIAL_DIRT:
+	{
+		return std::string("Dirt.");
+	}
+	case MATERIAL_SOIL:
+	{
+		return std::string("Soil.");
+	}
+	case MATERIAL_BASALT:
+	{
+		return std::string("Basalt.");
+	}
+	case MATERIAL_DUST:
+	{
+		return std::string("Dust.");
+	}
+	case MATERIAL_GRAVEL:
+	{
+		return std::string("Gravel.");
+	}
 	}
 	return std::string("Unknown");
 }
@@ -842,8 +918,8 @@ void resetMouseCursor()
 {
 	mousePositionX = 0;
 	mousePositionY = 0;
-	fmousePositionX = 0.0f;
-	fmousePositionY = 0.0f;
+	// fmousePositionX = 0.0f;
+	// fmousePositionY = 0.0f;
 }
 void togglePause ()
 {
@@ -867,7 +943,7 @@ void resetCell(unsigned int animalIndex, unsigned int cellLocalPositionI)
 	animals[animalIndex].body[cellLocalPositionI].eyeLookY = 0;
 	animals[animalIndex].body[cellLocalPositionI].localPosX = 0;
 	animals[animalIndex].body[cellLocalPositionI].localPosY = 0;
-	animals[animalIndex].body[cellLocalPositionI].dead = false;
+	// animals[animalIndex].body[cellLocalPositionI].dead = false;
 	animals[animalIndex].body[cellLocalPositionI].grabbedCreature = -1;
 
 	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
@@ -917,8 +993,8 @@ void resetAnimal(unsigned int animalIndex)
 		animals[animalIndex].uPosY = 0;
 		animals[animalIndex].parentAmnesty = true;
 		animals[animalIndex].retired = true;
-		animals[animalIndex].canBreatheUnderwater = true;
-		animals[animalIndex].canBreatheAir = true;
+		// animals[animalIndex].canBreatheUnderwater = true;
+		// animals[animalIndex].canBreatheAir = true;
 		animals[animalIndex].cellsUsed = 0;
 		animals[animalIndex].identityColor = Color(RNG(), RNG(), RNG(), 1.0f);
 		if (animalIndex == adversary)
@@ -1260,46 +1336,94 @@ Vec_f2 getTerrainSlope(unsigned int worldPositionI)
 }
 
 
-Color whatColorIsTheRock(unsigned int worldPositionI)
+void detailTerrain(unsigned int worldPositionI)
 {
-	Color rockColor = color_grey;
+	// Color rockColor = color_darkgrey;
+
+	// unsigned int rockType =
+
 	Vec_f2 slope = getTerrainSlope(worldPositionI);
+
+
+
 	float grade = sqrt( (slope.x * slope.x) +  (slope.y * slope.y)  );
-	float colorNoise = (((RNG() - 0.5f) + 0.5f) * 0.8f) ; // map -1,1 to 0,0.8
+	float colorNoise = 1 + (((RNG() - 0.5f) * 0.35)) ; // map -1,1 to 0,0.8
 
-	// printf("height %f, grade %f \n", world[worldPositionI].height, grade);
 
-	if (height < seaLevel * 1.5  )
+
+
+
+
+
+
+
+// #define MATERIAL_SAND
+// #define MATERIAL_DIRT
+// #define MATERIAL_SOIL
+// #define MATERIAL_BASALT
+// #define MATERIAL_DUST
+// #define MATERIAL_GRAVEL
+
+
+	if ( world[worldPositionI]. height < biome_marine)
 	{
-		if (grade < 1.0f)
+		if (grade < 2.5f)
 		{
-			rockColor = multiplyColorByScalar (  color_brown,  colorNoise );
+			// rockColor = multiplyColorByScalar (  color_tan,  colorNoise );
+			world[worldPositionI].terrain = MATERIAL_SAND;
 		}
-		else  if (grade < 2.5f)
+
+		else
 		{
-			rockColor = multiplyColorByScalar (  color_lightbrown,  colorNoise );
+			// rockColor = multiplyColorByScalar (  color_darkgrey,  colorNoise );
+			world[worldPositionI].terrain = MATERIAL_BASALT;
+		}
+	}
+
+	else if (world[worldPositionI]. height  > biome_marine && world[worldPositionI]. height  < biome_coastal )
+	{
+		if (grade < 2.5f)
+		{
+			// rockColor = multiplyColorByScalar (  color_brown,  colorNoise );
+			world[worldPositionI].terrain = MATERIAL_SOIL;
+		}
+		else  if (grade < 5.0f)
+		{
+			// rockColor = multiplyColorByScalar (  color_lightbrown,  colorNoise );
+			world[worldPositionI].terrain = MATERIAL_DIRT;
 		}
 		else
 		{
-			rockColor = multiplyColorByScalar (  color_tan,  colorNoise );
+			// rockColor = multiplyColorByScalar (  color_darkgrey,  colorNoise );
+			world[worldPositionI].terrain = MATERIAL_BASALT;
+			world[worldPositionI].wall = MATERIAL_BASALT;
+
 		}
 	}
-	else
+	else if (world[worldPositionI]. height  > biome_coastal)
 	{
-		if (grade < 1.0f)
+
+
+		if (grade < 2.5f)
 		{
-			rockColor = multiplyColorByScalar (  color_darkgrey, colorNoise );
+			// rockColor = multiplyColorByScalar (  color_lightgrey, colorNoise );
+			world[worldPositionI].terrain = MATERIAL_DUST;
 		}
-		else if (grade < 2.5f)
+		else if (grade < 5.0f)
 		{
-			rockColor = multiplyColorByScalar (  color_grey,  colorNoise );
+			// rockColor = multiplyColorByScalar (  color_grey,  colorNoise );
+			world[worldPositionI].terrain = MATERIAL_GRAVEL;
 		}
 		else
 		{
-			rockColor = multiplyColorByScalar (  color_lightgrey,  colorNoise );
+			// rockColor = multiplyColorByScalar (  color_darkgrey ,  colorNoise );
+			world[worldPositionI].terrain = MATERIAL_BASALT;
+			world[worldPositionI].wall = MATERIAL_BASALT;
 		}
+
+
 	}
-	return rockColor;
+	// return rockColor;
 
 }
 
@@ -1349,7 +1473,9 @@ bool materialBlocksMovement(unsigned int material)
 {
 	if (material == MATERIAL_ROCK ||
 	        material == MATERIAL_VOIDMETAL ||
-	        material == MATERIAL_METAL)
+	        material == MATERIAL_METAL ||
+	        material == MATERIAL_BASALT
+	   )
 	{
 		return true;
 	}
@@ -2241,6 +2367,29 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 	return -1;
 }
 
+
+bool materialSupportsGrowth(unsigned int material)
+{
+
+	if (
+
+	    material == MATERIAL_ROCK ||
+	    material == MATERIAL_SAND   ||
+	    material == MATERIAL_DIRT   ||
+	    material == MATERIAL_SOIL   ||
+	    material == MATERIAL_BASALT ||
+	    material == MATERIAL_DUST   ||
+	    material == MATERIAL_GRAVEL
+
+
+	)
+	{
+		return true;
+	}
+	return false;
+}
+
+
 Color materialColors(unsigned int material)
 {
 	switch (material)
@@ -2269,6 +2418,35 @@ Color materialColors(unsigned int material)
 		return color_blue_thirdClear;
 	case MATERIAL_FIRE:
 		return color_orange;
+
+
+
+// #define MATERIAL_SAND    72
+// #define MATERIAL_DIRT    73
+// #define MATERIAL_SOIL    74
+// #define MATERIAL_BASALT  75
+// #define MATERIAL_DUST    76
+// #define MATERIAL_GRAVEL  78
+
+	case MATERIAL_SAND:
+		return color_tan;
+	case MATERIAL_DIRT:
+		return color_lightbrown;
+	case MATERIAL_SOIL:
+		return color_brown;
+	case MATERIAL_BASALT:
+		return color_darkgrey;
+	case MATERIAL_DUST:
+		return color_lightgrey;
+	case MATERIAL_GRAVEL:
+		return color_grey;
+
+
+
+
+
+
+
 	}
 	return color_yellow;
 }
@@ -2410,7 +2588,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	else
 	{
 		Color materialColor ;
-		if (world[worldI].material == MATERIAL_GRASS || world[worldI].terrain == MATERIAL_ROCK )
+		if (world[worldI].material == MATERIAL_GRASS )
 		{
 			materialColor = world[worldI].grassColor;
 		}
@@ -2605,34 +2783,33 @@ void updateMap()
 					unsigned int neighbour = randomI + neighbourOffsets[n];
 					if (neighbour < worldSquareSize)
 					{
-						if (world[neighbour].material == MATERIAL_NOTHING
-						        && world[neighbour].terrain != MATERIAL_VOIDMETAL)
+						if (world[neighbour].material == MATERIAL_NOTHING &&
+						        !materialBlocksMovement(world[neighbour].wall )
+						        &&  materialSupportsGrowth(world[neighbour].terrain )
+						   )
 						{
 
-							// grow speed proportional to light
+							// grow speed proportional to light brightness
 							float growthChance =  0.0f;
 
-							growthChance += world[neighbour].light.r;
-							growthChance += world[neighbour].light.g;
-							growthChance += world[neighbour].light.b;
+							// growthChance += world[neighbour].light.r;
+							// growthChance += world[neighbour].light.g;
+							// growthChance += world[neighbour].light.b;
 
-							growthChance *= 0.3f;
+							// growthChance *= 0.3f;
 
-							growthChance *= world[neighbour].light.a;
+							// growthChance *= world[neighbour].light.a;
 
-							if (RNG() < growthChance)
+							if (RNG() < world[neighbour].light.a)
 
 							{
 
-								world[randomI].material = MATERIAL_GRASS;
-
-								world[randomI].grassColor = world[neighbour].grassColor;
-
-								world[randomI].grassColor.r += (RNG() - 0.5f) * 0.1f;
-								world[randomI].grassColor.g += (RNG() - 0.5f) * 0.1f;
-								world[randomI].grassColor.b += (RNG() - 0.5f) * 0.1f;
-
-								world[randomI].grassColor = clampColor(world[randomI].grassColor);
+								world[neighbour].material = MATERIAL_GRASS;
+								world[neighbour].grassColor = world[randomI].grassColor;
+								world[neighbour].grassColor.r += (RNG() - 0.5f) * 0.1f;
+								world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
+								world[neighbour].grassColor.b += (RNG() - 0.5f) * 0.1f;
+								world[neighbour].grassColor = clampColor(world[neighbour].grassColor);
 
 							}
 						}
@@ -3166,8 +3343,8 @@ void organs_all()
 			float totalLiver = 0;
 			unsigned int totalGonads = 0;
 			float highestIntensity = 0.0f;
-			bool canBreatheUnderwater = false;
-			bool canBreatheAir        = false;
+			// bool canBreatheUnderwater = false;
+			// bool canBreatheAir        = false;
 
 			for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; cellIndex++)                                      // place animalIndex on grid and attack / eat. add captured energy
 			{
@@ -3397,6 +3574,9 @@ void organs_all()
 						float fposx = cellWorldPositionX;
 						float fposy = cellWorldPositionY;
 
+						float fmousePositionX = mousePositionX;
+						float fmousePositionY = mousePositionY;
+
 
 						float angleToCursor = atan2(   fmousePositionY - (  cameraPositionY - fposy)  ,  fmousePositionX - (cameraPositionX - fposx));
 
@@ -3528,13 +3708,79 @@ void organs_all()
 
 				case ORGAN_LUNG:
 				{
-					canBreatheAir = true;
+					// canBreatheAir = true;
+
+
+					if (world[cellWorldPositionI].wall != MATERIAL_WATER)
+					{
+						animals[animalIndex].body[cellIndex].signalIntensity = baseLungCapacity;
+					}
+					else
+					{
+						animals[animalIndex].body[cellIndex].signalIntensity -= 0.01f;
+					}
+
+					if (animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
+					{
+						// animals[animalIndex].damageReceived++;
+
+						int otherLung = getRandomCellOfType(animalIndex, ORGAN_LUNG);
+						if (otherLung < 0)
+						{
+							otherLung = getRandomCellOfType(animalIndex, ORGAN_GILL); // compatible with gills
+						}
+						if (otherLung >= 0)
+						{
+							// if there is another reservoir of air, equalize them.
+							animals[animalIndex].body[cellIndex].signalIntensity +=	animals[animalIndex].body[otherLung].signalIntensity;
+							animals[animalIndex].body[cellIndex].signalIntensity *= 0.5f;
+							animals[animalIndex].body[otherLung].signalIntensity = animals[animalIndex].body[cellIndex].signalIntensity;
+						}
+						if (animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
+						{
+							animals[animalIndex].damageReceived++;
+						}
+					}
+
+
 					break;
 
 				}
 				case ORGAN_GILL:
 				{
-					canBreatheUnderwater = true;
+					// canBreatheUnderwater = true;
+					if (world[cellWorldPositionI].wall == MATERIAL_WATER)
+					{
+						animals[animalIndex].body[cellIndex].signalIntensity = baseLungCapacity;
+					}
+					else
+					{
+						animals[animalIndex].body[cellIndex].signalIntensity -= 0.01f;
+					}
+
+					if (animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
+					{
+
+
+						int otherLung = getRandomCellOfType(animalIndex, ORGAN_GILL);
+						if (otherLung < 0)
+						{
+							otherLung = getRandomCellOfType(animalIndex, ORGAN_LUNG); // compatible with lungs
+						}
+						if (otherLung >= 0)
+						{
+							// if there is another reservoir of air, equalize them.
+							animals[animalIndex].body[cellIndex].signalIntensity +=	animals[animalIndex].body[otherLung].signalIntensity;
+							animals[animalIndex].body[cellIndex].signalIntensity *= 0.5f;
+							animals[animalIndex].body[otherLung].signalIntensity = animals[animalIndex].body[cellIndex].signalIntensity;
+						}
+						if (animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
+						{
+							animals[animalIndex].damageReceived++;
+						}
+
+
+					}
 					break;
 
 				}
@@ -3955,8 +4201,8 @@ void organs_all()
 
 			animals[animalIndex].totalGonads = totalGonads;
 			animals[animalIndex].maxEnergy = animals[animalIndex].mass + (totalLiver * liverStorage);
-			animals[animalIndex].canBreatheAir = canBreatheAir;
-			animals[animalIndex].canBreatheUnderwater = canBreatheUnderwater;
+			// animals[animalIndex].canBreatheAir = canBreatheAir;
+			// animals[animalIndex].canBreatheUnderwater = canBreatheUnderwater;
 		}
 	}
 
@@ -4042,53 +4288,49 @@ void move_all()
 				// }
 
 
-				if (! animals[animalIndex].isMachine)
-				{
+				// if (! animals[animalIndex].isMachine)
+				// {
 
 
 
-					bool isInWater = false;
-					bool isInAir = false;
+				// bool isInWater = false;
+				// bool isInAir = false;
 
-					if (world[newPosition].wall == MATERIAL_WATER ||
-					        world[newPosition].material == MATERIAL_WATER ||
-					        world[newPosition].terrain == MATERIAL_WATER
-					   )
-					{
-						// animals[animalIndex].damageReceived ++;
-						isInWater = true;
-					}
-
-
-
-					if (world[newPosition].wall != MATERIAL_WATER
-					   )
-					{
-						// animals[animalIndex].damageReceived ++;
-						isInAir = true;
-					}
-
-
-					bool canBreathe = false;
-
-					if (animals[animalIndex].canBreatheAir && isInAir)
-					{
-						canBreathe = true;
-					}
-
-					if (animals[animalIndex].canBreatheUnderwater && isInWater)
-					{
-						canBreathe = true;
-					}
-
-					if (!canBreathe)
-					{
-						animals[animalIndex].damageReceived ++;
-					}
+				// if (world[newPosition].wall == MATERIAL_WATER ||
+				//         world[newPosition].material == MATERIAL_WATER ||
+				//         world[newPosition].terrain == MATERIAL_WATER
+				//    )
+				// {
+				// 	// animals[animalIndex].damageReceived ++;
+				// 	isInWater = true;
+				// }
 
 
 
+				// if (world[newPosition].wall != MATERIAL_WATER
+				//    )
+				// {
+				// 	// animals[animalIndex].damageReceived ++;
+				// 	isInAir = true;
+				// }
 
+
+				// bool canBreathe = false;
+
+				// if (animals[animalIndex].canBreatheAir && isInAir)
+				// {
+				// 	canBreathe = true;
+				// }
+
+				// if (animals[animalIndex].canBreatheUnderwater && isInWater)
+				// {
+				// 	canBreathe = true;
+				// }
+
+				// if (!canBreathe)
+				// {
+				// 	animals[animalIndex].damageReceived ++;
+				// }
 
 
 
@@ -4096,17 +4338,21 @@ void move_all()
 
 
 
-					// printf("!drowned\n");
-
-					// }
-					// else
-					// {
 
 
-					// 	// printf("!suffocated!\n");
-					// 	animals[animalIndex].damageReceived ++;
-					// }
-				}
+
+
+				// printf("!drowned\n");
+
+				// }
+				// else
+				// {
+
+
+				// 	// printf("!suffocated!\n");
+				// 	animals[animalIndex].damageReceived ++;
+				// }
+				// }
 
 
 
@@ -4482,12 +4728,9 @@ void viewAdversary()
 
 	if (cameraTargetCreature == adversary)
 	{
+		cameraTargetCreature = -1;
 		if (playerCreature >= 0)
-		{
-			// if (cameraTargetCreature == playerCreature)
-			// {
-			cameraTargetCreature = playerCreature;
-		}
+		{cameraTargetCreature = playerCreature;}
 	}
 	else
 	{
@@ -4708,7 +4951,7 @@ void camera()
 
 	// draw the cursor.
 	Color displayColor = color_white;
-	Vec_f2 worldMousePos = Vec_f2( fmousePositionX, fmousePositionY);
+	Vec_f2 worldMousePos = Vec_f2( mousePositionX, mousePositionY);
 	drawTile( worldMousePos, displayColor);
 
 
@@ -4867,6 +5110,10 @@ void drawGameInterfaceText()
 		printText2D(   std::string("[u] hide instructions"), menuX, menuY, textSize);
 		menuY += spacing;
 
+		printText2D(   std::string("[esc] quit"), menuX, menuY, textSize);
+		menuY += spacing;
+
+
 		printText2D(   std::string("[arrows] pan, [-,=] zoom"), menuX, menuY, textSize);
 		menuY += spacing;
 
@@ -4876,7 +5123,11 @@ void drawGameInterfaceText()
 			pauseString = std::string("[p] resume ");
 		}
 
-		printText2D(   std::string("[i] load, [o] save, ") + pauseString, menuX, menuY, textSize);
+		printText2D(   std::string("[l] limit frame rate"), menuX, menuY, textSize);
+		menuY += spacing;
+
+
+		printText2D(   std::string("[o] save, ") + pauseString, menuX, menuY, textSize);
 		menuY += spacing;
 
 		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
@@ -5072,7 +5323,53 @@ void drawGameInterfaceText()
 		}
 
 
+		int playerGill = getRandomCellOfType( playerCreature, ORGAN_GILL ) ;
+		if (playerGill >= 0)
+		{
+			if (animals[playerCreature].body[playerGill].signalIntensity < 0.0f)
+			{
+				printText2D(   std::string("You have no oxygen left.") , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+			else if (animals[playerCreature].body[playerGill].signalIntensity < baseLungCapacity / 2)
+			{
+				printText2D(   std::string("You're half out of oxygen.") , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+		}
 
+		playerGill = getRandomCellOfType( playerCreature, ORGAN_LUNG ) ;
+		if (playerGill >= 0)
+		{
+			if (animals[playerCreature].body[playerGill].signalIntensity < 0.0f)
+			{
+				printText2D(   std::string("You have no air left.") , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+			else if (animals[playerCreature].body[playerGill].signalIntensity < baseLungCapacity / 2)
+			{
+				printText2D(   std::string("You're half out of air.") , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+		}
+
+
+		if (animals[playerCreature].damageReceived < (animals[playerCreature].mass) * 0.5)
+		{
+			// printText2D(   std::string("You're hurt.") , menuX, menuY, textSize);
+			// menuY += spacing;
+		}
+		else if (animals[playerCreature].damageReceived < (animals[playerCreature].mass) * 0.75)
+		{
+			printText2D(   std::string("You're hurt.") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+
+		else
+		{
+			printText2D(   std::string("You are mortally wounded.") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
 
 
 
@@ -5666,8 +5963,8 @@ void spawnPlayer()
 		unsigned int targetWorldPositionX = cameraPositionX ;
 		unsigned int targetWorldPositionY = cameraPositionY ;
 
-		fmousePositionX = cameraPositionX;
-		fmousePositionY = cameraPositionY;
+		// fmousePositionX = cameraPositionX;
+		// fmousePositionY = cameraPositionY;
 		mousePositionX = cameraPositionX;
 		mousePositionY = cameraPositionY;
 
@@ -5777,8 +6074,8 @@ void normalizeTerrainHeight()
 
 
 
-	float postMaxHeight = 0.0f;
-	float postMinHeight = 0.0f;
+	postMaxHeight = 0.0f;
+	postMinHeight = 0.0f;
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 	{
 		if (world[worldPositionI].height > postMaxHeight)
@@ -5952,102 +6249,121 @@ unsigned int getRandomPosition(bool underwater)
 		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
 
 
-		unsigned int x = randomI % worldSize;
-		unsigned int y = randomI / worldSize;
-
-		if (x > baseSize && x < (worldSize - baseSize) && y > baseSize && y < (worldSize - baseSize))
+		if (!underwater)
 		{
-
-
-			bool allAir = true;
-			bool allWater = true;
-			for (int dy = -(baseSize / 2); dy < baseSize / 2; ++dy)
+			if (world[randomI].height > biome_coastal)
 			{
-
-
-				for (int dx = -(baseSize / 2); dx < baseSize / 2; ++dx)
-				{
-					unsigned int baseCheckI = ((y + dy) * worldSize  ) + (x + dx) ;
-
-					// if (underwater)
-					// {
-					if (world[baseCheckI].wall == MATERIAL_NOTHING)
-					{
-						allWater = false;
-					}
-					// }
-					// else
-					// {
-					if (world[baseCheckI].wall == MATERIAL_WATER)
-					{
-						allAir = false;
-					}
-					// }
-
-
-
-					if (world[baseCheckI].wall == MATERIAL_VOIDMETAL)
-					{
-						allAir = false;
-						allWater = false;
-					}
-
-
-
-
-
-				}
-
-
+				return randomI;
 			}
-
-
-			// if (allWater || allAir)
-			// {
-			// 	printf("gupta\n");
-			// }
-
-
-
-			if (underwater)
+		}
+		else
+		{
+			if (world[randomI].height < seaLevel)
 			{
-				if (allWater)
-				{
-					return randomI;
-					// break;
-				}
+				return randomI;
 			}
-
-			else
-			{
-				if (allAir)
-				{
-					return randomI;
-				}
-			}
-
-
-
-
-
 
 		}
 
 
-
-
 	}
 
+	// unsigned int x = randomI % worldSize;
+	// unsigned int y = randomI / worldSize;
+
+	// 	if (x > baseSize && x < (worldSize - baseSize) && y > baseSize && y < (worldSize - baseSize))
+	// 	{
+
+
+	// 		bool allAir = true;
+	// 		bool allWater = true;
+	// 		for (int dy = -(baseSize / 2); dy < baseSize / 2; ++dy)
+	// 		{
+
+
+	// 			for (int dx = -(baseSize / 2); dx < baseSize / 2; ++dx)
+	// 			{
+	// 				unsigned int baseCheckI = ((y + dy) * worldSize  ) + (x + dx) ;
+
+	// 				// if (underwater)
+	// 				// {
+	// 				if (world[baseCheckI].wall == MATERIAL_NOTHING)
+	// 				{
+	// 					allWater = false;
+	// 				}
+	// 				// }
+	// 				// else
+	// 				// {
+	// 				if (world[baseCheckI].wall == MATERIAL_WATER)
+	// 				{
+	// 					allAir = false;
+	// 				}
+	// 				// }
+
+
+
+	// 				if (world[baseCheckI].wall == MATERIAL_VOIDMETAL)
+	// 				{
+	// 					allAir = false;
+	// 					allWater = false;
+	// 				}
+
+
+
+
+
+	// 			}
+
+
+	// 		}
+
+
+	// 		// if (allWater || allAir)
+	// 		// {
+	// 		// 	printf("gupta\n");
+	// 		// }
+
+
+
+	// 		if (underwater)
+	// 		{
+	// 			if (allWater)
+	// 			{
+	// 				return randomI;
+	// 				// break;
+	// 			}
+	// 		}
+
+	// 		else
+	// 		{
+	// 			if (allAir)
+	// 			{
+	// 				return randomI;
+	// 			}
+	// 		}
 
 
 
 
 
 
-	if (underwater)
-	{
+	// 	}
 
-	}
+
+
+
+	// }
+
+
+
+
+
+
+
+	// if (underwater)
+	// {
+
+	// }
 
 
 
@@ -6323,139 +6639,180 @@ void applyPretties()
 		if (  world[worldPositionI].terrain == MATERIAL_ROCK )
 		{
 
-			world[worldPositionI].grassColor = whatColorIsTheRock(worldPositionI);
+			// world[worldPositionI].terrain =
+			detailTerrain(worldPositionI);
 
 		}
 
 	}
 }
+
+
+
 
 void setupRandomWorld()
 {
+	worldCreationStage = 0;
+	worldCreationStage++;
+
 	resetAnimals();
 	resetGrid();
 
-	if (worldToLoad == WORLD_CALADAN)
+	worldCreationStage++;
+
+
+	// if (worldToLoad == WORLD_CALADAN)
+	// {
+	// raindrops = 0;
+	// if (true)
+	// {
+	// seed the prelim map with noise.
+	float initWaterLevel = 1.0f;
+
+	for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
 	{
-		// raindrops = 0;
-		if (true)
+		unsigned int x = pp % prelimSize;
+		unsigned int y = pp / prelimSize;
+
+		float hDistance = x;
+		float hMax = worldSize;
+		prelimMap[pp] = hDistance / hMax;
+
+		float noiseScaleFactor = 0.005f;
+		float fx = x * noiseScaleFactor;
+		float fy = y * noiseScaleFactor;
+		float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+		prelimMap[pp] += noise;
+
+		noiseScaleFactor = 0.05f;
+		fx = x * noiseScaleFactor;
+		fy = y * noiseScaleFactor;
+		noise =   SimplexNoise::noise(fx, fy) * 0.1f;   // Get the noise value for the coordinate
+		prelimMap[pp] += noise;
+
+		noiseScaleFactor = 0.5f;
+		fx = x * noiseScaleFactor;
+		fy = y * noiseScaleFactor;
+		noise =   SimplexNoise::noise(fx, fy) * 0.01f;   // Get the noise value for the coordinate
+		prelimMap[pp] += noise;
+
+		prelimWater[pp] = initWaterLevel;
+	}
+
+
+	worldCreationStage++;
+
+
+	bool erode = false;
+	if (erode)
+	{
+
+		TinyErode::Simulation simulation(prelimSize, prelimSize);
+
+		simulation.SetMetersPerX(1000.0f / prelimSize);
+		simulation.SetMetersPerY(1000.0f / prelimSize);
+
+		int iterations = 256;
+
+
+		for (int i = 0; i < iterations; i++)
 		{
-			// seed the prelim map with noise.
-			float initWaterLevel = 1.0f;
+			printf("%i / %i\n", i, iterations);
 
-			for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
-			{
-				unsigned int x = pp % prelimSize;
-				unsigned int y = pp / prelimSize;
+			// Determines where the water will flow.
+			simulation.ComputeFlowAndTilt(getHeight, getWater);
 
-				float hDistance = x;
-				float hMax = worldSize;
-				prelimMap[pp] = hDistance / hMax;
+			// Moves the water around the terrain based on the previous computed values.
+			simulation.TransportWater(addWater);
 
-				float noiseScaleFactor = 0.005f;
-				float fx = x * noiseScaleFactor;
-				float fy = y * noiseScaleFactor;
-				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
-				prelimMap[pp] += noise;
+			// Where the magic happens. Soil is picked up from the terrain and height
+			// values are subtracted based on how much was picked up. Then the sediment
+			// moves along with the water and is later deposited.
+			simulation.TransportSediment(carryCapacity, deposition, erosion, addHeight);
 
-				noiseScaleFactor = 0.05f;
-				fx = x * noiseScaleFactor;
-				fy = y * noiseScaleFactor;
-				noise =   SimplexNoise::noise(fx, fy) * 0.1f;   // Get the noise value for the coordinate
-				prelimMap[pp] += noise;
-
-				noiseScaleFactor = 0.5f;
-				fx = x * noiseScaleFactor;
-				fy = y * noiseScaleFactor;
-				noise =   SimplexNoise::noise(fx, fy) * 0.01f;   // Get the noise value for the coordinate
-				prelimMap[pp] += noise;
-
-				prelimWater[pp] = initWaterLevel;
-			}
-
-
-
-			bool erode = false;
-			if (erode)
-			{
-
-				TinyErode::Simulation simulation(prelimSize, prelimSize);
-
-				simulation.SetMetersPerX(1000.0f / prelimSize);
-				simulation.SetMetersPerY(1000.0f / prelimSize);
-
-				int iterations = 256;
-
-
-				for (int i = 0; i < iterations; i++)
-				{
-					printf("%i / %i\n", i, iterations);
-
-					// Determines where the water will flow.
-					simulation.ComputeFlowAndTilt(getHeight, getWater);
-
-					// Moves the water around the terrain based on the previous computed values.
-					simulation.TransportWater(addWater);
-
-					// Where the magic happens. Soil is picked up from the terrain and height
-					// values are subtracted based on how much was picked up. Then the sediment
-					// moves along with the water and is later deposited.
-					simulation.TransportSediment(carryCapacity, deposition, erosion, addHeight);
-
-					// Due to heat, water is gradually evaported. This will also cause soil
-					// deposition since there is less water to carry soil.
-					simulation.Evaporate(addWater, evaporation);
-				}
-
-				// Drops all suspended sediment back into the terrain.
-				simulation.TerminateRainfall(addHeight);
-			}
-			copyPrelimToRealMap();
-
-
-			smoothHeightMap( 5, 0.5f );
-
-
-			normalizeTerrainHeight();
-			recomputeTerrainLighting();
-
-			// place items and terrain
-			for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
-			{
-				unsigned int x = worldPositionI % worldSize;
-				unsigned int y = worldPositionI / worldSize;
-				world[worldPositionI].terrain = MATERIAL_ROCK;
-
-				// walls around the world edge
-				if (x < wallThickness || x > worldSize - wallThickness || y < wallThickness  || y > worldSize - wallThickness)
-				{
-					world[worldPositionI].wall = MATERIAL_ROCK;
-				}
-
-				float noiseScaleFactor = 0.0025f;
-				float fx = x * noiseScaleFactor;
-				float fy = y * noiseScaleFactor;
-				float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
-				if (abs(noise) > 0.9f)
-				{
-					world[worldPositionI].wall = MATERIAL_ROCK;
-				}
-
-				if (world[worldPositionI].height < seaLevel)
-				{
-					world[worldPositionI].material = MATERIAL_GRASS;
-				}
-			}
-
-
-			applyPretties();
-
-			setupGameItems();
+			// Due to heat, water is gradually evaported. This will also cause soil
+			// deposition since there is less water to carry soil.
+			simulation.Evaporate(addWater, evaporation);
 		}
 
-
+		// Drops all suspended sediment back into the terrain.
+		simulation.TerminateRainfall(addHeight);
 	}
+
+
+
+	worldCreationStage++;
+
+	copyPrelimToRealMap();
+
+
+	worldCreationStage++;
+
+
+	// int passes = worldSize / prelimSize;
+	smoothHeightMap( 8, 0.5f );
+
+
+	worldCreationStage++;
+
+
+	normalizeTerrainHeight();
+
+
+	worldCreationStage++;
+
+	recomputeTerrainLighting();
+
+
+
+	worldCreationStage++;
+
+
+
+	// place items and terrain
+	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
+	{
+		unsigned int x = worldPositionI % worldSize;
+		unsigned int y = worldPositionI / worldSize;
+		world[worldPositionI].terrain = MATERIAL_ROCK;
+
+		// walls around the world edge
+		if (x < wallThickness || x > worldSize - wallThickness || y < wallThickness  || y > worldSize - wallThickness)
+		{
+			world[worldPositionI].wall = MATERIAL_VOIDMETAL;
+		}
+
+		// float noiseScaleFactor = 0.0025f;
+		// float fx = x * noiseScaleFactor;
+		// float fy = y * noiseScaleFactor;
+		// float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+		// if (abs(noise) > 0.9f)
+		// {
+		// 	world[worldPositionI].wall = MATERIAL_ROCK;
+		// }
+
+		if (world[worldPositionI].height < seaLevel)
+		{
+			world[worldPositionI].material = MATERIAL_GRASS;
+		}
+	}
+
+	applyPretties();
+
+
+	worldCreationStage++;
+
+	setupGameItems();
+	// }
+
+	worldCreationStage++;
+
+
+	setFlagReady();
+
+	// }
 }
+
 
 void tournamentController()
 {
@@ -6573,16 +6930,25 @@ void tournamentController()
 			int j = 1;
 			for (int k = j + 1; k < numberOfAnimals / 2; ++k)
 			{
-				setupExampleAnimal2(j);
-				int domingo = spawnAnimal( 1,
-				                           animals[j],
-				                           animals[adversary].position, true);
-
-				if (domingo >= 0)
+				if (k != adversary)
 				{
-					paintAnimal(domingo);
-					animals[domingo].energy = animals[domingo].maxEnergy;
-					animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
+					setupExampleAnimal2(j);
+					int domingo = spawnAnimal( 1,
+					                           animals[j],
+					                           animals[adversary].position, true);
+
+					if (domingo >= 0)
+					{
+						paintAnimal(domingo);
+						animals[domingo].energy = animals[domingo].maxEnergy;
+						animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
+					}
+
+
+					for (int cellIndex = 0; cellIndex < animals[domingo].cellsUsed; ++cellIndex)
+					{
+						animals[domingo].body[cellIndex].signalIntensity = RNG() * 100.0f;
+					}
 				}
 			}
 
@@ -6590,16 +6956,23 @@ void tournamentController()
 			j = 1;
 			for (int k = (numberOfAnimals / 2) + 1; k < numberOfAnimals; ++k)
 			{
-				// setupExampleAnimal2(j);
-				int domingo = spawnAnimal( 1,
-				                           champion,
-				                           animals[adversary].position, true);
-
-				if (domingo >= 0)
+				if (k != adversary)
 				{
-					paintAnimal(domingo);
-					animals[domingo].energy = animals[domingo].maxEnergy;
-					animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
+					// setupExampleAnimal2(j);
+					int domingo = spawnAnimal( 1,
+					                           champion,
+					                           animals[adversary].position, true);
+
+					if (domingo >= 0)
+					{
+						paintAnimal(domingo);
+						animals[domingo].energy = animals[domingo].maxEnergy;
+						animals[domingo].damageReceived = 0; // animals[domingo].maxEnergy;
+					}
+					for (int cellIndex = 0; cellIndex < animals[domingo].cellsUsed; ++cellIndex)
+					{
+						animals[domingo].body[cellIndex].signalIntensity = RNG() * 100.0f;
+					}
 				}
 			}
 
@@ -6623,7 +6996,7 @@ void seaLevelController()
 	// float seaLevelPhase = sin((( modelFrameCount % seaLevelFreq ) / seaLevelFreq) * 2 * 3.141f  );
 
 
-	int seaLevelFreq = 1000;
+	int seaLevelFreq = 5000;
 	const float wavesize = 1.0f;
 	seaLevel = baseSeaLevel + ( ((modelFrameCount % seaLevelFreq) / 20)  * wavesize);
 }
@@ -6677,15 +7050,160 @@ void modelSupervisor()
 	}
 }
 
+
+
+
+
+
+
+void drawMainMenuText()
+{
+
+
+	int menuX = 50;
+	int menuY = 50;
+	int textSize = 10;
+	int spacing = 20;
+
+
+
+// 0 clear grids
+// 1 seed prelim map with noise
+// 2 hydraulic erosion
+// 3 copy prelim to real map
+// 4 smooth heightmap
+// 5 normalize heightmap
+// 6 compute terrain lighting
+// 7 place terrain materials
+// 8 place game items
+// 9 ready
+
+
+	switch (worldCreationStage)
+	{
+
+	case 0:
+		printText2D(   std::string("DEEP SEA "), menuX, menuY, textSize);
+		menuY += spacing;
+		printText2D(   std::string("[esc] quit "), menuX, menuY, textSize);
+		menuY += spacing;
+		printText2D(   std::string("[j] new "), menuX, menuY, textSize);
+		menuY += spacing;
+		printText2D(   std::string("[i] load "), menuX, menuY, textSize);
+		menuY += spacing;
+		break;
+
+	case 1:
+		printText2D(   std::string("clear grids "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 2:
+		printText2D(   std::string("seed preliminary map with noise "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 3:
+		printText2D(   std::string("hydraulic erosion "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 4:
+		printText2D(   std::string("copy prelim to real map "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 5:
+		printText2D(   std::string("smooth heightmap "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 6:
+		printText2D(   std::string("normalize heightmap "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 7:
+		printText2D(   std::string("compute terrain lighting "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 8:
+		printText2D(   std::string("place terrain materials "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+	case 9:
+		printText2D(   std::string("place game items "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+	case 10:
+		printText2D(   std::string("ready "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 11:
+		printText2D(   std::string("loading animals from file "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+	case 12:
+		printText2D(   std::string("loading map from file "), menuX, menuY, textSize);
+		// menuY += spacing;
+		break;
+
+
+	}
+
+
+
+
+
+
+
+}
+
+
+
+
+
 void startSimulation()
 {
-	setupRandomWorld();
+
+	srand((unsigned int)time(NULL));
+	seedExtremelyFastNumberGenerators();
+
+
+
 
 	int j = 1;
 	setupExampleAnimal2(j);
 	champion = animals[j];
 
 	boost::thread t7{ modelSupervisor };
+
+	for ( ;; )
+	{
+		// you can start your threads like this:
+		boost::thread t2{ threadInterface };
+		// boost::thread t3{ threadPhysics };
+		// boost::thread t3{ threadGame };
+
+		// graphics only works in this thread, because it is the process the SDL context was created in.
+		threadGraphics();
+
+
+
+		// you can have this thread wait for another to end by saying:
+		t2.join();
+		// t3.join();
+
+		if (flagReturn)
+		{
+			flagReturn = false;
+			return;
+		}
+
+	}
 }
 
 void save()
@@ -6701,12 +7219,16 @@ void save()
 
 void load()
 {
+
+	worldCreationStage = 12;
 	std::ifstream in6(std::string("save/world").c_str());
 	in6.read( (char *)(&(world)), sizeof(Square) *  worldSquareSize);
 	in6.close();
-
+	worldCreationStage = 11;
 	std::ifstream in7(std::string("save/animals").c_str());
 	in7.read( (char *)(&(animals)), sizeof(Animal) *  numberOfAnimals);
 	in7.close();
+	worldCreationStage = 10;
+	setFlagReady();
 }
 

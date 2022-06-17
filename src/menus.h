@@ -64,7 +64,7 @@ void drawPanels();
 
 void rebaseMenu (menuItem * menu, int newX, int newY);
 
-
+void initText2D();
 
 menuItem * setupMenu ( std::string menuName , menuDirection direction, menuItem * parentMenu, void * callback=nullptr, void * userData=nullptr, Color color=Color(0.1f, 0.1f, 0.1f, 1.0f), Vec_f2 position=Vec_f2(0.0f, 0.0f));
 

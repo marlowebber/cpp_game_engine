@@ -25,10 +25,8 @@ add_subdirectory ( tracy ) # target : TracyClient or alias Tracy :: TracyClient
 
 # Define the framework files.
 set(SRCS
-	src/game.h
 	src/main.cpp
 	src/main.h
-	src/game.cpp
 	src/graphics.cpp
 	src/graphics.h
 	src/menus.h

@@ -5,7 +5,6 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/home/marlo/Documents/cpp_game_engine/src/SimplexNoise.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/SimplexNoise.cpp.o"
-  "/home/marlo/Documents/cpp_game_engine/src/game.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/game.cpp.o"
   "/home/marlo/Documents/cpp_game_engine/src/graphics.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/graphics.cpp.o"
   "/home/marlo/Documents/cpp_game_engine/src/main.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/main.cpp.o"
   "/home/marlo/Documents/cpp_game_engine/src/menus.cpp" "/home/marlo/Documents/cpp_game_engine/CMakeFiles/game.dir/src/menus.cpp.o"
