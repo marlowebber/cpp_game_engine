@@ -1548,23 +1548,19 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 
 
 
-void mutateAnimalComprehensive(unsigned int animalIndex)
+void mutateAnimal(unsigned int animalIndex)
 {
-
-
 	// some mutations are chosen more commonly than others. They are classed into groups, and each group is associated with a normalized likelyhood of occurring.
 	// the reason for this is that the development of the brain must always occur faster and in more detail than the development of the body, or else intelligent behavior can never arise.
 	float group1Probability = 1.0f;
 	float group2Probability = 0.25f;
 	float group3Probability = 0.0625f;
 	float group4Probability = 0.03125f;
-
 	float sum = group1Probability + group2Probability + group3Probability + group4Probability;
 
 	float groupChoice = RNG() * sum;
 
 	int group = 0;
-
 	if (groupChoice < group1Probability ) // chosen group 1
 	{
 		group = 1;
@@ -1630,7 +1626,7 @@ void mutateAnimalComprehensive(unsigned int animalIndex)
 	}
 	else if (group == 4)
 	{
-		int mutationChoice = extremelyFastNumberFromZeroTo(1);
+		int mutationChoice = extremelyFastNumberFromZeroTo(2);
 
 		if (mutationChoice == 0)
 		{
@@ -1647,288 +1643,438 @@ void mutateAnimalComprehensive(unsigned int animalIndex)
 	}
 
 
-
-}
-
-
-
-
-
-void mutateAnimal(unsigned int animalIndex)
-{
-	if (!doMutation) {return;}
-
-	if (
-	    true
-	    &&
-	    animalIndex < numberOfAnimals
-	) // don't mutate at all sometimes, to preserve a population against drift
+	switch (mutation)
 	{
-		// the mutations should not be evenly distributed, but the most important stuff should be focused on.
-		unsigned int whatToMutate = extremelyFastNumberFromZeroTo(8);
 
-		if (whatToMutate == 0)
+	case MUTATION_ERASEORGAN:
+	{
+		// erase an organ
+		int mutantCell = getRandomPopulatedCell( animalIndex);
+		if (mutantCell >= 0)
 		{
-			// erase an organ
-			int mutantCell = getRandomPopulatedCell( animalIndex);
-			if (mutantCell >= 0)
+			eliminateCell(animalIndex, mutantCell);
+		}
+		break;
+	}
+
+	case MUTATION_ADDORGAN:
+	{
+		// add an organ
+		unsigned int newOrgan = randomLetter();
+		animalAppendCell(animalIndex, newOrgan);
+		break;
+	}
+
+	case MUTATION_SWITCHCONNECTION:
+	{
+		// turn a connection on or off.
+		int mutantCell =  getRandomConnectingCell(animalIndex);
+		if (mutantCell >= 0)
+		{
+			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+			animals[animalIndex].genes[mutantCell].connections[mutantConnection].used = !(animals[animalIndex].genes[mutantCell].connections[mutantConnection].used );
+		}
+		break;
+	}
+
+	case MUTATION_RECONNECT:
+	{
+		// randomise a connection partner.
+		int mutantCell =  getRandomConnectingCell( animalIndex);
+		if (mutantCell >= 0)
+		{
+			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+			int mutantPartner =  getRandomConnectableCell( animalIndex);
+			if (mutantPartner >= 0)
 			{
-				eliminateCell(animalIndex, mutantCell);
+				animals[animalIndex].genes[mutantCell].connections[mutantConnection].connectedTo = mutantPartner;
+			}
+		}
+		break;
+	}
+	case MUTATION_CONNECTIONWEIGHT:
+	{
+		// randomise a connection weight.
+		int mutantCell =  getRandomConnectingCell(animalIndex);
+		if (mutantCell >= 0)
+		{
+			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+			if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
+			{
+				animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight *= ((RNG() - 0.5) * 4);
+			}
+			else // add to it
+			{
+				animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight += ((RNG() - 0.5 ) * 2);
+			}
+		}
+		break;
+	}
+	case MUTATION_ALTERBIAS:
+	{
+		// randomise a bias neuron.
+		int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
+		if (mutantCell >= 0)
+		{
+			if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
+			{
+				animals[animalIndex].genes[mutantCell].signalIntensity *= ((RNG() - 0.5 ) * 4);;
+			}
+			else // add to it
+			{
+				animals[animalIndex].genes[mutantCell].signalIntensity += ((RNG() - 0.5 ) * 2);;
+			}
+		}
+		break;
+	}
+	case MUTATION_MOVECELL:
+	{
+		// swap an existing cell location without messing up the connections.
+		int mutantCell = getRandomPopulatedCell(animalIndex);
+		if (mutantCell >= 0)
+		{
+			Vec_i2 destination  = getRandomEmptyEdgeLocation(animalIndex);
+
+			animals[animalIndex].body[mutantCell].localPosX = destination.x;
+			animals[animalIndex].body[mutantCell].localPosY = destination.y;
+		}
+		break;
+	}
+
+	case MUTATION_SPEAKERCHANNEL:
+	{
+		// mutate a speaker channel
+		int occupiedChannel = -1;
+		int typeOfChannel   = -1;
+
+		unsigned int startingRandomCell = extremelyFastNumberFromZeroTo(animals[animalIndex].cellsUsed) - 1;
+
+		for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
+		{
+			unsigned int cellIndex = (startingRandomCell + i) % animals[animalIndex].cellsUsed;
+			if ( organUsesSpeakerChannel( animals[animalIndex].body[cellIndex].organ )  )
+			{
+				occupiedChannel =	 findOccupiedChannel( animalIndex, animals[animalIndex].body[cellIndex].organ);
 			}
 		}
 
-		else if (whatToMutate == 1)
+		if (occupiedChannel >= 0 && occupiedChannel < numberOfSpeakerChannels)
 		{
-			// add an organ
-			unsigned int newOrgan = randomLetter();
-			animalAppendCell(animalIndex, newOrgan);
+			int increment = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels);
+			modifyChannel(animalIndex, occupiedChannel, increment);
+		}
+		break;
+	}
 
-			if (newOrgan == ORGAN_LUNG)
+	case MUTATION_EYELOOK:
+	{
+		// mutate an eyelook
+		int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
+		if (mutantCell >= 0 && mutantCell < animalSquareSize)
+		{
+			if (extremelyFastNumberFromZeroTo(1) == 0)
 			{
-				int mutantGill = getRandomCellOfType(animalIndex, ORGAN_GILL);
-				if (mutantGill >= 0)
-				{
-					eliminateCell(animalIndex, mutantGill);
-				}
+				animals[animalIndex].genes[mutantCell].eyeLookX += (extremelyFastNumberFromZeroTo(2) - 1);
 			}
-
-			else if (newOrgan == ORGAN_GILL)
+			else
 			{
-				int mutantLung = getRandomCellOfType(animalIndex, ORGAN_LUNG);
-				if (mutantLung >= 0)
-				{
-					eliminateCell(animalIndex, mutantLung);
-				}
+				animals[animalIndex].genes[mutantCell].eyeLookY += (extremelyFastNumberFromZeroTo(2) - 1);
 			}
 		}
+		break;
+	}
 
-		else if (whatToMutate == 2)
+	case MUTATION_SKINCOLOR:
+	{
+		// mutate a cell's skin color
+		int mutantCell = getRandomPopulatedCell(animalIndex);
+		if (mutantCell >= 0 && mutantCell < animalSquareSize)
 		{
-			// turn a connection on or off.
-			int mutantCell =  getRandomConnectingCell(animalIndex);
-			if (mutantCell >= 0)
-			{
-				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-				animals[animalIndex].genes[mutantCell].connections[mutantConnection].used = !(animals[animalIndex].genes[mutantCell].connections[mutantConnection].used );
-			}
+			animals[animalIndex].genes[mutantCell].color = mutateColor(	animals[animalIndex].genes[mutantCell].color);
 		}
+		break;
+	}
 
-		else if (whatToMutate == 3)
-		{
-			// randomise a connection partner.
-			int mutantCell =  getRandomConnectingCell( animalIndex);
-			if (mutantCell >= 0)
-			{
-				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-				int mutantPartner =  getRandomConnectableCell( animalIndex);
-				if (mutantPartner >= 0)
-				{
-					animals[animalIndex].genes[mutantCell].connections[mutantConnection].connectedTo = mutantPartner;
-				}
-			}
-		}
-		else if (whatToMutate == 4)
-		{
-			// randomise a connection weight.
-			int mutantCell =  getRandomConnectingCell(animalIndex);
-			if (mutantCell >= 0)
-			{
-				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-				if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
-				{
-					animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight *= ((RNG() - 0.5) * 4);
-				}
-				else // add to it
-				{
-					animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight += ((RNG() - 0.5 ) * 2);
-				}
-			}
-		}
-		else if (whatToMutate == 6)
-		{
-			// randomise a bias neuron.
-			int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
-			if (mutantCell >= 0)
-			{
-				if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
-				{
-					animals[animalIndex].genes[mutantCell].signalIntensity *= ((RNG() - 0.5 ) * 4);;
-				}
-				else // add to it
-				{
-					animals[animalIndex].genes[mutantCell].signalIntensity += ((RNG() - 0.5 ) * 2);;
-				}
-			}
-		}
-		else if (whatToMutate == 7)
-		{
-			// swap an existing cell location without messing up the connections.
-			int mutantCell = getRandomPopulatedCell(animalIndex);
-			if (mutantCell >= 0)
-			{
-				Vec_i2 destination  = getRandomEmptyEdgeLocation(animalIndex);
-
-				animals[animalIndex].body[mutantCell].localPosX = destination.x;
-				animals[animalIndex].body[mutantCell].localPosY = destination.y;
-			}
-		}
-		else if (whatToMutate == 8)
-		{
-			// other stuff.
-			unsigned int auxMutation = extremelyFastNumberFromZeroTo(6);
-			if (auxMutation == 0)
-			{
-				// mutate a cell's skin color
-				int mutantCell = getRandomPopulatedCell(animalIndex);
-				if (mutantCell >= 0 && mutantCell < animalSquareSize)
-				{
-					animals[animalIndex].genes[mutantCell].color = mutateColor(	animals[animalIndex].genes[mutantCell].color);
-				}
-			}
-
-			// else if (auxMutation == 2)
-			// {
-			// 	// mutate a timers freq
-			// 	int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_TIMER);
-			// 	if (mutantCell >= 0 && mutantCell < animalSquareSize)
-			// 	{
-			// 		animals[animalIndex].genes[mutantCell].timerFreq += RNG() - 0.5f * 0.1;
-			// 	}
-			// }
-			else if (auxMutation == 3)
-			{
-				// mutate a speaker channel
-
-
-				int occupiedChannel = -1;
-				int typeOfChannel   = -1;
-
-
-
-				unsigned int startingRandomCell = extremelyFastNumberFromZeroTo(animals[animalIndex].cellsUsed) - 1;
-
-				for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
-				{
-					unsigned int cellIndex = (startingRandomCell + i) % animals[animalIndex].cellsUsed;
-					if ( organUsesSpeakerChannel( animals[animalIndex].body[cellIndex].organ )  )
-					{
-						occupiedChannel =	 findOccupiedChannel( animalIndex, animals[animalIndex].body[cellIndex].organ);
-
-					}
-				}
-
-
-
-
-				if (occupiedChannel >= 0 && occupiedChannel < numberOfSpeakerChannels)
-				{
-					int increment = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels);
-					modifyChannel(animalIndex, occupiedChannel, increment);
-				}
-
-
-
-
-
-				// int mutantCellA = -1;// = getRandomCellOfType(animalIndex, ORGAN_SPEAKER);
-				// int mutantCellB = -1;// = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EAR);
-
-
-				// while (true)
-				// {
-
-				// 	bool triedSpeaker = false;
-				// 	bool triedPheromone = false;
-				// 	bool triedMemory = false;
-
-
-				// 	if (typeOfChannel == 0)
-				// 	{
-				// 		mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SPEAKER);
-				// 		mutantCellB = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EAR);
-				// 		triedSpeaker = true;
-				// 	}
-				// 	else if (typeOfChannel == 1)
-				// 	{
-				// 		mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PHEROMONE);
-				// 		mutantCellB = getRandomCellOfType(animalIndex, ORGAN_EMITTER_PHEROMONE);
-				// 		triedPheromone = true;
-				// 	}
-				// 	else if (typeOfChannel == 2)
-				// 	{
-				// 		mutantCellA = getRandomCellOfType(animalIndex, ORGAN_MEMORY_RX);
-				// 		mutantCellB = getRandomCellOfType(animalIndex, ORGAN_MEMORY_TX);
-				// 		triedMemory = true;
-				// 	}
-
-
-				// 	// unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
-				// 	if (mutantCellA >= 0 && mutantCellA < animalSquareSize && mutantCellB >= 0 && mutantCellB < animalSquareSize)
-				// 	{
-				// 		animals[animalIndex].genes[mutantCellA].speakerChannel = mutantChannel;
-				// 		animals[animalIndex].genes[mutantCellB].speakerChannel = mutantChannel;
-				// 		break;
-				// 	}
-
-				// 	if (triedSpeaker && triedPheromone && triedMemory)
-				// 	{
-				// 		break;
-				// 	}
-
-				// }
-
-
-
-			}
-			// else if (auxMutation == 4)
-			// {
-			// 	// mutate a pheromone channel
-			// 	int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PHEROMONE);
-			// 	int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_EMITTER_PHEROMONE);
-			// 	unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
-			// 	if (mutantCellA >= 0 && mutantCellA < animalSquareSize)
-			// 	{
-			// 		animals[animalIndex].genes[mutantCellA].speakerChannel = mutantChannel;
-			// 	}
-			// 	if (mutantCellB >= 0 && mutantCellB < animalSquareSize)
-			// 	{
-			// 		animals[animalIndex].genes[mutantCellB].speakerChannel = mutantChannel  ;
-			// 	}
-			// }
-			// else if (auxMutation == 5)
-			// {
-			// 	// mutate a memory channel
-			// 	int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_MEMORY_RX);
-			// 	int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_MEMORY_TX);
-			// 	unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
-			// 	if (mutantCellA >= 0 && mutantCellA < animalSquareSize)
-			// 	{
-			// 		animals[animalIndex].genes[mutantCellA].speakerChannel = mutantChannel;
-			// 	}
-			// 	if (mutantCellB >= 0 && mutantCellB < animalSquareSize)
-			// 	{
-			// 		animals[animalIndex].genes[mutantCellB].speakerChannel = mutantChannel  ;
-			// 	}
-			// }
-			else if (auxMutation == 6)
-			{
-				// mutate an eyelook
-				int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
-				if (mutantCell >= 0 && mutantCell < animalSquareSize)
-				{
-					if (extremelyFastNumberFromZeroTo(1) == 0)
-					{
-						animals[animalIndex].genes[mutantCell].eyeLookX += (extremelyFastNumberFromZeroTo(2) - 1);
-					}
-					else
-					{
-						animals[animalIndex].genes[mutantCell].eyeLookY += (extremelyFastNumberFromZeroTo(2) - 1);
-					}
-				}
-			}
-		}
 	}
 }
+
+
+
+// void mutateAnimal(unsigned int animalIndex)
+// {
+// 	if (!doMutation) {return;}
+
+// 	if (
+// 	    true
+// 	    &&
+// 	    animalIndex < numberOfAnimals
+// 	) // don't mutate at all sometimes, to preserve a population against drift
+// 	{
+// 		// the mutations should not be evenly distributed, but the most important stuff should be focused on.
+// 		unsigned int whatToMutate = extremelyFastNumberFromZeroTo(8);
+
+// 		if (whatToMutate == 0)
+// 		{
+// 			// erase an organ
+// 			int mutantCell = getRandomPopulatedCell( animalIndex);
+// 			if (mutantCell >= 0)
+// 			{
+// 				eliminateCell(animalIndex, mutantCell);
+// 			}
+// 		}
+
+// 		else if (whatToMutate == 1)
+// 		{
+// 			// add an organ
+// 			unsigned int newOrgan = randomLetter();
+// 			animalAppendCell(animalIndex, newOrgan);
+
+// 			if (newOrgan == ORGAN_LUNG)
+// 			{
+// 				int mutantGill = getRandomCellOfType(animalIndex, ORGAN_GILL);
+// 				if (mutantGill >= 0)
+// 				{
+// 					eliminateCell(animalIndex, mutantGill);
+// 				}
+// 			}
+
+// 			else if (newOrgan == ORGAN_GILL)
+// 			{
+// 				int mutantLung = getRandomCellOfType(animalIndex, ORGAN_LUNG);
+// 				if (mutantLung >= 0)
+// 				{
+// 					eliminateCell(animalIndex, mutantLung);
+// 				}
+// 			}
+// 		}
+
+// 		else if (whatToMutate == 2)
+// 		{
+// 			// turn a connection on or off.
+// 			int mutantCell =  getRandomConnectingCell(animalIndex);
+// 			if (mutantCell >= 0)
+// 			{
+// 				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+// 				animals[animalIndex].genes[mutantCell].connections[mutantConnection].used = !(animals[animalIndex].genes[mutantCell].connections[mutantConnection].used );
+// 			}
+// 		}
+
+// 		else if (whatToMutate == 3)
+// 		{
+// 			// randomise a connection partner.
+// 			int mutantCell =  getRandomConnectingCell( animalIndex);
+// 			if (mutantCell >= 0)
+// 			{
+// 				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+// 				int mutantPartner =  getRandomConnectableCell( animalIndex);
+// 				if (mutantPartner >= 0)
+// 				{
+// 					animals[animalIndex].genes[mutantCell].connections[mutantConnection].connectedTo = mutantPartner;
+// 				}
+// 			}
+// 		}
+// 		else if (whatToMutate == 4)
+// 		{
+// 			// randomise a connection weight.
+// 			int mutantCell =  getRandomConnectingCell(animalIndex);
+// 			if (mutantCell >= 0)
+// 			{
+// 				unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+// 				if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
+// 				{
+// 					animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight *= ((RNG() - 0.5) * 4);
+// 				}
+// 				else // add to it
+// 				{
+// 					animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight += ((RNG() - 0.5 ) * 2);
+// 				}
+// 			}
+// 		}
+// 		else if (whatToMutate == 6)
+// 		{
+// 			// randomise a bias neuron.
+// 			int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
+// 			if (mutantCell >= 0)
+// 			{
+// 				if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
+// 				{
+// 					animals[animalIndex].genes[mutantCell].signalIntensity *= ((RNG() - 0.5 ) * 4);;
+// 				}
+// 				else // add to it
+// 				{
+// 					animals[animalIndex].genes[mutantCell].signalIntensity += ((RNG() - 0.5 ) * 2);;
+// 				}
+// 			}
+// 		}
+// 		else if (whatToMutate == 7)
+// 		{
+// 			// swap an existing cell location without messing up the connections.
+// 			int mutantCell = getRandomPopulatedCell(animalIndex);
+// 			if (mutantCell >= 0)
+// 			{
+// 				Vec_i2 destination  = getRandomEmptyEdgeLocation(animalIndex);
+
+// 				animals[animalIndex].body[mutantCell].localPosX = destination.x;
+// 				animals[animalIndex].body[mutantCell].localPosY = destination.y;
+// 			}
+// 		}
+// 		else if (whatToMutate == 8)
+// 		{
+// 			// other stuff.
+// 			unsigned int auxMutation = extremelyFastNumberFromZeroTo(6);
+// 			if (auxMutation == 0)
+// 			{
+// 				// mutate a cell's skin color
+// 				int mutantCell = getRandomPopulatedCell(animalIndex);
+// 				if (mutantCell >= 0 && mutantCell < animalSquareSize)
+// 				{
+// 					animals[animalIndex].genes[mutantCell].color = mutateColor(	animals[animalIndex].genes[mutantCell].color);
+// 				}
+// 			}
+
+// 			// else if (auxMutation == 2)
+// 			// {
+// 			// 	// mutate a timers freq
+// 			// 	int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_TIMER);
+// 			// 	if (mutantCell >= 0 && mutantCell < animalSquareSize)
+// 			// 	{
+// 			// 		animals[animalIndex].genes[mutantCell].timerFreq += RNG() - 0.5f * 0.1;
+// 			// 	}
+// 			// }
+// 			else if (auxMutation == 3)
+// 			{
+// 				// mutate a speaker channel
+
+
+// 				int occupiedChannel = -1;
+// 				int typeOfChannel   = -1;
+
+
+
+// 				unsigned int startingRandomCell = extremelyFastNumberFromZeroTo(animals[animalIndex].cellsUsed) - 1;
+
+// 				for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
+// 				{
+// 					unsigned int cellIndex = (startingRandomCell + i) % animals[animalIndex].cellsUsed;
+// 					if ( organUsesSpeakerChannel( animals[animalIndex].body[cellIndex].organ )  )
+// 					{
+// 						occupiedChannel =	 findOccupiedChannel( animalIndex, animals[animalIndex].body[cellIndex].organ);
+
+// 					}
+// 				}
+
+
+
+
+// 				if (occupiedChannel >= 0 && occupiedChannel < numberOfSpeakerChannels)
+// 				{
+// 					int increment = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels);
+// 					modifyChannel(animalIndex, occupiedChannel, increment);
+// 				}
+
+
+
+
+
+// 				// int mutantCellA = -1;// = getRandomCellOfType(animalIndex, ORGAN_SPEAKER);
+// 				// int mutantCellB = -1;// = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EAR);
+
+
+// 				// while (true)
+// 				// {
+
+// 				// 	bool triedSpeaker = false;
+// 				// 	bool triedPheromone = false;
+// 				// 	bool triedMemory = false;
+
+
+// 				// 	if (typeOfChannel == 0)
+// 				// 	{
+// 				// 		mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SPEAKER);
+// 				// 		mutantCellB = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EAR);
+// 				// 		triedSpeaker = true;
+// 				// 	}
+// 				// 	else if (typeOfChannel == 1)
+// 				// 	{
+// 				// 		mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PHEROMONE);
+// 				// 		mutantCellB = getRandomCellOfType(animalIndex, ORGAN_EMITTER_PHEROMONE);
+// 				// 		triedPheromone = true;
+// 				// 	}
+// 				// 	else if (typeOfChannel == 2)
+// 				// 	{
+// 				// 		mutantCellA = getRandomCellOfType(animalIndex, ORGAN_MEMORY_RX);
+// 				// 		mutantCellB = getRandomCellOfType(animalIndex, ORGAN_MEMORY_TX);
+// 				// 		triedMemory = true;
+// 				// 	}
+
+
+// 				// 	// unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
+// 				// 	if (mutantCellA >= 0 && mutantCellA < animalSquareSize && mutantCellB >= 0 && mutantCellB < animalSquareSize)
+// 				// 	{
+// 				// 		animals[animalIndex].genes[mutantCellA].speakerChannel = mutantChannel;
+// 				// 		animals[animalIndex].genes[mutantCellB].speakerChannel = mutantChannel;
+// 				// 		break;
+// 				// 	}
+
+// 				// 	if (triedSpeaker && triedPheromone && triedMemory)
+// 				// 	{
+// 				// 		break;
+// 				// 	}
+
+// 				// }
+
+
+
+// 			}
+// 			// else if (auxMutation == 4)
+// 			// {
+// 			// 	// mutate a pheromone channel
+// 			// 	int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PHEROMONE);
+// 			// 	int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_EMITTER_PHEROMONE);
+// 			// 	unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
+// 			// 	if (mutantCellA >= 0 && mutantCellA < animalSquareSize)
+// 			// 	{
+// 			// 		animals[animalIndex].genes[mutantCellA].speakerChannel = mutantChannel;
+// 			// 	}
+// 			// 	if (mutantCellB >= 0 && mutantCellB < animalSquareSize)
+// 			// 	{
+// 			// 		animals[animalIndex].genes[mutantCellB].speakerChannel = mutantChannel  ;
+// 			// 	}
+// 			// }
+// 			// else if (auxMutation == 5)
+// 			// {
+// 			// 	// mutate a memory channel
+// 			// 	int mutantCellA = getRandomCellOfType(animalIndex, ORGAN_MEMORY_RX);
+// 			// 	int mutantCellB = getRandomCellOfType(animalIndex, ORGAN_MEMORY_TX);
+// 			// 	unsigned int mutantChannel = extremelyFastNumberFromZeroTo(numberOfSpeakerChannels - 1);
+// 			// 	if (mutantCellA >= 0 && mutantCellA < animalSquareSize)
+// 			// 	{
+// 			// 		animals[animalIndex].genes[mutantCellA].speakerChannel = mutantChannel;
+// 			// 	}
+// 			// 	if (mutantCellB >= 0 && mutantCellB < animalSquareSize)
+// 			// 	{
+// 			// 		animals[animalIndex].genes[mutantCellB].speakerChannel = mutantChannel  ;
+// 			// 	}
+// 			// }
+// 			else if (auxMutation == 6)
+// 			{
+// 				// mutate an eyelook
+// 				int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
+// 				if (mutantCell >= 0 && mutantCell < animalSquareSize)
+// 				{
+// 					if (extremelyFastNumberFromZeroTo(1) == 0)
+// 					{
+// 						animals[animalIndex].genes[mutantCell].eyeLookX += (extremelyFastNumberFromZeroTo(2) - 1);
+// 					}
+// 					else
+// 					{
+// 						animals[animalIndex].genes[mutantCell].eyeLookY += (extremelyFastNumberFromZeroTo(2) - 1);
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
 void spawnAnimalIntoSlot( unsigned int animalIndex,
                           Animal parent,
