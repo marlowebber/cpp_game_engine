@@ -76,11 +76,11 @@ const float signalPropagationConstant = 0.1f;      // how strongly sensor organs
 const float musclePower = 40.0f;
 const float const_pi = 3.1415f;
 
-const int paletteMenuX = 200;
+const int paletteMenuX = 300;
 const int paletteMenuY = 50;
 const int paletteTextSize = 10;
 const int paletteSpacing = 20;
-const unsigned int paletteWidth = 3;
+const unsigned int paletteWidth = 4;
 // these are the parameters that set up the physical geography of the game.world.
 const float seaLevel =  0.5f * worldSize;;;
 const float biome_marine  = seaLevel + (worldSize / 20);
@@ -153,8 +153,8 @@ unsigned int usPerFrame = 0;
 float fps = 1.0f;
 
 
-
-
+int adversaryLoiter = 0;
+unsigned int adversaryLoiterPos = 0;
 
 bool mainMenu = true;
 bool flagQuit = false;
@@ -394,6 +394,7 @@ void resetGrid()
 	{
 		game.world[i].terrain = MATERIAL_NOTHING;
 		game.world[i].material = MATERIAL_NOTHING;
+		game.world[i].wall = MATERIAL_NOTHING;
 		game.world[i].identity = -1;
 		game.world[i].trail = 0.0f;
 		game.world[i].height = 0.0f;
@@ -1423,6 +1424,10 @@ void updateMap()
 								game.world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
 								game.world[neighbour].grassColor.b += (RNG() - 0.5f) * 0.1f;
 								game.world[neighbour].grassColor = clampColor(game.world[neighbour].grassColor);
+
+								game.world[neighbour].pheromoneChannel = 6;
+								game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
+
 							}
 						}
 					}
@@ -1498,16 +1503,18 @@ void rightClickCallback ()
 	}
 }
 
-void drawPalette()
+void drawPalette(int menuX, int menuY)
 {
 	int closestValue = 1000;
 	unsigned int tempClosestToMouse = 0;
+	int paletteFinalX ;//= menuX + (paletteX * paletteSpacing * 10);
+	int paletteFinalY ;//= menuY + (paletteY * paletteSpacing);
 	for (int i = 0; i < numberOfOrganTypes; ++i)
 	{
 		unsigned int paletteX = i % paletteWidth;
 		unsigned int paletteY = i / paletteWidth;
-		int paletteFinalX = paletteMenuX + (paletteX * paletteSpacing * 6);
-		int paletteFinalY = paletteMenuY + (paletteY * paletteSpacing);
+		paletteFinalX = menuX + (paletteX * paletteSpacing * 10);
+		paletteFinalY = menuY + (paletteY * paletteSpacing);
 		if (i == game.paletteSelectedOrgan)
 		{
 			printText2D(  std::string("X ") +  tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
@@ -1517,6 +1524,16 @@ void drawPalette()
 			printText2D(   tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
 		}
 	}
+
+	menuY = paletteFinalY;
+	// if (game.palette)
+	// {
+	menuY += paletteSpacing;
+	printText2D(   std::string("[lmb] add tile, [rmb] delete tile") , menuX, menuY, paletteTextSize);
+	menuY += paletteSpacing;
+	printText2D(   std::string("[y] select next, [h] select last ") , menuX, menuY, paletteTextSize);
+	menuY += paletteSpacing;
+	// }
 }
 
 void communicationComputerCallback( int gunIndex, int shooterIndex)
@@ -2921,13 +2938,7 @@ void drawGameInterfaceText()
 		printText2D(   std::string("[g] pick up ") + std::string(game.animals[game.playerCanPickupItem].displayName) , menuX, menuY, textSize);
 		menuY += spacing;
 	}
-	if (game.palette)
-	{
-		printText2D(   std::string("[lmb] add, [rmb] delete ") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("[y] select next, [h] select last ") , menuX, menuY, textSize);
-		menuY += spacing;
-	}
+
 	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
 	int cursorPosY = game.cameraPositionY + game.mousePositionY;
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
@@ -3036,20 +3047,27 @@ void drawGameInterfaceText()
 				menuY += spacing;
 			}
 		}
-		if (game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.5)
+
+		if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.25 &&
+		        game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.5
+		   )
 		{
-			;
-		}
-		if (game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.75)
-		{
-			printText2D(   std::string("You're hurt.") , menuX, menuY, textSize);
+			printText2D(   std::string("You're mildly hurt.") , menuX, menuY, textSize);
 			menuY += spacing;
 		}
-		else
+		if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.5 &&
+		        game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.75
+		   )
+		{
+			printText2D(   std::string("You're badly hurt.") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+		else if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.75)
 		{
 			printText2D(   std::string("You are mortally wounded.") , menuX, menuY, textSize);
 			menuY += spacing;
 		}
+
 	}
 	displayComputerText();
 	if (printLogs)
@@ -3096,7 +3114,8 @@ void drawGameInterfaceText()
 
 	if (game.palette)
 	{
-		drawPalette();
+		menuY += spacing;
+		drawPalette(menuX, menuY);
 	}
 }
 
@@ -3109,7 +3128,7 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 	strcpy( &game.animals[animalIndex].displayName[0] , newName.c_str() );
 
 
-	if (newMachineCallback >=0)
+	if (newMachineCallback >= 0)
 	{
 		game.animals[animalIndex].isMachine = true;
 		game.animals[animalIndex].machineCallback = newMachineCallback;
@@ -3620,9 +3639,35 @@ void tournamentController()
 					adversaryRespawnPosY = worldSize - baseSize;
 				}
 				game.adversaryRespawnPos = (adversaryRespawnPosY * worldSize ) + adversaryRespawnPosX;
+
+
+
+				if (game.world[ game.adversaryRespawnPos  ]. wall != MATERIAL_WATER)
+				{
+					game.adversaryRespawnPos = getRandomPosition(true);
+				}
+
+			}
+
+
+			if (game.animals[game.adversary].position != adversaryLoiterPos)
+			{
+				adversaryLoiterPos = game.animals[game.adversary].position ;
+				adversaryLoiter = 0;
+			}
+			else
+			{
+				adversaryLoiter++;
+			}
+			if (adversaryLoiter > 1000)
+			{
+				killAnimal(game.adversary);
+				game.animals[game.adversary].retired = true;
 			}
 		}
 	}
+
+
 
 	if (respawnLowSpecies)
 	{
@@ -3663,15 +3708,52 @@ void tournamentController()
 			}
 		}
 
-		if (totalpop == 0 && game.adversary >= 0)// life went extinct but the game.adversary is still alive. Spawn a bunch more stuff to get it going again.
+		if (totalpop <= 1 && game.adversary >= 0)// life went extinct but the game.adversary is still alive. Spawn a bunch more stuff to get it going again.
 		{
 			int j = 1;
-			for (int k = j + 1; k < numberOfAnimals / 2; ++k)// spawn lots of the example animal
+
+
+			for (int k = 0; k < 12; ++k)// spawn lots of the example animal
 			{
+
+
 				if (k != game.adversary)
 				{
-					setupExampleAnimal2(j);
-					int domingo = spawnAnimal( 1, game.animals[j], game.animals[game.adversary].position, true);
+
+					int domingo = -1;
+					if (extremelyFastNumberFromZeroTo(1) == 0)
+
+
+					{
+						setupExampleAnimal2(j);
+
+						unsigned int randomPos = game.animals[game.adversary].position;
+
+						int randomCell = getRandomPopulatedCell(game.adversary);
+						if (randomCell >= 0)
+						{
+							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+						}
+
+						domingo = spawnAnimal( 1, game.animals[j], randomPos, true);
+
+
+
+					}
+					else
+					{
+
+						unsigned int randomPos = game.animals[game.adversary].position;
+						int randomCell = getRandomPopulatedCell(game.adversary);
+						if (randomCell >= 0)
+						{
+							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+						}
+
+						domingo = spawnAnimal( 1,  game.champion, randomPos, true);
+
+
+					}
 
 					if (domingo >= 0)
 					{
@@ -3682,19 +3764,7 @@ void tournamentController()
 				}
 			}
 
-			for (int k = (numberOfAnimals / 2) + 1; k < numberOfAnimals; ++k)// spawn lots of the game.champion
-			{
-				if (k != game.adversary)
-				{
-					int domingo = spawnAnimal( 1,  game.champion, game.animals[game.adversary].position, true);
-					if (domingo >= 0)
-					{
-						paintAnimal(domingo);
-						game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-						game.animals[domingo].damageReceived = 0;
-					}
-				}
-			}
+
 		}
 	}
 }

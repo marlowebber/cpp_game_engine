@@ -694,18 +694,33 @@ void setupExampleAnimal2(int i)
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
 	animalAppendCell( i, ORGAN_GILL );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_MUSCLE );
-	animalAppendCell( i, ORGAN_MUSCLE_TURN );
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
+
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+
+	animalAppendCell( i, ORGAN_MUSCLE );
+	animalAppendCell( i, ORGAN_MUSCLE_TURN );
+
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
+
+
 }
 
 
@@ -725,7 +740,7 @@ void setupExampleLighter(int i)
 		'1', '1',
 		'1', '1',
 	};
-	setupCreatureFromCharArray( i, lighter, 8, 2 , std::string("lighter"),MACHINECALLBACK_LIGHTER);
+	setupCreatureFromCharArray( i, lighter, 8, 2 , std::string("lighter"), MACHINECALLBACK_LIGHTER);
 }
 
 void setupExampleHuman(int i)
@@ -769,7 +784,7 @@ void setupTrackerGlasses(int i)
 		'2', '2', '1', '2', '2',
 		' ', '2', ' ', '2', ' ',
 	};
-	setupCreatureFromCharArray( i, trackerGlasses, 15, 5 , std::string("tracker glasses") ,MACHINECALLBACK_TRACKERGLASSES);
+	setupCreatureFromCharArray( i, trackerGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_TRACKERGLASSES);
 }
 
 void setupNeuroGlasses(int i)
@@ -780,19 +795,19 @@ void setupNeuroGlasses(int i)
 		'1', '2', '1', '2', '1',
 		'1', '1', ' ', '1', '1',
 	};
-	setupCreatureFromCharArray( i, neuroGlasses, 15, 5 , std::string("tracker glasses") ,MACHINECALLBACK_NEUROGLASSES);
+	setupCreatureFromCharArray( i, neuroGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_NEUROGLASSES);
 }
 
 void setupExampleGun(int i)
 {
 	char pistol[] =
 	{
-		'1', '1', '1', '1', 
-		'1', '1', '1', '1', 
-		' ', '1', '1', ' ', 
-		'1', '1', ' ', ' ', 
+		'1', '1', '1', '1',
+		'1', '1', '1', '1',
+		' ', '1', '1', ' ',
+		'1', '1', ' ', ' ',
 	};
-	setupCreatureFromCharArray( i, pistol, 16, 4 , std::string("pistol") ,MACHINECALLBACK_PISTOL);
+	setupCreatureFromCharArray( i, pistol, 16, 4 , std::string("pistol") , MACHINECALLBACK_PISTOL);
 }
 
 void setupExampleKnife(int i)
@@ -803,7 +818,7 @@ void setupExampleKnife(int i)
 		'1', '1', '1', '1',
 		' ', '1', ' ', ' ',
 	};
-	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") ,MACHINECALLBACK_KNIFE);
+	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") , MACHINECALLBACK_KNIFE);
 
 }
 
@@ -812,42 +827,42 @@ void setupEcologyCompter(int i)
 {
 	char computer[] =
 	{
-		'1', '1', '1', '1', '1', 
-		'1', '2', '2', '2', '1', 
-		'1', '2', '2', '2', '1', 
-		'1', '1', '1', '1', '1', 
-		' ', ' ', '1', ' ', ' ', 
-		'1', '1', '1', '1', '1', 
+		'1', '1', '1', '1', '1',
+		'1', '2', '2', '2', '1',
+		'1', '2', '2', '2', '1',
+		'1', '1', '1', '1', '1',
+		' ', ' ', '1', ' ', ' ',
+		'1', '1', '1', '1', '1',
 	};
-	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("ecology terminal") ,MACHINECALLBACK_ECOLOGYCOMPUTER);
+	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("ecology terminal") , MACHINECALLBACK_ECOLOGYCOMPUTER);
 }
 
 void setupMessageComputer(int i)
 {
 	char computer[] =
 	{
-		'2', '2', '2', '2', '2', 
-		'2', '2', '2', '2', '2', 
-		'2', '2', '2', '2', '2', 
-		'2', '2', '2', '2', '2', 
-		' ', ' ', '1', ' ', ' ', 
-		'1', '1', '1', '1', '1', 
+		'2', '2', '2', '2', '2',
+		'2', '2', '2', '2', '2',
+		'2', '2', '2', '2', '2',
+		'2', '2', '2', '2', '2',
+		' ', ' ', '1', ' ', ' ',
+		'1', '1', '1', '1', '1',
 	};
-	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("message terminal") ,MACHINECALLBACK_MESSAGECOMPUTER);
+	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("message terminal") , MACHINECALLBACK_MESSAGECOMPUTER);
 }
 
 void setupHospitalComputer(int i)
 {
 	char hospital[] =
 	{
-		 ' ', '2', ' ', 
-		 '2', '2', '2', 
-		 '2', '2', '2', 
-		 '2', '2', '2', 
-		 ' ', '2', ' ', 
-		 '2', '2', '2', 
+		' ', '2', ' ',
+		'2', '2', '2',
+		'2', '2', '2',
+		'2', '2', '2',
+		' ', '2', ' ',
+		'2', '2', '2',
 	};
-	setupCreatureFromCharArray( i, hospital, 18, 3 , std::string("hospital terminal") ,MACHINECALLBACK_HOSPITAL);
+	setupCreatureFromCharArray( i, hospital, 18, 3 , std::string("hospital terminal") , MACHINECALLBACK_HOSPITAL);
 }
 
 
