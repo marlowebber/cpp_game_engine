@@ -56,7 +56,6 @@ const bool setOrSteerAngle       = true;
 const bool printLogs             = false;
 
 const int prelimSize = 256;
-const int worldSize = 4096;
 const int cameraPanSpeed = 10;
 
 const float baseLungCapacity = 1.0f;
@@ -64,7 +63,6 @@ const unsigned int prelimSquareSize = prelimSize * prelimSize;
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
-const unsigned int animalSquareSize      = 128;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const unsigned int numberOfAnimals = 10000;
 const unsigned int numberOfSpecies = 8;
@@ -82,7 +80,6 @@ const unsigned int baseLifespan = 50000;			// if the lifespan is long, the anima
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 const float musclePower = 40.0f;
 const float thresholdOfBoredom = 0.1f;
-const unsigned int displayNameSize = 32;
 const unsigned int numberOfSpeakerChannels = 16;
 const float const_pi = 3.1415f;
 
@@ -170,13 +167,14 @@ auto evaporation = [](int x, int y) -> float {
 	GameState game;
 
 	// these are variables which are only needed per session, and never need to be stored.
-	unsigned int worldCreationStage = 0;
+	
 	float prelimMap[prelimSquareSize];
 	float prelimWater[prelimSquareSize];
-	bool mainMenu = true;
 	unsigned int modelFrameCount = 0;
 	unsigned int usPerFrame = 0;
 	float fps = 1.0f;
+
+	bool mainMenu = true;
 	bool flagQuit = false;
 	bool flagCreate = false;
 	bool flagLoad = false;
@@ -184,6 +182,7 @@ auto evaporation = [](int x, int y) -> float {
 	bool flagReturn = false;
 	int mouseX;
 	int mouseY;
+	unsigned int worldCreationStage = 0;
 
 
 

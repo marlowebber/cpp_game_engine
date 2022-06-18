@@ -2,10 +2,25 @@
 #define MARLO_H
 
 
+#include "utilities.h"
+
+
+const int worldSize = 4096;
+const int NUMBER_OF_CONNECTIONS = 8;
+const unsigned int animalSquareSize      = 128;
+const unsigned int displayNameSize = 32;
 
 
 
-
+extern bool mainMenu   ;
+extern bool flagQuit   ;
+extern bool flagCreate ;
+extern bool flagLoad   ;
+extern bool flagReady  ;
+extern bool flagReturn ;
+extern int mouseX;
+extern int mouseY;
+extern int worldCreationStage;
 
 struct Square
 {
@@ -145,7 +160,8 @@ struct GameState()
 } ;
 
 
-
+void setupRandomWorld();
+void startSimulation();
 void activateGrabbedMachine();
 void selectCursorAnimal();
 void rightClickCallback ();
@@ -158,8 +174,8 @@ void decrementSelectedOrgan();
 void playerGrab();
 void playerDrop();
 void adjustPlayerPos(Vec_f2 pos);
+void load();
+void save();
 
 
-
-
- #endif //MARLO_H
+#endif //MARLO_H
