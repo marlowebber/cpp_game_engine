@@ -33,8 +33,6 @@ set(SRCS
 	src/menus.cpp
 	src/utilities.h
 	src/utilities.cpp
-	src/neuro.cpp
-	src/neuro.h
 	src/TinyErode.h
 	src/untitled_marlo_project.cpp
 	src/untitled_marlo_project.h
@@ -63,7 +61,6 @@ target_link_libraries (
 	game
     Tracy::TracyClient 
 	OpenMP::OpenMP_CXX
-	${CMAKE_SOURCE_DIR}/fann/src/libfann.a
 	${SDL2_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${Boost_LIBRARIES}

@@ -686,7 +686,6 @@ bool isCellConnectable(unsigned int organ)
 	{
 		return true;
 	}
-
 	return false;
 }
 
@@ -717,29 +716,23 @@ void setupExampleAnimal2(int i)
 
 void setupExampleLighter(int i)
 {
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	game.animals[i].machineCallback = MACHINECALLBACK_LIGHTER;
-	std::string gunDescription = std::string("lighter");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
+	// game.animals[i].isMachine = true;
+	// game.animals[i].machineCallback = MACHINECALLBACK_LIGHTER;
+	char lighter[] =
+	{
+		'1', ' ',
+		'1', '1',
+		'1', '1',
+		'1', '1',
+	};
+	setupCreatureFromCharArray( i, lighter, 8, 2 , std::string("lighter"),MACHINECALLBACK_LIGHTER);
 }
 
 void setupExampleHuman(int i)
 {
-	resetAnimal(i);
-	std::string gunDescription = std::string("human");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+	// resetAnimal(i);
+	// std::string gunDescription = std::string("human");
+	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
 	char humanBody[] =
 	{
 		' ', ' ', ' ', 'B', ' ', ' ', ' ',
@@ -764,197 +757,98 @@ void setupExampleHuman(int i)
 		' ', ' ', 'B', ' ', 'B', ' ', ' ',
 		' ', ' ', 'B', ' ', 'B', ' ', ' ',
 	};
-	setupCreatureFromCharArray( i, humanBody, animalSquareSize, 7 );
+	setupCreatureFromCharArray( i, humanBody, animalSquareSize, 7 ,  std::string("human"), -1 );
 }
 
-void setupExampleGlasses(int i)
-{
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	appendCell( i, MATERIAL_GLASS, Vec_i2(1, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(2, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(3, 0) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-3, 0) );
-}
 
 void setupTrackerGlasses(int i)
 {
-	game.animals[i].machineCallback = MACHINECALLBACK_TRACKERGLASSES;
-	std::string gunDescription = std::string("tracker glasses");
-	strcpy( &(game.animals[i].displayName[0]) , gunDescription.c_str() );
+	char trackerGlasses[] =
+	{
+		' ', '2', ' ', '2', ' ',
+		'2', '2', '1', '2', '2',
+		' ', '2', ' ', '2', ' ',
+	};
+	setupCreatureFromCharArray( i, trackerGlasses, 15, 5 , std::string("tracker glasses") ,MACHINECALLBACK_TRACKERGLASSES);
 }
 
 void setupNeuroGlasses(int i)
 {
-	game.animals[i].machineCallback = MACHINECALLBACK_NEUROGLASSES;
-	std::string gunDescription = std::string("neuro glasses");
-	strcpy( &(game.animals[i].displayName[0]) , gunDescription.c_str() );
+	char neuroGlasses[] =
+	{
+		'1', '1', ' ', '1', '1',
+		'1', '2', '1', '2', '1',
+		'1', '1', ' ', '1', '1',
+	};
+	setupCreatureFromCharArray( i, neuroGlasses, 15, 5 , std::string("tracker glasses") ,MACHINECALLBACK_NEUROGLASSES);
 }
 
 void setupExampleGun(int i)
 {
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	game.animals[i].machineCallback = MACHINECALLBACK_PISTOL;
-	std::string gunDescription = std::string("pistol");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(1, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
+	char pistol[] =
+	{
+		'1', '1', '1', '1', 
+		'1', '1', '1', '1', 
+		' ', '1', '1', ' ', 
+		'1', '1', ' ', ' ', 
+	};
+	setupCreatureFromCharArray( i, pistol, 16, 4 , std::string("pistol") ,MACHINECALLBACK_PISTOL);
 }
 
 void setupExampleKnife(int i)
 {
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	game.animals[i].machineCallback = MACHINECALLBACK_KNIFE;
-	std::string gunDescription = std::string("knife");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+	char knife[] =
+	{
+		' ', '1', ' ', ' ',
+		'1', '1', '1', '1',
+		' ', '1', ' ', ' ',
+	};
+	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") ,MACHINECALLBACK_KNIFE);
 
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 3) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(+1, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, -1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, -2) );
 }
 
-void setupExampleComputer(int i)
-{
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	game.animals[i].fAngle = 0.0f;
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 0, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 1, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 2) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 1) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 0) );
-
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, -1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -1) );
-
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -2) );
-
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, -3) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -4) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -4) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -4) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -4) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -4) );
-}
 
 void setupEcologyCompter(int i)
 {
-	setupExampleComputer(i);
-	std::string gunDescription = std::string("ecology terminal");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-	game.animals[i].machineCallback = MACHINECALLBACK_ECOLOGYCOMPUTER;
+	char computer[] =
+	{
+		'1', '1', '1', '1', '1', 
+		'1', '2', '2', '2', '1', 
+		'1', '2', '2', '2', '1', 
+		'1', '1', '1', '1', '1', 
+		' ', ' ', '1', ' ', ' ', 
+		'1', '1', '1', '1', '1', 
+	};
+	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("ecology terminal") ,MACHINECALLBACK_ECOLOGYCOMPUTER);
 }
 
 void setupMessageComputer(int i)
 {
-	setupExampleComputer(i);
-	std::string gunDescription = std::string("message terminal");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-	game.animals[i].machineCallback = MACHINECALLBACK_MESSAGECOMPUTER;
+	char computer[] =
+	{
+		'2', '2', '2', '2', '2', 
+		'2', '2', '2', '2', '2', 
+		'2', '2', '2', '2', '2', 
+		'2', '2', '2', '2', '2', 
+		' ', ' ', '1', ' ', ' ', 
+		'1', '1', '1', '1', '1', 
+	};
+	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("message terminal") ,MACHINECALLBACK_MESSAGECOMPUTER);
 }
 
 void setupHospitalComputer(int i)
 {
-	setupExampleComputer(i);
-	std::string gunDescription = std::string("hospital");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-	game.animals[i].machineCallback = MACHINECALLBACK_HOSPITAL;
-}
-
-void setupBuilding_playerBase(unsigned int worldPositionI)
-{
-	unsigned int worldPositionX = worldPositionI % worldSize;
-	unsigned int worldPositionY = worldPositionI / worldSize;
-	float avgHeight = 0.0f;
-	unsigned int tally = 0;
-	for (unsigned int i = 0; i < worldSquareSize; ++i)
+	char hospital[] =
 	{
-		int x = i % worldSize;
-		int y = i / worldSize;
-		int xdiff = x - worldPositionX;
-		int ydiff = y - worldPositionY;
-		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)// set all the tiles around the position to a floor tile
-		{
-			avgHeight += game.world[i].height;
-			tally++;
-			game.world[i].terrain = MATERIAL_VOIDMETAL;
-			if (  !(game.world[i].wall == MATERIAL_NOTHING || game.world[i].wall == MATERIAL_WATER) )
-			{
-				game.world[i].wall = MATERIAL_NOTHING;
-			}
-		}
-		if ((((x > worldPositionX - baseSize - wallThickness) && (x < worldPositionX - baseSize + wallThickness) ) || // make walls around it // a square border of certain thickness
-		        ((x > worldPositionX + baseSize - wallThickness) && (x < worldPositionX + baseSize + wallThickness) ) ||
-		        ((y > worldPositionY - baseSize - wallThickness) && (y < worldPositionY - baseSize + wallThickness) ) ||
-		        ((y > worldPositionY + baseSize - wallThickness) && (y < worldPositionY + baseSize + wallThickness) ) )
-		        &&
-		        (abs(xdiff) < (baseSize + wallThickness) && abs(ydiff) < (baseSize + wallThickness))
-		        &&
-		        ((abs(xdiff) > doorThickness) &&  (abs(ydiff) > doorThickness) )) // with doors in the middle of each wall
-		{
-			game.world[i].wall = MATERIAL_VOIDMETAL;
-		}
-	}
-	avgHeight = avgHeight / tally;
-	for (unsigned int i = 0; i < worldSquareSize; ++i)
-	{
-		int x = i % worldSize;
-		int y = i / worldSize;
-		int xdiff = x - worldPositionX;
-		int ydiff = y - worldPositionY;
-		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
-		{
-			game.world[i].height = avgHeight;
-		}
-	}
-	game.cameraPositionX  = worldPositionX;
-	game.cameraPositionY = worldPositionY;
+		 ' ', '2', ' ', 
+		 '2', '2', '2', 
+		 '2', '2', '2', 
+		 '2', '2', '2', 
+		 ' ', '2', ' ', 
+		 '2', '2', '2', 
+	};
+	setupCreatureFromCharArray( i, hospital, 18, 3 , std::string("hospital terminal") ,MACHINECALLBACK_HOSPITAL);
 }
-
 
 
 

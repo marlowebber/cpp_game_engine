@@ -290,33 +290,6 @@ src/menus.cpp.s:
 	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/menus.cpp.s
 .PHONY : src/menus.cpp.s
 
-src/neuro.o: src/neuro.cpp.o
-
-.PHONY : src/neuro.o
-
-# target to build an object file
-src/neuro.cpp.o:
-	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/neuro.cpp.o
-.PHONY : src/neuro.cpp.o
-
-src/neuro.i: src/neuro.cpp.i
-
-.PHONY : src/neuro.i
-
-# target to preprocess a source file
-src/neuro.cpp.i:
-	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/neuro.cpp.i
-.PHONY : src/neuro.cpp.i
-
-src/neuro.s: src/neuro.cpp.s
-
-.PHONY : src/neuro.s
-
-# target to generate assembly for a file
-src/neuro.cpp.s:
-	$(MAKE) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/src/neuro.cpp.s
-.PHONY : src/neuro.cpp.s
-
 src/untitled_marlo_project.o: src/untitled_marlo_project.cpp.o
 
 .PHONY : src/untitled_marlo_project.o
@@ -424,9 +397,6 @@ help:
 	@echo "... src/menus.o"
 	@echo "... src/menus.i"
 	@echo "... src/menus.s"
-	@echo "... src/neuro.o"
-	@echo "... src/neuro.i"
-	@echo "... src/neuro.s"
 	@echo "... src/untitled_marlo_project.o"
 	@echo "... src/untitled_marlo_project.i"
 	@echo "... src/untitled_marlo_project.s"

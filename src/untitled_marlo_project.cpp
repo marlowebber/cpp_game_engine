@@ -164,7 +164,7 @@ bool flagReady = false;
 bool flagReturn = false;
 int mouseX;
 int mouseY;
- int worldCreationStage = 0;
+int worldCreationStage = 0;
 
 
 
@@ -1285,6 +1285,8 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	displayColor = multiplyColor(displayColor, game.world[worldI].light);
 	return displayColor;
 }
+
+
 
 float getNormalisedHeight(unsigned int worldPositionI)
 {
@@ -3099,8 +3101,20 @@ void drawGameInterfaceText()
 }
 
 
-void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width )
+void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback )
 {
+
+	resetAnimal(animalIndex);
+	// std::string gunDescription = std::string("human");
+	strcpy( &game.animals[animalIndex].displayName[0] , newName.c_str() );
+
+
+	if (newMachineCallback >=0)
+	{
+		game.animals[animalIndex].isMachine = true;
+		game.animals[animalIndex].machineCallback = newMachineCallback;
+	}
+
 	Vec_i2 o = Vec_i2(0, 0);
 	Vec_i2 p = Vec_i2(0, 0);
 	Color c = color_peach_light;
@@ -3152,6 +3166,9 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 			newOrgan = ORGAN_ADDOFFSPRINGENERGY;
 		case '1':
 			newOrgan = MATERIAL_METAL;
+		case '2':
+			newOrgan = MATERIAL_GLASS;
+
 		}
 		if (newOrgan != MATERIAL_NOTHING)
 		{
@@ -3365,6 +3382,59 @@ unsigned int getRandomPosition(bool underwater)
 		}
 	}
 }
+
+
+void setupBuilding_playerBase(unsigned int worldPositionI)
+{
+	unsigned int worldPositionX = worldPositionI % worldSize;
+	unsigned int worldPositionY = worldPositionI / worldSize;
+	float avgHeight = 0.0f;
+	unsigned int tally = 0;
+	for (unsigned int i = 0; i < worldSquareSize; ++i)
+	{
+		int x = i % worldSize;
+		int y = i / worldSize;
+		int xdiff = x - worldPositionX;
+		int ydiff = y - worldPositionY;
+		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)// set all the tiles around the position to a floor tile
+		{
+			avgHeight += game.world[i].height;
+			tally++;
+			game.world[i].terrain = MATERIAL_VOIDMETAL;
+			if (  !(game.world[i].wall == MATERIAL_NOTHING || game.world[i].wall == MATERIAL_WATER) )
+			{
+				game.world[i].wall = MATERIAL_NOTHING;
+			}
+		}
+		if ((((x > worldPositionX - baseSize - wallThickness) && (x < worldPositionX - baseSize + wallThickness) ) || // make walls around it // a square border of certain thickness
+		        ((x > worldPositionX + baseSize - wallThickness) && (x < worldPositionX + baseSize + wallThickness) ) ||
+		        ((y > worldPositionY - baseSize - wallThickness) && (y < worldPositionY - baseSize + wallThickness) ) ||
+		        ((y > worldPositionY + baseSize - wallThickness) && (y < worldPositionY + baseSize + wallThickness) ) )
+		        &&
+		        (abs(xdiff) < (baseSize + wallThickness) && abs(ydiff) < (baseSize + wallThickness))
+		        &&
+		        ((abs(xdiff) > doorThickness) &&  (abs(ydiff) > doorThickness) )) // with doors in the middle of each wall
+		{
+			game.world[i].wall = MATERIAL_VOIDMETAL;
+		}
+	}
+	avgHeight = avgHeight / tally;
+	for (unsigned int i = 0; i < worldSquareSize; ++i)
+	{
+		int x = i % worldSize;
+		int y = i / worldSize;
+		int xdiff = x - worldPositionX;
+		int ydiff = y - worldPositionY;
+		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
+		{
+			game.world[i].height = avgHeight;
+		}
+	}
+	game.cameraPositionX  = worldPositionX;
+	game.cameraPositionY = worldPositionY;
+}
+
+
 
 void setupGameItems()
 {

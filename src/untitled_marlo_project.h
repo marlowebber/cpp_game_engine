@@ -174,6 +174,7 @@ struct GameState
 } ;
 
 
+// the following are used as an interface to the game.
 void setupRandomWorld();
 void startSimulation();
 void activateGrabbedMachine();
@@ -199,5 +200,11 @@ void camera();
 void model();
 void drawGameInterfaceText();
 void drawMainMenuText();
+
+// the following are used privately to create the game content.
+void animalAppendCell(unsigned int animalIndex, unsigned int organType);
+void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );
+void resetAnimal(unsigned int animalIndex);
+
 
 #endif //MARLO_H
