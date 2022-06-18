@@ -6,11 +6,22 @@
 
 
 const int worldSize = 4096;
+const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
+const unsigned int numberOfAnimals = 10000;
+const unsigned int numberOfSpecies = 8;
 const unsigned int animalSquareSize      = 128;
 const unsigned int displayNameSize = 32;
+const unsigned int nLogs = 32;
+const unsigned int logLength = 64;
 const float playerSpeed = 0.3f;
 const float panSpeed = 0.1f;
+const unsigned int numberOfSpeakerChannels = 16;
+
+
+const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs game.animals to make new cells.
+const bool variedGrowthCost      = false;
+const bool variedUpkeep          = false;
 
 extern bool mainMenu   ;
 extern bool flagQuit   ;
@@ -21,6 +32,8 @@ extern bool flagReturn ;
 extern int mouseX;
 extern int mouseY;
 extern int worldCreationStage;
+
+
 
 
 struct Square
@@ -105,7 +118,7 @@ struct Animal
 
 
 // these parts need to be recorded in between sessions.
-struct GameState()
+struct GameState
 {
     char saveName[displayNameSize];
     char version[displayNameSize];
@@ -180,6 +193,11 @@ void save();
 void setMousePosition(Vec_i2 in);
 void saveSelectedAnimal ( );
 void toggleFPSLimit();
+bool getFPSLimit();
 void spawnPlayer();
+void camera();
+void model();
+void drawGameInterfaceText();
+void drawMainMenuText();
 
 #endif //MARLO_H

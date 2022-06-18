@@ -40,16 +40,15 @@
 
 #include "TinyErode.h"
 
+#include "content.h"
+
 const bool immortality           = false;
 const bool doReproduction        = true;
 const bool doMuscles             = true;
-const bool growingCostsEnergy    = true;
 const bool taxIsByMass           = true;
 const bool threading             = true;
 const bool cameraFollowsChampion = false;
 const bool cameraFollowsPlayer   = true;
-const bool variedGrowthCost      = false;
-const bool variedUpkeep          = false;
 const bool respawnLowSpecies     = true;
 const bool doMutation            = true;
 const bool setOrSteerAngle       = true;
@@ -63,13 +62,9 @@ const unsigned int prelimSquareSize = prelimSize * prelimSize;
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
-const unsigned int worldSquareSize       = worldSize * worldSize;
-const unsigned int numberOfAnimals = 10000;
-const unsigned int numberOfSpecies = 8;
 const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
 const unsigned int nNeighbours     = 8;
-const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs game.animals to make new cells.
 const float taxEnergyScale         = 0.00002f;        // a multiplier for how much it costs game.animals just to exist.
 const float movementEnergyScale    = 0.00002f;        // a multiplier for how much it costs game.animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
@@ -79,8 +74,6 @@ const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 50000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 const float musclePower = 40.0f;
-const float thresholdOfBoredom = 0.1f;
-const unsigned int numberOfSpeakerChannels = 16;
 const float const_pi = 3.1415f;
 
 const int paletteMenuX = 200;
@@ -88,9 +81,6 @@ const int paletteMenuY = 50;
 const int paletteTextSize = 10;
 const int paletteSpacing = 20;
 const unsigned int paletteWidth = 3;
-const unsigned int nLogs = 32;
-const unsigned int logLength = 64;
-
 // these are the parameters that set up the physical geography of the game.world.
 const float seaLevel =  0.5f * worldSize;;;
 const float biome_marine  = seaLevel + (worldSize / 20);
@@ -114,51 +104,6 @@ const int neighbourOffsets[] =
 	+worldSize - 1
 };
 
-// tinyerode stuff
-auto getHeight = [](int x, int y) -> float {
-	unsigned int address = (y * prelimSize) + x;
-	return  prelimMap[address];  ///* return height value at (x, y) */ 0.0f;
-};
-
-auto addHeight = [](int x, int y, float deltaHeight) {
-	unsigned int address = (y * prelimSize) + x;
-	prelimMap[address] += deltaHeight ;   /* add 'deltaHeight' to the location (x, y) */
-};
-
-auto getWater = [](int x, int y) -> float {
-	unsigned int address = (y * prelimSize) + x;
-	return  prelimWater[address]; //	return /* return water level at (x, y) */ return 0.0f;
-};
-
-auto addWater = [](int x, int y, float deltaWater) -> float {
-	/* Note: 'deltaWater' can be negative. */
-	unsigned int address = (y * prelimSize) + x;
-	float previousWaterLevel =  prelimWater[address];
-	prelimWater[address] += deltaWater;
-	if (prelimWater[address] < 0.0f)
-	{
-		prelimWater[address]  = 0.0f;
-	}
-	/* The function returns the new water level. It should not
-	 * fall below zero. */
-	return std::max(0.0f, previousWaterLevel + deltaWater);
-};
-
-auto carryCapacity = [](int x, int y) -> float {
-	return 0.1;
-};
-
-auto deposition = [](int x, int y) -> float {
-	return 0.1;
-};
-
-auto erosion = [](int x, int y) -> float {
-	return 0.1;
-};
-
-auto evaporation = [](int x, int y) -> float {
-	return 0.1;
-};
 
 
 
@@ -168,9 +113,48 @@ GameState game;
 
 float prelimMap[prelimSquareSize];
 float prelimWater[prelimSquareSize];
+// tinyerode stuff
+auto getHeight = [](int x, int y) -> float {
+	unsigned int address = (y * prelimSize) + x;
+	return  prelimMap[address];  ///* return height value at (x, y) */ 0.0f;
+};
+auto addHeight = [](int x, int y, float deltaHeight) {
+	unsigned int address = (y * prelimSize) + x;
+	prelimMap[address] += deltaHeight ;   /* add 'deltaHeight' to the location (x, y) */
+};
+auto getWater = [](int x, int y) -> float {
+	unsigned int address = (y * prelimSize) + x;
+	return  prelimWater[address]; //	return /* return water level at (x, y) */ return 0.0f;
+};
+auto addWater = [](int x, int y, float deltaWater) -> float {/* Note: 'deltaWater' can be negative. */
+	unsigned int address = (y * prelimSize) + x;
+	float previousWaterLevel =  prelimWater[address];
+	prelimWater[address] += deltaWater;
+	if (prelimWater[address] < 0.0f)	/* The function returns the new water level. It should not fall below zero. */
+	{
+		prelimWater[address]  = 0.0f;
+	}
+	return std::max(0.0f, previousWaterLevel + deltaWater);
+};
+auto carryCapacity = [](int x, int y) -> float {
+	return 0.1;
+};
+auto deposition = [](int x, int y) -> float {
+	return 0.1;
+};
+auto erosion = [](int x, int y) -> float {
+	return 0.1;
+};
+auto evaporation = [](int x, int y) -> float {
+	return 0.1;
+};
 unsigned int modelFrameCount = 0;
 unsigned int usPerFrame = 0;
 float fps = 1.0f;
+
+
+
+
 
 bool mainMenu = true;
 bool flagQuit = false;
@@ -180,7 +164,7 @@ bool flagReady = false;
 bool flagReturn = false;
 int mouseX;
 int mouseY;
-unsigned int worldCreationStage = 0;
+ int worldCreationStage = 0;
 
 
 
@@ -188,78 +172,6 @@ unsigned int worldCreationStage = 0;
 // --------------------- DeepSea public methods
 
 
-
-void activateGrabbedMachine()// occurs whenever a left click is received.
-{
-	if (game.playerCreature >= 0)
-	{
-		for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
-		{
-			if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
-			{
-				if (game.animals[game.playerCreature].body[i].grabbedCreature >= 0 && game.animals[game.playerCreature].body[i].grabbedCreature < numberOfAnimals)
-				{
-					if (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].isMachine)
-					{
-						if (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].machineCallback !=  MATERIAL_NOTHING)
-						{
-							switch (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].machineCallback )
-							{
-							case MACHINECALLBACK_KNIFE :
-								knifeCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							case MACHINECALLBACK_PISTOL :
-								exampleGunCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							case MACHINECALLBACK_LIGHTER :
-								lighterCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							case MACHINECALLBACK_HOSPITAL :
-								paletteCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							case MACHINECALLBACK_MESSAGECOMPUTER :
-								communicationComputerCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							}
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-
-void selectCursorAnimal()
-{
-	if (game.selectedAnimal >= 0)
-	{
-		game.selectedAnimal = -1;
-	}
-	else
-	{
-		int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
-		int cursorPosY = game.cameraPositionY + game.mousePositionY;
-		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
-		if (game.cursorAnimal >= 0 && game.cursorAnimal < numberOfAnimals)
-		{
-			int occupyingCell = isAnimalInSquare(game.cursorAnimal, worldCursorPos);
-			if ( occupyingCell >= 0)
-			{
-				game.selectedAnimal = game.cursorAnimal;
-			}
-		}
-	}
-}
-
-void rightClickCallback ()
-{
-	if (game.palette)
-	{
-		paletteEraseAtMouse();
-	}
-}
 
 
 void viewAdversary()
@@ -343,102 +255,31 @@ void playerDrop()
 	}
 }
 
-void adjustPlayerPos(Vec_f2 pos)
-{
-	if (game.playerCreature >= 0)
-	{
-		game.animals[game.playerCreature].fAngle = 0.0f;
-		int strafeMuscle = getRandomCellOfType(game.playerCreature, ORGAN_MUSCLE_STRAFE);
-		int muscle = getRandomCellOfType(game.playerCreature, ORGAN_MUSCLE);
-		if (strafeMuscle >= 0)
-		{
-			game.animals[game.playerCreature].body[strafeMuscle].signalIntensity = pos.y;
-		}
-		if (muscle >= 0)
-		{
-			game.animals[game.playerCreature].body[muscle].signalIntensity = pos.x;
-		}
-	}
-
-
-	else
-	{
-		cameraPositionX += cameraPanSpeed * pos.x;
-		cameraPositionX = cameraPositionX % worldSize;
-
-		cameraPositionY -= cameraPanSpeed * pos.y;
-		cameraPositionY = cameraPositionY % worldSize;
-	}
-
-
-}
 
 
 void setMousePosition(Vec_i2 in)
 {
-	mousePositionX = in.x;
-	mousePositionY = in.y;
+	game.mousePositionX = in.x;
+	game.mousePositionY = in.y;
 }
 
 
 
 void toggleFPSLimit()
 {
-game.lockfps = !game.lockfps;
+	game.lockfps = !game.lockfps;
 }
 
+bool getFPSLimit()
+{
+	return game.lockfps;
+}
 
 
 // --------------------- DeepSea private methods
 
 
 
-void resetGameState()
-{
-	// these variables are how the player drives their character, and what they get back from it.
-	game.playerGrabState = false;
-	game.playerCanSee = true;
-	game.playerCanHear = true;
-	game.playerCanSmell = true;
-	game.palette = false;
-	game.playerCanPickup = false;
-	game.playerCanPickupItem = -1;
-	game.lockfps           = true;
-	game.paused = false;
-	game.mousePositionX =  -430;
-	game.mousePositionY =  330;
-
-
-	// these variables keep track of the main characters in the game game.world.
-	game.playerCreature = -1;
-	game.championScore = 0;
-	game.championEnergyScore = 0.0f;
-	game.adversary = -1;
-	game.adversaryRespawnPos;
-	game.selectedAnimal = -1;
-	game.cursorAnimal = -1;
-	game.playerRespawnPos;
-
-
-
-	// camera view
-	game.cameraPositionX = 0 ;
-	game.cameraPositionY = 0 ;
-	game.cameraTargetCreature = -1;
-
-
-	// these variables govern the display of menus and other texts.
-	game.showInstructions = false;
-	game.ecologyComputerDisplay = false;
-	game.visualizer = VISUALIZER_TRUECOLOR;
-	game.computerdisplays[5];
-	game.logs[logLength][nLogs];
-	game.paletteSelectedOrgan = 0;
-
-
-	resetAnimals();
-	resetGrid();
-}
 
 
 
@@ -533,6 +374,82 @@ void resetAnimal(unsigned int animalIndex)
 			resetCell(animalIndex, cellLocalPositionI );
 		}
 	}
+}
+
+void resetAnimals()
+{
+	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+	{
+		resetAnimal(animalIndex);
+	}
+	int j = 1;
+	setupExampleAnimal2(j);
+	game.champion = game.animals[j];
+	game.championScore = 0;
+}
+
+void resetGrid()
+{
+	for (int i = 0; i < worldSquareSize; ++i)
+	{
+		game.world[i].terrain = MATERIAL_NOTHING;
+		game.world[i].material = MATERIAL_NOTHING;
+		game.world[i].identity = -1;
+		game.world[i].trail = 0.0f;
+		game.world[i].height = 0.0f;
+		game.world[i].light = color_white;
+		game.world[i].pheromoneIntensity = 0.0f;
+		game.world[i].pheromoneChannel = -1;
+		game.world[i].grassColor =  color_green;
+	}
+}
+
+
+void resetGameState()
+{
+	// these variables are how the player drives their character, and what they get back from it.
+	game.playerGrabState = false;
+	game.playerCanSee = true;
+	game.playerCanHear = true;
+	game.playerCanSmell = true;
+	game.palette = false;
+	game.playerCanPickup = false;
+	game.playerCanPickupItem = -1;
+	game.lockfps           = true;
+	game.paused = false;
+	game.mousePositionX =  -430;
+	game.mousePositionY =  330;
+
+
+	// these variables keep track of the main characters in the game game.world.
+	game.playerCreature = -1;
+	game.championScore = 0;
+	game.championEnergyScore = 0.0f;
+	game.adversary = -1;
+	game.adversaryRespawnPos;
+	game.selectedAnimal = -1;
+	game.cursorAnimal = -1;
+	game.playerRespawnPos;
+
+
+
+	// camera view
+	game.cameraPositionX = 0 ;
+	game.cameraPositionY = 0 ;
+	game.cameraTargetCreature = -1;
+
+
+	// these variables govern the display of menus and other texts.
+	game.showInstructions = false;
+	game.ecologyComputerDisplay = false;
+	game.visualizer = VISUALIZER_TRUECOLOR;
+	game.computerdisplays[5];
+	game.logs[logLength][nLogs];
+	game.paletteSelectedOrgan = 0;
+
+
+	resetAnimals();
+	resetGrid();
 }
 
 
@@ -699,17 +616,7 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 }
 
 
-void resetAnimals()
-{
-	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
-	{
-		resetAnimal(animalIndex);
-	}
-	int j = 1;
-	setupExampleAnimal2(j);
-	game.champion = game.animals[j];
-	game.championScore = 0;
-}
+
 
 Vec_f2 getTerrainSlope(unsigned int worldPositionI)
 {
@@ -719,72 +626,66 @@ Vec_f2 getTerrainSlope(unsigned int worldPositionI)
 }
 
 
-void detailTerrain(unsigned int worldPositionI)
+void detailTerrain()
 {
-	Vec_f2 slope = getTerrainSlope(worldPositionI);
-	float grade = sqrt( (slope.x * slope.x) +  (slope.y * slope.y)  );
-	float colorNoise = 1 + (((RNG() - 0.5f) * 0.35)) ; // map -1,1 to 0,0.8
-	if ( game.world[worldPositionI]. height < biome_marine)
+
+	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
 	{
-		if (grade < 5.0f)
+		if (  game.world[worldPositionI].terrain == MATERIAL_ROCK )
 		{
-			game.world[worldPositionI].terrain = MATERIAL_SAND;
+
+
+			Vec_f2 slope = getTerrainSlope(worldPositionI);
+			float grade = sqrt( (slope.x * slope.x) +  (slope.y * slope.y)  );
+			float colorNoise = 1 + (((RNG() - 0.5f) * 0.35)) ; // map -1,1 to 0,0.8
+			if ( game.world[worldPositionI]. height < biome_marine)
+			{
+				if (grade < 5.0f)
+				{
+					game.world[worldPositionI].terrain = MATERIAL_SAND;
+				}
+
+				else
+				{
+					game.world[worldPositionI].terrain = MATERIAL_BASALT;
+				}
+			}
+
+			else if (game.world[worldPositionI]. height  > biome_marine && game.world[worldPositionI]. height  < biome_coastal )
+			{
+				if (grade < 2.5f)
+				{
+					game.world[worldPositionI].terrain = MATERIAL_SOIL;
+				}
+				else  if (grade < 5.0f)
+				{
+					game.world[worldPositionI].terrain = MATERIAL_DIRT;
+				}
+				else
+				{
+					game.world[worldPositionI].terrain = MATERIAL_BASALT;
+					game.world[worldPositionI].wall = MATERIAL_BASALT;
+				}
+			}
+			else if (game.world[worldPositionI]. height  > biome_coastal)
+			{
+				if (grade < 2.5f)
+				{
+					game.world[worldPositionI].terrain = MATERIAL_GRAVEL;
+
+				}
+				else if (grade < 5.0f)
+				{
+					game.world[worldPositionI].terrain = MATERIAL_DUST;
+				}
+				else
+				{
+					game.world[worldPositionI].terrain = MATERIAL_BASALT;
+					game.world[worldPositionI].wall = MATERIAL_BASALT;
+				}
+			}
 		}
 
-		else
-		{
-			game.world[worldPositionI].terrain = MATERIAL_BASALT;
-		}
-	}
-
-	else if (game.world[worldPositionI]. height  > biome_marine && game.world[worldPositionI]. height  < biome_coastal )
-	{
-		if (grade < 2.5f)
-		{
-			game.world[worldPositionI].terrain = MATERIAL_SOIL;
-		}
-		else  if (grade < 5.0f)
-		{
-			game.world[worldPositionI].terrain = MATERIAL_DIRT;
-		}
-		else
-		{
-			game.world[worldPositionI].terrain = MATERIAL_BASALT;
-			game.world[worldPositionI].wall = MATERIAL_BASALT;
-		}
-	}
-	else if (game.world[worldPositionI]. height  > biome_coastal)
-	{
-		if (grade < 2.5f)
-		{
-			game.world[worldPositionI].terrain = MATERIAL_GRAVEL;
-
-		}
-		else if (grade < 5.0f)
-		{
-			game.world[worldPositionI].terrain = MATERIAL_DUST;
-		}
-		else
-		{
-			game.world[worldPositionI].terrain = MATERIAL_BASALT;
-			game.world[worldPositionI].wall = MATERIAL_BASALT;
-		}
-	}
-}
-
-void resetGrid()
-{
-	for (int i = 0; i < worldSquareSize; ++i)
-	{
-		game.world[i].terrain = MATERIAL_NOTHING;
-		game.world[i].material = MATERIAL_NOTHING;
-		game.world[i].identity = -1;
-		game.world[i].trail = 0.0f;
-		game.world[i].height = 0.0f;
-		game.world[i].light = color_white;
-		game.world[i].pheromoneIntensity = 0.0f;
-		game.world[i].pheromoneChannel = -1;
-		game.world[i].grassColor =  color_green;
 	}
 }
 
@@ -1095,8 +996,7 @@ void mutateAnimal(unsigned int animalIndex)
 	}
 	case MUTATION_ADDORGAN:
 	{
-		unsigned int newOrgan = randomLetter();
-		animalAppendCell(animalIndex, newOrgan);
+		animalAppendCell(animalIndex, extremelyFastNumberFromZeroTo(numberOfOrganTypes));
 		break;
 	}
 	case MUTATION_SWITCHCONNECTION:
@@ -1233,7 +1133,7 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	game.animals[animalIndex].fPosX = position % worldSize; // set the new creature to the desired position
 	game.animals[animalIndex].fPosY = position / worldSize;
 	game.animals[animalIndex].birthLocation = position;
-	game.animals[animalIndex].fAngle = ( (RNG() - 0.5f) * 2 * 3.141f  );
+	game.animals[animalIndex].fAngle = ( (RNG() - 0.5f) * 2 * const_pi );
 	mutateAnimal( animalIndex);
 	measureAnimalQualities(animalIndex);
 	memcpy( &( game.animals[animalIndex].displayName[0]), &(parent.displayName[0]), sizeof(char) * displayNameSize  );
@@ -1315,6 +1215,27 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 	}
 	return -1;
 }
+void selectCursorAnimal()
+{
+	if (game.selectedAnimal >= 0)
+	{
+		game.selectedAnimal = -1;
+	}
+	else
+	{
+		int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
+		int cursorPosY = game.cameraPositionY + game.mousePositionY;
+		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+		if (game.cursorAnimal >= 0 && game.cursorAnimal < numberOfAnimals)
+		{
+			int occupyingCell = isAnimalInSquare(game.cursorAnimal, worldCursorPos);
+			if ( occupyingCell >= 0)
+			{
+				game.selectedAnimal = game.cursorAnimal;
+			}
+		}
+	}
+}
 
 
 Color whatColorIsThisSquare(  unsigned int worldI)
@@ -1378,7 +1299,7 @@ void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAn
 	float ySurfaceDifference = (yLightAngle - slope.y);
 	if (worldPositionI + worldSize < worldSquareSize)
 	{
-		float brightness = 1.0f - ((xSurfaceDifference + ySurfaceDifference) / (2.0f * 3.14f));
+		float brightness = 1.0f - ((xSurfaceDifference + ySurfaceDifference) / (2.0f * const_pi));
 		if (brightness < 0.2f) { brightness = 0.2f;}
 		game.world[worldPositionI].light = multiplyColorByScalar(color_white, brightness);
 	}
@@ -1563,6 +1484,15 @@ void paletteEraseAtMouse()
 				eliminateCell(game.selectedAnimal, i);
 			}
 		}
+	}
+}
+
+
+void rightClickCallback ()
+{
+	if (game.palette)
+	{
+		paletteEraseAtMouse();
 	}
 }
 
@@ -1771,6 +1701,52 @@ int getGrabbableItem(unsigned int animalIndex, unsigned int cellIndex)
 	}
 	return result;
 }
+
+
+
+void activateGrabbedMachine()// occurs whenever a left click is received.
+{
+	if (game.playerCreature >= 0)
+	{
+		for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
+		{
+			if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
+			{
+				if (game.animals[game.playerCreature].body[i].grabbedCreature >= 0 && game.animals[game.playerCreature].body[i].grabbedCreature < numberOfAnimals)
+				{
+					if (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].isMachine)
+					{
+						if (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].machineCallback !=  MATERIAL_NOTHING)
+						{
+							switch (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].machineCallback )
+							{
+							case MACHINECALLBACK_KNIFE :
+								knifeCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+								break;
+							case MACHINECALLBACK_PISTOL :
+								exampleGunCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+								break;
+							case MACHINECALLBACK_LIGHTER :
+								lighterCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+								break;
+							case MACHINECALLBACK_HOSPITAL :
+								paletteCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+								break;
+							case MACHINECALLBACK_MESSAGECOMPUTER :
+								communicationComputerCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+								break;
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
 
 // the animal is a grid of living cells that do different things. this function describes what they do each turn.
 void organs_all()
@@ -2604,6 +2580,8 @@ void move_all()
 	}
 }
 
+
+
 void energy_all() // perform energies.
 {
 	ZoneScoped;
@@ -3120,12 +3098,6 @@ void drawGameInterfaceText()
 	}
 }
 
-void a( unsigned int animalIndex , unsigned int organ,  Vec_i2 * p , Color color)
-{
-	appendCell( animalIndex, organ, *p);
-	game.animals[animalIndex].body[game.animals[animalIndex].cellsUsed - 1].color = color;
-	p->x++;
-}
 
 void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width )
 {
@@ -3194,245 +3166,7 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 	}
 }
 
-void setupExampleLighter(int i)
-{
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	game.animals[i].machineCallback = MACHINECALLBACK_LIGHTER;
-	std::string gunDescription = std::string("lighter");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
 
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
-}
-
-void setupExampleHuman(int i)
-{
-	resetAnimal(i);
-	std::string gunDescription = std::string("human");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-	char humanBody[] =
-	{
-		' ', ' ', ' ', 'B', ' ', ' ', ' ',
-		' ', ' ', 'B', 'B', 'B', ' ', ' ',
-		' ', 'B', 'E', 'B', 'E', 'B', ' ',
-		' ', ' ', 'B', 'N', 'B', ' ', ' ',
-		' ', ' ', ' ', 'S', ' ', ' ', ' ',
-		' ', ' ', ' ', 'B', ' ', ' ', ' ',
-		' ', 'B', 'B', 'B', 'B', 'B', ' ',
-		'M', 'M', 'U', 'B', 'U', 'M', 'M',
-		'M', ' ', 'B', 'B', 'B', ' ', 'M',
-		'B', ' ', 'L', 'B', 'L', ' ', 'B',
-		'B', ' ', 'B', 'B', 'B', ' ', 'B',
-		'G', ' ', 'A', 'O', 'A', ' ', 'G',
-		' ', ' ', 'B', 'B', 'B', ' ', ' ',
-		' ', ' ', 'B', 'D', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-	};
-	setupCreatureFromCharArray( i, humanBody, animalSquareSize, 7 );
-}
-
-void setupExampleGlasses(int i)
-{
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	appendCell( i, MATERIAL_GLASS, Vec_i2(1, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(2, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(3, 0) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-3, 0) );
-}
-
-void setupTrackerGlasses(int i)
-{
-	game.animals[i].machineCallback = MACHINECALLBACK_TRACKERGLASSES;
-	std::string gunDescription = std::string("tracker glasses");
-	strcpy( &(game.animals[i].displayName[0]) , gunDescription.c_str() );
-}
-
-void setupNeuroGlasses(int i)
-{
-	game.animals[i].machineCallback = MACHINECALLBACK_NEUROGLASSES;
-	std::string gunDescription = std::string("neuro glasses");
-	strcpy( &(game.animals[i].displayName[0]) , gunDescription.c_str() );
-}
-
-void setupExampleGun(int i)
-{
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	game.animals[i].machineCallback = MACHINECALLBACK_PISTOL;
-	std::string gunDescription = std::string("pistol");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(1, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
-}
-
-void setupExampleKnife(int i)
-{
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	game.animals[i].machineCallback = MACHINECALLBACK_KNIFE;
-	std::string gunDescription = std::string("knife");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 3) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(+1, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, -1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, -2) );
-}
-
-void setupExampleComputer(int i)
-{
-	resetAnimal(i);
-	game.animals[i].isMachine = true;
-	game.animals[i].fAngle = 0.0f;
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 0, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 1, 2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 2) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, 1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, 1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 1) );
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, 0) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, 0) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 0) );
-
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, -1) );
-	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, -1) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -1) );
-
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -2) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -2) );
-
-
-	appendCell( i, MATERIAL_METAL, Vec_i2(0, -3) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -4) );
-	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -4) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -4) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -4) );
-	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -4) );
-}
-
-void setupEcologyCompter(int i)
-{
-	setupExampleComputer(i);
-	std::string gunDescription = std::string("ecology terminal");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-	game.animals[i].machineCallback = MACHINECALLBACK_ECOLOGYCOMPUTER;
-}
-
-void setupMessageComputer(int i)
-{
-	setupExampleComputer(i);
-	std::string gunDescription = std::string("message terminal");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-	game.animals[i].machineCallback = MACHINECALLBACK_MESSAGECOMPUTER;
-}
-
-void setupHospitalComputer(int i)
-{
-	setupExampleComputer(i);
-	std::string gunDescription = std::string("hospital");
-	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-	game.animals[i].machineCallback = MACHINECALLBACK_HOSPITAL;
-}
-
-void setupBuilding_playerBase(unsigned int worldPositionI)
-{
-	unsigned int worldPositionX = worldPositionI % worldSize;
-	unsigned int worldPositionY = worldPositionI / worldSize;
-	float avgHeight = 0.0f;
-	unsigned int tally = 0;
-	for (unsigned int i = 0; i < worldSquareSize; ++i)
-	{
-		int x = i % worldSize;
-		int y = i / worldSize;
-		int xdiff = x - worldPositionX;
-		int ydiff = y - worldPositionY;
-		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)// set all the tiles around the position to a floor tile
-		{
-			avgHeight += game.world[i].height;
-			tally++;
-			game.world[i].terrain = MATERIAL_VOIDMETAL;
-			if (  !(game.world[i].wall == MATERIAL_NOTHING || game.world[i].wall == MATERIAL_WATER) )
-			{
-				game.world[i].wall = MATERIAL_NOTHING;
-			}
-		}
-		if ((((x > worldPositionX - baseSize - wallThickness) && (x < worldPositionX - baseSize + wallThickness) ) || // make walls around it // a square border of certain thickness
-		        ((x > worldPositionX + baseSize - wallThickness) && (x < worldPositionX + baseSize + wallThickness) ) ||
-		        ((y > worldPositionY - baseSize - wallThickness) && (y < worldPositionY - baseSize + wallThickness) ) ||
-		        ((y > worldPositionY + baseSize - wallThickness) && (y < worldPositionY + baseSize + wallThickness) ) )
-		        &&
-		        (abs(xdiff) < (baseSize + wallThickness) && abs(ydiff) < (baseSize + wallThickness))
-		        &&
-		        ((abs(xdiff) > doorThickness) &&  (abs(ydiff) > doorThickness) )) // with doors in the middle of each wall
-		{
-			game.world[i].wall = MATERIAL_VOIDMETAL;
-		}
-	}
-	avgHeight = avgHeight / tally;
-	for (unsigned int i = 0; i < worldSquareSize; ++i)
-	{
-		int x = i % worldSize;
-		int y = i / worldSize;
-		int xdiff = x - worldPositionX;
-		int ydiff = y - worldPositionY;
-		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
-		{
-			game.world[i].height = avgHeight;
-		}
-	}
-	game.cameraPositionX  = worldPositionX;
-	game.cameraPositionY = worldPositionY;
-}
 
 void spawnAdversary(unsigned int targetWorldPositionI)
 {
@@ -3468,6 +3202,36 @@ void spawnPlayer()
 	{
 		killAnimal(game.playerCreature);
 	}
+}
+
+
+void adjustPlayerPos(Vec_f2 pos)
+{
+	if (game.playerCreature >= 0)
+	{
+		game.animals[game.playerCreature].fAngle = 0.0f;
+		int strafeMuscle = getRandomCellOfType(game.playerCreature, ORGAN_MUSCLE_STRAFE);
+		int muscle = getRandomCellOfType(game.playerCreature, ORGAN_MUSCLE);
+		if (strafeMuscle >= 0)
+		{
+			game.animals[game.playerCreature].body[strafeMuscle].signalIntensity = pos.y;
+		}
+		if (muscle >= 0)
+		{
+			game.animals[game.playerCreature].body[muscle].signalIntensity = pos.x;
+		}
+	}
+
+
+	else
+	{
+		game.cameraPositionX += cameraPanSpeed * pos.x;
+		game.cameraPositionX =  game.cameraPositionX % worldSize;
+		game.cameraPositionY -= cameraPanSpeed * pos.y;
+		game.cameraPositionY =  game.cameraPositionY % worldSize;
+	}
+
+
 }
 
 void saveParticularAnimal(unsigned int animalIndex, std::string filename )
@@ -3661,16 +3425,7 @@ void setupGameItems()
 	spawnAnimalIntoSlot(8, game.animals[i], targetWorldPositionI, false);
 }
 
-void applyPretties()
-{
-	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)
-	{
-		if (  game.world[worldPositionI].terrain == MATERIAL_ROCK )
-		{
-			detailTerrain(worldPositionI);
-		}
-	}
-}
+
 
 void setupRandomWorld()
 {
@@ -3748,7 +3503,7 @@ void setupRandomWorld()
 			game.world[worldPositionI].material = MATERIAL_GRASS;
 		}
 	}
-	applyPretties();
+	detailTerrain();
 	worldCreationStage++;
 	setupGameItems();
 	worldCreationStage++;
@@ -3911,8 +3666,13 @@ void modelSupervisor()
 
 void drawMainMenuText()
 {
+	int menuX = 50;
+	int menuY = 500;
+	int textSize = 10;
+	int spacing = 20;
+
 	bool saveExists = false;
-	if (exists_test3(std::string("save/game.animals")) && exists_test3(std::string("save/game.world")) )
+	if (exists_test3(std::string("save/game") ))
 	{
 		saveExists = true;
 	}
@@ -3990,16 +3750,16 @@ void startSimulation()
 
 void save()
 {
-	std::ofstream out6(std::string("save/game.world").c_str());
-	out6.write( (char*)(game), sizeof(GameState) );
+	std::ofstream out6(std::string("save/game").c_str());
+	out6.write( (char*)(&game), sizeof(GameState) );
 	out6.close();
 }
 
 void load()
 {
 	worldCreationStage = 12;
-	std::ifstream in6(std::string("save/game.world").c_str());
-	in6.read( (char *)(&(game)), sizeof(GameState));
+	std::ifstream in6(std::string("save/game").c_str());
+	in6.read( (char *)(&game), sizeof(GameState));
 	in6.close();
 	worldCreationStage = 10;
 	setFlagReady();

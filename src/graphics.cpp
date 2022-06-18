@@ -603,6 +603,7 @@ void mainMenuDraw()
 	preDraw();
 
 	prepareForMenuDraw();
+
 	drawMainMenuText();
 
 	postDraw();
@@ -617,7 +618,7 @@ void threadGraphics()
 
 	camera();
 
-	if (lockfps)
+	if (getFPSLimit())
 	{
 		model();
 	}

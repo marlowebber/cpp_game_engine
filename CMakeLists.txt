@@ -40,6 +40,7 @@ set(SRCS
 	src/untitled_marlo_project.h
 	src/SimplexNoise.cpp
 	src/SimplexNoise.h
+	src/content.h
 	tracy/TracyClient.cpp
 	tracy/Tracy.hpp
 )

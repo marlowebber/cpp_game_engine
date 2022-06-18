@@ -558,40 +558,38 @@ std::string tileShortNames(unsigned int tile)
 float organGrowthCost(unsigned int organ)
 {
 	float growthCost = 0.0f;
-	if (growingCostsEnergy)
+	growthCost = growthEnergyScale;
+	if (variedGrowthCost)
 	{
-		growthCost = growthEnergyScale;
-		if (variedGrowthCost)
+		switch (organ)
 		{
-			switch (organ)
-			{
-			case ORGAN_MUSCLE:
-				growthCost *= 1.0f;
-				break;
-			case ORGAN_BONE:
-				growthCost *= 1.0f;
-				break;
-			case ORGAN_WEAPON:
-				growthCost *= 2.0f;
-				break;
-			case ORGAN_GONAD:
-				growthCost *= 10.0f;
-				break;
-			case ORGAN_MOUTH_VEG:
-				growthCost *= 10.0f;
-				break;
-			case ORGAN_MOUTH_SCAVENGE:
-				growthCost *= 10.0f;
-				break;
-			case ORGAN_MOUTH_CARNIVORE:
-				growthCost *= 10.0f;
-				break;
-			case ORGAN_MOUTH_PARASITE:
-				growthCost *= 10.0f;
-				break;
-			}
+		case ORGAN_MUSCLE:
+			growthCost *= 1.0f;
+			break;
+		case ORGAN_BONE:
+			growthCost *= 1.0f;
+			break;
+		case ORGAN_WEAPON:
+			growthCost *= 2.0f;
+			break;
+		case ORGAN_GONAD:
+			growthCost *= 10.0f;
+			break;
+		case ORGAN_MOUTH_VEG:
+			growthCost *= 10.0f;
+			break;
+		case ORGAN_MOUTH_SCAVENGE:
+			growthCost *= 10.0f;
+			break;
+		case ORGAN_MOUTH_CARNIVORE:
+			growthCost *= 10.0f;
+			break;
+		case ORGAN_MOUTH_PARASITE:
+			growthCost *= 10.0f;
+			break;
 		}
 	}
+
 	return growthCost;
 }
 
@@ -653,18 +651,18 @@ bool organIsANeuron(unsigned int organ)
 bool organIsASensor(unsigned int organ)
 {
 	if (organ == ORGAN_SENSOR_EYE ||
-	    organ == ORGAN_SENSOR_BODYANGLE ||
-	    organ == ORGAN_SENSOR_TRACKER      ||
-	    organ == ORGAN_SENSOR_EAR        ||
-	    organ == ORGAN_SENSOR_PHEROMONE ||
-	    organ == ORGAN_MEMORY_RX ||
-	    organ == ORGAN_SENSOR_LAST_STRANGER ||
-	    organ == ORGAN_SENSOR_LAST_KIN ||
-	    organ == ORGAN_SENSOR_HUNGER ||
-	    organ == ORGAN_SENSOR_AGE ||
-	    organ == ORGAN_SENSOR_BIRTHPLACE ||
-	    organ == ORGAN_SENSOR_PARENT ||
-	    organ == ORGAN_SENSOR_PAIN)
+	        organ == ORGAN_SENSOR_BODYANGLE ||
+	        organ == ORGAN_SENSOR_TRACKER      ||
+	        organ == ORGAN_SENSOR_EAR        ||
+	        organ == ORGAN_SENSOR_PHEROMONE ||
+	        organ == ORGAN_MEMORY_RX ||
+	        organ == ORGAN_SENSOR_LAST_STRANGER ||
+	        organ == ORGAN_SENSOR_LAST_KIN ||
+	        organ == ORGAN_SENSOR_HUNGER ||
+	        organ == ORGAN_SENSOR_AGE ||
+	        organ == ORGAN_SENSOR_BIRTHPLACE ||
+	        organ == ORGAN_SENSOR_PARENT ||
+	        organ == ORGAN_SENSOR_PAIN)
 	{
 		return true;
 	}
@@ -674,7 +672,7 @@ bool organIsASensor(unsigned int organ)
 bool isCellConnecting(unsigned int organ)
 {
 	if ( organIsAnActuator(organ) ||
-	    organIsANeuron(organ) )
+	        organIsANeuron(organ) )
 	{
 		return true;
 	}
@@ -684,7 +682,7 @@ bool isCellConnecting(unsigned int organ)
 bool isCellConnectable(unsigned int organ)
 {
 	if (organIsASensor(organ) ||
-	    organIsANeuron(organ))
+	        organIsANeuron(organ))
 	{
 		return true;
 	}
@@ -711,10 +709,261 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 }
 
-char randomLetter()
+
+
+
+
+
+
+void setupExampleLighter(int i)
 {
-	return	extremelyFastNumberFromZeroTo(numberOfOrganTypes);
+	resetAnimal(i);
+	game.animals[i].isMachine = true;
+	game.animals[i].machineCallback = MACHINECALLBACK_LIGHTER;
+	std::string gunDescription = std::string("lighter");
+	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
 }
+
+void setupExampleHuman(int i)
+{
+	resetAnimal(i);
+	std::string gunDescription = std::string("human");
+	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+	char humanBody[] =
+	{
+		' ', ' ', ' ', 'B', ' ', ' ', ' ',
+		' ', ' ', 'B', 'B', 'B', ' ', ' ',
+		' ', 'B', 'E', 'B', 'E', 'B', ' ',
+		' ', ' ', 'B', 'N', 'B', ' ', ' ',
+		' ', ' ', ' ', 'S', ' ', ' ', ' ',
+		' ', ' ', ' ', 'B', ' ', ' ', ' ',
+		' ', 'B', 'B', 'B', 'B', 'B', ' ',
+		'M', 'M', 'U', 'B', 'U', 'M', 'M',
+		'M', ' ', 'B', 'B', 'B', ' ', 'M',
+		'B', ' ', 'L', 'B', 'L', ' ', 'B',
+		'B', ' ', 'B', 'B', 'B', ' ', 'B',
+		'G', ' ', 'A', 'O', 'A', ' ', 'G',
+		' ', ' ', 'B', 'B', 'B', ' ', ' ',
+		' ', ' ', 'B', 'D', 'B', ' ', ' ',
+		' ', ' ', 'B', ' ', 'B', ' ', ' ',
+		' ', ' ', 'B', ' ', 'B', ' ', ' ',
+		' ', ' ', 'T', ' ', 'T', ' ', ' ',
+		' ', ' ', 'B', ' ', 'B', ' ', ' ',
+		' ', ' ', 'B', ' ', 'B', ' ', ' ',
+		' ', ' ', 'B', ' ', 'B', ' ', ' ',
+		' ', ' ', 'B', ' ', 'B', ' ', ' ',
+	};
+	setupCreatureFromCharArray( i, humanBody, animalSquareSize, 7 );
+}
+
+void setupExampleGlasses(int i)
+{
+	resetAnimal(i);
+	game.animals[i].isMachine = true;
+	appendCell( i, MATERIAL_GLASS, Vec_i2(1, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(2, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(2, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(3, 0) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-2, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-3, 0) );
+}
+
+void setupTrackerGlasses(int i)
+{
+	game.animals[i].machineCallback = MACHINECALLBACK_TRACKERGLASSES;
+	std::string gunDescription = std::string("tracker glasses");
+	strcpy( &(game.animals[i].displayName[0]) , gunDescription.c_str() );
+}
+
+void setupNeuroGlasses(int i)
+{
+	game.animals[i].machineCallback = MACHINECALLBACK_NEUROGLASSES;
+	std::string gunDescription = std::string("neuro glasses");
+	strcpy( &(game.animals[i].displayName[0]) , gunDescription.c_str() );
+}
+
+void setupExampleGun(int i)
+{
+	resetAnimal(i);
+	game.animals[i].isMachine = true;
+	game.animals[i].machineCallback = MACHINECALLBACK_PISTOL;
+	std::string gunDescription = std::string("pistol");
+	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(1, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(2, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -1) );
+}
+
+void setupExampleKnife(int i)
+{
+	resetAnimal(i);
+	game.animals[i].isMachine = true;
+	game.animals[i].machineCallback = MACHINECALLBACK_KNIFE;
+	std::string gunDescription = std::string("knife");
+	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 3) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(+1, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, -1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, -2) );
+}
+
+void setupExampleComputer(int i)
+{
+	resetAnimal(i);
+	game.animals[i].isMachine = true;
+	game.animals[i].fAngle = 0.0f;
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 0, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 1, 2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 2) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, 1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, 1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 1) );
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, 0) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, 0) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, 0) );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2(-1, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 0, -1) );
+	appendCell( i, MATERIAL_GLASS, Vec_i2( 1, -1) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -1) );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -2) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -2) );
+
+
+	appendCell( i, MATERIAL_METAL, Vec_i2(0, -3) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-2, -4) );
+	appendCell( i, MATERIAL_METAL, Vec_i2(-1, -4) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 0, -4) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 1, -4) );
+	appendCell( i, MATERIAL_METAL, Vec_i2( 2, -4) );
+}
+
+void setupEcologyCompter(int i)
+{
+	setupExampleComputer(i);
+	std::string gunDescription = std::string("ecology terminal");
+	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+	game.animals[i].machineCallback = MACHINECALLBACK_ECOLOGYCOMPUTER;
+}
+
+void setupMessageComputer(int i)
+{
+	setupExampleComputer(i);
+	std::string gunDescription = std::string("message terminal");
+	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+	game.animals[i].machineCallback = MACHINECALLBACK_MESSAGECOMPUTER;
+}
+
+void setupHospitalComputer(int i)
+{
+	setupExampleComputer(i);
+	std::string gunDescription = std::string("hospital");
+	strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+	game.animals[i].machineCallback = MACHINECALLBACK_HOSPITAL;
+}
+
+void setupBuilding_playerBase(unsigned int worldPositionI)
+{
+	unsigned int worldPositionX = worldPositionI % worldSize;
+	unsigned int worldPositionY = worldPositionI / worldSize;
+	float avgHeight = 0.0f;
+	unsigned int tally = 0;
+	for (unsigned int i = 0; i < worldSquareSize; ++i)
+	{
+		int x = i % worldSize;
+		int y = i / worldSize;
+		int xdiff = x - worldPositionX;
+		int ydiff = y - worldPositionY;
+		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)// set all the tiles around the position to a floor tile
+		{
+			avgHeight += game.world[i].height;
+			tally++;
+			game.world[i].terrain = MATERIAL_VOIDMETAL;
+			if (  !(game.world[i].wall == MATERIAL_NOTHING || game.world[i].wall == MATERIAL_WATER) )
+			{
+				game.world[i].wall = MATERIAL_NOTHING;
+			}
+		}
+		if ((((x > worldPositionX - baseSize - wallThickness) && (x < worldPositionX - baseSize + wallThickness) ) || // make walls around it // a square border of certain thickness
+		        ((x > worldPositionX + baseSize - wallThickness) && (x < worldPositionX + baseSize + wallThickness) ) ||
+		        ((y > worldPositionY - baseSize - wallThickness) && (y < worldPositionY - baseSize + wallThickness) ) ||
+		        ((y > worldPositionY + baseSize - wallThickness) && (y < worldPositionY + baseSize + wallThickness) ) )
+		        &&
+		        (abs(xdiff) < (baseSize + wallThickness) && abs(ydiff) < (baseSize + wallThickness))
+		        &&
+		        ((abs(xdiff) > doorThickness) &&  (abs(ydiff) > doorThickness) )) // with doors in the middle of each wall
+		{
+			game.world[i].wall = MATERIAL_VOIDMETAL;
+		}
+	}
+	avgHeight = avgHeight / tally;
+	for (unsigned int i = 0; i < worldSquareSize; ++i)
+	{
+		int x = i % worldSize;
+		int y = i / worldSize;
+		int xdiff = x - worldPositionX;
+		int ydiff = y - worldPositionY;
+		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)
+		{
+			game.world[i].height = avgHeight;
+		}
+	}
+	game.cameraPositionX  = worldPositionX;
+	game.cameraPositionY = worldPositionY;
+}
+
+
+
+
+
+
+
+
+
+
 
 bool materialBlocksMovement(unsigned int material)
 {
@@ -897,4 +1146,4 @@ bool organVisible(unsigned int organ)
 }
 
 
- #endif //CONTENT_H
+#endif //CONTENT_H

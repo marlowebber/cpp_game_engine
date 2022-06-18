@@ -1,5 +1,7 @@
 #include "utilities.h"
 
+#include <fstream>
+#include<iostream>
 //https://github.com/edrosten/8bit_rng/blob/master/rng-4261412736.c
 uint32_t x, y, z, a;
 
@@ -168,3 +170,19 @@ float fast_sigmoid(float in)
 	return  out;
 }
 
+
+bool exists_test3(std::string filename)
+{
+	// using namespace std;
+	// int main() {
+	/* try to open file to read */
+	std::ifstream ifile;
+	ifile.open(filename.c_str());
+	if (ifile) {
+		return true;//cout << "file exists";
+	}
+	// else {
+	return false;//cout << "file doesn't exist";
+	// }
+	// }
+}
