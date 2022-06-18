@@ -9,8 +9,8 @@ const int worldSize = 4096;
 const int NUMBER_OF_CONNECTIONS = 8;
 const unsigned int animalSquareSize      = 128;
 const unsigned int displayNameSize = 32;
-
-
+const float playerSpeed = 0.3f;
+const float panSpeed = 0.1f;
 
 extern bool mainMenu   ;
 extern bool flagQuit   ;
@@ -21,6 +21,7 @@ extern bool flagReturn ;
 extern int mouseX;
 extern int mouseY;
 extern int worldCreationStage;
+
 
 struct Square
 {
@@ -176,6 +177,9 @@ void playerDrop();
 void adjustPlayerPos(Vec_f2 pos);
 void load();
 void save();
-
+void setMousePosition(Vec_i2 in);
+void saveSelectedAnimal ( );
+void toggleFPSLimit();
+void spawnPlayer();
 
 #endif //MARLO_H

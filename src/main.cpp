@@ -109,7 +109,9 @@ void threadInterface()
 				spawnPlayer();
 				break;
 			case SDLK_l:
-				lockfps = !lockfps;
+				// lockfps = !lockfps;
+
+				 toggleFPSLimit();
 				break;
 			case SDLK_y:
 				incrementSelectedOrgan();
@@ -128,54 +130,50 @@ void threadInterface()
 				break;
 			case SDLK_d:
 			{
-				if (playerCreature >= 0)
-				{
+				// if (playerCreature >= 0)
+				// {
 					adjustPlayerPos(Vec_f2(playerSpeed, 0.0f));
-				}
-				else
-				{
-					cameraPositionX += cameraPanSpeed;
-					cameraPositionX = cameraPositionX % worldSize;
-				}
+				// }
+			
 				break;
 			}
 			case SDLK_s:
 			{
-				if (playerCreature >= 0)
-				{
+				// if (playerCreature >= 0)
+				// {
 					adjustPlayerPos(Vec_f2(0.0f, -playerSpeed));
-				}
-				else
-				{
-					cameraPositionY -= cameraPanSpeed;
-					cameraPositionY = cameraPositionY % worldSize;
-				}
+				// }
+				// else
+				// {
+				// 	cameraPositionY -= cameraPanSpeed;
+				// 	cameraPositionY = cameraPositionY % worldSize;
+				// }
 				break;
 			}
 			case SDLK_a:
 			{
-				if (playerCreature >= 0)
-				{
+				// if (playerCreature >= 0)
+				// {
 					adjustPlayerPos(Vec_f2(-playerSpeed, 0.0f));
-				}
-				else
-				{
-					cameraPositionX -= cameraPanSpeed;
-					cameraPositionX = cameraPositionX % worldSize;
-				}
+				// }
+				// else
+				// {
+				// 	cameraPositionX -= cameraPanSpeed;
+				// 	cameraPositionX = cameraPositionX % worldSize;
+				// }
 				break;
 			}
 			case SDLK_w:
 			{
-				if (playerCreature >= 0)
-				{
+				// if (playerCreature >= 0)
+				// {
 					adjustPlayerPos(Vec_f2(0.0f, playerSpeed));
-				}
-				else
-				{
-					cameraPositionY += cameraPanSpeed;
-					cameraPositionY = cameraPositionY % worldSize;
-				}
+				// }
+				// else
+				// {
+				// 	cameraPositionY += cameraPanSpeed;
+				// 	cameraPositionY = cameraPositionY % worldSize;
+				// }
 				break;
 			}
 			case SDLK_o: 
@@ -203,11 +201,11 @@ void threadInterface()
 				toggleInstructions();
 				break;
 			}
-			case SDLK_b:
-			{
-				recomputeTerrainLighting();
-				break;
-			}
+			// case SDLK_b:
+			// {
+			// 	recomputeTerrainLighting();
+			// 	break;
+			// }
 			case SDLK_ESCAPE:
 				flagReturn = true;
 				return;
@@ -262,8 +260,10 @@ void threadInterface()
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
 			Vec_f2 mouseWorldPos = transformScreenPositionToWorld( Vec_f2( mouseX, mouseY ) );
-			mousePositionX = mouseWorldPos.x;
-			mousePositionY = mouseWorldPos.y;
+			// mousePositionX = mouseWorldPos.x;
+			// mousePositionY = mouseWorldPos.y;
+
+			 setMousePosition(Vec_i2 (mouseWorldPos.x, mouseWorldPos.y));
 			break;
 		}
 		}

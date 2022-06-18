@@ -101,8 +101,6 @@ const unsigned int baseSize = 100;
 const unsigned int wallThickness = 8;
 const unsigned int doorThickness = 16;
 
-const float panSpeed = 0.1f;
-const float playerSpeed = 0.3f;
 
 const int neighbourOffsets[] =
 {
@@ -164,25 +162,25 @@ auto evaporation = [](int x, int y) -> float {
 
 
 
-	GameState game;
+GameState game;
 
-	// these are variables which are only needed per session, and never need to be stored.
-	
-	float prelimMap[prelimSquareSize];
-	float prelimWater[prelimSquareSize];
-	unsigned int modelFrameCount = 0;
-	unsigned int usPerFrame = 0;
-	float fps = 1.0f;
+// these are variables which are only needed per session, and never need to be stored.
 
-	bool mainMenu = true;
-	bool flagQuit = false;
-	bool flagCreate = false;
-	bool flagLoad = false;
-	bool flagReady = false;
-	bool flagReturn = false;
-	int mouseX;
-	int mouseY;
-	unsigned int worldCreationStage = 0;
+float prelimMap[prelimSquareSize];
+float prelimWater[prelimSquareSize];
+unsigned int modelFrameCount = 0;
+unsigned int usPerFrame = 0;
+float fps = 1.0f;
+
+bool mainMenu = true;
+bool flagQuit = false;
+bool flagCreate = false;
+bool flagLoad = false;
+bool flagReady = false;
+bool flagReturn = false;
+int mouseX;
+int mouseY;
+unsigned int worldCreationStage = 0;
 
 
 
@@ -361,11 +359,33 @@ void adjustPlayerPos(Vec_f2 pos)
 			game.animals[game.playerCreature].body[muscle].signalIntensity = pos.x;
 		}
 	}
+
+
+	else
+	{
+		cameraPositionX += cameraPanSpeed * pos.x;
+		cameraPositionX = cameraPositionX % worldSize;
+
+		cameraPositionY -= cameraPanSpeed * pos.y;
+		cameraPositionY = cameraPositionY % worldSize;
+	}
+
+
+}
+
+
+void setMousePosition(Vec_i2 in)
+{
+	mousePositionX = in.x;
+	mousePositionY = in.y;
 }
 
 
 
-
+void toggleFPSLimit()
+{
+game.lockfps = !game.lockfps;
+}
 
 
 
