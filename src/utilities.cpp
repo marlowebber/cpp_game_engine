@@ -161,3 +161,10 @@ void setupExtremelyFastNumberGenerators()
 
 
 
+float fast_sigmoid(float in)
+{
+	// https://stackoverflow.com/questions/10732027/fast-sigmoid-algorithm
+	float out = (in / (1 + abs(in)));
+	return  out;
+}
+

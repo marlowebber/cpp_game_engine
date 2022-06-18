@@ -28,6 +28,7 @@ extern unsigned int worldCreationStage;
 
 
 
+
 struct Square
 {
     unsigned int wall;      //  material filling the volume of the square. You probably can't move through it.

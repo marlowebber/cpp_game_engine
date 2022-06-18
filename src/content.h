@@ -736,3 +736,158 @@ bool materialDegrades(unsigned int material)
 
 	return false;
 }
+
+
+
+bool materialSupportsGrowth(unsigned int material)
+{
+	if (material == MATERIAL_ROCK ||
+	        material == MATERIAL_SAND   ||
+	        material == MATERIAL_DIRT   ||
+	        material == MATERIAL_SOIL   ||
+	        material == MATERIAL_GRAVEL)
+	{
+		return true;
+	}
+	return false;
+}
+
+Color materialColors(unsigned int material)
+{
+	switch (material)
+	{
+	case MATERIAL_NOTHING:
+		return color_clear;
+	case MATERIAL_FOOD:
+		return color_brown;
+	case MATERIAL_ROCK:
+		return color_grey;
+	case MATERIAL_BONE:
+		return color_white;
+	case MATERIAL_BLOOD:
+		return color_brightred;
+	case MATERIAL_GRASS:
+		return color_green;
+	case MATERIAL_METAL:
+		return color_darkgrey;
+	case MATERIAL_VOIDMETAL:
+		return color_charcoal;
+	case MATERIAL_SMOKE:
+		return color_lightgrey;
+	case MATERIAL_GLASS:
+		return color_lightblue;
+	case MATERIAL_WATER:
+		return color_blue_thirdClear;
+	case MATERIAL_FIRE:
+		return color_orange;
+	case MATERIAL_SAND:
+		return color_tan;
+	case MATERIAL_DIRT:
+		return color_lightbrown;
+	case MATERIAL_SOIL:
+		return color_brown;
+	case MATERIAL_BASALT:
+		return color_darkgrey;
+	case MATERIAL_DUST:
+		return color_lightgrey;
+	case MATERIAL_GRAVEL:
+		return color_grey;
+	}
+	return color_yellow;
+}
+
+Color organColors(unsigned int organ)
+{
+	switch (organ)
+	{
+	case ORGAN_MOUTH_VEG            :
+		return color_charcoal;
+	case ORGAN_MOUTH_SCAVENGE       :
+		return color_charcoal;
+	case ORGAN_GONAD                :
+		return color_cream;
+	case ORGAN_MUSCLE               :
+		return color_darkred;
+	case ORGAN_BONE                 :
+		return color_offwhite;
+	case ORGAN_WEAPON               :
+		return color_offwhite;
+	case ORGAN_LIVER                :
+		return color_puce;
+	case ORGAN_MUSCLE_TURN          :
+		return color_muscles1;
+	case ORGAN_SENSOR_EYE           :
+		return color_charcoal;
+	case ORGAN_MOUTH_CARNIVORE      :
+		return color_charcoal;
+	case ORGAN_MOUTH_PARASITE       :
+		return color_charcoal;
+	case ORGAN_ADDOFFSPRINGENERGY   :
+		return color_brains1;
+	case ORGAN_ADDLIFESPAN          :
+		return color_brains2;
+	case ORGAN_NEURON               :
+		return color_brains3;
+	case ORGAN_BIASNEURON           :
+		return color_brains4;
+	case ORGAN_SENSOR_BODYANGLE	    :
+		return color_tan;
+	case ORGAN_SENSOR_TRACKER       :
+		break;
+	case ORGAN_SPEAKER              :
+		return color_offwhite;
+	case ORGAN_SENSOR_EAR           :
+		return color_charcoal;
+	case ORGAN_MUSCLE_STRAFE        :
+		return color_muscles2;
+	case ORGAN_SENSOR_PHEROMONE     :
+		return color_charcoal;
+	case ORGAN_EMITTER_PHEROMONE    :
+		return color_peach_light;
+	case ORGAN_MEMORY_RX            :
+		return color_brains1;
+	case ORGAN_MEMORY_TX            :
+		return color_brains2;
+	case ORGAN_GILL                 :
+		return color_brightred;
+	case ORGAN_LUNG                 :
+		return color_lungs1;
+	case ORGAN_SENSOR_HUNGER        :
+		return color_brains1;
+	case ORGAN_SENSOR_AGE           :
+		return color_brains2;
+	case ORGAN_SENSOR_LAST_STRANGER :
+		return color_brains3;
+	case ORGAN_SENSOR_LAST_KIN      :
+		return color_brains1;
+	case ORGAN_SENSOR_PARENT        :
+		return color_brains2;
+	case ORGAN_SENSOR_BIRTHPLACE    :
+		return color_brains3;
+	case ORGAN_SENSOR_TOUCH         :
+		return color_tan;
+	case ORGAN_COLDADAPT            :
+		return color_violet;
+	case ORGAN_HEATADAPT            :
+		return color_peach;
+	case ORGAN_GRABBER              :
+		return color_peach_light;
+	}
+	return color_yellow;
+}
+
+bool organVisible(unsigned int organ)
+{
+	if (organ == ORGAN_MOUTH_VEG ||
+	        organ == ORGAN_MOUTH_SCAVENGE ||
+	        organ == ORGAN_SENSOR_EYE ||
+	        organ == ORGAN_MOUTH_CARNIVORE ||
+	        organ == ORGAN_MOUTH_PARASITE ||
+	        organ == ORGAN_SENSOR_TRACKER ||
+	        organ == ORGAN_SPEAKER ||
+	        organ == ORGAN_SENSOR_EAR)
+	{
+		return true;
+	}
+	return false;
+}
