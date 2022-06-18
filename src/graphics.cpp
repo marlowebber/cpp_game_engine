@@ -130,6 +130,15 @@ float colorAmplitude(Color a )
 	return c;
 }
 
+Color mutateColor(Color in)
+{
+	Color out = in;
+	out.r += (RNG() - 0.5) * 0.1f;
+	out.g += (RNG() - 0.5) * 0.1f;
+	out.b += (RNG() - 0.5) * 0.1f;
+	return clampColor(out);
+}
+
 static const char * vertex_shader =
     "#version 330\n"
     "in vec2 i_position;\n"

@@ -166,5 +166,5 @@ uint32_t extremelyFastNumberFromZeroTo( uint32_t to);
 
 
 void setupExtremelyFastNumberGenerators();
-
+float fast_sigmoid(float in);
 #endif

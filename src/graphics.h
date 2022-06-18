@@ -99,4 +99,5 @@ Color clampColor (Color in);
 Color addColor (Color a, Color b);
 
 float colorAmplitude(Color a );
+Color mutateColor(Color in);
 #endif
