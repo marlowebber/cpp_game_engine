@@ -109,8 +109,27 @@ const unsigned int baseSize = 100;
 const unsigned int wallThickness = 8;
 const unsigned int doorThickness = 16;
 
-float prelimMap[prelimSquareSize];
-float prelimWater[prelimSquareSize];
+
+
+const float panSpeed = 0.1f;
+const float playerSpeed = 0.3f;
+
+
+
+const int neighbourOffsets[] =
+{
+	- 1,
+	- worldSize - 1,
+	- worldSize ,
+	- worldSize  + 1,
+	+ 1,
+	+worldSize + 1,
+	+worldSize,
+	+worldSize - 1
+};
+
+
+
 // tinyerode stuff
 auto getHeight = [](int x, int y) -> float {
 	unsigned int address = (y * prelimSize) + x;
@@ -156,55 +175,6 @@ auto erosion = [](int x, int y) -> float {
 auto evaporation = [](int x, int y) -> float {
 	return 0.1;
 };
-
-unsigned int worldCreationStage = 0;
-
-
-int menuX = 50;
-int menuY = 50;
-int textSize = 10;
-int spacing = 20;
-
-
-const int neighbourOffsets[] =
-{
-	- 1,
-	- worldSize - 1,
-	- worldSize ,
-	- worldSize  + 1,
-	+ 1,
-	+worldSize + 1,
-	+worldSize,
-	+worldSize - 1
-};
-
-
-
-
-bool mainMenu = true;
-
-
-
-
-
-// telemetry of the game's performance
-unsigned int modelFrameCount = 0;
-unsigned int usPerFrame = 0;
-float fps = 1.0f;
-
-
-
-bool flagQuit = false;
-bool flagCreate = false;
-bool flagLoad = false;
-bool flagReady = false;
-bool flagReturn = false;
-
-int mouseX;
-int mouseY;
-
-const float panSpeed = 0.1f;
-const float playerSpeed = 0.3f;
 
 
 
@@ -272,194 +242,216 @@ struct GameState()
 
 
 
-class DeepSea
-{
-
 	GameState game;
 
-public:
+
+	// these are variables which are only needed per session, and never need to be stored.
+	unsigned int worldCreationStage = 0;
+	float prelimMap[prelimSquareSize];
+	float prelimWater[prelimSquareSize];
+	bool mainMenu = true;
+	unsigned int modelFrameCount = 0;
+	unsigned int usPerFrame = 0;
+	float fps = 1.0f;
+	bool flagQuit = false;
+	bool flagCreate = false;
+	bool flagLoad = false;
+	bool flagReady = false;
+	bool flagReturn = false;
+	int mouseX;
+	int mouseY;
 
 
 
-	void activateGrabbedMachine()// occurs whenever a left click is received.
+
+
+
+
+
+
+// --------------------- DeepSea public methods
+
+
+
+void activateGrabbedMachine()// occurs whenever a left click is received.
+{
+	if (playerCreature >= 0)
 	{
-		if (playerCreature >= 0)
+		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
 		{
-			for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
+			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
 			{
-				if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
+				if (animals[playerCreature].body[i].grabbedCreature >= 0 && animals[playerCreature].body[i].grabbedCreature < numberOfAnimals)
 				{
-					if (animals[playerCreature].body[i].grabbedCreature >= 0 && animals[playerCreature].body[i].grabbedCreature < numberOfAnimals)
+					if (animals [   animals[playerCreature].body[i].grabbedCreature  ].isMachine)
 					{
-						if (animals [   animals[playerCreature].body[i].grabbedCreature  ].isMachine)
+						if (animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback !=  MATERIAL_NOTHING)
 						{
-							if (animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback !=  MATERIAL_NOTHING)
+							switch (animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback )
 							{
-								switch (animals [   animals[playerCreature].body[i].grabbedCreature  ].machineCallback )
-								{
-								case MACHINECALLBACK_KNIFE :
-									knifeCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
-									break;
-								case MACHINECALLBACK_PISTOL :
-									exampleGunCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
-									break;
-								case MACHINECALLBACK_LIGHTER :
-									lighterCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
-									break;
-								case MACHINECALLBACK_HOSPITAL :
-									paletteCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
-									break;
-								case MACHINECALLBACK_MESSAGECOMPUTER :
-									communicationComputerCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
-									break;
-								}
+							case MACHINECALLBACK_KNIFE :
+								knifeCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							case MACHINECALLBACK_PISTOL :
+								exampleGunCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							case MACHINECALLBACK_LIGHTER :
+								lighterCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							case MACHINECALLBACK_HOSPITAL :
+								paletteCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
+								break;
+							case MACHINECALLBACK_MESSAGECOMPUTER :
+								communicationComputerCallback(animals[playerCreature].body[i].grabbedCreature , playerCreature  );
 								break;
 							}
+							break;
 						}
 					}
 				}
 			}
 		}
 	}
+}
 
 
-	void selectCursorAnimal()
+void selectCursorAnimal()
+{
+	if (selectedAnimal >= 0)
 	{
-		if (selectedAnimal >= 0)
+		selectedAnimal = -1;
+	}
+	else
+	{
+		int cursorPosX = cameraPositionX +  mousePositionX ;
+		int cursorPosY = cameraPositionY + mousePositionY;
+		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+		if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
 		{
-			selectedAnimal = -1;
-		}
-		else
-		{
-			int cursorPosX = cameraPositionX +  mousePositionX ;
-			int cursorPosY = cameraPositionY + mousePositionY;
-			unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
-			if (cursorAnimal >= 0 && cursorAnimal < numberOfAnimals)
+			int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
+			if ( occupyingCell >= 0)
 			{
-				int occupyingCell = isAnimalInSquare(cursorAnimal, worldCursorPos);
-				if ( occupyingCell >= 0)
+				selectedAnimal = cursorAnimal;
+			}
+		}
+	}
+}
+
+void rightClickCallback ()
+{
+	if (palette)
+	{
+		paletteEraseAtMouse();
+	}
+}
+
+
+void viewAdversary()
+{
+	if (cameraTargetCreature == adversary)
+	{
+		cameraTargetCreature = -1;
+		if (playerCreature >= 0)
+		{
+			cameraTargetCreature = playerCreature;
+		}
+	}
+	else
+	{
+		if (adversary >= 0)
+		{
+			cameraTargetCreature = adversary;
+		}
+	}
+}
+
+void toggleInstructions()
+{
+	showInstructions = !showInstructions;
+}
+
+
+void resetMouseCursor(  )
+{
+	mousePositionX = 0;
+	mousePositionY = 0;
+}
+
+void togglePause ()
+{
+	paused = !paused;
+}
+
+void incrementSelectedOrgan()
+{
+	paletteSelectedOrgan++;
+	paletteSelectedOrgan = paletteSelectedOrgan % numberOfOrganTypes;
+}
+void decrementSelectedOrgan()
+{
+	paletteSelectedOrgan--;
+	paletteSelectedOrgan = paletteSelectedOrgan % numberOfOrganTypes;
+}
+
+void playerGrab()
+{
+	if (playerCreature >= 0)
+	{
+		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
+		{
+			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
+			{
+				if (animals[playerCreature].body[i].grabbedCreature == -1)
 				{
-					selectedAnimal = cursorAnimal;
+					animals[playerCreature].body[i].signalIntensity = 1;
 				}
 			}
 		}
 	}
+}
 
-	void rightClickCallback ()
+void playerDrop()
+{
+	if (playerCreature >= 0)
 	{
-		if (palette)
+		for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
 		{
-			paletteEraseAtMouse();
-		}
-	}
-
-
-	void viewAdversary()
-	{
-		if (cameraTargetCreature == adversary)
-		{
-			cameraTargetCreature = -1;
-			if (playerCreature >= 0)
+			if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
 			{
-				cameraTargetCreature = playerCreature;
-			}
-		}
-		else
-		{
-			if (adversary >= 0)
-			{
-				cameraTargetCreature = adversary;
-			}
-		}
-	}
-
-	void toggleInstructions()
-	{
-		showInstructions = !showInstructions;
-	}
-
-
-	void resetMouseCursor(  )
-	{
-		mousePositionX = 0;
-		mousePositionY = 0;
-	}
-
-	void togglePause ()
-	{
-		paused = !paused;
-	}
-
-	void incrementSelectedOrgan()
-	{
-		paletteSelectedOrgan++;
-		paletteSelectedOrgan = paletteSelectedOrgan % numberOfOrganTypes;
-	}
-	void decrementSelectedOrgan()
-	{
-		paletteSelectedOrgan--;
-		paletteSelectedOrgan = paletteSelectedOrgan % numberOfOrganTypes;
-	}
-
-	void playerGrab()
-	{
-		if (playerCreature >= 0)
-		{
-			for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
-			{
-				if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
+				if (animals[playerCreature].body[i].grabbedCreature >= 0)
 				{
-					if (animals[playerCreature].body[i].grabbedCreature == -1)
-					{
-						animals[playerCreature].body[i].signalIntensity = 1;
-					}
+					animals[playerCreature].body[i].signalIntensity = -1;
 				}
 			}
 		}
 	}
+}
 
-	void playerDrop()
+void adjustPlayerPos(Vec_f2 pos)
+{
+	if (playerCreature >= 0)
 	{
-		if (playerCreature >= 0)
+		animals[playerCreature].fAngle = 0.0f;
+		int strafeMuscle = getRandomCellOfType(playerCreature, ORGAN_MUSCLE_STRAFE);
+		int muscle = getRandomCellOfType(playerCreature, ORGAN_MUSCLE);
+		if (strafeMuscle >= 0)
 		{
-			for (int i = 0; i < animals[playerCreature].cellsUsed; ++i)
-			{
-				if (animals[playerCreature].body[i].organ == ORGAN_GRABBER)
-				{
-					if (animals[playerCreature].body[i].grabbedCreature >= 0)
-					{
-						animals[playerCreature].body[i].signalIntensity = -1;
-					}
-				}
-			}
+			animals[playerCreature].body[strafeMuscle].signalIntensity = pos.y;
+		}
+		if (muscle >= 0)
+		{
+			animals[playerCreature].body[muscle].signalIntensity = pos.x;
 		}
 	}
-
-	void adjustPlayerPos(Vec_f2 pos)
-	{
-		if (playerCreature >= 0)
-		{
-			animals[playerCreature].fAngle = 0.0f;
-			int strafeMuscle = getRandomCellOfType(playerCreature, ORGAN_MUSCLE_STRAFE);
-			int muscle = getRandomCellOfType(playerCreature, ORGAN_MUSCLE);
-			if (strafeMuscle >= 0)
-			{
-				animals[playerCreature].body[strafeMuscle].signalIntensity = pos.y;
-			}
-			if (muscle >= 0)
-			{
-				animals[playerCreature].body[muscle].signalIntensity = pos.x;
-			}
-		}
-	}
+}
 
 
-private:
 
 
-};
 
 
+
+// --------------------- DeepSea private methods
 
 
 
@@ -1854,7 +1846,7 @@ void organs_all()
 			float totalLiver = 0;
 			unsigned int totalGonads = 0;
 			float highestIntensity = 0.0f;
-			for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; cellIndex++)         
+			for (unsigned int cellIndex = 0; cellIndex < animals[animalIndex].cellsUsed; cellIndex++)
 			{
 				unsigned int cellWorldPositionI = animals[animalIndex].body[cellIndex].worldPositionI;
 				unsigned int cellWorldPositionX = cellWorldPositionI % worldSize;
