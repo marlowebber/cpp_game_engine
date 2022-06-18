@@ -3501,6 +3501,7 @@ void setupRandomWorld()
 {
 	worldCreationStage = 0;
 	worldCreationStage++;
+	resetGameState();
 	worldCreationStage++;
 	float initWaterLevel = 1.0f;
 	for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
