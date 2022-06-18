@@ -1,29 +1,7 @@
 #ifndef MARLO_H
 #define MARLO_H
 
-void startSimulation();
-void model();
-void camera();
 
-
-
-
-const extern int prelimSize ;
-const extern int worldSize ;
-const extern int cameraPanSpeed ;
-extern unsigned int cameraPositionX ;
-extern unsigned int cameraPositionY ;
-extern bool playerInControl;
-extern int mousePositionX;
-extern int mousePositionY;
-// extern float fmousePositionX;
-// extern float fmousePositionY;
-extern bool lockfps;
-extern float fps ;
-extern  int playerCreature ;
-extern bool shift;
-extern bool mainMenu;
-extern unsigned int worldCreationStage;
 
 
 
@@ -110,52 +88,78 @@ struct Animal
 };
 
 
+// these parts need to be recorded in between sessions.
+struct GameState()
+{
+    char saveName[displayNameSize];
+    char version[displayNameSize];
 
-void spawnPlayer();
+    // these variables are how the player drives their character, and what they get back from it.
+    bool playerGrabState ;
+    bool playerCanSee ;
+    bool playerCanHear ;
+    bool playerCanSmell ;
+    bool palette ;
+    bool playerCanPickup ;
+    int playerCanPickupItem;
+    bool lockfps;
+    bool paused ;
+    int mousePositionX ;
+    int mousePositionY ;
 
-void save();
-void load();
+    // these variables keep track of the main characters in the game world.
+    int playerCreature ;
+    int championScore ;
+    float championEnergyScore ;
+    int adversary = -1;
+    unsigned int adversaryRespawnPos;
+    int selectedAnimal ;
+    int cursorAnimal ;
+    unsigned int playerRespawnPos;
+    Animal champion;
 
-void model();
+    // camera view
+    unsigned int cameraPositionX;
+    unsigned int cameraPositionY;
+    int cameraTargetCreature ;
 
-void drawGameInterfaceText();
+    // these variables govern the display of menus and other texts.
+    bool showInstructions ;
+    bool ecologyComputerDisplay ;
+    int visualizer ;
+    bool computerdisplays[5];
+    char logs[logLength][nLogs];
+    unsigned int paletteSelectedOrgan ;
 
-void spawnTournamentAnimals();
-void adjustPlayerPos(Vec_f2 pos);
+    bool speciesVacancies [numberOfSpecies];
+    unsigned int speciesPopulationCounts [numberOfSpecies];
+    unsigned int populationCountUpdates  [numberOfSpecies];
+    unsigned int speciesAttacksPerTurn   [numberOfSpecies];
 
-void playerGrab();
-void playerDrop();
+    float speakerChannels[numberOfSpeakerChannels];
+    float speakerChannelsLastTurn[numberOfSpeakerChannels];
 
-void togglePause ();
+    Animal animals[numberOfAnimals];
 
-void selectCursorAnimal();
+    struct Square world[worldSquareSize];
+} ;
+
+
 
 void activateGrabbedMachine();
-void resetMouseCursor();
-
-void saveSelectedAnimal();
-
+void selectCursorAnimal();
+void rightClickCallback ();
 void viewAdversary();
-
-void incrementSelectedOrgan();
-
-void decrementSelectedOrgan();
-
-void rightClickCallback();
-
-
-void toggleErodingRain();
-void normalizeTerrainHeight();
 void toggleInstructions();
+void resetMouseCursor(  );
+void togglePause ();
+void incrementSelectedOrgan();
+void decrementSelectedOrgan();
+void playerGrab();
+void playerDrop();
+void adjustPlayerPos(Vec_f2 pos);
 
-void recomputeTerrainLighting();
 
-void gameGraphics();
-
-void setupRandomWorld();
-
-
-void drawMainMenuText();
 
 
  #endif //MARLO_H

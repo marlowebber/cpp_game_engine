@@ -1,3 +1,8 @@
+#ifndef CONTENT_H
+#define CONTENT_H
+
+
+#include "untitled_marlo_project.h"
 
 
 #define MATERIAL_NOTHING           0
@@ -891,3 +896,6 @@ bool organVisible(unsigned int organ)
 	}
 	return false;
 }
+
+
+ #endif //CONTENT_H
