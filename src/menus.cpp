@@ -55,19 +55,19 @@ void exampleMenuCallback(void * userData)
 
 Vec_f2 transformScreenPositionToWorld( Vec_f2 screen )
 {
-    float worldX =           ( ((screen.x - (width / 2)))  * (viewZoom  ) / 96) + viewPanX ;
-    float worldY =     -1 *  ( ((screen.y - (height / 2))) * (viewZoom  ) / 96) + viewPanY;
+    float worldX =           ( ((screen.x - (width  / 2))) * (viewZoom  ) / (width  * 0.5f) ) + viewPanX ;
+    float worldY =     -1 *  ( ((screen.y - (height / 2))) * (viewZoom  ) / (height * 0.9f) ) + viewPanY;
     return Vec_f2  (worldX, worldY);
 }
 
-Vec_f2 transformWorldPositionToScreen( Vec_f2 world )
-{
-    float screenX = (  192 * world.x - 192 * viewPanX + width  * viewZoom ) / (2 * viewZoom);
-    float screenY = (  -192 * (world.y * -1) + 192 * viewPanY + height * viewZoom ) / (2 * viewZoom);
-    screenX = screenX / viewportScaleFactorX;
-    screenY = screenY / viewportScaleFactorY;
-    return Vec_f2(screenX, screenY);
-}
+// Vec_f2 transformWorldPositionToScreen( Vec_f2 world )
+// {
+//     float screenX = (   192  *  world.x       - 192 * viewPanX + width  * viewZoom ) / (2 * viewZoom);
+//     float screenY = (  -192  * (world.y * -1) + 192 * viewPanY + height * viewZoom ) / (2 * viewZoom);
+//     screenX = screenX / viewportScaleFactorX;
+//     screenY = screenY / viewportScaleFactorY;
+//     return Vec_f2(screenX, screenY);
+// }
 
 GLuint loadBMP_custom(const char * imagepath)
 {
