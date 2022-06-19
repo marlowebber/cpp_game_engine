@@ -52,7 +52,7 @@ const bool cameraFollowsPlayer   = true;
 const bool respawnLowSpecies     = true;
 const bool doMutation            = true;
 const bool setOrSteerAngle       = true;
-const bool printLogs             = false;
+const bool printLogs             = true;
 
 const int prelimSize = 256;
 const int cameraPanSpeed = 10;
@@ -282,7 +282,6 @@ bool getFPSLimit()
 
 
 
-
 void appendLog( std::string input)
 {
 	for (int i = nLogs; i > 0; i--)
@@ -431,7 +430,8 @@ void resetGameState()
 	game.selectedAnimal = -1;
 	game.cursorAnimal = -1;
 	game.playerRespawnPos;
-
+	game.adversaryDefeated = false;
+	game.adversaryCreated = false;
 
 
 	// camera view
@@ -1116,6 +1116,24 @@ void mutateAnimal(unsigned int animalIndex)
 	}
 }
 
+void rebuildBodyFromGenes(unsigned int animalIndex)
+{
+	if (animalIndex < numberOfAnimals)
+	{
+		game.animals[animalIndex].damageReceived = 0;
+		for (int i = 0; i < animalSquareSize; ++i)
+		{
+			game.animals[animalIndex].body[i] = game.animals[animalIndex].genes[i];  //.damage = 0.0f;
+			game.animals[animalIndex].body[i].damage = 0.0f;
+		}
+
+		measureAnimalQualities(animalIndex);
+	}
+}
+
+
+
+
 void spawnAnimalIntoSlot( unsigned int animalIndex,
                           Animal parent,
                           unsigned int position, bool mutation) // copy genes from the parent and then copy body from own new genes.
@@ -1124,7 +1142,6 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	for (int i = 0; i < animalSquareSize; ++i)
 	{
 		game.animals[animalIndex].genes[i] = parent.genes[i];
-		game.animals[animalIndex].body[i] = parent.genes[i];
 	}
 	game.animals[animalIndex].isMachine = parent.isMachine;
 	game.animals[animalIndex].machineCallback = parent.machineCallback;
@@ -1135,8 +1152,11 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	game.animals[animalIndex].fPosY = position / worldSize;
 	game.animals[animalIndex].birthLocation = position;
 	game.animals[animalIndex].fAngle = ( (RNG() - 0.5f) * 2 * const_pi );
+
+	rebuildBodyFromGenes( animalIndex);
+
 	mutateAnimal( animalIndex);
-	measureAnimalQualities(animalIndex);
+	// measureAnimalQualities(animalIndex);
 	memcpy( &( game.animals[animalIndex].displayName[0]), &(parent.displayName[0]), sizeof(char) * displayNameSize  );
 }
 
@@ -1160,6 +1180,7 @@ void killAnimal(int animalIndex)
 	if (animalIndex == game.playerCreature)
 	{
 		game.playerCreature = -1;
+		appendLog(std::string("You died!"));
 	}
 	if (animalIndex == game.cameraTargetCreature)
 	{
@@ -1568,9 +1589,23 @@ void spillBlood(unsigned int worldPositionI)
 	}
 }
 
-// return true if you blow the limb off, false if its still attached.
-bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount)
+void defeatAdversary()
 {
+	int i = 1;
+	setupNeuroGlasses(i);
+	spawnAnimalIntoSlot(8, game.animals[i], game.animals[game.adversary].position, false);
+
+	game.adversaryDefeated = true;
+	killAnimal(game.adversary);
+}
+
+// return true if you blow the limb off, false if its still attached.
+bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
+{
+
+	std::string damageLog = std::string("");
+	bool limbLost = false;
+
 	unsigned int cellWorldPositionI = game.animals[animalIndex].body[cellIndex].worldPositionI;
 	float defense = defenseAtWorldPoint(game.world[cellWorldPositionI].identity, cellWorldPositionI);
 	if (defense > 0)
@@ -1579,6 +1614,7 @@ bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount)
 	}
 	game.animals[animalIndex].body[cellIndex].damage += amount;
 	spillBlood(cellWorldPositionI);
+
 	int painCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PAIN);
 	if (painCell >= 0)
 	{
@@ -1588,9 +1624,47 @@ bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount)
 	{
 		game.animals[animalIndex].damageReceived++;
 		game.animals[animalIndex].mass--;
+
+		if (animalIndex == game.adversary && shooterIndex == game.playerCreature)
+		{
+			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].mass)
+			{
+				defeatAdversary();
+			}
+
+		}
+		limbLost = true;
+		// return true;
+	}
+	// return false;
+
+
+	if (animalIndex == game.playerCreature)
+	{
+
+
+		// float number = 3.14159;
+		std::string num_text = std::to_string(amount);
+		std::string rounded = num_text.substr(0, num_text.find(".") + 2);
+
+		damageLog += std::string("Hit for ") + std::string( rounded );
+
+		if (limbLost)
+		{
+			damageLog += std::string(", lost a ") + tileShortNames(game.animals[animalIndex].body[cellIndex].organ ) + std::string("!");
+		}
+
+		appendLog(damageLog);
+	}
+
+
+	if (limbLost)
+	{
 		return true;
 	}
 	return false;
+
+
 }
 
 void knifeCallback( int gunIndex, int shooterIndex )
@@ -1603,7 +1677,7 @@ void knifeCallback( int gunIndex, int shooterIndex )
 		int occupyingCell = isAnimalInSquare(game.cursorAnimal, worldCursorPos);
 		if ( occupyingCell >= 0)
 		{
-			hurtAnimal(game.cursorAnimal, occupyingCell, 0.3f);
+			hurtAnimal(game.cursorAnimal, occupyingCell, 0.3f, shooterIndex);
 		}
 	}
 }
@@ -1630,7 +1704,7 @@ void exampleGunCallback( int gunIndex, int shooterIndex)
 					unsigned int shotOffNub = isAnimalInSquare(game.world[shootWorldPosition].identity, shootWorldPosition);
 					if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
 					{
-						hurtAnimal(game.world[shootWorldPosition].identity, shotOffNub, 0.35f + RNG());
+						hurtAnimal(game.world[shootWorldPosition].identity, shotOffNub, 0.35f + RNG(), shooterIndex);
 					}
 				}
 				if (game.world[shootWorldPosition].wall == MATERIAL_NOTHING )
@@ -1662,17 +1736,6 @@ void lighterCallback( int gunIndex, int shooterIndex )
 	}
 }
 
-void healAllDamage(unsigned int animalIndex)
-{
-	if (animalIndex < numberOfAnimals)
-	{
-		game.animals[animalIndex].damageReceived = 0;
-		for (int i = 0; i < animalSquareSize; ++i)
-		{
-			game.animals[animalIndex].body[i].damage = 0.0f;
-		}
-	}
-}
 
 int getGrabbableItem(unsigned int animalIndex, unsigned int cellIndex)
 {
@@ -1844,7 +1907,8 @@ void organs_all()
 								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) == (MACHINECALLBACK_HOSPITAL))
 								{
 									game.palette = true;
-									healAllDamage(game.playerCreature);
+									// healAllDamage(game.playerCreature);
+									rebuildBodyFromGenes(game.playerCreature);
 								}
 								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_ECOLOGYCOMPUTER)
 								{
@@ -2535,7 +2599,7 @@ void move_all()
 										continue;
 									}
 								}
-								bool meatAvailable = hurtAnimal(game.world[cellWorldPositionI].identity , targetLocalPositionI, 1.0f );
+								bool meatAvailable = hurtAnimal(game.world[cellWorldPositionI].identity , targetLocalPositionI, 1.0f, animalIndex );
 								if (meatAvailable)
 								{
 									okToStep = true;
@@ -2852,42 +2916,47 @@ void displayComputerText()
 		printText2D(   std::string("Resting tax: ") + std::to_string(taxEnergyScale)  + std::string(", movement tax: ") + std::to_string(movementEnergyScale) + std::string(", growth tax: ") + std::to_string(growthEnergyScale)   , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
-// First terminal is near the player at the start.  Explain how to pick up and use items. The player is given a pistol.
-// The second terminal contains a hospital and explains how anatomy works in the game. The player is encouraged to add a gill to themselves to allow breathing underwater. It is located at the shoreline
-// The 4th terminal is under water in a teeming coral reef. It contains tracker glasses that allow the game.adversary to be identified and found.
-// The game.adversary is killed and life no longer has a source, but will continue existing where it does. The game.adversary drops neuro glasses that the player needs to edit brain connections.
-// If all life in the simulation is destroyed, a message will become available stating that the game.animals broke out into the real game.world and caused widespread disaster
+
 	if (game.computerdisplays[0])
 	{
-		printText2D(   std::string("game.animals are groups of tiles that move around. Each tile has a dedicated purpose.") , menuX, menuY, textSize);
+		printText2D(   std::string("Animals are groups of tiles that move around. Each tile has a dedicated purpose.") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("Your body is made this way too. ") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("If your tiles are damaged, you will lose the tile's function,") , menuX, menuY, textSize);
 		menuY -= spacing;
-		printText2D(   std::string("which can include your sight or movement. ") , menuX, menuY, textSize);
+		printText2D(   std::string("which can include your sight, movement, or breathing, resulting in disorientation and death. ") , menuX, menuY, textSize);
 		menuY -= spacing;
-		printText2D(   std::string("Find the hospital terminal! It is in a black building on land, just like this one.") , menuX, menuY, textSize);
+		printText2D(   std::string("Find the hospital! It is in a black building on land, just like this one.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (game.computerdisplays[1])
 	{
-		printText2D(   std::string("Use the hospital terminal to add a gill to your body. It will enable you to explore underwater.") , menuX, menuY, textSize);
+		printText2D(   std::string("The hospital will heal you if you pick it up.") , menuX, menuY, textSize);
 		menuY -= spacing;
-		printText2D(   std::string("Find a building under the water and retrieve the tracker glasses. These can identity the game.adversary.") , menuX, menuY, textSize);
+		printText2D(   std::string("It can also be used to alter your body and mind.") , menuX, menuY, textSize);
+		menuY -= spacing;
+		printText2D(   std::string("Use it to add a gill anywhere on your body, so that you can survive under water") , menuX, menuY, textSize);
+		menuY -= spacing;
+		printText2D(   std::string("Find a building under the water and retrieve the tracker glasses.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (game.computerdisplays[2])
 	{
-		printText2D(   std::string("Activate the tracker glasses to see the trails that game.animals leave.") , menuX, menuY, textSize);
+		printText2D(   std::string("Activate the tracker glasses to see the trails that creatures leave.") , menuX, menuY, textSize);
 		menuY -= spacing;
-		printText2D(   std::string("You will recognize the game.adversary by its white trail.") , menuX, menuY, textSize);
+		printText2D(   std::string("You will recognize the adversary by its white trail.") , menuX, menuY, textSize);
 		menuY -= spacing;
-		printText2D(   std::string("Take the weapon, find the game.adversary and kill it.") , menuX, menuY, textSize);
+		printText2D(   std::string("Take the weapon, find the adversary and destroy it.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (game.computerdisplays[3])
 	{
+
+		printText2D(   std::string("The adversary has been destroyed. Life will no longer be created in the world, but will persist from its current state,") , menuX, menuY, textSize);
+		menuY -= spacing;
+		printText2D(   std::string("or eventually be driven to extinction.") , menuX, menuY, textSize);
+		menuY -= spacing;
 		printText2D(   std::string("Neuro glasses allow you to see the minute electrical activity of living flesh.") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("You can use them, in combination with the hospital, to edit the connection map of a living creature.") , menuX, menuY, textSize);
@@ -2938,6 +3007,10 @@ void drawGameInterfaceText()
 		printText2D(   std::string("[g] pick up ") + std::string(game.animals[game.playerCanPickupItem].displayName) , menuX, menuY, textSize);
 		menuY += spacing;
 	}
+	if (game.selectedAnimal >= 0)
+	{
+		std::string selectString( "[e] to deselect. [k] save animal.");
+	}
 
 	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
 	int cursorPosY = game.cameraPositionY + game.mousePositionY;
@@ -2954,10 +3027,7 @@ void drawGameInterfaceText()
 			unsigned int cursorAnimalSpecies = game.cursorAnimal / numberOfAnimalsPerSpecies;
 			int occupyingCell = isAnimalInSquare(game.cursorAnimal, worldCursorPos);
 			std::string selectString( " [e] to select.");
-			if (game.selectedAnimal >= 0)
-			{
-				std::string selectString( " [e] to deselect. [k] save animal.");
-			}
+
 			if ( occupyingCell >= 0)
 			{
 				if (cursorAnimalSpecies == 0)
@@ -3048,13 +3118,13 @@ void drawGameInterfaceText()
 			}
 		}
 
-		if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.25 &&
-		        game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.5
-		   )
-		{
-			printText2D(   std::string("You're mildly hurt.") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
+		// if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.25 &&
+		//         game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.5
+		//    )
+		// {
+		// 	printText2D(   std::string("You're mildly hurt.") , menuX, menuY, textSize);
+		// 	menuY += spacing;
+		// }
 		if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.5 &&
 		        game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.75
 		   )
@@ -3102,7 +3172,9 @@ void drawGameInterfaceText()
 		{
 			printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
 			menuY += spacing;
-			printText2D(   std::string("Explore to find useful items.") , menuX, menuY, textSize);
+			printText2D(   std::string("[r] despawn") , menuX, menuY, textSize);
+			menuY += spacing;
+			printText2D(   std::string("Start by finding items in the world and picking them up.") , menuX, menuY, textSize);
 			menuY += spacing;
 		}
 		else
@@ -3213,6 +3285,14 @@ void spawnAdversary(unsigned int targetWorldPositionI)
 	game.animals[game.adversary].uPosY = targetWorldPositionI / worldSize;
 	game.animals[game.adversary].fPosX = game.animals[game.adversary].uPosX;
 	game.animals[game.adversary].fPosY = game.animals[game.adversary].uPosY;
+
+	if (!game.adversaryCreated)
+	{
+
+		appendLog( std::string("Life has started in the oceans,") );
+		appendLog( std::string("and begun to grow and change.") );
+		game.adversaryCreated = true;
+	}
 }
 
 void spawnPlayer()
@@ -3508,10 +3588,8 @@ void setupGameItems()
 	setupExampleLighter(i);
 	spawnAnimalIntoSlot(7, game.animals[i], targetWorldPositionI, false);
 
-	targetWorldPositionI =  getRandomPosition(true);
-	setupBuilding_playerBase(targetWorldPositionI);
-	setupNeuroGlasses(i);
-	spawnAnimalIntoSlot(8, game.animals[i], targetWorldPositionI, false);
+	// targetWorldPositionI =  getRandomPosition(true);
+	// setupBuilding_playerBase(targetWorldPositionI);
 }
 
 
@@ -3605,166 +3683,171 @@ void setupRandomWorld()
 void tournamentController()
 {
 	ZoneScoped;
-	if (game.adversary < 0)
+
+	if (! game.adversaryDefeated)
 	{
-		spawnAdversary(game.adversaryRespawnPos);
-	}
-	if (game.adversary >= 0 && game.adversary < numberOfAnimals)
-	{
-		if (game.animals[game.adversary].retired)
+
+		if (game.adversary < 0)
 		{
 			spawnAdversary(game.adversaryRespawnPos);
 		}
-		else
+		if (game.adversary >= 0 && game.adversary < numberOfAnimals)
 		{
-			if (game.animals[game.adversary].position >= 0 && game.animals[game.adversary].position < worldSquareSize)
+			if (game.animals[game.adversary].retired)
 			{
-				game.adversaryRespawnPos = game.animals[game.adversary].position;
-				unsigned int adversaryRespawnPosX = game.adversaryRespawnPos % worldSize;
-				unsigned int adversaryRespawnPosY = game.adversaryRespawnPos / worldSize;
-				if (adversaryRespawnPosX < baseSize)
-				{
-					adversaryRespawnPosX = baseSize;
-				}
-				else if (adversaryRespawnPosX > worldSize - baseSize )
-				{
-					adversaryRespawnPosX = worldSize - baseSize;
-				}
-				if (adversaryRespawnPosY < baseSize)
-				{
-					adversaryRespawnPosY = baseSize;
-				}
-				else if (adversaryRespawnPosY > worldSize - baseSize )
-				{
-					adversaryRespawnPosY = worldSize - baseSize;
-				}
-				game.adversaryRespawnPos = (adversaryRespawnPosY * worldSize ) + adversaryRespawnPosX;
-
-
-
-				if (game.world[ game.adversaryRespawnPos  ]. wall != MATERIAL_WATER)
-				{
-					game.adversaryRespawnPos = getRandomPosition(true);
-				}
-
-			}
-
-
-			if (game.animals[game.adversary].position != adversaryLoiterPos)
-			{
-				adversaryLoiterPos = game.animals[game.adversary].position ;
-				adversaryLoiter = 0;
+				spawnAdversary(game.adversaryRespawnPos);
 			}
 			else
 			{
-				adversaryLoiter++;
-			}
-			if (adversaryLoiter > 1000)
-			{
-				killAnimal(game.adversary);
-				game.animals[game.adversary].retired = true;
+				if (game.animals[game.adversary].position >= 0 && game.animals[game.adversary].position < worldSquareSize)
+				{
+					game.adversaryRespawnPos = game.animals[game.adversary].position;
+					unsigned int adversaryRespawnPosX = game.adversaryRespawnPos % worldSize;
+					unsigned int adversaryRespawnPosY = game.adversaryRespawnPos / worldSize;
+					if (adversaryRespawnPosX < baseSize)
+					{
+						adversaryRespawnPosX = baseSize;
+					}
+					else if (adversaryRespawnPosX > worldSize - baseSize )
+					{
+						adversaryRespawnPosX = worldSize - baseSize;
+					}
+					if (adversaryRespawnPosY < baseSize)
+					{
+						adversaryRespawnPosY = baseSize;
+					}
+					else if (adversaryRespawnPosY > worldSize - baseSize )
+					{
+						adversaryRespawnPosY = worldSize - baseSize;
+					}
+					game.adversaryRespawnPos = (adversaryRespawnPosY * worldSize ) + adversaryRespawnPosX;
+
+
+
+					if (game.world[ game.adversaryRespawnPos  ]. wall != MATERIAL_WATER)
+					{
+						game.adversaryRespawnPos = getRandomPosition(true);
+					}
+
+				}
+
+
+				if (game.animals[game.adversary].position != adversaryLoiterPos)
+				{
+					adversaryLoiterPos = game.animals[game.adversary].position ;
+					adversaryLoiter = 0;
+				}
+				else
+				{
+					adversaryLoiter++;
+				}
+				if (adversaryLoiter > 1000)
+				{
+					killAnimal(game.adversary);
+					game.animals[game.adversary].retired = true;
+				}
 			}
 		}
-	}
 
 
 
-	if (respawnLowSpecies)
-	{
-		unsigned int totalpop = 0;
-		for (unsigned int speciesIndex = 1; speciesIndex < numberOfSpecies; speciesIndex++) // start at 1 to ignore the non-natural species 0.
+		if (respawnLowSpecies)
 		{
-			totalpop += game.speciesPopulationCounts[speciesIndex] ;
-			if (game.speciesPopulationCounts[speciesIndex] == 0)
+			unsigned int totalpop = 0;
+			for (unsigned int speciesIndex = 1; speciesIndex < numberOfSpecies; speciesIndex++) // start at 1 to ignore the non-natural species 0.
 			{
-				int foundAnimal = -1;// if there is another species who is successful, duplicate an animal from them.
-				int foundSpecies = -1;
-				for (unsigned int j = 1; j < numberOfSpecies; ++j)
+				totalpop += game.speciesPopulationCounts[speciesIndex] ;
+				if (game.speciesPopulationCounts[speciesIndex] == 0)
 				{
-					if (game.speciesPopulationCounts[j] >= 1)
+					int foundAnimal = -1;// if there is another species who is successful, duplicate an animal from them.
+					int foundSpecies = -1;
+					for (unsigned int j = 1; j < numberOfSpecies; ++j)
 					{
-						for (unsigned int k = extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 2); k < numberOfAnimalsPerSpecies; ++k)
+						if (game.speciesPopulationCounts[j] >= 1)
 						{
-							unsigned int animalToCopy = (j * numberOfAnimalsPerSpecies) + k;
-							if (!game.animals[animalToCopy].retired)
+							for (unsigned int k = extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 2); k < numberOfAnimalsPerSpecies; ++k)
 							{
-								foundAnimal = animalToCopy;
-								foundSpecies = j;
-								break;
+								unsigned int animalToCopy = (j * numberOfAnimalsPerSpecies) + k;
+								if (!game.animals[animalToCopy].retired)
+								{
+									foundAnimal = animalToCopy;
+									foundSpecies = j;
+									break;
+								}
 							}
 						}
+						if (foundAnimal >= 0)
+						{
+							break;
+						}
 					}
-					if (foundAnimal >= 0)
+					if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
 					{
-						break;
+						int ispeciesindex = speciesIndex;
+						memcpy(    &game.animals[ (speciesIndex * numberOfAnimalsPerSpecies) ] , &game.animals[ foundAnimal ], sizeof(Animal)    );
+						resetAnimal(foundAnimal);
 					}
-				}
-				if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
-				{
-					int ispeciesindex = speciesIndex;
-					memcpy(    &game.animals[ (speciesIndex * numberOfAnimalsPerSpecies) ] , &game.animals[ foundAnimal ], sizeof(Animal)    );
-					resetAnimal(foundAnimal);
 				}
 			}
-		}
 
-		if (totalpop <= 1 && game.adversary >= 0)// life went extinct but the game.adversary is still alive. Spawn a bunch more stuff to get it going again.
-		{
-			int j = 1;
-
-
-			for (int k = 0; k < 12; ++k)// spawn lots of the example animal
+			if (totalpop <= 1 && game.adversary >= 0)// life went extinct but the game.adversary is still alive. Spawn a bunch more stuff to get it going again.
 			{
+				int j = 1;
 
 
-				if (k != game.adversary)
+				for (int k = 0; k < 12; ++k)// spawn lots of the example animal
 				{
 
-					int domingo = -1;
-					if (extremelyFastNumberFromZeroTo(1) == 0)
 
-
+					if (k != game.adversary)
 					{
-						setupExampleAnimal2(j);
 
-						unsigned int randomPos = game.animals[game.adversary].position;
+						int domingo = -1;
+						if (extremelyFastNumberFromZeroTo(1) == 0)
 
-						int randomCell = getRandomPopulatedCell(game.adversary);
-						if (randomCell >= 0)
+
 						{
-							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+							setupExampleAnimal2(j);
+
+							unsigned int randomPos = game.animals[game.adversary].position;
+
+							int randomCell = getRandomPopulatedCell(game.adversary);
+							if (randomCell >= 0)
+							{
+								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+							}
+
+							domingo = spawnAnimal( 1, game.animals[j], randomPos, true);
+
+
+
+						}
+						else
+						{
+
+							unsigned int randomPos = game.animals[game.adversary].position;
+							int randomCell = getRandomPopulatedCell(game.adversary);
+							if (randomCell >= 0)
+							{
+								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+							}
+
+							domingo = spawnAnimal( 1,  game.champion, randomPos, true);
+
+
 						}
 
-						domingo = spawnAnimal( 1, game.animals[j], randomPos, true);
-
-
-
-					}
-					else
-					{
-
-						unsigned int randomPos = game.animals[game.adversary].position;
-						int randomCell = getRandomPopulatedCell(game.adversary);
-						if (randomCell >= 0)
+						if (domingo >= 0)
 						{
-							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+							paintAnimal(domingo);
+							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+							game.animals[domingo].damageReceived = 0;
 						}
-
-						domingo = spawnAnimal( 1,  game.champion, randomPos, true);
-
-
-					}
-
-					if (domingo >= 0)
-					{
-						paintAnimal(domingo);
-						game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-						game.animals[domingo].damageReceived = 0;
 					}
 				}
+
+
 			}
-
-
 		}
 	}
 }

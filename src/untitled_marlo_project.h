@@ -146,6 +146,8 @@ struct GameState
     int cursorAnimal ;
     unsigned int playerRespawnPos;
     Animal champion;
+    bool adversaryDefeated;
+    bool adversaryCreated;
 
     // camera view
     unsigned int cameraPositionX;
