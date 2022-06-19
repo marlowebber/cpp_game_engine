@@ -19,6 +19,10 @@ const float panSpeed = 0.1f;
 const unsigned int numberOfSpeakerChannels = 16;
 
 
+const float  maxZoom = 450.0f;
+const float  minZoom = 50.0f;
+
+
 const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs game.animals to make new cells.
 const bool variedGrowthCost      = false;
 const bool variedUpkeep          = false;
@@ -202,6 +206,7 @@ void camera();
 void model();
 void drawGameInterfaceText();
 void drawMainMenuText();
+void incrementCameraPos(Vec_i2 in);
 
 // the following are used privately to create the game content.
 void animalAppendCell(unsigned int animalIndex, unsigned int organType);

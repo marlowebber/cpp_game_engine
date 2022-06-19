@@ -83,24 +83,39 @@ void threadInterface()
 			switch ( event.key.keysym.sym )
 			{
 			case SDLK_LEFT:
-				viewPanSetpointX = viewPanSetpointX - (panSpeed * viewZoomSetpoint);
+				// viewPanSetpointX = viewPanSetpointX - (panSpeed * viewZoomSetpoint);
+			incrementCameraPos( Vec_i2(-1, 0) );
 				break;
 			case SDLK_RIGHT:
-				viewPanSetpointX = viewPanSetpointX + (panSpeed * viewZoomSetpoint);
+				// viewPanSetpointX = viewPanSetpointX + (panSpeed * viewZoomSetpoint);
+			incrementCameraPos( Vec_i2(1, 0) );
 				break;
 			case SDLK_UP:
-				viewPanSetpointY = viewPanSetpointY + (panSpeed * viewZoomSetpoint);
+				// viewPanSetpointY = viewPanSetpointY + (panSpeed * viewZoomSetpoint);
+			incrementCameraPos( Vec_i2(0, 1) );
 				break;
 			case SDLK_DOWN:
-				viewPanSetpointY = viewPanSetpointY - (panSpeed * viewZoomSetpoint);
+				// viewPanSetpointY = viewPanSetpointY - (panSpeed * viewZoomSetpoint);
+			incrementCameraPos( Vec_i2(-0, -1) );
 				break;
 			case SDLK_LSHIFT:
 				break;
 			case SDLK_EQUALS:
 				viewZoomSetpoint = viewZoomSetpoint * 0.9f;
+
+
+				if (viewZoomSetpoint < minZoom)
+				{
+					viewZoomSetpoint = minZoom;
+				}
 				break;
 			case SDLK_MINUS:
 				viewZoomSetpoint = viewZoomSetpoint * 1.1f;
+				if (viewZoomSetpoint > maxZoom)
+				{
+					viewZoomSetpoint = maxZoom;
+				}
+
 				break;
 			case SDLK_p:
 				togglePause();
@@ -111,7 +126,7 @@ void threadInterface()
 			case SDLK_l:
 				// lockfps = !lockfps;
 
-				 toggleFPSLimit();
+				toggleFPSLimit();
 				break;
 			case SDLK_y:
 				incrementSelectedOrgan();
@@ -132,16 +147,16 @@ void threadInterface()
 			{
 				// if (playerCreature >= 0)
 				// {
-					adjustPlayerPos(Vec_f2(playerSpeed, 0.0f));
+				adjustPlayerPos(Vec_f2(playerSpeed, 0.0f));
 				// }
-			
+
 				break;
 			}
 			case SDLK_s:
 			{
 				// if (playerCreature >= 0)
 				// {
-					adjustPlayerPos(Vec_f2(0.0f, -playerSpeed));
+				adjustPlayerPos(Vec_f2(0.0f, -playerSpeed));
 				// }
 				// else
 				// {
@@ -154,7 +169,7 @@ void threadInterface()
 			{
 				// if (playerCreature >= 0)
 				// {
-					adjustPlayerPos(Vec_f2(-playerSpeed, 0.0f));
+				adjustPlayerPos(Vec_f2(-playerSpeed, 0.0f));
 				// }
 				// else
 				// {
@@ -167,7 +182,7 @@ void threadInterface()
 			{
 				// if (playerCreature >= 0)
 				// {
-					adjustPlayerPos(Vec_f2(0.0f, playerSpeed));
+				adjustPlayerPos(Vec_f2(0.0f, playerSpeed));
 				// }
 				// else
 				// {
@@ -176,7 +191,7 @@ void threadInterface()
 				// }
 				break;
 			}
-			case SDLK_o: 
+			case SDLK_o:
 			{
 				save();
 				break;
@@ -257,13 +272,11 @@ void threadInterface()
 		}
 		case SDL_MOUSEMOTION:
 		{
-			mouseX = event.motion.x;
-			mouseY = event.motion.y;
-			Vec_f2 mouseWorldPos = transformScreenPositionToWorld( Vec_f2( mouseX, mouseY ) );
-			// mousePositionX = mouseWorldPos.x;
-			// mousePositionY = mouseWorldPos.y;
-
-			 setMousePosition(Vec_i2 (mouseWorldPos.x, mouseWorldPos.y));
+			// mouseX = event.motion.x;
+			// mouseY = event.motion.y;
+			// Vec_f2 mouseWorldPos = transformScreenPositionToWorld( Vec_f2( mouseX, mouseY ) );
+		
+			// setMousePosition(Vec_i2 (event.motion.x , event.motion.y));
 			break;
 		}
 		}

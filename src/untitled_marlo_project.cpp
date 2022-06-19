@@ -650,6 +650,14 @@ void detailTerrain()
 				{
 					game.world[worldPositionI].terrain = MATERIAL_BASALT;
 				}
+
+
+				if (game.world[worldPositionI].height < seaLevel)
+				{
+					game.world[worldPositionI].wall = MATERIAL_WATER;
+				}
+
+
 			}
 
 			else if (game.world[worldPositionI]. height  > biome_marine && game.world[worldPositionI]. height  < biome_coastal )
@@ -1865,22 +1873,11 @@ void organs_all()
 
 				case ORGAN_GRABBER:
 				{
-					if (animalIndex != game.playerCreature)
-					{
-						game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
-						for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-						{
-							if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
-							{
-								unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-								if (connected_to_cell < animalSquareSize)
-								{
-									game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-								}
-							}
-						}
-					}
-					else
+
+
+
+
+					if (animalIndex == game.playerCreature)
 					{
 						int potentialGrab = getGrabbableItem(game.playerCreature, cellIndex);// check if there is anything grabbable.
 						if (potentialGrab >= 0)
@@ -1893,40 +1890,96 @@ void organs_all()
 							game.playerCanPickup = false;
 							game.playerCanPickupItem = -1;
 						}
+
+
 					}
 
-					if (game.animals[animalIndex].body[cellIndex].signalIntensity  >= 1.0f && game.animals[animalIndex].body[cellIndex].grabbedCreature  == -1)// if greater than 0, grab.
+
+					else
+					{
+
+
+
+
+
+
+
+						game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+						for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+						{
+							if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
+							{
+								unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
+								if (connected_to_cell < animalSquareSize)
+								{
+									game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
+								}
+							}
+						}
+
+
+
+
+					}
+
+
+
+
+					// Grab stuff.
+					if (game.animals[animalIndex].body[cellIndex].signalIntensity  >= 1.0f && game.animals[animalIndex].body[cellIndex].grabbedCreature  == -1)
 					{
 						int potentialGrab = getGrabbableItem (animalIndex, cellIndex);
 						if (potentialGrab >= 0)
 						{
 							game.animals[animalIndex].body[cellIndex].grabbedCreature = potentialGrab;//game.world[neighbour].identity;
 							game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
-							if (  game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].isMachine  )// some machines have stuff that activates on pickup
+
+						}
+					}
+
+
+
+
+
+
+
+					// Grabbed items behavior
+					if (game.animals[animalIndex].body[cellIndex].grabbedCreature >= 0 )// if there is a grabbed creature, adjust its position to the grabber.
+					{
+
+
+
+						// some machines are active when you're holding them
+
+
+						if (animalIndex == game.playerCreature)
+						{
+							game.palette = false;
+							game.ecologyComputerDisplay = false;
+
+
+							if (  game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].isMachine  )
 							{
 								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) == (MACHINECALLBACK_HOSPITAL))
 								{
 									game.palette = true;
-									// healAllDamage(game.playerCreature);
 									rebuildBodyFromGenes(game.playerCreature);
 								}
 								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_ECOLOGYCOMPUTER)
 								{
 									game.ecologyComputerDisplay = true;
 								}
-								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_NEUROGLASSES )
-								{
-									game.visualizer = VISUALIZER_NEURALACTIVITY;
-								}
-								if ( game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback ==   MACHINECALLBACK_TRACKERGLASSES  )
-								{
-									game.visualizer = VISUALIZER_TRACKS;
-								}
+
 							}
+
 						}
-					}
-					if (game.animals[animalIndex].body[cellIndex].grabbedCreature >= 0 )// if there is a grabbed creature, adjust its position to the grabber.
-					{
+
+
+
+
+
+
+						//Move grabbed items to the grabber position.
 						game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].uPosX = cellWorldPositionX;
 						game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].uPosY = cellWorldPositionY;
 						game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].fPosX = cellWorldPositionX;
@@ -1941,31 +1994,33 @@ void organs_all()
 						float angleToCursor = atan2(   fmousePositionY - (  game.cameraPositionY - fposy)  ,  fmousePositionX - (game.cameraPositionX - fposx));
 						game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].fAngle = angleToCursor;
 
+
+						// Dropping items.
 						if (  game.animals[animalIndex].body[cellIndex].signalIntensity  <= -1.0f)
 						{
-							if (  game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].isMachine  )
-							{
-								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_HOSPITAL)
-								{
-									game.palette = false;
-								}
-								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_MESSAGECOMPUTER)
-								{
-									for (int i = 0; i < 5; ++i)
-									{
-										game.computerdisplays[i] = false;
-									}
-								}
-								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_ECOLOGYCOMPUTER)
-								{
-									game.ecologyComputerDisplay = false;
-								}
-								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_NEUROGLASSES ||
-								        game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback ==   MACHINECALLBACK_TRACKERGLASSES  )
-								{
-									game.visualizer = VISUALIZER_TRUECOLOR;
-								}
-							}
+							// if (  game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].isMachine  )
+							// {
+							// 	if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_HOSPITAL)
+							// 	{
+							// 		game.palette = false;
+							// 	}
+							// 	if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_MESSAGECOMPUTER)
+							// 	{
+							// 		for (int i = 0; i < 5; ++i)
+							// 		{
+							// 			game.computerdisplays[i] = false;
+							// 		}
+							// 	}
+							// 	if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_ECOLOGYCOMPUTER)
+							// 	{
+							// 		game.ecologyComputerDisplay = false;
+							// 	}
+							// 	if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_NEUROGLASSES ||
+							// 	        game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback ==   MACHINECALLBACK_TRACKERGLASSES  )
+							// 	{
+							// 		game.visualizer = VISUALIZER_TRUECOLOR;
+							// 	}
+							// }
 							game.animals[animalIndex].body[cellIndex].grabbedCreature = -1;
 							game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 						}
@@ -3012,6 +3067,7 @@ void drawGameInterfaceText()
 		std::string selectString( "[e] to deselect. [k] save animal.");
 	}
 
+
 	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
 	int cursorPosY = game.cameraPositionY + game.mousePositionY;
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
@@ -3446,7 +3502,6 @@ void recomputeTerrainLighting()
 		computeLight( worldPositionI, sunXangle, sunYangle);
 		if (game.world[worldPositionI].height < seaLevel)
 		{
-			game.world[worldPositionI].wall = MATERIAL_WATER;
 			float depth = (seaLevel - game.world[worldPositionI].height);
 			float brightness = (1 / (1 + (depth / (worldSize / 8))) );
 			if (brightness < 0.2f) { brightness = 0.2f;}
@@ -3460,23 +3515,34 @@ void recomputeTerrainLighting()
 	}
 }
 
+
+
 unsigned int getRandomPosition(bool underwater)
 {
 	while (true)
 	{
 		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-		if (!underwater)
-		{
-			if (game.world[randomI].height > biome_coastal)
-			{
-				return randomI;
-			}
-		}
-		else
+
+		if (underwater)
 		{
 			if (game.world[randomI].height < seaLevel)
 			{
-				return randomI;
+				if (game.world[randomI] .wall == MATERIAL_WATER )
+				{
+					return randomI;
+				}
+			}
+		}
+
+		else
+		{
+			if (game.world[randomI].height > biome_coastal)
+			{
+				if (game.world[randomI] .wall != MATERIAL_WATER  )
+
+				{
+					return randomI;
+				}
 			}
 		}
 	}
