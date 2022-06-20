@@ -213,5 +213,6 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType);
 void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );
 void resetAnimal(unsigned int animalIndex);
 
+void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width );
 
 #endif //MARLO_H

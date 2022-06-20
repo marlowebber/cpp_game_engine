@@ -28,55 +28,11 @@ cmath
 untitled_marlo_project.h
 /home/marlo/Documents/cpp_game_engine/src/untitled_marlo_project.h
 
-/home/marlo/Documents/cpp_game_engine/src/graphics.cpp
-graphics.h
-/home/marlo/Documents/cpp_game_engine/src/graphics.h
-menus.h
-/home/marlo/Documents/cpp_game_engine/src/menus.h
-untitled_marlo_project.h
-/home/marlo/Documents/cpp_game_engine/src/untitled_marlo_project.h
-SDL.h
--
-math.h
--
-stdio.h
--
-
 /home/marlo/Documents/cpp_game_engine/src/graphics.h
 utilities.h
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
-
-/home/marlo/Documents/cpp_game_engine/src/main.cpp
-ctime
--
-chrono
--
-iostream
--
-graphics.h
-/home/marlo/Documents/cpp_game_engine/src/graphics.h
-menus.h
-/home/marlo/Documents/cpp_game_engine/src/menus.h
-untitled_marlo_project.h
-/home/marlo/Documents/cpp_game_engine/src/untitled_marlo_project.h
-Tracy.hpp
--
 
 /home/marlo/Documents/cpp_game_engine/src/main.h
-
-/home/marlo/Documents/cpp_game_engine/src/menus.cpp
-graphics.h
-/home/marlo/Documents/cpp_game_engine/src/graphics.h
-menus.h
-/home/marlo/Documents/cpp_game_engine/src/menus.h
-utilities.h
-/home/marlo/Documents/cpp_game_engine/src/utilities.h
-stdio.h
--
-iostream
--
-fstream
--
 
 /home/marlo/Documents/cpp_game_engine/src/menus.h
 
@@ -143,14 +99,6 @@ content.h
 /home/marlo/Documents/cpp_game_engine/src/untitled_marlo_project.h
 utilities.h
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
-
-/home/marlo/Documents/cpp_game_engine/src/utilities.cpp
-utilities.h
-/home/marlo/Documents/cpp_game_engine/src/utilities.h
-fstream
--
-iostream
--
 
 /home/marlo/Documents/cpp_game_engine/src/utilities.h
 GL/gl.h

@@ -781,7 +781,54 @@ void setupExampleHuman(int i)
 		' ', ' ', 'B', ' ', 'B', ' ', ' ',
 	};
 	setupCreatureFromCharArray( i, humanBody, animalSquareSize, 7 ,  std::string("human"), -1 );
+
+
+
+	char humanPaint[] =
+	{
+		' ', ' ', ' ', 'T', ' ', ' ', ' ',
+		' ', ' ', 'T', 'T', 'T', ' ', ' ',
+		' ', 'T', 'B', 'T', 'B', 'T', ' ',
+		' ', ' ', 'T', 'P', 'T', ' ', ' ',
+		' ', ' ', ' ', 'R', ' ', ' ', ' ',
+		' ', ' ', ' ', 'T', ' ', ' ', ' ',
+		' ', 'T', 'T', 'T', 'T', 'T', ' ',
+		'T', 'T', 'T', 'T', 'T', 'T', 'T',
+		'T', ' ', 'P', 'T', 'P', ' ', 'T',
+		'T', ' ', 'T', 'T', 'T', ' ', 'T',
+		'T', ' ', 'T', 'T', 'T', ' ', 'T',
+		'T', ' ', 'T', 'P', 'T', ' ', 'T',
+		' ', ' ', 'T', 'T', 'T', ' ', ' ',
+		' ', ' ', 'T', 'P', 'T', ' ', ' ',
+		' ', ' ', 'T', ' ', 'T', ' ', ' ',
+		' ', ' ', 'T', ' ', 'T', ' ', ' ',
+		' ', ' ', 'T', ' ', 'T', ' ', ' ',
+		' ', ' ', 'T', ' ', 'T', ' ', ' ',
+		' ', ' ', 'T', ' ', 'T', ' ', ' ',
+		' ', ' ', 'T', ' ', 'T', ' ', ' ',
+		' ', ' ', 'T', ' ', 'T', ' ', ' ',
+	};
+	// paintCreatureFromCharArray(  );
+
+	paintCreatureFromCharArray( i, humanPaint, animalSquareSize, 7 );
 }
+
+
+
+
+// void paintExampleHuman(int i)
+// {
+// 	// resetAnimal(i);
+// 	// std::string gunDescription = std::string("human");
+// 	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+
+// }
+
+
+
+
+
+
 
 
 void setupTrackerGlasses(int i)
@@ -921,6 +968,43 @@ bool materialSupportsGrowth(unsigned int material)
 	}
 	return false;
 }
+
+
+
+
+float materialFertility(unsigned int material)
+{
+	// if (material == MATERIAL_ROCK ||
+	//         material == MATERIAL_SAND   ||
+	//         material == MATERIAL_DIRT   ||
+	//         material == MATERIAL_SOIL   ||
+	//         material == MATERIAL_GRAVEL)
+	// {
+	// 	return true;
+	// }
+	// return false;
+
+
+
+	switch (material)
+	{
+	case MATERIAL_ROCK:
+		return 0.1f;
+	case MATERIAL_SAND:
+		return 0.125f;
+	case MATERIAL_DIRT:
+		return 1.0f;
+	case MATERIAL_SOIL:
+		return 0.5f;
+	case MATERIAL_GRAVEL:
+		return 0.125f;
+
+	}
+	return 0.0f;
+}
+
+
+
 
 Color materialColors(unsigned int material)
 {
