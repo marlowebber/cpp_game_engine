@@ -136,9 +136,9 @@ void threadInterface()
 			case SDLK_f:
 				playerDrop();
 				break;
-			case SDLK_SPACE:
-				resetMouseCursor();
-				break;
+			// case SDLK_SPACE:
+				// resetMouseCursor();
+				// break;
 			case SDLK_d:
 			{
 				// if (playerCreature >= 0)
@@ -202,21 +202,29 @@ void threadInterface()
 				saveSelectedAnimal();
 				break;
 			}
-			case SDLK_m:
-			{
-				viewAdversary();
-				break;
-			}
+			
 			case SDLK_u:
 			{
 				toggleInstructions();
 				break;
 			}
-			// case SDLK_b:
-			// {
-			// 	recomputeTerrainLighting();
-			// 	break;
-			// }
+
+
+case SDLK_m:
+			{
+				viewAdversary();
+				break;
+			}
+
+
+
+
+
+			case SDLK_t:
+			{
+				incrementSelectedGrabber();
+				break;
+			}
 			case SDLK_ESCAPE:
 				flagReturn = true;
 				return;

@@ -3258,6 +3258,36 @@ void displayComputerText()
 	menuY -= spacing;
 }
 
+
+
+void incrementSelectedGrabber()
+{
+
+
+	// unsigned int cellAddress = game.playerActiveGrabber;
+
+	for (unsigned int i = 0; i < game.animals[game.playerCreature].cellsUsed ; ++i)
+		// unsigned int i = 0;
+		// while (true)
+	{
+
+		unsigned int neighbour = (game.playerActiveGrabber + i) % game.animals[game.playerCreature].cellsUsed;
+
+		if (game.animals[game.playerCreature].body[neighbour].organ == ORGAN_GRABBER && game.animals[game.playerCreature].body[neighbour].grabbedCreature >= 0
+			 && neighbour != game.playerActiveGrabber
+			 )
+		{
+			game.playerActiveGrabber = neighbour;
+			break;
+		}
+		// i++;
+
+	}
+
+
+}
+
+
 void drawGameInterfaceText()
 {
 	int menuX = 50;
@@ -3266,9 +3296,18 @@ void drawGameInterfaceText()
 	int spacing = 20;
 
 
+	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
+	int cursorPosY = game.cameraPositionY + game.mousePositionY;
+
+
+	unsigned int worldCursorPos = ((cursorPosY * worldSize) + cursorPosX ) % worldSquareSize;
+
+
 	printText2D(   std::string("FPS ") + std::to_string(modelFrameCount ) , menuX, menuY, textSize);
 	modelFrameCount = 0;
 	menuY += spacing;
+
+
 	if (game.showInstructions)
 	{
 		printText2D(   std::string("[u] hide instructions"), menuX, menuY, textSize);
@@ -3279,38 +3318,93 @@ void drawGameInterfaceText()
 		printText2D(   std::string("[u] instructions"), menuX, menuY, textSize);
 		menuY += spacing;
 	}
-	bool holding = false;	// print grabber states
+
+
+
+	unsigned int holding = 0;	// print grabber states
 	for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
 	{
 		if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
 		{
 			if (game.animals[game.playerCreature].body[i].grabbedCreature >= 0)
 			{
-				std::string stringToPrint = std::string("Holding ") + game.animals[  game.animals[game.playerCreature].body[i].grabbedCreature ].displayName + std::string(". [f] to drop.");
-				if (game.animals[  game.animals[game.playerCreature].body[i].grabbedCreature ].isMachine)
-				{
-					stringToPrint += std::string(" [lmb, rmb] to use.");
-				}
-				printText2D( stringToPrint   , menuX, menuY, textSize);
-				menuY += spacing;
-				holding = true;
+				holding++;
 			}
 		}
 	}
-	if (!holding && game.playerCanPickup && game.playerCanPickupItem >= 0 && game.playerCanPickupItem < numberOfAnimals)
+
+
+	if (holding > 0)
+	{
+
+		std::string stringToPrint;
+
+		printText2D(   std::string("Holding ") + std::to_string(holding )  + std::string(" items. [t] next"), menuX, menuY, textSize);
+		menuY += spacing;
+
+
+		if (game.playerActiveGrabber >= 0 && game.playerActiveGrabber < animalSquareSize)
+		{
+			stringToPrint += std::string("Holding ") + game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].displayName + std::string(" [f] drop ");
+
+
+			if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].isMachine)
+			{
+
+				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_HOSPITAL)
+				{
+					stringToPrint += std::string("[lmb, rmb] add, erase");
+				}
+
+				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_ECOLOGYCOMPUTER)
+				{
+					stringToPrint += std::string("[lmb] see stats");
+				}
+
+				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_MESSAGECOMPUTER)
+				{
+					stringToPrint += std::string("[lmb] read messages");
+				}
+
+				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_LIGHTER)
+				{
+					stringToPrint += std::string("[lmb] start fire");
+				}
+
+				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_KNIFE)
+				{
+					stringToPrint += std::string("[lmb] cut");
+				}
+
+				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_PISTOL)
+				{
+					stringToPrint += std::string(" lmb] shoot");
+				}
+
+
+			}
+			printText2D( stringToPrint   , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+	}
+
+	if (game.playerCanPickup && game.playerCanPickupItem >= 0 && game.playerCanPickupItem < numberOfAnimals)
 	{
 		printText2D(   std::string("[g] pick up ") + std::string(game.animals[game.playerCanPickupItem].displayName) , menuX, menuY, textSize);
 		menuY += spacing;
 	}
+
 	if (game.selectedAnimal >= 0)
 	{
 		std::string selectString( "[e] to deselect. [k] save animal.");
 	}
 
 
-	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
-	int cursorPosY = game.cameraPositionY + game.mousePositionY;
-	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+
+
+
+
+
 	if (worldCursorPos < worldSquareSize)
 	{
 		int heightInt = game.world[worldCursorPos].height;
@@ -3404,7 +3498,7 @@ void drawGameInterfaceText()
 				menuY += spacing;
 			}
 		}
-		
+
 
 
 

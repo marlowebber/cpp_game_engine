@@ -128,6 +128,7 @@ struct GameState
     char version[displayNameSize];
 
     // these variables are how the player drives their character, and what they get back from it.
+    unsigned int playerActiveGrabber;
     bool playerGrabState ;
     bool playerCanSee ;
     bool playerCanHear ;
@@ -207,6 +208,7 @@ void model();
 void drawGameInterfaceText();
 void drawMainMenuText();
 void incrementCameraPos(Vec_i2 in);
+void incrementSelectedGrabber();
 
 // the following are used privately to create the game content.
 void animalAppendCell(unsigned int animalIndex, unsigned int organType);
