@@ -1343,7 +1343,9 @@ void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAn
 	if (worldPositionI + worldSize < worldSquareSize)
 	{
 		float brightness = 1.0f - ((xSurfaceDifference + ySurfaceDifference) / (2.0f * const_pi));
-		if (brightness < 0.2f) { brightness = 0.2f;}
+		// if (brightness < 0.2f) { brightness = 0.2f;}
+		brightness *= 0.5;
+		brightness += 0.5f;
 		game.world[worldPositionI].light = multiplyColorByScalar(color_white, brightness);
 	}
 }
@@ -3059,7 +3061,9 @@ void camera()
 					{
 						if (shadows[shadowIndex])
 						{
-							displayColor = color_black;
+
+							// displayColor = color_black;
+							displayColor = filterColor(displayColor, tint_shadow);
 						}
 					}
 
@@ -3651,10 +3655,10 @@ void normalizeTerrainHeight()
 			postMinHeight = game.world[worldPositionI].height;
 		}
 	}
-	for (int i = 0; i < worldSquareSize; ++i)
-	{
-		computeLight(i, sunXangle, sunYangle);
-	}
+	// for (int i = 0; i < worldSquareSize; ++i)
+	// {
+	// 	computeLight(i, sunXangle, sunYangle);
+	// }
 }
 
 void copyPrelimToRealMap()
@@ -3681,9 +3685,13 @@ void recomputeTerrainLighting()
 			float depth = (seaLevel - game.world[worldPositionI].height);
 			float brightness = (1 / (1 + (depth / (worldSize / 8))) );
 			if (brightness < 0.2f) { brightness = 0.2f;}
+
+			// brightness *= 0.5f;
+			// brightness += 0.5f;
+
 			game.world[worldPositionI].light = multiplyColorByScalar(game.world[worldPositionI].light, brightness   );
 		}
-		float steps = 8;
+		float steps = 16;
 		float b = game.world[worldPositionI].light.a * steps;//100.0f;
 		int ib = b;
 		float betoot =  (ib / steps);
