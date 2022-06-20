@@ -909,9 +909,9 @@ void mutateAnimal(unsigned int animalIndex)
 	// some mutations are chosen more commonly than others. They are classed into groups, and each group is associated with a normalized likelyhood of occurring.
 	// the reason for this is that the development of the brain must always occur faster and in more detail than the development of the body, or else intelligent behavior can never arise.
 	float group1Probability = 1.0f;
-	float group2Probability = 0.25f;
-	float group3Probability = 0.0625f;
-	float group4Probability = 0.03125f;
+	float group2Probability = 0.5f;
+	float group3Probability = 0.125f;
+	float group4Probability = 0.0625f;
 	float sum = group1Probability + group2Probability + group3Probability + group4Probability;
 	float groupChoice = RNG() * sum;
 	int group = 0;
@@ -1163,8 +1163,11 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 
 	rebuildBodyFromGenes( animalIndex);
 
-	mutateAnimal( animalIndex);
-	// measureAnimalQualities(animalIndex);
+	if (mutation)
+	{
+		mutateAnimal( animalIndex);
+	}
+
 	memcpy( &( game.animals[animalIndex].displayName[0]), &(parent.displayName[0]), sizeof(char) * displayNameSize  );
 }
 
@@ -1245,6 +1248,14 @@ int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 	}
 	return -1;
 }
+
+
+bool isAnyAnimalInSquare()
+{
+
+}
+
+
 void selectCursorAnimal()
 {
 	if (game.selectedAnimal >= 0)
@@ -1273,7 +1284,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	Color displayColor = color_black;
 	int viewedAnimal = -1;
 	unsigned int animalIndex = game.world[worldI].identity;
-	unsigned int occupyingCell = 0;
+	int occupyingCell = -1;
 	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
 		occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
@@ -1842,6 +1853,12 @@ void activateGrabbedMachine()// occurs whenever a left click is received.
 void organs_all()
 {
 	ZoneScoped;
+
+	game.palette = false;
+	game.ecologyComputerDisplay = false;
+
+
+
 	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 	{
 		unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
@@ -1879,6 +1896,11 @@ void organs_all()
 
 					if (animalIndex == game.playerCreature)
 					{
+
+
+
+
+
 						int potentialGrab = getGrabbableItem(game.playerCreature, cellIndex);// check if there is anything grabbable.
 						if (potentialGrab >= 0)
 						{
@@ -1931,8 +1953,15 @@ void organs_all()
 						int potentialGrab = getGrabbableItem (animalIndex, cellIndex);
 						if (potentialGrab >= 0)
 						{
-							game.animals[animalIndex].body[cellIndex].grabbedCreature = potentialGrab;//game.world[neighbour].identity;
+							game.animals[animalIndex].body[cellIndex].grabbedCreature = potentialGrab;
 							game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+
+							if ((game.animals[game.animals[animalIndex].body[cellIndex].grabbedCreature].machineCallback) == (MACHINECALLBACK_HOSPITAL)
+							        && game.animals[animalIndex].damageReceived > 0	)
+							{
+
+								spawnAnimalIntoSlot( animalIndex, game.animals[animalIndex], game.animals[animalIndex].position, true );
+							}
 
 						}
 					}
@@ -1954,8 +1983,6 @@ void organs_all()
 
 						if (animalIndex == game.playerCreature)
 						{
-							game.palette = false;
-							game.ecologyComputerDisplay = false;
 
 
 							if (  game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].isMachine  )
@@ -1963,7 +1990,6 @@ void organs_all()
 								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) == (MACHINECALLBACK_HOSPITAL))
 								{
 									game.palette = true;
-									rebuildBodyFromGenes(game.playerCreature);
 								}
 								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_ECOLOGYCOMPUTER)
 								{
@@ -2336,7 +2362,7 @@ void organs_all()
 						{
 							if (game.world[neighbour].identity >= 0)
 							{
-								if (isAnimalInSquare( game.world[neighbour].identity , neighbour ))
+								if (isAnimalInSquare( game.world[neighbour].identity , neighbour ) >= 0)
 								{
 									game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
 								}
@@ -2354,7 +2380,7 @@ void organs_all()
 						{
 							if (touchedAnimal != animalIndex)
 							{
-								if (isAnimalInSquare( touchedAnimal , cellWorldPositionI ))
+								if (isAnimalInSquare( touchedAnimal , cellWorldPositionI ) >= 0)
 								{
 									game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
 								}
@@ -2836,6 +2862,10 @@ void computeAllAnimalsOneTurn()
 	}
 }
 
+
+
+
+
 void camera()
 {
 	if (game.cameraTargetCreature >= 0)
@@ -2863,89 +2893,241 @@ void camera()
 	{
 		int viewFieldMax = +(viewFieldY / 2);
 		int viewFieldMin = -(viewFieldX / 2);
+
+
+		// if ( game.visualizer == VISUALIZER_TRUECOLOR)
+		// {
+
+		unsigned int shadowSquareSize = viewFieldX * viewFieldY;
+		bool shadows[shadowSquareSize];
+
+		for (int i = 0; i < shadowSquareSize; ++i)
+		{
+			shadows[i] = false;
+		}
+
+
+
 		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
 		{
 			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
 			{
 				unsigned int x = (vx + game.cameraPositionX) % worldSize;
 				unsigned int y = (vy + game.cameraPositionY) % worldSize;
-				Color displayColor = color_black;
 				unsigned int worldI = (y * worldSize) + x;
+
+				// blocking walls cast shadows.
+				bool wallPresent = false;
+				if ( materialBlocksMovement( game.world[worldI].wall  )  )
+				{
+					wallPresent = true;
+				}
+
+				// animals cast shadows on the cells below them, if those cells are empty.
+				bool animalPresent = false;
+				int animalIndex = game.world[worldI].identity;
+				int occupyingCell = -1;
+				if (animalIndex >= 0 && animalIndex < numberOfAnimals)
+				{
+					occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
+					if (occupyingCell >= 0)
+					{
+						animalPresent = true;
+					}
+				}
+
+				if (wallPresent || animalPresent)
+				{
+						unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
+					// if (shadowIndex < shadowSquareSize)
+					// {
+					// 	shadows[shadowIndex] = false;
+					// }
+					shadowIndex += viewFieldX - 1;
+					if (shadowIndex < shadowSquareSize)
+					{
+						shadows[shadowIndex] = true;
+					}
+
+				}
+			}
+		}
+
+
+
+
+	for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
+		{
+			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
+			{
+				unsigned int x = (vx + game.cameraPositionX) % worldSize;
+				unsigned int y = (vy + game.cameraPositionY) % worldSize;
+				unsigned int worldI = (y * worldSize) + x;
+
+				// blocking walls cast shadows.
+				bool wallPresent = false;
+				if ( materialBlocksMovement( game.world[worldI].wall  )  )
+				{
+					wallPresent = true;
+				}
+
+				// animals cast shadows on the cells below them, if those cells are empty.
+				bool animalPresent = false;
+				int animalIndex = game.world[worldI].identity;
+				int occupyingCell = -1;
+				if (animalIndex >= 0 && animalIndex < numberOfAnimals)
+				{
+					occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
+					if (occupyingCell >= 0)
+					{
+						animalPresent = true;
+					}
+				}
+
+				if (wallPresent || animalPresent)
+				{
+						unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
+					// if (shadowIndex < shadowSquareSize)
+					// {
+					// 	shadows[shadowIndex] = false;
+					// }
+					// shadowIndex -= viewFieldX - 1;
+					if (shadowIndex < shadowSquareSize)
+					{
+						shadows[shadowIndex] = false;
+					}
+
+				}
+			}
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// bool occupied = false;
+		// int animalIndexB = game.world[worldI].identity;
+		// int occupyingCell = -1;
+		// if (animalIndex >= 0 && animalIndex < numberOfAnimals)
+		// {
+		// 	occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
+		// 	if (occupyingCell >= 0)
+		// 	{
+		// 		occupied = true;
+		// 	}
+		// }
+
+		// if (occupied)
+		// {
+
+		// }
+
+
+
+
+		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
+		{
+			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
+			{
+
+				Color displayColor = color_black;
+
+				unsigned int x = (vx + game.cameraPositionX) % worldSize;
+				unsigned int y = (vy + game.cameraPositionY) % worldSize;
+				unsigned int worldI = (y * worldSize) + x;
+
 				if (worldI < worldSquareSize)
 				{
 					float fx = vx;
 					float fy = vy;
-					switch (game.visualizer)
+
+					displayColor = whatColorIsThisSquare(worldI);
+
+					unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
+
+					if (shadowIndex < shadowSquareSize)
 					{
-					case VISUALIZER_TRUECOLOR:
-					{
-						displayColor = whatColorIsThisSquare(worldI);
-						drawTile( Vec_f2( fx, fy ), displayColor);
-						break;
+						if (shadows[shadowIndex])
+						{
+							displayColor = color_black;
+						}
 					}
-					case VISUALIZER_TRACKS:
-					{
-						displayColor = color_grey;
-						float amount = 0.5f;
-						if (game.world[worldI].wall != MATERIAL_NOTHING)
-						{
-							amount -= 0.25f;
-						}
-						if (game.world[worldI].material != MATERIAL_NOTHING)
-						{
-							amount -= 0.0625f;
-						}
-						if (game.world[worldI].identity < numberOfAnimals && game.world[worldI].identity >= 0)
-						{
-							if (game.animals[ game.world[worldI].identity].isMachine  )
-							{
-								displayColor = color_white;
-								drawTile( Vec_f2( fx, fy ), displayColor);
-							}
-							displayColor = game.animals[ game.world[worldI].identity ].identityColor;
-							drawPointerTriangle( Vec_f2( fx, fy ), displayColor, game.world[worldI].trail );
-						}
-						break;
-					}
-					case VISUALIZER_NEURALACTIVITY:
-					{
-						displayColor = color_grey;
-						float amount = 0.5f;
-						if (game.world[worldI].wall != MATERIAL_NOTHING)
-						{
-							amount -= 0.25f;
-						}
-						if (game.world[worldI].material != MATERIAL_NOTHING)
-						{
-							amount -= 0.0625f;
-						}
-						if (game.world[worldI].identity < numberOfAnimals && game.world[worldI].identity >= 0)
-						{
-							int occupyingCell = isAnimalInSquare(game.world[worldI].identity, worldI);
-							if ( occupyingCell >= 0)
-							{
-								unsigned int organ = game.animals[ game.world[worldI].identity] .body[occupyingCell].organ;
-								if (organIsANeuron(  organ ) || organIsASensor(organ))
-								{
-									amount = game.animals[game.world[worldI].identity].body[occupyingCell].signalIntensity ; //* 2.0f;
-								}
-								if (game.animals[game.world[worldI].identity].isMachine)
-								{
-									amount = 1.0f;
-								}
-							}
-						}
-						displayColor.r = (amount * 0.5f) + 0.5f ; // map 1,-1 to 1,0
-						displayColor.g = (amount * 0.5f) + 0.5f;
-						displayColor.b = (amount * 0.5f) + 0.5f;
-						drawTile( Vec_f2( fx, fy ), displayColor);
-						break;
-					}
-					}
+
+
+
+
+					drawTile( Vec_f2( fx, fy ), displayColor);
 				}
 			}
 		}
+
+
 	}
+
+	// }
+	// case VISUALIZER_TRACKS:
+	// 	{
+	// 		displayColor = color_grey;
+	// 		float amount = 0.5f;
+	// 		if (game.world[worldI].wall != MATERIAL_NOTHING)
+	// 		{
+	// 			amount -= 0.25f;
+	// 		}
+	// 		if (game.world[worldI].material != MATERIAL_NOTHING)
+	// 		{
+	// 			amount -= 0.0625f;
+	// 		}
+	// 		if (game.world[worldI].identity < numberOfAnimals && game.world[worldI].identity >= 0)
+	// 		{
+	// 			if (game.animals[ game.world[worldI].identity].isMachine  )
+	// 			{
+	// 				displayColor = color_white;
+	// 				drawTile( Vec_f2( fx, fy ), displayColor);
+	// 			}
+	// 			displayColor = game.animals[ game.world[worldI].identity ].identityColor;
+	// 			drawPointerTriangle( Vec_f2( fx, fy ), displayColor, game.world[worldI].trail );
+	// 		}
+	// 		break;
+	// 	}
+	// case VISUALIZER_NEURALACTIVITY:
+	// 	{
+	// 		displayColor = color_grey;
+	// 		float amount = 0.5f;
+	// 		if (game.world[worldI].wall != MATERIAL_NOTHING)
+	// 		{
+	// 			amount -= 0.25f;
+	// 		}
+	// 		if (game.world[worldI].material != MATERIAL_NOTHING)
+	// 		{
+	// 			amount -= 0.0625f;
+	// 		}
+	// 		if (game.world[worldI].identity < numberOfAnimals && game.world[worldI].identity >= 0)
+	// 		{
+	// 			int occupyingCell = isAnimalInSquare(game.world[worldI].identity, worldI);
+	// 			if ( occupyingCell >= 0)
+	// 			{
+	// 				unsigned int organ = game.animals[ game.world[worldI].identity] .body[occupyingCell].organ;
+	// 				if (organIsANeuron(  organ ) || organIsASensor(organ))
+	// 				{
+	// 					amount = game.animals[game.world[worldI].identity].body[occupyingCell].signalIntensity ; //* 2.0f;
+	// 				}
+	// 				if (game.animals[game.world[worldI].identity].isMachine)
+	// 				{
+	// 					amount = 1.0f;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
 
 	Color displayColor = color_white;// draw the cursor.
 	Vec_f2 worldMousePos = Vec_f2( game.mousePositionX, game.mousePositionY);
@@ -3353,27 +3535,21 @@ void spawnAdversary(unsigned int targetWorldPositionI)
 
 void spawnPlayer()
 {
-	if (game.playerCreature == -1)
-	{
-		unsigned int targetWorldPositionI =  game.playerRespawnPos;
-		int i = 1;
-		setupExampleHuman(i);
-		game.playerCreature = 0;
-		spawnAnimalIntoSlot(game.playerCreature, game.animals[i], targetWorldPositionI, false);
-		game.cameraTargetCreature = game.playerCreature;
-		int randomLung = getRandomCellOfType(game.playerCreature, ORGAN_LUNG);
-		if (randomLung >= 0)
-		{
-			game.animals[game.playerCreature].body[randomLung].signalIntensity = baseLungCapacity;
-		}
-		game.animals[game.playerCreature].energy = game.animals[game.playerCreature].maxEnergy;
-		game.animals[game.playerCreature].damageReceived = 0;
-		appendLog( std::string("Spawned the player.") );
-	}
-	else
-	{
-		killAnimal(game.playerCreature);
-	}
+	// if (game.playerCreature == -1)
+	// {
+	unsigned int targetWorldPositionI =  game.playerRespawnPos;
+	int i = 1;
+	setupExampleHuman(i);
+	game.playerCreature = 0;
+	spawnAnimalIntoSlot(game.playerCreature, game.animals[i], targetWorldPositionI, false);
+	game.cameraTargetCreature = game.playerCreature;
+
+	appendLog( std::string("Spawned the player.") );
+	// }
+	// else
+	// {
+	// 	killAnimal(game.playerCreature);
+	// }
 }
 
 
@@ -3615,9 +3791,7 @@ void setupGameItems()
 	setupMessageComputer( i);
 	spawnAnimalIntoSlot(9, game.animals[i], targetWorldPositionI, false);
 
-	targetWorldPositionI += 25 * worldSize;
-	game.playerRespawnPos = targetWorldPositionI;
-	spawnPlayer();
+
 
 	targetWorldPositionI =  getRandomPosition(true);
 	game.adversaryRespawnPos = targetWorldPositionI;
@@ -3627,6 +3801,11 @@ void setupGameItems()
 	setupBuilding_playerBase(targetWorldPositionI);
 	setupHospitalComputer(i);
 	spawnAnimalIntoSlot(5, game.animals[i], targetWorldPositionI, false);
+
+	targetWorldPositionI += 25 * worldSize;
+	game.playerRespawnPos = targetWorldPositionI;
+
+	spawnPlayer();
 
 	targetWorldPositionI += 25 * worldSize;
 	setupMessageComputer( i);
