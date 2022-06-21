@@ -8,9 +8,9 @@
 const int worldSize = 4096;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
-const unsigned int numberOfAnimals = 10000;
+const unsigned int numberOfAnimals = 2500;
 const unsigned int numberOfSpecies = 8;
-const unsigned int animalSquareSize      = 128;
+const unsigned int animalSquareSize      = 512;
 const unsigned int displayNameSize = 32;
 const unsigned int nLogs = 32;
 const unsigned int logLength = 64;

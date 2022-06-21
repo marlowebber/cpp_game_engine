@@ -43,8 +43,9 @@
 #define ORGAN_HEATADAPT            36
 #define ORGAN_GRABBER              37
 #define ORGAN_SENSOR_PAIN          38
+#define ORGAN_HAIR                 39
 
-#define numberOfOrganTypes        38 // the number limit of growable genes
+#define numberOfOrganTypes        39 // the number limit of growable genes
 
 #define MARKER                    50
 
@@ -253,6 +254,29 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("A bony hand which can clutch items and grab animals.");
 	}
+
+
+
+
+	case ORGAN_SENSOR_PAIN:
+	{
+		return std::string("A part of the brain which feels the trauma of injury.");
+	}
+	case ORGAN_HEATADAPT:
+	{
+		return std::string("A gland which secretes liquid crystal to raise the boiling point.");
+	}
+	case ORGAN_COLDADAPT:
+	{
+		return std::string("A gland which produces syrup to lower the boiling point.");
+	}
+	case ORGAN_HAIR:
+	{
+		return std::string("Soft, shiny strands of hair.");
+	}
+
+
+
 	case MATERIAL_FOOD:
 	{
 		return std::string("There's a piece of dried-out old meat.");
@@ -328,6 +352,7 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("Scattered rubble.");
 	}
+
 
 
 	}
@@ -477,6 +502,32 @@ std::string tileShortNames(unsigned int tile)
 	{
 		return std::string("Grabber");
 	}
+
+
+case ORGAN_SENSOR_PAIN:
+	{
+		return std::string("Pain sensor");
+	}
+
+case ORGAN_COLDADAPT:
+	{
+		return std::string("Cold adapt");
+	}
+
+case ORGAN_HEATADAPT:
+	{
+		return std::string("Heat adapt");
+	}
+
+case ORGAN_HAIR:
+	{
+		return std::string("Hair");
+	}
+
+
+
+
+
 	case MATERIAL_FOOD:
 	{
 		return std::string("Food");
@@ -758,57 +809,82 @@ void setupExampleHuman(int i)
 	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
 	char humanBody[] =
 	{
-		' ', ' ', ' ', 'B', ' ', ' ', ' ',
-		' ', ' ', 'B', 'B', 'B', ' ', ' ',
-		' ', 'B', 'E', 'B', 'E', 'B', ' ',
-		' ', ' ', 'B', 'N', 'B', ' ', ' ',
-		' ', ' ', ' ', 'S', ' ', ' ', ' ',
-		' ', 'B', 'B', 'B', 'B', 'B', ' ',
-		'M', 'M', 'U', 'B', 'U', 'M', 'M',
-		'M', ' ', 'B', 'B', 'B', ' ', 'M',
-		'B', ' ', 'L', 'B', 'L', ' ', 'B',
-		'B', ' ', 'B', 'B', 'B', ' ', 'B',
-		'G', ' ', 'A', 'O', 'A', ' ', 'G',
-		' ', ' ', 'B', 'B', 'B', ' ', ' ',
-		' ', ' ', 'B', 'D', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', 'B', ' ', ' ',
+' ',' ',' ',' ',' ',' ','/',' ',' ',' ',' ',' ',' ', 
+' ',' ',' ',' ',' ','/','B','/',' ',' ',' ',' ',' ', 
+' ',' ',' ',' ','/','B','B','B','/',' ',' ',' ',' ', 
+' ',' ',' ',' ','B','B','B','B','B','/',' ',' ',' ', 
+' ',' ',' ','/','B','B','B','B','B','/',' ',' ',' ', 
+' ',' ',' ','R','B','E','B','E','B','R',' ',' ',' ', 
+' ',' ',' ','/','/','B','N','B','/','/',' ',' ',' ', 
+' ',' ',' ',' ','/','/','S','/','/',' ',' ',' ',' ', 
+' ',' ',' ',' ',' ','B','M','B',' ',' ',' ',' ',' ', 
+' ',' ',' ','B','B','B','B','B','B','B',' ',' ',' ', 
+' ',' ','B','M','M','U','B','U','M','M','B',' ',' ', 
+' ',' ','B','M','B','B','B','B','B','M','B',' ',' ', 
+' ',' ','B','/','M','X','B','H','M','/','B',' ',' ', 
+' ',' ','B',' ','B','B','B','B','B',' ','B',' ',' ', 
+' ',' ','M',' ','T','M','B','M','T',' ','M',' ',' ', 
+' ',' ','B',' ',' ','B','B','B',' ',' ','B',' ',' ', 
+' ',' ','B',' ',' ','L','B','L',' ',' ','B',' ',' ', 
+' ',' ','B',' ','M','B','B','B','M',' ','B',' ',' ', 
+' ',' ','G',' ','B','O','B','O','B',' ','G',' ',' ', 
+' ',' ',' ','M','A','B','D','B','A','M',' ',' ',' ', 
+' ',' ',' ','M','B','M','/','M','B','M',' ',' ',' ', 
+' ',' ',' ','M','B','M',' ','M','B','M',' ',' ',' ', 
+' ',' ',' ','M','B','M',' ','M','B','M',' ',' ',' ', 
+' ',' ',' ','M','B','M',' ','M','B','M',' ',' ',' ', 
+' ',' ',' ',' ','M','M',' ','M','M',' ',' ',' ',' ', 
+' ',' ',' ','M','B',' ',' ',' ','B','M',' ',' ',' ', 
+' ',' ',' ','M','B',' ',' ',' ','B','M',' ',' ',' ', 
+' ',' ',' ','M','B',' ',' ',' ','B','M',' ',' ',' ', 
+' ',' ',' ','M','B',' ',' ',' ','B','M',' ',' ',' ', 
+' ',' ',' ',' ','B',' ',' ',' ','B',' ',' ',' ',' ', 
+' ',' ',' ',' ','B',' ',' ',' ','B',' ',' ',' ',' ', 
+' ',' ',' ',' ','A',' ',' ',' ','A',' ',' ',' ',' ', 
+
 	};
-	setupCreatureFromCharArray( i, humanBody, animalSquareSize, 7 ,  std::string("human"), -1 );
+	setupCreatureFromCharArray( i, humanBody, animalSquareSize, 13 ,  std::string("human"), -1 );
+
 
 
 
 	char humanPaint[] =
 	{
-		' ', ' ', ' ', 'T', ' ', ' ', ' ',
-		' ', ' ', 'T', 'T', 'T', ' ', ' ',
-		' ', 'T', 'B', 'T', 'B', 'T', ' ',
-		' ', ' ', 'T', 'P', 'T', ' ', ' ',
-		' ', ' ', ' ', 'R', ' ', ' ', ' ',
-		' ', 'T', 'T', 'T', 'T', 'T', ' ',
-		'T', 'T', 'T', 'T', 'T', 'T', 'T',
-		'T', ' ', 'P', 'T', 'P', ' ', 'T',
-		'T', ' ', 'T', 'T', 'T', ' ', 'T',
-		'T', ' ', 'T', 'T', 'T', ' ', 'T',
-		'T', ' ', 'T', 'P', 'T', ' ', 'T',
-		' ', ' ', 'T', 'T', 'T', ' ', ' ',
-		' ', ' ', 'T', 'P', 'T', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-		' ', ' ', 'T', ' ', 'T', ' ', ' ',
-	};
-	// paintCreatureFromCharArray(  );
+' ',' ',' ',' ',' ',' ','R',' ',' ',' ',' ',' ',' ', 
+' ',' ',' ',' ',' ','R','R','R',' ',' ',' ',' ',' ', 
+' ',' ',' ',' ','R','R','R','T','R',' ',' ',' ',' ', 
+' ',' ',' ','R','R','R','T','T','R','R',' ',' ',' ', 
+' ',' ',' ','R','R','T','T','T','T','R',' ',' ',' ', 
+' ',' ',' ','P','R','B','T','B','T','P',' ',' ',' ', 
+' ',' ',' ','R','R','T','P','T','R','R',' ',' ',' ', 
+' ',' ',' ',' ','R','R','T','R','R',' ',' ',' ',' ', 
+' ',' ',' ',' ',' ','T','T','T',' ',' ',' ',' ',' ', 
+' ',' ',' ','T','T','T','T','T','T','T',' ',' ',' ', 
+' ',' ','T','T','T','T','T','T','T','T','T',' ',' ', 
+' ',' ','T','T','T','T','T','T','T','T','T',' ',' ', 
+' ',' ','T','R','P','T','T','T','P','R','T',' ',' ', 
+' ',' ','T',' ','T','T','T','T','T',' ','T',' ',' ', 
+' ',' ','T',' ','T','T','T','T','T',' ','T',' ',' ', 
+' ',' ','T',' ',' ','T','T','T',' ',' ','T',' ',' ', 
+' ',' ','T',' ',' ','T','P','T',' ',' ','T',' ',' ', 
+' ',' ','T',' ','T','T','T','T','T',' ','T',' ',' ', 
+' ',' ','P',' ','T','T','T','T','T',' ','P',' ',' ', 
+' ',' ',' ','T','T','R','R','R','T','T',' ',' ',' ', 
+' ',' ',' ','T','T','T','R','T','T','T',' ',' ',' ', 
+' ',' ',' ','T','T','T',' ','T','T','T',' ',' ',' ', 
+' ',' ',' ','T','T','T',' ','T','T','T',' ',' ',' ', 
+' ',' ',' ','T','T','T',' ','T','T','T',' ',' ',' ', 
+' ',' ',' ',' ','T','T',' ','T','T',' ',' ',' ',' ', 
+' ',' ',' ','T','T',' ',' ',' ','T','T',' ',' ',' ', 
+' ',' ',' ','T','T',' ',' ',' ','T','T',' ',' ',' ', 
+' ',' ',' ','T','T',' ',' ',' ','T','T',' ',' ',' ', 
+' ',' ',' ','T','T',' ',' ',' ','T','T',' ',' ',' ', 
+' ',' ',' ',' ','T',' ',' ',' ','T',' ',' ',' ',' ', 
+' ',' ',' ',' ','T',' ',' ',' ','T',' ',' ',' ',' ', 
+' ',' ',' ',' ','P',' ',' ',' ','P',' ',' ',' ',' ', 
 
-	paintCreatureFromCharArray( i, humanPaint, animalSquareSize, 7 );
+	};
+	paintCreatureFromCharArray( i, humanPaint, animalSquareSize, 13 );
 }
 
 
@@ -1124,6 +1200,8 @@ Color organColors(unsigned int organ)
 		return color_peach;
 	case ORGAN_GRABBER              :
 		return color_peach_light;
+	case ORGAN_HAIR              :
+		return color_clear;
 	}
 	return color_yellow;
 }
@@ -1136,8 +1214,7 @@ bool organVisible(unsigned int organ)
 	        organ == ORGAN_MOUTH_CARNIVORE ||
 	        organ == ORGAN_MOUTH_PARASITE ||
 	        organ == ORGAN_SENSOR_TRACKER ||
-	        organ == ORGAN_SPEAKER ||
-	        organ == ORGAN_SENSOR_EAR)
+	        organ == ORGAN_SPEAKER )
 	{
 		return true;
 	}

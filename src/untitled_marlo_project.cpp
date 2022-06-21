@@ -180,19 +180,44 @@ void viewAdversary()
 {
 	if (game.cameraTargetCreature == game.adversary)
 	{
-		game.cameraTargetCreature = -1;
 		if (game.playerCreature >= 0)
 		{
 			game.cameraTargetCreature = game.playerCreature;
 		}
+		else
+		{
+			game.cameraTargetCreature = -1;
+		}
 	}
-	else
+
+	else if (game.cameraTargetCreature == game.playerCreature)
 	{
 		if (game.adversary >= 0)
 		{
 			game.cameraTargetCreature = game.adversary;
 		}
+		else
+		{
+			game.cameraTargetCreature = -1;
+		}
 	}
+	else
+	{
+		if (game.playerCreature >= 0)
+		{
+			game.cameraTargetCreature = game.playerCreature;
+		}
+		else if (game.adversary >= 0)
+		{
+			game.cameraTargetCreature = game.adversary;
+		}
+		else
+		{
+			game.cameraTargetCreature = -1;
+		}
+	}
+
+
 }
 
 void toggleInstructions()
@@ -3274,8 +3299,8 @@ void incrementSelectedGrabber()
 		unsigned int neighbour = (game.playerActiveGrabber + i) % game.animals[game.playerCreature].cellsUsed;
 
 		if (game.animals[game.playerCreature].body[neighbour].organ == ORGAN_GRABBER && game.animals[game.playerCreature].body[neighbour].grabbedCreature >= 0
-			 && neighbour != game.playerActiveGrabber
-			 )
+		        && neighbour != game.playerActiveGrabber
+		   )
 		{
 			game.playerActiveGrabber = neighbour;
 			break;
@@ -3613,6 +3638,9 @@ void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 		case 'P':
 			newColor = color_pink;
 			break;
+			case 'R':
+			newColor = color_brown;
+			break;
 			// case 'E':
 			// 	newOrgan = ORGAN_SENSOR_EYE;
 			// 	break;
@@ -3740,12 +3768,30 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 		case 'D':
 			newOrgan = ORGAN_GONAD;
 			break;
+		case 'R':
+			newOrgan = ORGAN_SENSOR_EAR;
+			break;
+		case 'H':
+			newOrgan = ORGAN_SENSOR_BIRTHPLACE;
+			break;
+		case 'X':
+			newOrgan = ORGAN_SENSOR_PAIN;
+			break;
+
+		case '/':
+			newOrgan = ORGAN_HAIR;
+			break;
+
+
 		case 'O':
 			newOrgan = ORGAN_ADDOFFSPRINGENERGY;
+			break;
 		case '1':
 			newOrgan = MATERIAL_METAL;
+			break;
 		case '2':
 			newOrgan = MATERIAL_GLASS;
+			break;
 
 		}
 		if (newOrgan != MATERIAL_NOTHING)
