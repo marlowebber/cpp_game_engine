@@ -57,6 +57,7 @@ struct Square
     char seedGenes[16];
     unsigned int state;
     unsigned int geneCursor;
+    int plantIdentity;
     float energy;
     float energyDebt;
 };

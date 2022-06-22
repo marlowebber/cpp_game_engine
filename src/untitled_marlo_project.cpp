@@ -437,7 +437,7 @@ void resetGrid()
 	for (int i = 0; i < worldSquareSize; ++i)
 	{
 		game.world[i].terrain = MATERIAL_NOTHING;
-		game.world[i].material = MATERIAL_NOTHING;
+		// game.world[i].material = MATERIAL_NOTHING;
 		game.world[i].wall = MATERIAL_NOTHING;
 		game.world[i].identity = -1;
 		game.world[i].trail = 0.0f;
@@ -446,6 +446,8 @@ void resetGrid()
 		game.world[i].pheromoneIntensity = 0.0f;
 		game.world[i].pheromoneChannel = -1;
 		game.world[i].grassColor =  color_green;
+
+
 	}
 }
 
@@ -1335,13 +1337,13 @@ void killAnimal(int animalIndex)
 			{
 				game.world[cellWorldPositionI].pheromoneChannel = 13;
 				game.world[cellWorldPositionI].pheromoneIntensity = 1.0f;
-				if (game.world[cellWorldPositionI].material == MATERIAL_NOTHING)
+				if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
 				{
-					game.world[cellWorldPositionI].material = MATERIAL_FOOD;
+					game.world[cellWorldPositionI].wall = MATERIAL_FOOD;
 				}
 				if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_BONE)
 				{
-					game.world[cellWorldPositionI].material = MATERIAL_BONE;
+					game.world[cellWorldPositionI].wall = MATERIAL_BONE;
 				}
 			}
 		}
@@ -1426,15 +1428,18 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	else
 	{
 		Color materialColor ;
-		if (game.world[worldI].material == MATERIAL_GRASS )
+		if (game.world[worldI].wall == MATERIAL_GRASS )
 		{
 			materialColor = game.world[worldI].grassColor;
 		}
-		else
-		{
-			materialColor = materialColors(game.world[worldI].material);
-		}
-		displayColor = filterColor( materialColors(game.world[worldI].terrain) ,  materialColor);		// you can see the three material layers in order, wall then material then floor.
+		// else
+		// {
+		// 	materialColor = materialColors(game.world[worldI].material);
+		// }
+		displayColor = 
+		// filterColor(
+		 materialColors(game.world[worldI].terrain);
+		  // ,  materialColor);		// you can see the three material layers in order, wall then material then floor.
 		Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
 		displayColor = filterColor( displayColor, wallColor  );
 	}
@@ -1537,40 +1542,44 @@ void updateMap()
 					game.world[randomI].wall = MATERIAL_NOTHING;
 				}
 			}
-			if (game.world[randomI].material == MATERIAL_FIRE)
-			{
-				for (int i = 0; i < nNeighbours; ++i)
-				{
-					unsigned int neighbour = randomI + neighbourOffsets[i];
-					if (neighbour < worldSquareSize)
-					{
-						if (game.world[neighbour].material == MATERIAL_GRASS)
-						{
-							game.world[randomI].material = MATERIAL_FIRE;
-						}
-					}
-				}
-				if (extremelyFastNumberFromZeroTo(1) == 0)
-				{
-					game.world[randomI].material = MATERIAL_NOTHING;
-				}
-				else
-				{
-					unsigned int neighbour = randomI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
-					if (neighbour < worldSquareSize)
-					{
-						game.world[neighbour].material = MATERIAL_FIRE;
-					}
-				}
-			}
-			if (game.world[randomI].material == MATERIAL_GRASS)
+
+
+			// if (game.world[randomI].material == MATERIAL_FIRE)
+			// {
+			// 	for (int i = 0; i < nNeighbours; ++i)
+			// 	{
+			// 		unsigned int neighbour = randomI + neighbourOffsets[i];
+			// 		if (neighbour < worldSquareSize)
+			// 		{
+			// 			if (game.world[neighbour].material == MATERIAL_GRASS)
+			// 			{
+			// 				game.world[randomI].material = MATERIAL_FIRE;
+			// 			}
+			// 		}
+			// 	}
+			// 	if (extremelyFastNumberFromZeroTo(1) == 0)
+			// 	{
+			// 		game.world[randomI].material = MATERIAL_NOTHING;
+			// 	}
+			// 	else
+			// 	{
+			// 		unsigned int neighbour = randomI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
+			// 		if (neighbour < worldSquareSize)
+			// 		{
+			// 			game.world[neighbour].material = MATERIAL_FIRE;
+			// 		}
+			// 	}
+			// }
+
+
+			if (game.world[randomI].wall == MATERIAL_GRASS)
 			{
 				for (int n = 0; n < nNeighbours; ++n)
 				{
 					unsigned int neighbour = randomI + neighbourOffsets[n];
 					if (neighbour < worldSquareSize)
 					{
-						if (game.world[neighbour].material == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
+						if (game.world[neighbour].wall == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
 						{
 							float growthChance =  (game.world[neighbour].light.a ); // grow speed proportional to light brightness
 
@@ -1578,7 +1587,7 @@ void updateMap()
 
 							if (RNG() < growthChance )
 							{
-								game.world[neighbour].material = MATERIAL_GRASS;
+								game.world[neighbour].wall = MATERIAL_GRASS;
 								game.world[neighbour].grassColor = game.world[randomI].grassColor;
 								game.world[neighbour].grassColor.r += (RNG() - 0.5f) * 0.1f;
 								game.world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
@@ -1593,9 +1602,9 @@ void updateMap()
 					}
 				}
 			}
-			if ( materialDegrades( game.world[randomI].material) )
+			if ( materialDegrades( game.world[randomI].wall) )
 			{
-				game.world[randomI].material = MATERIAL_NOTHING;
+				game.world[randomI].wall = MATERIAL_NOTHING;
 			}
 		}
 	}
@@ -1712,9 +1721,9 @@ void communicationComputerCallback( int gunIndex, int shooterIndex)
 
 void spillBlood(unsigned int worldPositionI)
 {
-	if (game.world[worldPositionI].material == MATERIAL_NOTHING)
+	if (game.world[worldPositionI].wall == MATERIAL_NOTHING)
 	{
-		game.world[worldPositionI].material = MATERIAL_BLOOD;
+		game.world[worldPositionI].wall = MATERIAL_BLOOD;
 	}
 	else
 	{
@@ -1723,9 +1732,9 @@ void spillBlood(unsigned int worldPositionI)
 			unsigned int neighbour = worldPositionI += neighbourOffsets[i];
 			if ( neighbour < worldSquareSize)
 			{
-				if (game.world[neighbour].material == MATERIAL_NOTHING)
+				if (game.world[neighbour].wall == MATERIAL_NOTHING)
 				{
-					game.world[neighbour].material = MATERIAL_BLOOD;
+					game.world[neighbour].wall = MATERIAL_BLOOD;
 					break;
 				}
 			}
@@ -1882,9 +1891,9 @@ void lighterCallback( int gunIndex, int shooterIndex )
 		int cursorPosY = game.cameraPositionY + game.mousePositionY;
 		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 
-		if ( game.world[worldCursorPos].material == MATERIAL_NOTHING ||  game.world[worldCursorPos].material == MATERIAL_GRASS )
+		if ( game.world[worldCursorPos].wall == MATERIAL_NOTHING ||  game.world[worldCursorPos].wall == MATERIAL_GRASS )
 		{
-			game.world[worldCursorPos].material = MATERIAL_FIRE;
+			game.world[worldCursorPos].wall = MATERIAL_FIRE;
 		}
 	}
 }
@@ -2533,7 +2542,7 @@ void organs_all()
 								{
 									game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
 								}
-								else if (game.world[neighbour].material != MATERIAL_NOTHING)
+								else if (game.world[neighbour].wall != MATERIAL_NOTHING)
 								{
 									game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
 								}
@@ -2551,7 +2560,7 @@ void organs_all()
 								{
 									game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
 								}
-								else if (game.world[cellWorldPositionI].material != MATERIAL_NOTHING)
+								else if (game.world[cellWorldPositionI].wall != MATERIAL_NOTHING)
 								{
 									game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
 								}
@@ -2613,20 +2622,20 @@ void organs_all()
 
 				case ORGAN_MOUTH_VEG :
 				{
-					if (game.world[cellWorldPositionI].material == MATERIAL_GRASS)
+					if (game.world[cellWorldPositionI].wall == MATERIAL_GRASS)
 					{
 						game.animals[animalIndex].energy += game.ecoSettings[1] ;
-						game.world[cellWorldPositionI].material = MATERIAL_NOTHING;
+						game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
 					}
 					break;
 				}
 
 				case ORGAN_MOUTH_SCAVENGE :
 				{
-					if (game.world[cellWorldPositionI].material == MATERIAL_FOOD)
+					if (game.world[cellWorldPositionI].wall == MATERIAL_FOOD)
 					{
 						game.animals[animalIndex].energy += game.ecoSettings[0] ;
-						game.world[cellWorldPositionI].material = MATERIAL_NOTHING;
+						game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
 					}
 					break;
 				}
@@ -2857,9 +2866,9 @@ void move_all()
 									{
 										if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_WEAPON)
 										{
-											if (game.world[cellWorldPositionI].material == MATERIAL_NOTHING)
+											if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
 											{
-												game.world[cellWorldPositionI].material = MATERIAL_FOOD;
+												game.world[cellWorldPositionI].wall = MATERIAL_FOOD;
 											}
 										}
 										if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE)
@@ -2888,11 +2897,11 @@ void move_all()
 				{
 					if (game.world[cellWorldPositionI].identity == -1 && speciesIndex != 0)
 					{
-						if (game.world[cellWorldPositionI].material == MATERIAL_NOTHING || game.world[cellWorldPositionI].material == MATERIAL_GRASS)
+						if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING || game.world[cellWorldPositionI].wall == MATERIAL_GRASS)
 						{
 							if (materialSupportsGrowth(game.world[cellWorldPositionI].terrain ))
 							{
-								game.world[cellWorldPositionI].material = MATERIAL_GRASS;
+								game.world[cellWorldPositionI].wall = MATERIAL_GRASS;
 								game.world[cellWorldPositionI].grassColor =  addColor( color_green , multiplyColorByScalar(game.animals[animalIndex].identityColor, 0.5f ));//
 							}
 						}
@@ -3629,9 +3638,9 @@ void drawGameInterfaceText()
 		}
 		if (!animalInSquare)
 		{
-			if (game.world[worldCursorPos].material != MATERIAL_NOTHING)
+			if (game.world[worldCursorPos].wall != MATERIAL_NOTHING)
 			{
-				printText2D(  tileDescriptions(game.world[worldCursorPos].material ), menuX, menuY, textSize);
+				printText2D(  tileDescriptions(game.world[worldCursorPos].wall ), menuX, menuY, textSize);
 				menuY += spacing;
 			}
 			else
@@ -4362,7 +4371,7 @@ void setupRandomWorld()
 		}
 		if (game.world[worldPositionI].height < seaLevel)
 		{
-			game.world[worldPositionI].material = MATERIAL_GRASS;
+			game.world[worldPositionI].wall = MATERIAL_GRASS;
 		}
 	}
 	detailTerrain();

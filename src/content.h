@@ -97,6 +97,29 @@
 #define VISUALIZER_IDENTITY            1004
 #define VISUALIZER_NEURALACTIVITY      1006
 
+
+
+
+
+#define PLANTGENE_GROW_0 
+#define PLANTGENE_GROW_1 
+#define PLANTGENE_GROW_2 
+#define PLANTGENE_GROW_3 
+#define PLANTGENE_GROW_4 
+#define PLANTGENE_GROW_5 
+#define PLANTGENE_GROW_6 
+#define PLANTGENE_GROW_7 
+#define PLANTGENE_GROW_SYMM_H 
+#define PLANTGENE_GROW_SYMM_V 
+#define PLANTGENE_RED
+#define PLANTGENE_GREEN
+#define PLANTGENE_BLUE
+#define PLANTGENE_SEED
+#define PLANTGENE_GOTO
+
+
+
+
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {
 	std::string( "It has an earthy smell." ),
