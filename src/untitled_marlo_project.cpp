@@ -1712,6 +1712,15 @@ void defeatAdversary()
 	killAnimal(game.adversary);
 }
 
+
+
+void healAnimal(unsigned int animalIndex)
+{
+
+}
+
+
+
 // return true if you blow the limb off, false if its still attached.
 bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
 {
@@ -1736,11 +1745,11 @@ bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, 
 	if (game.animals[animalIndex].body[cellIndex].damage > 1.0f)
 	{
 		game.animals[animalIndex].damageReceived++;
-		game.animals[animalIndex].mass--;
+		// game.animals[animalIndex].mass--;
 
 		if (animalIndex == game.adversary && shooterIndex == game.playerCreature)
 		{
-			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].mass)
+			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].mass/2)
 			{
 				defeatAdversary();
 			}
@@ -1948,9 +1957,6 @@ void organs_all()
 {
 	ZoneScoped;
 
-	game.palette = false;
-	game.ecologyComputerDisplay = false;
-
 
 
 	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
@@ -1988,8 +1994,8 @@ void organs_all()
 					// pick a random tile within range, see if it contains an animal not of species 0, and shoot it if so.
 
 					const int destroyerRange = 250;
-					int randomX = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange/2);
-					int randomY = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange/2);
+					int randomX = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange / 2);
+					int randomY = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange / 2);
 
 
 
@@ -2063,12 +2069,12 @@ void organs_all()
 							game.animals[animalIndex].body[cellIndex].grabbedCreature = potentialGrab;
 							game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 
-							if ((game.animals[game.animals[animalIndex].body[cellIndex].grabbedCreature].machineCallback) == (MACHINECALLBACK_HOSPITAL)
-							        && game.animals[animalIndex].damageReceived > 0	)
-							{
+							// if ((game.animals[game.animals[animalIndex].body[cellIndex].grabbedCreature].machineCallback) == (MACHINECALLBACK_HOSPITAL)
+							//         && game.animals[animalIndex].damageReceived > 0	)
+							// {
 
-								spawnAnimalIntoSlot( animalIndex, game.animals[animalIndex], game.animals[animalIndex].position, true );
-							}
+							// 	spawnAnimalIntoSlot( animalIndex, game.animals[animalIndex], game.animals[animalIndex].position, true );
+							// }
 
 
 						}
@@ -2089,26 +2095,7 @@ void organs_all()
 						// some machines are active when you're holding them
 
 
-						if (animalIndex == game.playerCreature)
-						{
-
-
-							if (  game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].isMachine  )
-							{
-								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) == (MACHINECALLBACK_HOSPITAL))
-								{
-									game.palette = true;
-								}
-								if ((game.animals[game.animals[game.playerCreature].body[cellIndex].grabbedCreature].machineCallback) ==   MACHINECALLBACK_ECOLOGYCOMPUTER)
-								{
-									game.ecologyComputerDisplay = true;
-								}
-
-							}
-
-						}
-
-
+					
 
 
 
@@ -2909,7 +2896,7 @@ void energy_all() // perform energies.
 				{
 					execute = true;
 				}
-				if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].mass)
+				if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].mass / 2)
 				{
 					execute = true;
 				}
@@ -3357,6 +3344,7 @@ void drawGameInterfaceText()
 	int cursorPosY = game.cameraPositionY + game.mousePositionY;
 
 
+
 	unsigned int worldCursorPos = ((cursorPosY * worldSize) + cursorPosX ) % worldSquareSize;
 
 
@@ -3376,6 +3364,9 @@ void drawGameInterfaceText()
 		menuY += spacing;
 	}
 
+
+	game.palette = false;
+	game.ecologyComputerDisplay = false;
 
 
 	unsigned int holding = 0;	// print grabber states
@@ -3407,9 +3398,19 @@ void drawGameInterfaceText()
 		menuY += spacing;
 
 
+
+
 		if (game.playerActiveGrabber >= 0 && game.playerActiveGrabber < animalSquareSize)
 		{
 			stringToPrint += std::string("Holding ") + game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].displayName + std::string(" [f] drop ");
+
+
+
+
+
+
+
+
 
 
 			if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].isMachine)
@@ -3418,11 +3419,13 @@ void drawGameInterfaceText()
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_HOSPITAL)
 				{
 					stringToPrint += std::string("[lmb, rmb] add, erase");
+					game.palette = true;
 				}
 
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_ECOLOGYCOMPUTER)
 				{
-					stringToPrint += std::string("[lmb] see stats");
+					// stringToPrint += std::string("[lmb] see stats");
+					game.ecologyComputerDisplay = true;
 				}
 
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_MESSAGECOMPUTER)
@@ -3566,24 +3569,23 @@ void drawGameInterfaceText()
 
 
 
-		// if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.25 &&
-		//         game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.5
-		//    )
-		// {
-		// 	printText2D(   std::string("You're mildly hurt.") , menuX, menuY, textSize);
-		// 	menuY += spacing;
-		// }
-		if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.5 &&
-		        game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.75
-		   )
+		 playerGill = getRandomCellOfType( game.playerCreature, ORGAN_SENSOR_PAIN ) ;
+		if (playerGill >= 0)
 		{
-			printText2D(   std::string("You're badly hurt.") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
-		else if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.75)
-		{
-			printText2D(   std::string("You are mortally wounded.") , menuX, menuY, textSize);
-			menuY += spacing;
+
+			if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.25 &&
+			        game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.375
+			   )
+			{
+				printText2D(   std::string("You're badly hurt.") , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+			else if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.375)
+			{
+				printText2D(   std::string("You are mortally wounded.") , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+
 		}
 
 	}
