@@ -137,8 +137,8 @@ void threadInterface()
 				playerDrop();
 				break;
 			// case SDLK_SPACE:
-				// resetMouseCursor();
-				// break;
+			// resetMouseCursor();
+			// break;
 			case SDLK_d:
 			{
 				// if (playerCreature >= 0)
@@ -202,7 +202,7 @@ void threadInterface()
 				saveSelectedAnimal();
 				break;
 			}
-			
+
 			case SDLK_u:
 			{
 				toggleInstructions();
@@ -210,7 +210,7 @@ void threadInterface()
 			}
 
 
-case SDLK_m:
+			case SDLK_m:
 			{
 				viewAdversary();
 				break;
@@ -299,12 +299,20 @@ void setFlagReady()
 	flagReady = true;
 }
 
+
+
+void initDeepSea()
+{
+
+	worldCreationStage = 0;
+}
+
 int main( int argc, char * argv[] )
 {
 	setupGraphics();
 	setupExtremelyFastNumberGenerators();
 	initText2D();
-	worldCreationStage = 0;
+	initDeepSea();
 	for (;;)
 	{
 		flagCreate = false;

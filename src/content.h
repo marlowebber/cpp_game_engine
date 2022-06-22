@@ -756,6 +756,7 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EAR );
 	animalAppendCell( i, ORGAN_SENSOR_PHEROMONE );
+	animalAppendCell( i, ORGAN_SENSOR_TRACKER );
 
 	animalAppendCell( i, ORGAN_SENSOR_AGE );
 	animalAppendCell( i, ORGAN_SENSOR_HUNGER );
@@ -768,9 +769,13 @@ void setupExampleAnimal2(int i)
 	animalAppendCell( i, ORGAN_NEURON );
 
 	animalAppendCell( i, ORGAN_MUSCLE );
+	animalAppendCell( i, ORGAN_MUSCLE );
+	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
 	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
+	animalAppendCell( i, ORGAN_MUSCLE_TURN );
 	animalAppendCell( i, ORGAN_EMITTER_PHEROMONE );
+	animalAppendCell( i, ORGAN_SPEAKER );
 
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );

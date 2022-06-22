@@ -65,8 +65,8 @@ const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
 const unsigned int nNeighbours     = 8;
-const float taxEnergyScale         = 0.00002f;        // a multiplier for how much it costs game.animals just to exist.
-const float movementEnergyScale    = 0.00002f;        // a multiplier for how much it costs game.animals to move.
+const float taxEnergyScale         = 0.00000f;        // a multiplier for how much it animals just to exist.
+const float movementEnergyScale    = 0.00000f;        // a multiplier for how much it animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
 const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
 const float neuralNoise = 0.1f;
@@ -3638,7 +3638,7 @@ void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 		case 'P':
 			newColor = color_pink;
 			break;
-			case 'R':
+		case 'R':
 			newColor = color_brown;
 			break;
 			// case 'E':
@@ -4140,10 +4140,10 @@ void setupGameItems()
 
 void setupRandomWorld()
 {
-	worldCreationStage = 0;
-	worldCreationStage++;
+	worldCreationStage = 1;
+	// worldCreationStage++;
 	resetGameState();
-	worldCreationStage++;
+	worldCreationStage =2;
 	float initWaterLevel = 1.0f;
 	for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
 	{
@@ -4169,7 +4169,7 @@ void setupRandomWorld()
 		prelimMap[pp] += noise;
 		prelimWater[pp] = initWaterLevel;
 	}
-	worldCreationStage++;
+	worldCreationStage = 3;
 	bool erode = false;
 	if (erode)
 	{
@@ -4194,13 +4194,13 @@ void setupRandomWorld()
 		// Drops all suspended sediment back into the terrain.
 		simulation.TerminateRainfall(addHeight);
 	}
-	worldCreationStage++;
+	worldCreationStage = 4;
 	copyPrelimToRealMap();
-	worldCreationStage++;
+	worldCreationStage = 5;
 	smoothHeightMap( 8, 0.5f );
-	worldCreationStage++;
+	worldCreationStage = 6;
 	normalizeTerrainHeight();
-	worldCreationStage++;
+	worldCreationStage = 7;
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize; worldPositionI++)// place items and terrain
 	{
 		unsigned int x = worldPositionI % worldSize;
@@ -4216,11 +4216,16 @@ void setupRandomWorld()
 		}
 	}
 	detailTerrain();
-	worldCreationStage++;
+	worldCreationStage = 8;
 	setupGameItems();
-	worldCreationStage++;
+	worldCreationStage = 9;
 	recomputeTerrainLighting();
-	worldCreationStage++;
+	worldCreationStage = 13;
+
+
+	save();
+
+	worldCreationStage = 10;
 	setFlagReady();
 }
 
@@ -4443,6 +4448,7 @@ void drawMainMenuText()
 	{
 		saveExists = true;
 	}
+
 	switch (worldCreationStage)
 	{
 	case 0:
@@ -4450,11 +4456,21 @@ void drawMainMenuText()
 		menuY += spacing;
 		printText2D(   std::string("[esc] quit "), menuX, menuY, textSize);
 		menuY += spacing;
-		printText2D(   std::string("[j] new "), menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("[i] load "), menuX, menuY, textSize);
-		menuY += spacing;
+
+
+		if (saveExists)
+		{
+			printText2D(   std::string("[i] load "), menuX, menuY, textSize);
+			menuY += spacing;
+			break;
+		}
+		else
+		{
+			printText2D(   std::string("[j] new "), menuX, menuY, textSize);
+			menuY += spacing;
+		}
 		break;
+
 	case 1:
 		printText2D(   std::string("clear grids "), menuX, menuY, textSize);
 		break;
@@ -4491,11 +4507,16 @@ void drawMainMenuText()
 	case 12:
 		printText2D(   std::string("loading map from file "), menuX, menuY, textSize);
 		break;
+	case 13:
+		printText2D(   std::string("saving"), menuX, menuY, textSize);
+		break;
 	}
 }
 
 void startSimulation()
 {
+
+	worldCreationStage = 0;
 	srand((unsigned int)time(NULL));
 	seedExtremelyFastNumberGenerators();
 	int j = 1;
