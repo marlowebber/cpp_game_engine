@@ -62,10 +62,10 @@ const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 
 const unsigned int nNeighbours     = 8;
-const float taxEnergyScale         = 0.00000f;        // a multiplier for how much it animals just to exist.
-const float movementEnergyScale    = 0.00000f;        // a multiplier for how much it animals to move.
-const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
-const float grassEnergy            = 0.25f;         // how much you get from eating a square of grass
+// const float taxEnergyScale         = 0.00000f;        // a multiplier for how much it animals just to exist.
+// const float movementEnergyScale    = 0.00000f;        // a multiplier for how much it animals to move.
+// const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
+// const float grassEnergy            = 0.25f;         // how much you get from eating a square of grass
 const float neuralNoise = 0.1f;
 const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 20000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
@@ -238,13 +238,31 @@ void togglePause ()
 
 void incrementSelectedOrgan()
 {
-	game.paletteSelectedOrgan++;
-	game.paletteSelectedOrgan = game.paletteSelectedOrgan % numberOfOrganTypes;
+	if (game.palette)
+	{
+		game.paletteSelectedOrgan++;
+		game.paletteSelectedOrgan = game.paletteSelectedOrgan % numberOfOrganTypes;
+	}
+
+	if (game.ecologyComputerDisplay)
+	{
+		game.activeEcoSetting++;
+		game.activeEcoSetting = game.activeEcoSetting % numberOfEcologySettings;
+	}
 }
 void decrementSelectedOrgan()
 {
-	game.paletteSelectedOrgan--;
-	game.paletteSelectedOrgan = game.paletteSelectedOrgan % numberOfOrganTypes;
+	if (game.palette)
+	{
+		game.paletteSelectedOrgan--;
+		game.paletteSelectedOrgan = game.paletteSelectedOrgan % numberOfOrganTypes;
+	}
+
+	if (game.ecologyComputerDisplay)
+	{
+		game.activeEcoSetting++;
+		game.activeEcoSetting = game.activeEcoSetting % numberOfEcologySettings;
+	}
 }
 
 void playerGrab()
@@ -473,6 +491,13 @@ void resetGameState()
 	game.computerdisplays[5];
 	game.logs[logLength][nLogs];
 	game.paletteSelectedOrgan = 0;
+
+	game.ecoSettings[3]       = 0.000001f; // tax energy scale
+	game.ecoSettings[2]     = 0.000001f;      // movement energy scale
+	game.ecoSettings[0]           = 0.95f; // food (meat) energy
+	game.ecoSettings[1]          = 0.25f; // grass energy
+
+	game.activeEcoSetting = 0;
 
 
 	resetAnimals();
@@ -1635,6 +1660,11 @@ void rightClickCallback ()
 	{
 		paletteEraseAtMouse();
 	}
+
+	if (game.ecologyComputerDisplay)
+	{
+		game.ecoSettings[game.activeEcoSetting] *= (1.0f/1.5f);
+	}
 }
 
 void drawPalette(int menuX, int menuY)
@@ -1659,14 +1689,14 @@ void drawPalette(int menuX, int menuY)
 		}
 	}
 
-	menuY = paletteFinalY;
-	// if (game.palette)
-	// {
-	menuY += paletteSpacing;
-	printText2D(   std::string("[lmb] add tile, [rmb] delete tile") , menuX, menuY, paletteTextSize);
-	menuY += paletteSpacing;
-	printText2D(   std::string("[y] select next, [h] select last ") , menuX, menuY, paletteTextSize);
-	menuY += paletteSpacing;
+	// menuY = paletteFinalY;
+	// // if (game.palette)
+	// // {
+	// menuY += paletteSpacing;
+	// printText2D(   std::string("[lmb] add tile, [rmb] delete tile") , menuX, menuY, paletteTextSize);
+	// menuY += paletteSpacing;
+	// printText2D(   std::string("[y] select next, [h] select last ") , menuX, menuY, paletteTextSize);
+	// menuY += paletteSpacing;
 	// }
 }
 
@@ -1749,7 +1779,7 @@ bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, 
 
 		if (animalIndex == game.adversary && shooterIndex == game.playerCreature)
 		{
-			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].mass/2)
+			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].mass / 2)
 			{
 				defeatAdversary();
 			}
@@ -1912,40 +1942,79 @@ void activateGrabbedMachine()// occurs whenever a left click is received.
 {
 	if (game.playerCreature >= 0)
 	{
-		for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
+
+		if (game.playerActiveGrabber >= 0)
 		{
-			if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
+
+			if (game.animals [ game.playerCreature].body[game.playerActiveGrabber].grabbedCreature >= 0)
 			{
-				if (game.animals[game.playerCreature].body[i].grabbedCreature >= 0 && game.animals[game.playerCreature].body[i].grabbedCreature < numberOfAnimals)
+
+				if (game.animals [   game.animals [ game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].isMachine)
 				{
-					if (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].isMachine)
+
+					switch (game.animals [   game.animals [ game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback )
 					{
-						if (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].machineCallback !=  MATERIAL_NOTHING)
-						{
-							switch (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].machineCallback )
-							{
-							case MACHINECALLBACK_KNIFE :
-								knifeCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							case MACHINECALLBACK_PISTOL :
-								exampleGunCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							case MACHINECALLBACK_LIGHTER :
-								lighterCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							case MACHINECALLBACK_HOSPITAL :
-								paletteCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							case MACHINECALLBACK_MESSAGECOMPUTER :
-								communicationComputerCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
-								break;
-							}
-							break;
-						}
+					case MACHINECALLBACK_KNIFE :
+						knifeCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
+					case MACHINECALLBACK_PISTOL :
+						exampleGunCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
+					case MACHINECALLBACK_LIGHTER :
+						lighterCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
+					case MACHINECALLBACK_HOSPITAL :
+						paletteCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
+					case MACHINECALLBACK_MESSAGECOMPUTER :
+						communicationComputerCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
 					}
 				}
+
 			}
+
 		}
+
+		// for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
+		// {
+		// 	if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
+		// 	{
+		// 		if (game.animals[game.playerCreature].body[i].grabbedCreature >= 0 && game.animals[game.playerCreature].body[i].grabbedCreature < numberOfAnimals)
+		// 		{
+		// 			if (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].isMachine)
+		// 			{
+		// 				if (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].machineCallback !=  MATERIAL_NOTHING)
+		// 				{
+		// 					switch (game.animals [   game.animals[game.playerCreature].body[i].grabbedCreature  ].machineCallback )
+		// 					{
+		// 					case MACHINECALLBACK_KNIFE :
+		// 						knifeCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+		// 						break;
+		// 					case MACHINECALLBACK_PISTOL :
+		// 						exampleGunCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+		// 						break;
+		// 					case MACHINECALLBACK_LIGHTER :
+		// 						lighterCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+		// 						break;
+		// 					case MACHINECALLBACK_HOSPITAL :
+		// 						paletteCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+		// 						break;
+		// 					case MACHINECALLBACK_MESSAGECOMPUTER :
+		// 						communicationComputerCallback(game.animals[game.playerCreature].body[i].grabbedCreature , game.playerCreature  );
+		// 						break;
+		// 					}
+		// 					break;
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
+	}
+
+	if (game.ecologyComputerDisplay)
+	{
+		game.ecoSettings[game.activeEcoSetting] *= 1.5f;
 	}
 }
 
@@ -2095,7 +2164,7 @@ void organs_all()
 						// some machines are active when you're holding them
 
 
-					
+
 
 
 
@@ -2545,7 +2614,7 @@ void organs_all()
 				{
 					if (game.world[cellWorldPositionI].material == MATERIAL_GRASS)
 					{
-						game.animals[animalIndex].energy += grassEnergy ;
+						game.animals[animalIndex].energy += game.ecoSettings[1] ;
 						game.world[cellWorldPositionI].material = MATERIAL_NOTHING;
 					}
 					break;
@@ -2555,7 +2624,7 @@ void organs_all()
 				{
 					if (game.world[cellWorldPositionI].material == MATERIAL_FOOD)
 					{
-						game.animals[animalIndex].energy += foodEnergy ;
+						game.animals[animalIndex].energy += game.ecoSettings[0] ;
 						game.world[cellWorldPositionI].material = MATERIAL_NOTHING;
 					}
 					break;
@@ -2743,7 +2812,7 @@ void move_all()
 			{
 				if (taxIsByMass)
 				{
-					game.animals[animalIndex].energy -= taxEnergyScale *  organUpkeepCost(game.animals[animalIndex].body[cellIndex].organ); // * speciesEnergyOuts[speciesIndex] ;
+					game.animals[animalIndex].energy -= game.ecoSettings[3] *  organUpkeepCost(game.animals[animalIndex].body[cellIndex].organ); // * speciesEnergyOuts[speciesIndex] ;
 				}
 				bool okToStep = true;
 				int rotatedX = game.animals[animalIndex].body[cellIndex].localPosX * game.animals[animalIndex].fAngleCos - game.animals[animalIndex].body[cellIndex].localPosY * game.animals[animalIndex].fAngleSin;
@@ -2794,7 +2863,7 @@ void move_all()
 										}
 										if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE)
 										{
-											game.animals[animalIndex].energy += foodEnergy ;
+											game.animals[animalIndex].energy += game.ecoSettings[0] ;
 										}
 									}
 								}
@@ -3246,16 +3315,52 @@ void displayComputerText()
 			printText2D(   std::string("Species ") + std::to_string(i) +   std::string(" pop. " + std::to_string(game.speciesPopulationCounts[i])) + " hits " + std::to_string(game.speciesAttacksPerTurn[i]) , menuX, menuY, textSize);
 			menuY -= spacing;
 		}
-		menuY -= spacing;
-		printText2D(   std::string("Grass energy: ") + std::to_string(grassEnergy)  + std::string(", meat energy: ") + std::to_string(foodEnergy)   , menuX, menuY, textSize);
-		menuY -= spacing;
-		printText2D(   std::string("Resting tax: ") + std::to_string(taxEnergyScale)  + std::string(", movement tax: ") + std::to_string(movementEnergyScale) + std::string(", growth tax: ") + std::to_string(growthEnergyScale)   , menuX, menuY, textSize);
-		menuY -= spacing;
+		// menuY -= spacing;
+		// printText2D(   std::string("Grass energy: ") + std::to_string(game.ecoSettings[1])  +
+		//                std::string(", meat energy: ") + std::to_string(game.ecoSettings[0])   , menuX, menuY, textSize);
+		// menuY -= spacing;
+		// printText2D(   std::string("Resting tax: ") + std::to_string(game.ecoSettings[3])
+		//                + std::string(", movement tax: ") + std::to_string(game.ecoSettings[2])
+		//                , menuX, menuY, textSize);
+		// menuY -= spacing;
+
+		for (int j = 0; j < numberOfEcologySettings; ++j)
+		{
+			std::string selectString = std::string("");
+			if (j == game.activeEcoSetting) { selectString = std::string("X "); }
+			switch (j)
+			{
+			case 0:
+			{
+				printText2D(  selectString + std::string("Meat energy ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				break;
+			}
+			case 1:
+			{
+				// if (j == game.activeEcoSetting) { selectString = std::string("X "); }
+				printText2D( selectString +  std::string("Grass energy ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				break;
+			}
+			case 2:
+			{
+				// if (j == game.activeEcoSetting) { selectString = std::string("X "); }
+				printText2D( selectString +  std::string("Movement tax ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				break;
+			}
+			case 3:
+			{
+				// if (j == game.activeEcoSetting) { selectString = std::string("X "); }
+				printText2D( selectString +  std::string("Resting tax ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				break;
+			}
+			}
+
+			menuY -= spacing;
+		}
 	}
 
 	if (game.computerdisplays[0])
 	{
-		printText2D(   std::string("Animals are groups of tiles that move around. Each tile has a dedicated purpose.") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("Your body is made this way too. ") , menuX, menuY, textSize);
 		menuY -= spacing;
@@ -3418,13 +3523,13 @@ void drawGameInterfaceText()
 
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_HOSPITAL)
 				{
-					stringToPrint += std::string("[lmb, rmb] add, erase");
+					stringToPrint += std::string("[lmb] add [rmb] erase [y] next [h] prev");
 					game.palette = true;
 				}
 
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_ECOLOGYCOMPUTER)
 				{
-					// stringToPrint += std::string("[lmb] see stats");
+					stringToPrint += std::string("[lmb] + [rmb] - [y] next [h] last");
 					game.ecologyComputerDisplay = true;
 				}
 
@@ -3569,7 +3674,7 @@ void drawGameInterfaceText()
 
 
 
-		 playerGill = getRandomCellOfType( game.playerCreature, ORGAN_SENSOR_PAIN ) ;
+		playerGill = getRandomCellOfType( game.playerCreature, ORGAN_SENSOR_PAIN ) ;
 		if (playerGill >= 0)
 		{
 
@@ -3681,6 +3786,9 @@ void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 			break;
 		case 'R':
 			newColor = color_brown;
+			break;
+		case 'V':
+			newColor = color_charcoal;
 			break;
 			// case 'E':
 			// 	newOrgan = ORGAN_SENSOR_EYE;

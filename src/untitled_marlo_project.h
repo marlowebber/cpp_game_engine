@@ -17,13 +17,11 @@ const unsigned int logLength = 64;
 const float playerSpeed = 0.3f;
 const float panSpeed = 0.1f;
 const unsigned int numberOfSpeakerChannels = 16;
-
+const unsigned int numberOfEcologySettings = 4;
 
 const float  maxZoom = 450.0f;
 const float  minZoom = 50.0f;
 
-
-const float growthEnergyScale      = 1.0f;         // a multiplier for how much it costs game.animals to make new cells.
 const bool variedGrowthCost      = false;
 const bool variedUpkeep          = false;
 
@@ -121,6 +119,16 @@ struct Animal
 };
 
 
+// struct EcologySettings
+// {
+// float taxEnergyScale         ;//= 0.00000f;        // a multiplier for how much it animals just to exist.
+// float movementEnergyScale    ;//= 0.00000f;        // a multiplier for how much it animals to move.
+// float foodEnergy             ;//= 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
+// float grassEnergy            ;//= 0.25f;         // how much you get from eating a square of grass
+
+// };
+
+
 // these parts need to be recorded in between sessions.
 struct GameState
 {
@@ -178,6 +186,11 @@ struct GameState
     Animal animals[numberOfAnimals];
 
     struct Square world[worldSquareSize];
+
+    // EcologySettings ecoSettings;
+    float ecoSettings[numberOfEcologySettings];
+
+    unsigned int activeEcoSetting;
 } ;
 
 
