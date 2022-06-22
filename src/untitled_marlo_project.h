@@ -9,7 +9,7 @@ const int worldSize = 4096;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
 const unsigned int numberOfAnimals = 2500;
-const unsigned int numberOfSpecies = 8;
+const unsigned int numberOfSpecies = 4;
 const unsigned int animalSquareSize      = 512;
 const unsigned int displayNameSize = 32;
 const unsigned int nLogs = 32;
@@ -128,7 +128,7 @@ struct GameState
     char version[displayNameSize];
 
     // these variables are how the player drives their character, and what they get back from it.
-    unsigned int playerActiveGrabber;
+    int playerActiveGrabber;
     bool playerGrabState ;
     bool playerCanSee ;
     bool playerCanHear ;

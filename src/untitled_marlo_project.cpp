@@ -42,15 +42,12 @@
 
 #include "content.h"
 
-const bool immortality           = false;
 const bool doReproduction        = true;
 const bool doMuscles             = true;
 const bool taxIsByMass           = true;
-const bool threading             = true;
 const bool cameraFollowsChampion = false;
 const bool cameraFollowsPlayer   = true;
 const bool respawnLowSpecies     = true;
-const bool doMutation            = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
 
@@ -68,7 +65,7 @@ const unsigned int nNeighbours     = 8;
 const float taxEnergyScale         = 0.00000f;        // a multiplier for how much it animals just to exist.
 const float movementEnergyScale    = 0.00000f;        // a multiplier for how much it animals to move.
 const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
-const float grassEnergy            = 0.3f;         // how much you get from eating a square of grass
+const float grassEnergy            = 0.25f;         // how much you get from eating a square of grass
 const float neuralNoise = 0.1f;
 const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 20000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
@@ -77,6 +74,8 @@ const float musclePower = 40.0f;
 const float const_pi = 3.1415f;
 
 const float aBreath = 0.01f;
+
+const float neuralMutationStrength = 0.1f;
 
 const int paletteMenuX = 300;
 const int paletteMenuY = 50;
@@ -954,6 +953,16 @@ int getRandomPopulatedCell(unsigned int animalIndex)
 // the opposite of append cell- remove a cell from the genes and body, shifting all other cells backwards and updating all connections.
 void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 {
+
+
+	// record the signal intensities, so when you reconstruct the cells from their genes, you can put the intensities back just so.
+	float signalIntensities[animalSquareSize];
+	for (int cellIndex = 0; cellIndex < animalSquareSize; ++cellIndex)
+	{
+		signalIntensities[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity;
+	}
+
+
 	for (int cellIndex = cellToDelete + 1; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex) // shift array of cells down 1, overwriting the lowest modified cell (the cell to delete)
 	{
 		game.animals[animalIndex].genes[cellIndex - 1] = game.animals[animalIndex].genes[cellIndex];
@@ -973,34 +982,50 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 			}
 		}
 		game.animals[animalIndex].body[cellIndex] = game.animals[animalIndex].genes[cellIndex] ;
+
+
+
 	}
+
+	for (int cellIndex = 0; cellIndex < animalSquareSize - 1; ++cellIndex)
+	{
+		game.animals[animalIndex].body[cellIndex].signalIntensity = signalIntensities[cellIndex + 1];
+	}
+
 }
 
 void mutateAnimal(unsigned int animalIndex)
 {
 	// some mutations are chosen more commonly than others. They are classed into groups, and each group is associated with a normalized likelyhood of occurring.
 	// the reason for this is that the development of the brain must always occur faster and in more detail than the development of the body, or else intelligent behavior can never arise.
-	float group1Probability = 1.0f;
-	float group2Probability = 0.5f;
-	float group3Probability = 0.125f;
-	float group4Probability = 0.0625f;
+	const float group1Probability = 1.0f;
+	const float group2Probability = 0.5f;
+	const float group3Probability = 0.125f;
+	const float group4Probability = 0.0625f;
 	float sum = group1Probability + group2Probability + group3Probability + group4Probability;
 	float groupChoice = RNG() * sum;
 	int group = 0;
 	if (groupChoice < group1Probability ) // chosen group 1
 	{
+		// printf("group 1 mutation\n");
 		group = 1;
 	}
 	else if (groupChoice > (group1Probability) &&  groupChoice < (group1Probability + group2Probability) ) // chosen group 2
 	{
+
+		// printf("group 2 mutation\n");
 		group = 2;
 	}
 	else if (groupChoice > (group1Probability + group2Probability) &&  groupChoice < (group1Probability + group2Probability + group3Probability) ) // chosen group 3
 	{
+
+		// printf("group 3 mutation\n");
 		group = 3;
 	}
 	else if (groupChoice > (group1Probability + group2Probability + group3Probability) &&  groupChoice < (sum) ) // chosen group 4
 	{
+
+		// printf("group 4 mutation\n");
 		group = 4;
 	}
 	int mutation = MATERIAL_NOTHING;// choose a mutation from the group randomly.
@@ -1110,14 +1135,15 @@ void mutateAnimal(unsigned int animalIndex)
 		if (mutantCell >= 0)
 		{
 			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-			if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
-			{
-				game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight *= ((RNG() - 0.5) * 4);
-			}
-			else // add to it
-			{
-				game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight += ((RNG() - 0.5 ) * 2);
-			}
+			// if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
+			// {
+			game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight *= ((RNG() - 0.5f) * neuralMutationStrength);
+			game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight += ((RNG() - 0.5f) * neuralMutationStrength);
+			// }
+			// else // add to it
+			// {
+			// 	game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight += ((RNG() - 0.5 ) * 2);
+			// }
 		}
 		break;
 	}
@@ -1126,14 +1152,10 @@ void mutateAnimal(unsigned int animalIndex)
 		int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
 		if (mutantCell >= 0)
 		{
-			if (extremelyFastNumberFromZeroTo(1) == 0) // multiply it
-			{
-				game.animals[animalIndex].genes[mutantCell].signalIntensity *= ((RNG() - 0.5 ) * 4);;
-			}
-			else // add to it
-			{
-				game.animals[animalIndex].genes[mutantCell].signalIntensity += ((RNG() - 0.5 ) * 2);;
-			}
+
+			game.animals[animalIndex].genes[mutantCell].signalIntensity *= ((RNG() - 0.5f ) * neuralMutationStrength);
+			game.animals[animalIndex].genes[mutantCell].signalIntensity += ((RNG() - 0.5f ) * neuralMutationStrength);
+
 		}
 		break;
 	}
@@ -1960,6 +1982,19 @@ void organs_all()
 
 				}
 
+
+				case TILE_DESTROYER_EYE:
+				{
+					// pick a random tile within range, see if it contains an animal not of species 0, and shoot it if so.
+
+					const int destroyerRange = 250;
+					int randomX = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange/2);
+					int randomY = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange/2);
+
+
+
+				}
+
 				case ORGAN_GRABBER:
 				{
 
@@ -2034,6 +2069,7 @@ void organs_all()
 
 								spawnAnimalIntoSlot( animalIndex, game.animals[animalIndex], game.animals[animalIndex].position, true );
 							}
+
 
 						}
 					}
@@ -2121,6 +2157,10 @@ void organs_all()
 							// }
 							game.animals[animalIndex].body[cellIndex].grabbedCreature = -1;
 							game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+
+
+
+
 						}
 					}
 					break;
@@ -2854,7 +2894,7 @@ void energy_all() // perform energies.
 				}
 			}
 			bool execute = false;
-			if (!immortality && !game.animals[animalIndex].isMachine) // reasons an npc can die
+			if ( !game.animals[animalIndex].isMachine) // reasons an npc can die
 			{
 				if (game.speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) && animalIndex != game.playerCreature) // only kill off weak game.animals if there is some population.
 					if (game.animals[animalIndex].energy < 0.0f)
@@ -2918,26 +2958,18 @@ void energy_all() // perform energies.
 
 void computeAllAnimalsOneTurn()
 {
-	if (threading)
-	{
 
-		boost::thread t11{ updateMap };
-		boost::thread t8{ organs_all };
-		boost::thread t9{ move_all   };
-		boost::thread t10{ energy_all };
-		t10.join();
-		t9.join();
-		t8.join();
-		t11.join();
 
-	}
-	else
-	{
-		energy_all();
-		organs_all();
-		move_all();
-		updateMap();
-	}
+	boost::thread t11{ updateMap };
+	boost::thread t8{ organs_all };
+	boost::thread t9{ move_all   };
+	boost::thread t10{ energy_all };
+	t10.join();
+	t9.join();
+	t8.join();
+	t11.join();
+
+
 }
 
 
@@ -3357,10 +3389,17 @@ void drawGameInterfaceText()
 			}
 		}
 	}
-
+	if (holding == 0)
+	{
+		game.playerActiveGrabber = -1;
+	}
 
 	if (holding > 0)
 	{
+		if (game.playerActiveGrabber < 0)
+		{
+			incrementSelectedGrabber();
+		}
 
 		std::string stringToPrint;
 
@@ -3792,6 +3831,9 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 		case '2':
 			newOrgan = MATERIAL_GLASS;
 			break;
+		case '3':
+			newOrgan = MATERIAL_GLASS;
+			break;
 
 		}
 		if (newOrgan != MATERIAL_NOTHING)
@@ -3812,7 +3854,7 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 void spawnAdversary(unsigned int targetWorldPositionI)
 {
 	game.adversary = numberOfAnimalsPerSpecies + 1; // game.adversary animal is a low number index in the 1th species. 0th is for players and machines.
-	spawnAnimalIntoSlot(game.adversary, game.champion, targetWorldPositionI, false);
+	spawnAnimalIntoSlot(game.adversary, game.champion, targetWorldPositionI, true);
 	game.animals[game.adversary].position = targetWorldPositionI;
 	game.animals[game.adversary].uPosX = targetWorldPositionI % worldSize;
 	game.animals[game.adversary].uPosY = targetWorldPositionI / worldSize;
@@ -3896,20 +3938,6 @@ void saveSelectedAnimal ( )
 	if (game.selectedAnimal >= 0)
 	{
 		saveParticularAnimal(game.selectedAnimal, std::string("save/game.selectedAnimal") );
-	}
-}
-
-void spawnTournamentAnimals()
-{
-	if (game.adversary >= 0)
-	{
-		for (int i = (1 * numberOfAnimalsPerSpecies); i < numberOfAnimals; ++i)// game.animals in the tournament are not in the 0th species, which is for players and machines.
-		{
-			unsigned int targetWorldPositionI = game.animals[game.adversary].position;
-			int j = 1;
-			setupExampleAnimal2(j);
-			spawnAnimalIntoSlot(i, game.animals[j], targetWorldPositionI, true);
-		}
 	}
 }
 
@@ -4143,7 +4171,7 @@ void setupRandomWorld()
 	worldCreationStage = 1;
 	// worldCreationStage++;
 	resetGameState();
-	worldCreationStage =2;
+	worldCreationStage = 2;
 	float initWaterLevel = 1.0f;
 	for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
 	{
