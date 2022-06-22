@@ -5,7 +5,7 @@
 #include "utilities.h"
 
 
-const int worldSize = 4096;
+const int worldSize = 3500;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
 const unsigned int numberOfAnimals = 2500;
@@ -31,10 +31,10 @@ extern bool flagCreate ;
 extern bool flagLoad   ;
 extern bool flagReady  ;
 extern bool flagReturn ;
+extern bool flagSave ;
 extern int mouseX;
 extern int mouseY;
 extern int worldCreationStage;
-
 
 
 
@@ -52,6 +52,13 @@ struct Square
     float pheromoneIntensity;
     int pheromoneChannel;
     Color grassColor;
+
+    char genes[16];
+    char seedGenes[16];
+    unsigned int state;
+    unsigned int geneCursor;
+    float energy;
+    float energyDebt;
 };
 
 struct Connection
@@ -127,6 +134,7 @@ struct Animal
 // float grassEnergy            ;//= 0.25f;         // how much you get from eating a square of grass
 
 // };
+
 
 
 // these parts need to be recorded in between sessions.

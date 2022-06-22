@@ -163,6 +163,7 @@ bool flagCreate = false;
 bool flagLoad = false;
 bool flagReady = false;
 bool flagReturn = false;
+bool flagSave = false;
 int mouseX;
 int mouseY;
 int worldCreationStage = 0;
@@ -3034,6 +3035,8 @@ void computeAllAnimalsOneTurn()
 
 void camera()
 {
+	if (flagSave) { return;}
+
 	if (game.cameraTargetCreature >= 0)
 	{
 		game.cameraPositionX = game.animals[game.cameraTargetCreature].position % worldSize;
@@ -3443,6 +3446,15 @@ void drawGameInterfaceText()
 	int menuY = 50;
 	int textSize = 10;
 	int spacing = 20;
+
+
+	if (flagSave)
+	{
+	printText2D(   std::string("saving") , menuX, menuY, textSize);
+	menuY += spacing;
+	return;	
+	}
+
 
 
 	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
@@ -4543,7 +4555,7 @@ void model()
 {
 	// auto start = std::chrono::steady_clock::now();
 	ZoneScoped;
-	if (!game.paused)
+	if (!game.paused && !flagSave)
 	{
 		tournamentController();
 		computeAllAnimalsOneTurn();
@@ -4676,9 +4688,13 @@ void startSimulation()
 
 void save()
 {
+	flagSave = true;
+	worldCreationStage = 13;
 	std::ofstream out6(std::string("save/game").c_str());
 	out6.write( (char*)(&game), sizeof(GameState) );
 	out6.close();
+	worldCreationStage = 10;
+	flagSave = false;
 }
 
 void load()
