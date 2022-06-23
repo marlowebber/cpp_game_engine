@@ -161,6 +161,7 @@ struct GameState
     bool paused ;
     int mousePositionX ;
     int mousePositionY ;
+    bool playerLMBDown;
 
     // these variables keep track of the main characters in the game world.
     int playerCreature ;
@@ -235,6 +236,7 @@ void drawGameInterfaceText();
 void drawMainMenuText();
 void incrementCameraPos(Vec_i2 in);
 void incrementSelectedGrabber();
+void notifyLMBUp();
 
 // the following are used privately to create the game content.
 void animalAppendCell(unsigned int animalIndex, unsigned int organType);

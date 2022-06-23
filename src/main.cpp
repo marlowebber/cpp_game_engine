@@ -238,26 +238,27 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
-				if (capturingText)
-				{
-					editUserDataCallback () ;
-				}
-				if ( checkMenus ( mouseX,  mouseY) )
-				{
-					return;
-				}
-				else
-				{
+				// if (capturingText)
+				// {
+				// 	editUserDataCallback () ;
+				// }
+				// if ( checkMenus ( mouseX,  mouseY) )
+				// {
+				// 	return;
+				// }
+				// else
+				// {
 					activateGrabbedMachine();
-				}
+				// }
 				break;
 			}
 			case SDL_BUTTON_RIGHT:
 			{
 				rightClickCallback();
+				break;
+			}
 			}
 			break;
-			}
 		}
 		case SDL_MOUSEBUTTONUP:
 		{
@@ -265,14 +266,16 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
-				if ( draggedMenu != nullptr )
-				{
-					clearDraggingMenu();
-				}
+
+				notifyLMBUp();
+				// if ( draggedMenu != nullptr )
+				// {
+				// 	clearDraggingMenu();
+				// }
 				break;
 			}
-			break;
 			}
+			break;
 		}
 		case SDL_MOUSEMOTION:
 		{

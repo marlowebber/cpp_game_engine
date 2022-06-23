@@ -506,6 +506,7 @@ void resetGameState()
 	game.playerRespawnPos;
 	game.adversaryDefeated = false;
 	game.adversaryCreated = false;
+	game.playerLMBDown = false;
 
 
 	// camera view
@@ -1443,7 +1444,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 
 		if (organVisible(game.animals[viewedAnimal].body[occupyingCell].organ ))
 		{
-			
+
 			displayColor = organColors(game.animals[viewedAnimal].body[occupyingCell].organ );
 		}
 
@@ -1451,12 +1452,12 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		{
 			displayColor = organColors(game.animals[viewedAnimal].body[occupyingCell].organ );
 
-			displayColor = mixColor( displayColor, color_brightred , ((game.animals[viewedAnimal].body[occupyingCell].damage )- 0.5f)*2.0f );
+			displayColor = mixColor( displayColor, color_brightred , ((game.animals[viewedAnimal].body[occupyingCell].damage ) - 0.5f) * 2.0f );
 		}
 		else
 		{
 			displayColor = game.animals[viewedAnimal].body[occupyingCell].color;
-			displayColor = mixColor( color_brightred, displayColor, (game.animals[viewedAnimal].body[occupyingCell].damage)*2.0f );
+			displayColor = mixColor( color_brightred, displayColor, (game.animals[viewedAnimal].body[occupyingCell].damage) * 2.0f );
 		}
 		if (viewedAnimal == game.selectedAnimal) // highlight selected animal.
 		{
@@ -2215,6 +2216,8 @@ bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, 
 
 }
 
+ int lastCutSquare = 0;
+
 void knifeCallback( int gunIndex, int shooterIndex )
 {
 	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
@@ -2225,7 +2228,11 @@ void knifeCallback( int gunIndex, int shooterIndex )
 		int occupyingCell = isAnimalInSquare(game.cursorAnimal, worldCursorPos);
 		if ( occupyingCell >= 0)
 		{
-			hurtAnimal(game.cursorAnimal, occupyingCell, 0.3f, shooterIndex);
+			if (occupyingCell != lastCutSquare)
+			{
+				hurtAnimal(game.cursorAnimal, occupyingCell, 0.3f, shooterIndex);
+				lastCutSquare = occupyingCell;
+			}
 		}
 	}
 }
@@ -2334,8 +2341,16 @@ int getGrabbableItem(unsigned int animalIndex, unsigned int cellIndex)
 
 
 
+void notifyLMBUp()
+{
+	// printf("LMB up\n");
+	game.playerLMBDown = false;
+}
+
 void activateGrabbedMachine()// occurs whenever a left click is received.
 {
+	// printf("LMB down\n");
+	game.playerLMBDown = true;
 	if (game.playerCreature >= 0)
 	{
 
@@ -2350,9 +2365,9 @@ void activateGrabbedMachine()// occurs whenever a left click is received.
 
 					switch (game.animals [   game.animals [ game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback )
 					{
-					case MACHINECALLBACK_KNIFE :
-						knifeCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
-						break;
+					// case MACHINECALLBACK_KNIFE :
+					// 	knifeCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+					// 	break;
 					case MACHINECALLBACK_PISTOL :
 						exampleGunCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
 						break;
@@ -3970,11 +3985,17 @@ void drawGameInterfaceText()
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_KNIFE)
 				{
 					stringToPrint += std::string("[lmb] cut");
+
+					if (game.playerLMBDown)
+					{
+						// printf("feegmahteeties\n");
+						knifeCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+					}
 				}
 
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_PISTOL)
 				{
-					stringToPrint += std::string(" lmb] shoot");
+					stringToPrint += std::string("[lmb] shoot");
 				}
 
 
