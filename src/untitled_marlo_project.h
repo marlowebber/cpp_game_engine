@@ -36,7 +36,7 @@ extern int mouseX;
 extern int mouseY;
 extern int worldCreationStage;
 
-const float plantGenomeSize = 16;
+const unsigned int plantGenomeSize = 16;
 const float lightEnergy = 1.0f;
 
 struct Square
@@ -54,7 +54,7 @@ struct Square
     int pheromoneChannel;
     Color grassColor;
 
-    char genes[plantGenomeSize];
+    char plantGenes[plantGenomeSize];
     char seedGenes[plantGenomeSize];
      int plantState;
      int geneCursor;

@@ -1515,7 +1515,7 @@ unsigned int plantIdentityCursor = 0;
 int getNewPlantIdentity()
 {
 	plantIdentityCursor++;
-	return plantIdentityCursor
+	return plantIdentityCursor;
 }
 
 
@@ -1523,45 +1523,18 @@ int getNewPlantIdentity()
 
 void growPlants(unsigned int worldI)
 {
-
-
-
-// #define PLANTGENE_GROW_0      1
-// #define PLANTGENE_GROW_1      2
-// #define PLANTGENE_GROW_2      3
-// #define PLANTGENE_GROW_3      4
-// #define PLANTGENE_GROW_4      5
-// #define PLANTGENE_GROW_5      6
-// #define PLANTGENE_GROW_6      7
-// #define PLANTGENE_GROW_7      8
-// #define PLANTGENE_GROW_SYMM_H 9
-// #define PLANTGENE_GROW_SYMM_V 10
-// #define PLANTGENE_RED         11
-// #define PLANTGENE_GREEN       12
-// #define PLANTGENE_BLUE        13
-
-
-// #define PLANTGENE_LIGHT       14
-// #define PLANTGENE_DARK        15
-
-// #define PLANTGENE_SEED        16
-// #define PLANTGENE_GOTO        17
-
-
 	bool growthMatrix[nNeighbours];
 	for (int i = 0; i < nNeighbours; ++i)
 	{
 		growthMatrix[i] = false;
 	}
-
+	unsigned int turns = 0;
 	while (true)
 	{
+		turns++; if (turns > plantGenomeSize) { return; }
 		if (game.world[worldI].geneCursor >= plantGenomeSize) {return;}
-
 		char c = game.world[worldI].plantGenes[game.world[worldI].geneCursor];
-
 		bool done = false;
-
 		if (c < nNeighbours)
 		{
 			growthMatrix[c] = !growthMatrix[c];
@@ -1631,7 +1604,6 @@ void growPlants(unsigned int worldI)
 				game.world[worldI].grassColor = clampColor(game.world[worldI].grassColor);
 				break;
 			}
-
 			case PLANTGENE_SEED:
 			{
 				for (int i = 0; i < nNeighbours; ++i)
@@ -1650,7 +1622,6 @@ void growPlants(unsigned int worldI)
 				}
 				break;
 			}
-
 			case PLANTGENE_LEAF:
 			{
 				for (int i = 0; i < nNeighbours; ++i)
@@ -1669,38 +1640,20 @@ void growPlants(unsigned int worldI)
 				}
 				break;
 			}
-
-
 			case PLANTGENE_GOTO:
 			{
 				game.world[worldI].geneCursor = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1];
 				break;
 			}
-
-
 			}
-
+			game.world[worldI].geneCursor ++;
 			if (done)
 			{
 				return;
 			}
-
-
-			game.world[neighbour].geneCursor ++;
 		}
-
-
-
-
-
 	}
-
-
-
-
 }
-
-
 
 void updatePlants(unsigned int worldI)
 {
@@ -1746,7 +1699,7 @@ void updatePlants(unsigned int worldI)
 			game.world[worldI].plantState = PLANT_STATE_LEAF;
 			game.world[worldI].plantIdentity = getNewPlantIdentity();
 			game.world[worldI].geneCursor = 0;
-			memcpy( & (game.world[neighbour].genes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
+			memcpy( & (game.world[worldI].plantGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
 
 		}
 		else
