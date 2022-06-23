@@ -2137,12 +2137,50 @@ void defeatAdversary()
 
 	game.adversaryDefeated = true;
 	killAnimal(game.adversary);
+
+	appendLog( std::string("the adversary was killed!") );
 }
 
 
 
 void healAnimal(unsigned int animalIndex)
 {
+
+	int pre = 0;
+	for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+	{
+		if (game.animals[animalIndex].body[i].damage > 1.0f)
+		{
+			pre++;
+		}
+	}
+
+	for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+	{
+		if (game.animals[animalIndex].body[i].damage > 0.0f)
+		{
+			game.animals[animalIndex].body[i].damage -= 0.05f;
+		}
+		else
+		{
+			game.animals[animalIndex].body[i].damage = 0.0f;
+		}
+	}
+
+	int post = 0;
+	for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+	{
+		if (game.animals[animalIndex].body[i].damage > 1.0f)
+		{
+			post++;
+		}
+	}
+
+	int diff = pre - post;
+	if (diff <= game.animals[animalIndex].damageReceived)
+	{
+		game.animals[animalIndex].damageReceived -= diff;
+	}
 
 }
 
@@ -2216,7 +2254,7 @@ bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, 
 
 }
 
- int lastCutSquare = 0;
+int lastCutSquare = 0;
 
 void knifeCallback( int gunIndex, int shooterIndex )
 {
@@ -2237,42 +2275,53 @@ void knifeCallback( int gunIndex, int shooterIndex )
 	}
 }
 
+
+void shoot(unsigned int gunIndex, int shooterIndex,  unsigned int shootWorldPosition, float angle)
+{
+	float bulletPosX = shootWorldPosition % worldSize;
+	float bulletPosY = shootWorldPosition / worldSize;
+
+	unsigned int range = 1000;
+	for (int i = 0; i < range; ++i)
+	{
+		bulletPosX += 1.0f * (cos(angle));
+		bulletPosY += 1.0f * (sin(angle));
+		unsigned int ubulletPosX = bulletPosX;
+		unsigned int ubulletPosY = bulletPosY;
+		unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
+		if (shootWorldPosition < worldSquareSize)
+		{
+			if (game.world[shootWorldPosition].identity >= 0 && game.world[shootWorldPosition].identity != gunIndex && game.world[shootWorldPosition].identity < numberOfAnimals && game.world[shootWorldPosition].identity != shooterIndex)
+			{
+				unsigned int shotOffNub = isAnimalInSquare(game.world[shootWorldPosition].identity, shootWorldPosition);
+				if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
+				{
+					hurtAnimal(game.world[shootWorldPosition].identity, shotOffNub, 0.35f + RNG(), shooterIndex);
+				}
+			}
+			if (game.world[shootWorldPosition].wall == MATERIAL_NOTHING )
+			{
+				game.world[shootWorldPosition].wall = MATERIAL_SMOKE;
+			}
+			if ( materialBlocksMovement( game.world[shootWorldPosition].wall)  )
+			{
+				game.world[shootWorldPosition].wall = MATERIAL_NOTHING;
+				break;
+			}
+		}
+	}
+
+}
+
 void exampleGunCallback( int gunIndex, int shooterIndex)
 {
 	if (gunIndex >= 0)
 	{
-		unsigned int range = 1000;
-		float bulletPosX = game.animals[gunIndex].fPosX;// trace a line from the gun and destroy any tissue found on the way.
-		float bulletPosY = game.animals[gunIndex].fPosY;
-		float angle      =  game.animals[gunIndex].fAngle;
-		for (int i = 0; i < range; ++i)
-		{
-			bulletPosX += 1.0f * (cos(angle));
-			bulletPosY += 1.0f * (sin(angle));
-			unsigned int ubulletPosX = bulletPosX;
-			unsigned int ubulletPosY = bulletPosY;
-			unsigned int shootWorldPosition = (ubulletPosY * worldSize) + ubulletPosX;
-			if (shootWorldPosition < worldSquareSize)
-			{
-				if (game.world[shootWorldPosition].identity >= 0 && game.world[shootWorldPosition].identity != gunIndex && game.world[shootWorldPosition].identity < numberOfAnimals && game.world[shootWorldPosition].identity != shooterIndex)
-				{
-					unsigned int shotOffNub = isAnimalInSquare(game.world[shootWorldPosition].identity, shootWorldPosition);
-					if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
-					{
-						hurtAnimal(game.world[shootWorldPosition].identity, shotOffNub, 0.35f + RNG(), shooterIndex);
-					}
-				}
-				if (game.world[shootWorldPosition].wall == MATERIAL_NOTHING )
-				{
-					game.world[shootWorldPosition].wall = MATERIAL_SMOKE;
-				}
-				if ( materialBlocksMovement( game.world[shootWorldPosition].wall)  )
-				{
-					game.world[shootWorldPosition].wall = MATERIAL_NOTHING;
-					break;
-				}
-			}
-		}
+		// float bulletPosX = game.animals[gunIndex].fPosX;// trace a line from the gun and destroy any tissue found on the way.
+		// float bulletPosY = game.animals[gunIndex].fPosY;
+		// float angle      =
+
+		shoot( gunIndex, shooterIndex,  game.animals[gunIndex].position, game.animals[gunIndex].fAngle);
 	}
 }
 
@@ -2473,9 +2522,32 @@ void organs_all()
 				{
 					// pick a random tile within range, see if it contains an animal not of species 0, and shoot it if so.
 
-					const int destroyerRange = 250;
+					const int destroyerRange = 1000;
 					int randomX = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange / 2);
 					int randomY = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange / 2);
+
+					int targetPosX = cellWorldPositionX + randomX;
+					int targetPosY = cellWorldPositionY + randomY;
+					unsigned int targetPosI = (targetPosY * worldSize) + targetPosX;
+
+					if (targetPosI < worldSquareSize)
+					{
+						if (game.world[targetPosI].identity >= 0)
+						{
+							if (isAnimalInSquare( game.world[targetPosI].identity , targetPosI ) >= 0)
+							{
+
+								float diffx = cellWorldPositionX - targetPosX;
+								float diffy = cellWorldPositionY - targetPosY;
+								float angleToTarget =  atan2( diffy  , diffx );
+
+								// float angleToCursor = atan2(   fmousePositionY - (  game.cameraPositionY - fposy)  ,  fmousePositionX - (game.cameraPositionX - fposx));
+
+								shoot( animalIndex, animalIndex,  game.animals[animalIndex].position, angleToTarget);
+							}
+						}
+					}
+
 
 
 
@@ -3023,11 +3095,27 @@ void organs_all()
 
 				case ORGAN_MOUTH_VEG :
 				{
-					if (game.world[cellWorldPositionI].wall == MATERIAL_GRASS)
+
+					if (game.world[cellWorldPositionI].plantState == MATERIAL_BUD)
+					{
+						game.animals[animalIndex].energy += game.ecoSettings[1] ;
+						game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
+					}
+
+					else if (game.world[cellWorldPositionI].plantState == MATERIAL_LEAF)
+					{
+						game.animals[animalIndex].energy += game.ecoSettings[1] ;
+						game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
+					}
+
+					else if (game.world[cellWorldPositionI].wall == MATERIAL_GRASS)
 					{
 						game.animals[animalIndex].energy += game.ecoSettings[1] ;
 						game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
 					}
+
+
+
 					break;
 				}
 
@@ -3872,7 +3960,7 @@ void incrementSelectedGrabber()
 void drawInterfacePanel()
 {
 
-    drawRectangle( Vec_f2 (0.0f, 0.0f) , color_black, 100.0f, 100.0f);
+	drawRectangle( Vec_f2 (0.0f, 0.0f) , color_black, 100.0f, 100.0f);
 
 }
 
@@ -3974,6 +4062,9 @@ void drawGameInterfaceText()
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_HOSPITAL)
 				{
 					stringToPrint += std::string("[lmb] add [rmb] erase [y] next [h] prev");
+
+
+					healAnimal(game.playerCreature);
 					game.palette = true;
 				}
 
@@ -4411,7 +4502,7 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 			newOrgan = MATERIAL_GLASS;
 			break;
 		case '3':
-			newOrgan = MATERIAL_GLASS;
+			newOrgan = TILE_DESTROYER_EYE;
 			break;
 
 		}
@@ -4708,6 +4799,16 @@ void setupGameItems()
 	setupHospitalComputer(i);
 	spawnAnimalIntoSlot(5, game.animals[i], targetWorldPositionI, false);
 
+	targetWorldPositionI += 25 * worldSize;
+	game.playerRespawnPos = targetWorldPositionI;
+	spawnPlayer();
+
+
+	targetWorldPositionI += 25;
+	setupDestroyer( i);
+	spawnAnimalIntoSlot(12, game.animals[i], targetWorldPositionI, false);
+
+
 
 	targetWorldPositionI += 25 * worldSize;
 	setupMessageComputer( i);
@@ -4731,14 +4832,15 @@ void setupGameItems()
 	setupExampleKnife(i);
 	spawnAnimalIntoSlot(6, game.animals[i], targetWorldPositionI, false);
 
-	targetWorldPositionI += 25 * worldSize;
-	game.playerRespawnPos = targetWorldPositionI;
-	spawnPlayer();
-
 
 	targetWorldPositionI += 25;
 	setupExampleLighter(i);
 	spawnAnimalIntoSlot(7, game.animals[i], targetWorldPositionI, false);
+
+
+	// targetWorldPositionI += 25;
+	// setupDestroyer( i);
+	// spawnAnimalIntoSlot(12, game.animals[i], targetWorldPositionI, false);
 
 	// targetWorldPositionI =  getRandomPosition(true);
 	// setupBuilding_playerBase(targetWorldPositionI);

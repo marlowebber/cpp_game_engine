@@ -85,6 +85,7 @@
 #define MACHINECALLBACK_NEUROGLASSES     105
 #define MACHINECALLBACK_ECOLOGYCOMPUTER  106
 #define MACHINECALLBACK_LIGHTER          107
+#define MACHINECALLBACK_DESTROYER        108
 
 #define MUTATION_CONNECTIONWEIGHT 10006
 #define MUTATION_ALTERBIAS        10007
@@ -1016,19 +1017,30 @@ void setupExampleHuman(int i)
 
 void setupDestroyer(int i)
 {
-	char trackerGlasses[] =
+	char destroyer[] =
 	{
-		' ', '2', ' ', '2', ' ',
-		'2', '2', '1', '2', '2',
-		' ', '2', ' ', '2', ' ',
-		' ', '2', ' ', '2', ' ',
-		'2', '2', '1', '2', '2',
-		' ', '2', ' ', '2', ' ',
-		' ', '2', ' ', '2', ' ',
-		'2', '2', '1', '2', '2',
-		' ', '2', ' ', '2', ' ',
+		' ', ' ', '1', ' ', ' ',
+		' ', '1', '1', '1', ' ',
+		' ', '1', '1', '1', ' ',
+		'1', '1', '1', '1', '1',
+		'1', '1', '3', '1', '1',
+		'1', '1', '1', '1', '1',
+		' ', '1', '1', '1', ' ',
+		' ', '1', '1', '1', ' ',
+		' ', '1', '1', '1', ' ',
+		' ', '1', '1', '1', ' ',
+		' ', '1', '1', '1', ' ',
+		' ', '1', '1', '1', ' ',
+		' ', '1', '1', '1', ' ',
+		' ', ' ', '1', ' ', ' ',
+		' ', ' ', '1', ' ', ' ',
+		' ', ' ', '1', ' ', ' ',
+		' ', ' ', '1', ' ', ' ',
+		' ', ' ', '1', ' ', ' ',
+		' ', ' ', '1', ' ', ' ',
+		' ', ' ', '1', ' ', ' ',
 	};
-	setupCreatureFromCharArray( i, trackerGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_TRACKERGLASSES);
+	setupCreatureFromCharArray( i, destroyer, 20*5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
 }
 
 

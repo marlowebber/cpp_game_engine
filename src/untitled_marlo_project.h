@@ -6,7 +6,7 @@
 
 
 const unsigned int nNeighbours     = 8;
-const int worldSize = 3450;
+const int worldSize = 3400;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
 const unsigned int numberOfAnimals = 2500;
@@ -66,6 +66,7 @@ struct Square
     float energy;
     float energyDebt;
 
+    int sequenceNumber;
     bool growthMatrix[nNeighbours];
 };
 
