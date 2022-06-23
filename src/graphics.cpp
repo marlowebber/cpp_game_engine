@@ -234,7 +234,7 @@ void drawTile( Vec_f2 position , Color finalColor)
 
 
 
-void drawPanel( Vec_f2 position , Color finalColor, float panelWidth, float panelHeight)
+void drawRectangle( Vec_f2 position , Color finalColor, float panelWidth, float panelHeight)
 {
 
 	vertToBuffer ( finalColor, Vec_f2 (  position.x -    panelWidth          , position.y -     panelHeight            ) );
@@ -613,6 +613,9 @@ void postDraw ()
 	float panResponseY = (panDifferenceY * -1) / cameraTrackingResponse;
 	viewPanX +=  panResponseX ;
 	viewPanY += panResponseY ;
+
+	viewPanSetpointX = clamp(viewPanSetpointX, -1.0f * viewPanLimit, viewPanLimit );
+	viewPanSetpointY = clamp(viewPanSetpointY, -1.0f * viewPanLimit, viewPanLimit );
 }
 
 void addExamplePanelToBuffer()
@@ -660,6 +663,9 @@ void threadGraphics()
 	prepareForMenuDraw();
 	// addExamplePanelToBuffer();
 	drawPanels();
+	drawInterfacePanel();
+
+
 	glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
 	glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
 

@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "untitled_marlo_project.h"
+
 unsigned int Text2DTextureID;
 unsigned int Text2DVertexBufferID;
 unsigned int Text2DUVBufferID;
@@ -354,7 +356,6 @@ void printText2D(std::string m_text, int x, int y, int size)
 {
 
 
-    drawPanel( Vec_f2 (x, y) , color_black_thirdClear, m_text.length() * size, size);
 
     const char * text = m_text.c_str();
 
@@ -637,6 +638,7 @@ void drawMenuText (menuItem * menu)
         drawMenuText(&(*subMenu));
     }
 }
+
 
 
 void drawPanel ( menuItem * menu );

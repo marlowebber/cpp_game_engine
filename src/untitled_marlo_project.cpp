@@ -3726,6 +3726,8 @@ void camera()
 	Color displayColor = color_white;// draw the cursor.
 	Vec_f2 worldMousePos = Vec_f2( game.mousePositionX, game.mousePositionY);
 	drawTile( worldMousePos, displayColor);
+
+
 }
 
 void displayComputerText()
@@ -3867,12 +3869,21 @@ void incrementSelectedGrabber()
 }
 
 
+void drawInterfacePanel()
+{
+
+    drawRectangle( Vec_f2 (0.0f, 0.0f) , color_black, 100.0f, 100.0f);
+
+}
+
 void drawGameInterfaceText()
 {
 	int menuX = 50;
 	int menuY = 50;
 	int textSize = 10;
 	int spacing = 20;
+
+
 
 
 	if (flagSave)
@@ -3893,8 +3904,8 @@ void drawGameInterfaceText()
 
 
 	printText2D(   std::string("FPS ") + std::to_string(modelFrameCount ) , menuX, menuY, textSize);
-	modelFrameCount = 0;
 	menuY += spacing;
+	modelFrameCount = 0;
 
 
 	if (game.showInstructions)
@@ -4199,6 +4210,9 @@ void drawGameInterfaceText()
 		menuY += spacing;
 		drawPalette(menuX, menuY);
 	}
+
+
+
 }
 
 void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width )

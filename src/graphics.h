@@ -89,7 +89,7 @@ void drawTile( Vec_f2 position , Color finalColor);
 void drawPointerTriangle( Vec_f2 position , Color finalColor, float angle);
 
 
-void drawPanel( Vec_f2 position , Color finalColor, float panelWidth, float panelHeight);
+void drawRectangle( Vec_f2 position , Color finalColor, float panelWidth, float panelHeight);
 Vec_f2 GetOGLPos(int x, int y);
 
 Color multiplyColor (Color a, Color b);

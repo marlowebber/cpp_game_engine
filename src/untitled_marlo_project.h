@@ -20,6 +20,8 @@ const float panSpeed = 0.1f;
 const unsigned int numberOfSpeakerChannels = 16;
 const unsigned int numberOfEcologySettings = 4;
 
+const float viewPanLimit = 250.0f;
+
 const float  maxZoom = 450.0f;
 const float  minZoom = 50.0f;
 
@@ -36,6 +38,7 @@ extern bool flagSave ;
 extern int mouseX;
 extern int mouseY;
 extern int worldCreationStage;
+extern unsigned int longestMenu;
 
 const unsigned int plantGenomeSize = 16;
 const float lightEnergy = 1.0f;
@@ -237,6 +240,9 @@ void drawMainMenuText();
 void incrementCameraPos(Vec_i2 in);
 void incrementSelectedGrabber();
 void notifyLMBUp();
+void drawInterfacePanel();
+
+void checkLongestMenu(std::string in);
 
 // the following are used privately to create the game content.
 void animalAppendCell(unsigned int animalIndex, unsigned int organType);

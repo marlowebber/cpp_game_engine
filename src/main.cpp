@@ -87,12 +87,15 @@ void threadInterface()
 				break;
 			case SDLK_RIGHT:
 				viewPanSetpointX = viewPanSetpointX + (panSpeed * viewZoomSetpoint);
+				// viewPanSetpointX = clamp(viewPanSetpointX, -1.0f * viewPanLimit, viewPanLimit );
 				break;
 			case SDLK_UP:
 				viewPanSetpointY = viewPanSetpointY + (panSpeed * viewZoomSetpoint);
+				// viewPanSetpointX = clamp(viewPanSetpointY, -1.0f * viewPanLimit, viewPanLimit );
 				break;
 			case SDLK_DOWN:
 				viewPanSetpointY = viewPanSetpointY - (panSpeed * viewZoomSetpoint);
+				// viewPanSetpointX = clamp(viewPanSetpointY, -1.0f * viewPanLimit, viewPanLimit );
 				break;
 			case SDLK_LSHIFT:
 				break;
@@ -248,7 +251,7 @@ void threadInterface()
 				// }
 				// else
 				// {
-					activateGrabbedMachine();
+				activateGrabbedMachine();
 				// }
 				break;
 			}
