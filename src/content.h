@@ -116,7 +116,7 @@
 #define PLANT_STATE_SEED      20       // to produce copies of plant.
 #define PLANT_STATE_BUD       21       // a seed whose debt has not paid off.
 
-#define maxPlantGenes 22
+#define numberOfPlantGenes 21
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {

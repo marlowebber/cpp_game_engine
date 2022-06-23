@@ -352,6 +352,10 @@ void initText2D()
 
 void printText2D(std::string m_text, int x, int y, int size)
 {
+
+
+    drawPanel( Vec_f2 (x, y) , color_black_thirdClear, m_text.length() * size, size);
+
     const char * text = m_text.c_str();
 
     unsigned int length = strlen(text);

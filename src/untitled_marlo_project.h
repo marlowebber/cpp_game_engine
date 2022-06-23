@@ -41,8 +41,8 @@ const float lightEnergy = 1.0f;
 
 struct Square
 {
-    unsigned int wall;      //  material filling the volume of the square. You probably can't move through it.
-    unsigned int material;  // a piece of material sitting on the ground. You can move over it, no matter what it is made of.
+    unsigned int wall;      //  material filling the volume of the square. You may not be able to move through it.
+    // unsigned int material;  // a piece of material sitting on the ground. You can move over it, no matter what it is made of.
     unsigned int terrain;   // the floor itself. If it is not solid, you may have to swim in it.
     int identity;           // id of the last animal to cross the tile
     int occupyingCell;      // id of the last cell to cross this tile

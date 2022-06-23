@@ -146,7 +146,7 @@ Color normalizeColor(Color in)
 	if (in.r > max) { max = in.r;}
 	if (in.g > max) { max = in.g;}
 	if (in.b > max) { max = in.b;}
-	float scale = 1/max;
+	float scale = 1 / max;
 	out.r *= scale;
 	out.g *= scale;
 	out.b *= scale;
@@ -231,6 +231,21 @@ void drawTile( Vec_f2 position , Color finalColor)
 	vertToBuffer ( finalColor, Vec_f2 (  position.x +    tileWidth          , position.y +     tileWidth            ) );
 	vertToBuffer ( finalColor, Vec_f2 (  position.x +    tileWidth          , position.y -     tileWidth            ) );
 }
+
+
+
+void drawPanel( Vec_f2 position , Color finalColor, float panelWidth, float panelHeight)
+{
+
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    panelWidth          , position.y -     panelHeight            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    panelWidth          , position.y +     panelHeight            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    panelWidth          , position.y +     panelHeight            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x -    panelWidth          , position.y -     panelHeight            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    panelWidth          , position.y +     panelHeight            ) );
+	vertToBuffer ( finalColor, Vec_f2 (  position.x +    panelWidth          , position.y -     panelHeight            ) );
+
+}
+
 
 
 void drawLine(  Vec_f2 a, Vec_f2 b, float thickness, Color finalColor )
