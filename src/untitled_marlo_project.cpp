@@ -1549,6 +1549,8 @@ int getNewPlantIdentity()
 void growPlants(unsigned int worldI)
 {
 	bool growthMatrix[nNeighbours];
+	unsigned int geneCursorAdjust = game.world[worldI].geneCursor;
+	bool useAdjustedCursor = false;
 	for (int i = 0; i < nNeighbours; ++i)
 	{
 		growthMatrix[i] = false;
@@ -1642,6 +1644,14 @@ void growPlants(unsigned int worldI)
 							game.world[neighbour].identity = game.world[worldI].identity;
 							game.world[neighbour].energy = 0.0f;
 							game.world[neighbour].energyDebt = 2.0f;
+							if (useAdjustedCursor)
+							{
+								game.world[neighbour].geneCursor = geneCursorAdjust;
+							}
+							else
+							{
+								game.world[neighbour].geneCursor = game.world[worldI].geneCursor;
+							}
 						}
 					}
 				}
@@ -1660,14 +1670,25 @@ void growPlants(unsigned int worldI)
 							game.world[neighbour].identity = game.world[worldI].identity;
 							game.world[neighbour].energy = 0.0f;
 							game.world[neighbour].energyDebt = 1.0f;
+							if (useAdjustedCursor)
+							{
+								game.world[neighbour].geneCursor = geneCursorAdjust;
+
+							}
+							else
+							{
+								game.world[neighbour].geneCursor = game.world[worldI].geneCursor;
+							}
 						}
 					}
 				}
+				done = true;
 				break;
 			}
 			case PLANTGENE_GOTO:
 			{
-				game.world[worldI].geneCursor = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1];
+				geneCursorAdjust = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1];
+				useAdjustedCursor = true;
 				break;
 			}
 			}
@@ -3152,6 +3173,13 @@ void move_all()
 							{
 								game.world[cellWorldPositionI].wall = MATERIAL_GRASS;
 								game.world[cellWorldPositionI].grassColor =  addColor( color_green , multiplyColorByScalar(game.animals[animalIndex].identityColor, 0.5f ));//
+
+
+								game.world[cellWorldPositionI].plantState = PLANT_STATE_SEED;
+								for (int k = 0; k < plantGenomeSize; ++k)
+								{
+									game.world[cellWorldPositionI].seedGenes[k] = extremelyFastNumberFromZeroTo(maxPlantGenes);
+								}
 							}
 						}
 					}
