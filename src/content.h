@@ -71,6 +71,12 @@
 #define MATERIAL_GRAVEL  78
 #define MATERIAL_FABRIC  79
 
+#define MATERIAL_LEAF      80       // for energy capture and transmission.
+#define MATERIAL_SEED      81       // to produce copies of plant.
+#define MATERIAL_BUD       82       // a seed whose debt has not paid off.
+#define MATERIAL_WOOD      83       
+
+
 #define MACHINECALLBACK_PISTOL           100
 #define MACHINECALLBACK_KNIFE            101
 #define MACHINECALLBACK_HOSPITAL         102
@@ -106,11 +112,8 @@
 #define PLANTGENE_GROW_SYMM_V 10
 #define PLANTGENE_BUD         11
 #define PLANTGENE_LEAF        12
-#define PLANTGENE_GOTO        13
-#define PLANT_STATE_LEAF      14       // for energy capture and transmission.
-#define PLANT_STATE_SEED      15       // to produce copies of plant.
-#define PLANT_STATE_BUD       16       // a seed whose debt has not paid off.
-#define PLANT_STATE_WOOD      17       
+#define PLANTGENE_WOOD        13
+#define PLANTGENE_GOTO        14
 
 
 
@@ -383,6 +386,35 @@ std::string tileDescriptions(unsigned int tile)
 	}
 
 
+
+case MATERIAL_SEED:
+	{
+		return std::string("A seed of a plant.");
+	}
+
+
+case MATERIAL_BUD:
+	{
+		return std::string("A plant's flowers.");
+	}
+
+
+case MATERIAL_WOOD:
+	{
+		return std::string("A branch with bark.");
+	}
+
+
+case MATERIAL_LEAF:
+	{
+		return std::string("Leaves and twigs.");
+	}
+
+
+
+
+
+		
 
 
 	}
