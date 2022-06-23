@@ -177,8 +177,6 @@ game: /usr/lib/x86_64-linux-gnu/libGLX.so
 game: /usr/lib/x86_64-linux-gnu/libGLU.so
 game: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
 game: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
-game: /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so
-game: /usr/lib/x86_64-linux-gnu/libpthread.so
 game: /usr/lib/x86_64-linux-gnu/libboost_atomic.so.1.71.0
 game: CMakeFiles/game.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/marlo/Documents/cpp_game_engine/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable game"

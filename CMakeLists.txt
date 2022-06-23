@@ -10,7 +10,6 @@ project(game)
 set(CMAKE_CXX_FLAGS "-g")
 
 
-find_package(OpenMP REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem thread)
@@ -60,7 +59,6 @@ target_link_libraries (
 
 	game
     Tracy::TracyClient 
-	OpenMP::OpenMP_CXX
 	${SDL2_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${Boost_LIBRARIES}
