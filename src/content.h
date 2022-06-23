@@ -104,19 +104,19 @@
 
 #define PLANTGENE_GROW_SYMM_H 9
 #define PLANTGENE_GROW_SYMM_V 10
-#define PLANTGENE_RED         11
-#define PLANTGENE_GREEN       12
-#define PLANTGENE_BLUE        13
-#define PLANTGENE_LIGHT       14
-#define PLANTGENE_DARK        15
-#define PLANTGENE_BUD         16
-#define PLANTGENE_LEAF        17
-#define PLANTGENE_GOTO        18
-#define PLANT_STATE_LEAF      19       // for energy capture and transmission.
-#define PLANT_STATE_SEED      20       // to produce copies of plant.
-#define PLANT_STATE_BUD       21       // a seed whose debt has not paid off.
+#define PLANTGENE_BUD         11
+#define PLANTGENE_LEAF        12
+#define PLANTGENE_GOTO        13
+#define PLANT_STATE_LEAF      14       // for energy capture and transmission.
+#define PLANT_STATE_SEED      15       // to produce copies of plant.
+#define PLANT_STATE_BUD       16       // a seed whose debt has not paid off.
+#define PLANT_STATE_WOOD      17       
 
-#define numberOfPlantGenes 21
+
+
+
+
+#define numberOfPlantGenes 18
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {
