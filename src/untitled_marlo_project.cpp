@@ -1794,110 +1794,133 @@ void updatePlants(unsigned int worldI)
 }
 
 
-void updateMap()
+void updateMapI(unsigned int randomI)
 {
-	ZoneScoped;
-	unsigned int mapUpdateFidelity = worldSquareSize / 25000;
-	for (unsigned int i = 0; i < mapUpdateFidelity; ++i)
+	// unsigned int randomX = extremelyFastNumberFromZeroTo(worldSize - 1);
+	// unsigned int randomY = extremelyFastNumberFromZeroTo(worldSize - 1);
+	// unsigned int randomI = (randomY * worldSize) + randomX;
+	// if (randomI < worldSquareSize)// slowly reduce pheromones over time.
+	// {
+	if (game.world[randomI].pheromoneIntensity > 0.2f)
 	{
-		unsigned int randomX = extremelyFastNumberFromZeroTo(worldSize - 1);
-		unsigned int randomY = extremelyFastNumberFromZeroTo(worldSize - 1);
-		unsigned int randomI = (randomY * worldSize) + randomX;
-		if (randomI < worldSquareSize)// slowly reduce pheromones over time.
+		game.world[randomI].pheromoneIntensity -= 0.2f;
+	}
+	else
+	{
+		game.world[randomI].pheromoneChannel = -1;
+	}
+	if (game.world[randomI].height < seaLevel)
+	{
+		if (game.world[randomI].wall == MATERIAL_NOTHING)
 		{
-			if (game.world[randomI].pheromoneIntensity > 0.2f)
+			game.world[randomI].wall = MATERIAL_WATER;
+		}
+	}
+	else
+	{
+		if (game.world[randomI].wall == MATERIAL_WATER)
+		{
+			game.world[randomI].wall = MATERIAL_NOTHING;
+		}
+	}
+
+
+	// if (game.world[randomI].material == MATERIAL_FIRE)
+	// {
+	// 	for (int i = 0; i < nNeighbours; ++i)
+	// 	{
+	// 		unsigned int neighbour = randomI + neighbourOffsets[i];
+	// 		if (neighbour < worldSquareSize)
+	// 		{
+	// 			if (game.world[neighbour].material == MATERIAL_GRASS)
+	// 			{
+	// 				game.world[randomI].material = MATERIAL_FIRE;
+	// 			}
+	// 		}
+	// 	}
+	// 	if (extremelyFastNumberFromZeroTo(1) == 0)
+	// 	{
+	// 		game.world[randomI].material = MATERIAL_NOTHING;
+	// 	}
+	// 	else
+	// 	{
+	// 		unsigned int neighbour = randomI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
+	// 		if (neighbour < worldSquareSize)
+	// 		{
+	// 			game.world[neighbour].material = MATERIAL_FIRE;
+	// 		}
+	// 	}
+	// }
+
+
+	if (game.world[randomI].wall == MATERIAL_GRASS)
+	{
+		for (int n = 0; n < nNeighbours; ++n)
+		{
+			unsigned int neighbour = randomI + neighbourOffsets[n];
+			if (neighbour < worldSquareSize)
 			{
-				game.world[randomI].pheromoneIntensity -= 0.2f;
-			}
-			else
-			{
-				game.world[randomI].pheromoneChannel = -1;
-			}
-			if (game.world[randomI].height < seaLevel)
-			{
-				if (game.world[randomI].wall == MATERIAL_NOTHING)
+				if (game.world[neighbour].wall == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
 				{
-					game.world[randomI].wall = MATERIAL_WATER;
-				}
-			}
-			else
-			{
-				if (game.world[randomI].wall == MATERIAL_WATER)
-				{
-					game.world[randomI].wall = MATERIAL_NOTHING;
-				}
-			}
+					float growthChance =  (game.world[neighbour].light.a ); // grow speed proportional to light brightness
 
 
-			// if (game.world[randomI].material == MATERIAL_FIRE)
-			// {
-			// 	for (int i = 0; i < nNeighbours; ++i)
-			// 	{
-			// 		unsigned int neighbour = randomI + neighbourOffsets[i];
-			// 		if (neighbour < worldSquareSize)
-			// 		{
-			// 			if (game.world[neighbour].material == MATERIAL_GRASS)
-			// 			{
-			// 				game.world[randomI].material = MATERIAL_FIRE;
-			// 			}
-			// 		}
-			// 	}
-			// 	if (extremelyFastNumberFromZeroTo(1) == 0)
-			// 	{
-			// 		game.world[randomI].material = MATERIAL_NOTHING;
-			// 	}
-			// 	else
-			// 	{
-			// 		unsigned int neighbour = randomI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
-			// 		if (neighbour < worldSquareSize)
-			// 		{
-			// 			game.world[neighbour].material = MATERIAL_FIRE;
-			// 		}
-			// 	}
-			// }
 
-
-			if (game.world[randomI].wall == MATERIAL_GRASS)
-			{
-				for (int n = 0; n < nNeighbours; ++n)
-				{
-					unsigned int neighbour = randomI + neighbourOffsets[n];
-					if (neighbour < worldSquareSize)
+					if (RNG() < growthChance )
 					{
-						if (game.world[neighbour].wall == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
-						{
-							float growthChance =  (game.world[neighbour].light.a ); // grow speed proportional to light brightness
+						game.world[neighbour].wall = MATERIAL_GRASS;
+						game.world[neighbour].grassColor = game.world[randomI].grassColor;
+						game.world[neighbour].grassColor.r += (RNG() - 0.5f) * 0.1f;
+						game.world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
+						game.world[neighbour].grassColor.b += (RNG() - 0.5f) * 0.1f;
+						game.world[neighbour].grassColor = clampColor(game.world[neighbour].grassColor);
 
+						game.world[neighbour].pheromoneChannel = 6;
+						game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
 
-
-							if (RNG() < growthChance )
-							{
-								game.world[neighbour].wall = MATERIAL_GRASS;
-								game.world[neighbour].grassColor = game.world[randomI].grassColor;
-								game.world[neighbour].grassColor.r += (RNG() - 0.5f) * 0.1f;
-								game.world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
-								game.world[neighbour].grassColor.b += (RNG() - 0.5f) * 0.1f;
-								game.world[neighbour].grassColor = clampColor(game.world[neighbour].grassColor);
-
-								game.world[neighbour].pheromoneChannel = 6;
-								game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
-
-							}
-						}
 					}
 				}
 			}
-			if ( materialDegrades( game.world[randomI].wall) )
-			{
-				game.world[randomI].wall = MATERIAL_NOTHING;
-			}
-
-			if ( game.world[randomI].plantState != MATERIAL_NOTHING)
-			{
-				updatePlants(randomI);
-			}
 		}
 	}
+	if ( materialDegrades( game.world[randomI].wall) )
+	{
+		game.world[randomI].wall = MATERIAL_NOTHING;
+	}
+
+	if ( game.world[randomI].plantState != MATERIAL_NOTHING)
+	{
+		updatePlants(randomI);
+	}
+}
+
+bool mapPhase;
+void updateMap()
+{
+	ZoneScoped;
+
+	if (mapPhase)
+	{
+
+
+		for (unsigned int randomI = 0; randomI < worldSquareSize; ++randomI)
+		{
+
+
+			updateMapI(randomI);
+		}
+	}
+	else
+	{
+
+		for (unsigned int randomI = worldSquareSize; randomI > 0; --randomI)
+		{
+
+
+			updateMapI(randomI);
+		}
+	}
+	mapPhase = !mapPhase;
 }
 
 int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPositionI)
@@ -3185,15 +3208,15 @@ void move_all()
 				}
 				if (okToStep)
 				{
-					if (game.world[cellWorldPositionI].identity == -1 
-						// && speciesIndex != 0
-						)
+					if (game.world[cellWorldPositionI].identity == -1
+					        // && speciesIndex != 0
+					   )
 					{
 						if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING || game.world[cellWorldPositionI].wall == MATERIAL_GRASS)
 						{
 							if (materialSupportsGrowth(game.world[cellWorldPositionI].terrain ))
 							{
-								// game.world[cellWorldPositionI].wall = MATERIAL_GRASS;
+								game.world[cellWorldPositionI].wall = MATERIAL_GRASS;
 								game.world[cellWorldPositionI].grassColor =  addColor( color_green , multiplyColorByScalar(game.animals[animalIndex].identityColor, 0.5f ));//
 
 
@@ -3325,14 +3348,14 @@ void computeAllAnimalsOneTurn()
 {
 
 
-	boost::thread t11{ updateMap };
+	// boost::thread t11{ updateMap };
 	boost::thread t8{ organs_all };
 	boost::thread t9{ move_all   };
 	boost::thread t10{ energy_all };
 	t10.join();
 	t9.join();
 	t8.join();
-	t11.join();
+	// t11.join();
 
 
 }
@@ -4919,6 +4942,16 @@ void modelSupervisor()
 	}
 }
 
+
+void mapSupervisor()
+{
+	while (true)
+	{
+		updateMap();
+	}
+}
+
+
 void drawMainMenuText()
 {
 	int menuX = 50;
@@ -5006,6 +5039,7 @@ void startSimulation()
 	setupExampleAnimal2(j);
 	game.champion = game.animals[j];
 	boost::thread t7{ modelSupervisor };
+	boost::thread t8{ mapSupervisor };
 	for ( ;; )
 	{
 		boost::thread t2{ threadInterface };
