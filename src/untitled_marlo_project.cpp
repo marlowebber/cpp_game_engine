@@ -1427,21 +1427,46 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	}
 	else
 	{
-		Color materialColor ;
-		if (game.world[worldI].wall == MATERIAL_GRASS )
-		{
-			materialColor = game.world[worldI].grassColor;
-		}
-		// else
+		// Color materialColor ;
+		// if (game.world[worldI].wall == MATERIAL_GRASS )
 		// {
-		// 	materialColor = materialColors(game.world[worldI].material);
+		// 	materialColor = game.world[worldI].grassColor;
 		// }
-		displayColor =
-		    // filterColor(
-		    materialColors(game.world[worldI].terrain);
-		// ,  materialColor);		// you can see the three material layers in order, wall then material then floor.
+		// // else
+		// // {
+		// // 	materialColor = materialColors(game.world[worldI].material);
+		// // }
+		// displayColor =
+		//     // filterColor(
+		//     materialColors(game.world[worldI].terrain);
+		// // ,  materialColor);		// you can see the three material layers in order, wall then material then floor.
+		// Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
+		// displayColor = filterColor( displayColor, wallColor  );
+
+
+
+		// colors are filtered like this.
+
+		//1. terrain.
+		displayColor = materialColors(game.world[worldI].terrain);
+
+		//2. wall
 		Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
 		displayColor = filterColor( displayColor, wallColor  );
+
+		//3. plant
+		if (game.world[worldI].plantState == PLANT_STATE_LEAF ||
+		        game.world[worldI].plantState == PLANT_STATE_SEED ||
+		        game.world[worldI].plantState == PLANT_STATE_BUD  ||
+		        game.world[worldI].wall == MATERIAL_GRASS
+		   )
+			displayColor = filterColor( displayColor, game.world[worldI].grassColor  );
+
+		//4. animal
+
+
+
+
 	}
 	displayColor = multiplyColor(displayColor, game.world[worldI].light);
 	return displayColor;
@@ -1700,7 +1725,6 @@ void updatePlants(unsigned int worldI)
 			game.world[worldI].plantIdentity = getNewPlantIdentity();
 			game.world[worldI].geneCursor = 0;
 			memcpy( & (game.world[worldI].plantGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
-
 		}
 		else
 		{
@@ -1726,7 +1750,6 @@ void updatePlants(unsigned int worldI)
 		}
 	}
 	}
-
 }
 
 
@@ -1826,6 +1849,11 @@ void updateMap()
 			if ( materialDegrades( game.world[randomI].wall) )
 			{
 				game.world[randomI].wall = MATERIAL_NOTHING;
+			}
+
+			if ( game.world[randomI].plantState != MATERIAL_NOTHING)
+			{
+				updatePlants(randomI);
 			}
 		}
 	}
