@@ -109,7 +109,7 @@
 #define PLANTGENE_BLUE        13
 #define PLANTGENE_LIGHT       14
 #define PLANTGENE_DARK        15
-#define PLANTGENE_SEED        16
+#define PLANTGENE_BUD         16
 #define PLANTGENE_LEAF        17
 #define PLANTGENE_GOTO        18
 #define PLANT_STATE_LEAF      19       // for energy capture and transmission.
