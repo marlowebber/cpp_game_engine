@@ -100,4 +100,6 @@ Color addColor (Color a, Color b);
 
 float colorAmplitude(Color a );
 Color mutateColor(Color in);
+
+Color normalizeColor(Color in);
 #endif

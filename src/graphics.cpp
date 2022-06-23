@@ -123,9 +123,9 @@ float colorAmplitude(Color a )
 	float c = a.r;
 	c      += a.g;
 	c      += a.b;
-	c      *= a.a;
-
 	c = c / 3.0f ; // because there are 3 color components, normalise the result to 1.
+
+	c      *= a.a;
 
 	return c;
 }
@@ -137,6 +137,20 @@ Color mutateColor(Color in)
 	out.g += (RNG() - 0.5) * 0.1f;
 	out.b += (RNG() - 0.5) * 0.1f;
 	return clampColor(out);
+}
+
+Color normalizeColor(Color in)
+{
+	Color out = in;
+	float max = 0.0f;
+	if (in.r > max) { max = in.r;}
+	if (in.g > max) { max = in.g;}
+	if (in.b > max) { max = in.b;}
+	float scale = 1/max;
+	out.r *= scale;
+	out.g *= scale;
+	out.b *= scale;
+	return out;
 }
 
 static const char * vertex_shader =

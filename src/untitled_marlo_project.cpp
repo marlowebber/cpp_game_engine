@@ -1436,10 +1436,10 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		// {
 		// 	materialColor = materialColors(game.world[worldI].material);
 		// }
-		displayColor = 
-		// filterColor(
-		 materialColors(game.world[worldI].terrain);
-		  // ,  materialColor);		// you can see the three material layers in order, wall then material then floor.
+		displayColor =
+		    // filterColor(
+		    materialColors(game.world[worldI].terrain);
+		// ,  materialColor);		// you can see the three material layers in order, wall then material then floor.
 		Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
 		displayColor = filterColor( displayColor, wallColor  );
 	}
@@ -1508,6 +1508,274 @@ void smoothHeightMap(unsigned int passes, float strength)
 		}
 	}
 }
+
+
+unsigned int plantIdentityCursor = 0;
+
+int getNewPlantIdentity()
+{
+	plantIdentityCursor++;
+	return plantIdentityCursor
+}
+
+
+
+
+void growPlants(unsigned int worldI)
+{
+
+
+
+// #define PLANTGENE_GROW_0      1
+// #define PLANTGENE_GROW_1      2
+// #define PLANTGENE_GROW_2      3
+// #define PLANTGENE_GROW_3      4
+// #define PLANTGENE_GROW_4      5
+// #define PLANTGENE_GROW_5      6
+// #define PLANTGENE_GROW_6      7
+// #define PLANTGENE_GROW_7      8
+// #define PLANTGENE_GROW_SYMM_H 9
+// #define PLANTGENE_GROW_SYMM_V 10
+// #define PLANTGENE_RED         11
+// #define PLANTGENE_GREEN       12
+// #define PLANTGENE_BLUE        13
+
+
+// #define PLANTGENE_LIGHT       14
+// #define PLANTGENE_DARK        15
+
+// #define PLANTGENE_SEED        16
+// #define PLANTGENE_GOTO        17
+
+
+	bool growthMatrix[nNeighbours];
+	for (int i = 0; i < nNeighbours; ++i)
+	{
+		growthMatrix[i] = false;
+	}
+
+	while (true)
+	{
+		if (game.world[worldI].geneCursor >= plantGenomeSize) {return;}
+
+		char c = game.world[worldI].plantGenes[game.world[worldI].geneCursor];
+
+		bool done = false;
+
+		if (c < nNeighbours)
+		{
+			growthMatrix[c] = !growthMatrix[c];
+			continue;
+		}
+		else
+		{
+			switch (c)
+			{
+			case PLANTGENE_GROW_SYMM_H:
+			{
+				bool originalGrowthMatrix[nNeighbours];
+				memcpy(&(originalGrowthMatrix[0]), &(growthMatrix[0]), sizeof(bool)*nNeighbours  );
+				memset(&(growthMatrix), false, sizeof(bool)*nNeighbours);
+				if (originalGrowthMatrix[7]) { growthMatrix[5] = true;}
+				if (originalGrowthMatrix[5]) { growthMatrix[7] = true;}
+				if (originalGrowthMatrix[0]) { growthMatrix[4] = true;}
+				if (originalGrowthMatrix[4]) { growthMatrix[0] = true;}
+				if (originalGrowthMatrix[1]) { growthMatrix[3] = true;}
+				if (originalGrowthMatrix[3]) { growthMatrix[1] = true;}
+				break;
+			}
+			case PLANTGENE_GROW_SYMM_V:
+			{
+				bool originalGrowthMatrix[nNeighbours];
+				memcpy(&(originalGrowthMatrix[0]), &(growthMatrix[0]), sizeof(bool)*nNeighbours  );
+				memset(&(growthMatrix), false, sizeof(bool)*nNeighbours);
+				if (originalGrowthMatrix[1]) { growthMatrix[5] = true;}
+				if (originalGrowthMatrix[2]) { growthMatrix[6] = true;}
+				if (originalGrowthMatrix[3]) { growthMatrix[7] = true;}
+				if (originalGrowthMatrix[5]) { growthMatrix[1] = true;}
+				if (originalGrowthMatrix[6]) { growthMatrix[2] = true;}
+				if (originalGrowthMatrix[7]) { growthMatrix[3] = true;}
+				break;
+			}
+			case PLANTGENE_RED:
+			{
+				game.world[worldI].grassColor.r *= 1.35f;
+				game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_GREEN:
+			{
+				game.world[worldI].grassColor.g *= 1.35f;
+				game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_BLUE:
+			{
+				game.world[worldI].grassColor.b *= 1.35f;
+				game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_LIGHT:
+			{
+				game.world[worldI].grassColor.r *= 1.35f;
+				game.world[worldI].grassColor.g *= 1.35f;
+				game.world[worldI].grassColor.b *= 1.35f;
+				game.world[worldI].grassColor = clampColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_DARK:
+			{
+				game.world[worldI].grassColor.r *= 0.75f;
+				game.world[worldI].grassColor.g *= 0.75f;
+				game.world[worldI].grassColor.b *= 0.75f;
+				game.world[worldI].grassColor = clampColor(game.world[worldI].grassColor);
+				break;
+			}
+
+			case PLANTGENE_SEED:
+			{
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					if (growthMatrix[i])
+					{
+						unsigned int neighbour = worldI + neighbourOffsets[i];
+						if (neighbour < worldSquareSize)
+						{
+							game.world[neighbour].plantState = PLANT_STATE_BUD;
+							game.world[neighbour].identity = game.world[worldI].identity;
+							game.world[neighbour].energy = 0.0f;
+							game.world[neighbour].energyDebt = 2.0f;
+						}
+					}
+				}
+				break;
+			}
+
+			case PLANTGENE_LEAF:
+			{
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					if (growthMatrix[i])
+					{
+						unsigned int neighbour = worldI + neighbourOffsets[i];
+						if (neighbour < worldSquareSize)
+						{
+							game.world[neighbour].plantState = PLANT_STATE_LEAF;
+							game.world[neighbour].identity = game.world[worldI].identity;
+							game.world[neighbour].energy = 0.0f;
+							game.world[neighbour].energyDebt = 1.0f;
+						}
+					}
+				}
+				break;
+			}
+
+
+			case PLANTGENE_GOTO:
+			{
+				game.world[worldI].geneCursor = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1];
+				break;
+			}
+
+
+			}
+
+			if (done)
+			{
+				return;
+			}
+
+
+			game.world[neighbour].geneCursor ++;
+		}
+
+
+
+
+
+	}
+
+
+
+
+}
+
+
+
+void updatePlants(unsigned int worldI)
+{
+	switch (game.world[worldI].plantState)
+	{
+	case PLANT_STATE_LEAF:
+	{
+		game.world[worldI].energy +=  colorAmplitude(game.world[worldI].light ) ;
+
+		// transfer energy between adjacent cells with same ID
+		for (int i = 0; i < nNeighbours; ++i)
+		{
+			unsigned int neighbour = worldI + neighbourOffsets[  i ];
+			if (neighbour < worldSquareSize)
+			{
+				if ( game.world[neighbour].identity == game.world[worldI].identity)
+				{
+					float avg = game.world[worldI].energy + game.world[neighbour].energy;
+					avg *= 0.5f;
+					game.world[worldI].energy = avg;
+					game.world[neighbour].energy = avg;
+				}
+			}
+		}
+
+		// grow plant into neighboring squares if applicable
+		if (game.world[worldI].energyDebt < 0.0f)
+		{
+			growPlants(worldI);
+		}
+		else
+		{
+			game.world[worldI].energyDebt -= game.world[worldI].energy;
+			game.world[worldI].energy = 0.0f;
+		}
+		break;
+	}
+	case PLANT_STATE_SEED:
+	{
+		// spawn plants from seeds if applicable
+		if (extremelyFastNumberFromZeroTo(10) == 0)
+		{
+			game.world[worldI].plantState = PLANT_STATE_LEAF;
+			game.world[worldI].plantIdentity = getNewPlantIdentity();
+			game.world[worldI].geneCursor = 0;
+			memcpy( & (game.world[neighbour].genes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
+
+		}
+		else
+		{
+			// move seeds randomly
+			unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
+			if (neighbour < worldSquareSize)
+			{
+				if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].plantState == MATERIAL_NOTHING )
+				{
+					game.world[neighbour].plantState = PLANT_STATE_SEED;
+					memcpy( & (game.world[neighbour].seedGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
+					game.world[worldI].plantState = MATERIAL_NOTHING;
+				}
+			}
+		}
+		break;
+	}
+	case PLANT_STATE_BUD:
+	{
+		if (game.world[worldI].energyDebt < 0.0f)
+		{
+			game.world[worldI].plantState = PLANT_STATE_SEED;
+		}
+	}
+	}
+
+}
+
 
 void updateMap()
 {
@@ -1673,7 +1941,7 @@ void rightClickCallback ()
 
 	if (game.ecologyComputerDisplay)
 	{
-		game.ecoSettings[game.activeEcoSetting] *= (1.0f/1.5f);
+		game.ecoSettings[game.activeEcoSetting] *= (1.0f / 1.5f);
 	}
 }
 
@@ -3459,9 +3727,9 @@ void drawGameInterfaceText()
 
 	if (flagSave)
 	{
-	printText2D(   std::string("saving") , menuX, menuY, textSize);
-	menuY += spacing;
-	return;	
+		printText2D(   std::string("saving") , menuX, menuY, textSize);
+		menuY += spacing;
+		return;
 	}
 
 

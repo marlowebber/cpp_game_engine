@@ -100,25 +100,23 @@
 
 
 
+// plant genes must be higher than the highest nNeighbour but must be lower than the maximum size of a char (255).
 
-#define PLANTGENE_GROW_0 
-#define PLANTGENE_GROW_1 
-#define PLANTGENE_GROW_2 
-#define PLANTGENE_GROW_3 
-#define PLANTGENE_GROW_4 
-#define PLANTGENE_GROW_5 
-#define PLANTGENE_GROW_6 
-#define PLANTGENE_GROW_7 
-#define PLANTGENE_GROW_SYMM_H 
-#define PLANTGENE_GROW_SYMM_V 
-#define PLANTGENE_RED
-#define PLANTGENE_GREEN
-#define PLANTGENE_BLUE
-#define PLANTGENE_SEED
-#define PLANTGENE_GOTO
+#define PLANTGENE_GROW_SYMM_H 9
+#define PLANTGENE_GROW_SYMM_V 10
+#define PLANTGENE_RED         11
+#define PLANTGENE_GREEN       12
+#define PLANTGENE_BLUE        13
+#define PLANTGENE_LIGHT       14
+#define PLANTGENE_DARK        15
+#define PLANTGENE_SEED        16
+#define PLANTGENE_LEAF        17
+#define PLANTGENE_GOTO        18
+#define PLANT_STATE_LEAF      19       // for energy capture and transmission.
+#define PLANT_STATE_SEED      20       // to produce copies of plant.
+#define PLANT_STATE_BUD       21       // a seed whose debt has not paid off.
 
-
-
+#define maxPlantGenes 22
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {
