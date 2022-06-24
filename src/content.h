@@ -79,7 +79,7 @@
 #define MATERIAL_SEED      81       // to produce copies of plant.
 #define MATERIAL_BUD       82       // a seed whose debt has not paid off.
 #define MATERIAL_WOOD      83       
-
+#define MATERIAL_POLLEN    84     
 
 #define MACHINECALLBACK_PISTOL           100
 #define MACHINECALLBACK_KNIFE            101
@@ -128,7 +128,13 @@
 #define PLANTGENE_LIGHT   20
 #define PLANTGENE_DARK    21
 
-#define numberOfPlantGenes 21
+// #define PLANTGENE_SEED_RED     22
+// #define PLANTGENE_SEED_GREEN   23
+// #define PLANTGENE_SEED_BLUE    24
+// #define PLANTGENE_SEED_LIGHT   25
+// #define PLANTGENE_SEED_DARK    26
+
+#define numberOfPlantGenes 26
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {

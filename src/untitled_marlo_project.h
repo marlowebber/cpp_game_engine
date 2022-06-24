@@ -6,7 +6,7 @@
 
 
 const unsigned int nNeighbours     = 8;
-const int worldSize = 3000;
+const int worldSize = 2500;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
 const unsigned int numberOfAnimals = 8000;
@@ -40,7 +40,7 @@ extern int mouseY;
 extern int worldCreationStage;
 extern unsigned int longestMenu;
 
-const unsigned int plantGenomeSize = 16;
+const unsigned int plantGenomeSize = 24;
 const float lightEnergy = 1.0f;
 
 struct Square
@@ -58,8 +58,14 @@ struct Square
     int pheromoneChannel;
     Color grassColor;
 
-    char plantGenes[plantGenomeSize];
+
+
     char seedGenes[plantGenomeSize];
+    int seedIdentity;
+    int seedState;
+    Color seedColor;
+
+    char plantGenes[plantGenomeSize];
      int plantState;
      int geneCursor;
     int plantIdentity;
@@ -68,7 +74,6 @@ struct Square
     int sequenceNumber;
     int sequenceReturn;
     bool grown;
-
     bool growthMatrix[nNeighbours];
 };
 
