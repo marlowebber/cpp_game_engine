@@ -451,11 +451,14 @@ void resetGrid()
 		memset(&(game.world[i].seedGenes[0]), MATERIAL_NOTHING, sizeof(char) * plantGenomeSize);
 
 
-		game.world[i].plantState;
-		game.world[i].geneCursor;
-		game.world[i].plantIdentity;
-		game.world[i].energy;
-		game.world[i].energyDebt;
+		game.world[i].plantState = MATERIAL_NOTHING;
+		game.world[i].geneCursor = 0;
+		game.world[i].plantIdentity = 0;
+		game.world[i].energy = 0.0f;
+		game.world[i].energyDebt = 0.0f;
+		game.world[i].sequenceReturn = 0;
+		game.world[i].sequenceNumber = 0;
+		game.world[i].grown = false;;
 
 
 	}
@@ -1625,6 +1628,14 @@ void growInto(unsigned int from, unsigned int to, unsigned int organ)
 		game.world[to].energy = 0.0f;
 		game.world[to].geneCursor = game.world[from].geneCursor;
 		game.world[to].grassColor = game.world[from].grassColor;
+
+
+
+		game.world[to].sequenceNumber = game.world[from].sequenceNumber;
+		game.world[to].sequenceReturn = game.world[from].sequenceReturn;
+
+		game.world[to].grown = false;
+
 		if (organ == MATERIAL_SEED)
 		{
 			game.world[to].energyDebt = 2.0f;
@@ -1646,6 +1657,7 @@ void growPlants(unsigned int worldI)
 	unsigned int skipTo = game.world[worldI].geneCursor;
 	bool skip = false;
 	unsigned int turns = 0;
+	game.world[worldI].grown = true;
 	while (true)
 	{
 		turns++; if (turns > plantGenomeSize) { return; }
@@ -1686,6 +1698,36 @@ void growPlants(unsigned int worldI)
 				if (originalGrowthMatrix[5]) { game.world[worldI].growthMatrix[1] = true;}
 				if (originalGrowthMatrix[6]) { game.world[worldI].growthMatrix[2] = true;}
 				if (originalGrowthMatrix[7]) { game.world[worldI].growthMatrix[3] = true;}
+				break;
+			}
+
+
+			case PLANTGENE_SEQUENCE:
+			{
+
+
+				unsigned int nextGene = game.world[worldI].geneCursor + 1;
+				game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[nextGene];
+				game.world[worldI].sequenceReturn = game.world[worldI].geneCursor ;
+
+
+
+				break;
+			}
+
+
+			case PLANTGENE_BREAK:
+			{
+
+				// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number.
+				if (game.world[worldI].sequenceNumber > 0)
+				{
+
+				}
+				else
+				{
+					; // if the sequence number is greater than zero, a break doesn't do anything.
+				}
 				break;
 			}
 
@@ -1767,11 +1809,14 @@ void updatePlants(unsigned int worldI)
 	// {
 	if (game.world[worldI].energyDebt < 0.0f)
 	{
-		if (game.world[worldI].plantState == MATERIAL_WOOD)
+		if (!(game.world[worldI].grown))
 		{
-
-			growPlants(worldI);
+			if (game.world[worldI].plantState == MATERIAL_WOOD)
+			{
+				growPlants(worldI);
+			}
 		}
+
 	}
 	else
 	{
@@ -2571,35 +2616,67 @@ void organs_all()
 				{
 					// pick a random tile within range, see if it contains an animal not of species 0, and shoot it if so.
 
-					const int destroyerRange = 1000;
-					int randomX = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange / 2);
-					int randomY = extremelyFastNumberFromZeroTo(destroyerRange) - (destroyerRange / 2);
+					const int destroyerRange = 250;
 
-					int targetPosX = cellWorldPositionX + randomX;
-					int targetPosY = cellWorldPositionY + randomY;
-					unsigned int targetPosI = (targetPosY * worldSize) + targetPosX;
+					int closestvx ; int closestvy;
+					float closestTargetDistance = destroyerRange;
 
-					if (targetPosI < worldSquareSize)
+					bool targetAcquired = false;
+
+					for (int vy = -destroyerRange; vy < destroyerRange; ++vy)
 					{
-						if (game.world[targetPosI].identity >= 0)
+						for (int vx = -destroyerRange; vx < destroyerRange; ++vx)
 						{
-							if (isAnimalInSquare( game.world[targetPosI].identity , targetPosI ) >= 0)
+
+
+
+							int targetPosX = cellWorldPositionX + vx;
+							int targetPosY = cellWorldPositionY + vy;
+							unsigned int targetPosI = (targetPosY * worldSize) + targetPosX;
+
+
+							if (targetPosI < worldSquareSize)
 							{
+								if (game.world[targetPosI].identity >= 0)
+								{
+									if (isAnimalInSquare( game.world[targetPosI].identity , targetPosI ) >= 0)
+									{
 
-								float diffx = cellWorldPositionX - targetPosX;
-								float diffy = cellWorldPositionY - targetPosY;
-								float angleToTarget =  atan2( diffy  , diffx );
+										float distanceToTarget = magnitude_int(  vx , vy   );
+										// float angleToCursor = atan2(   fmousePositionY - (  game.cameraPositionY - fposy)  ,  fmousePositionX - (game.cameraPositionX - fposx));
 
-								// float angleToCursor = atan2(   fmousePositionY - (  game.cameraPositionY - fposy)  ,  fmousePositionX - (game.cameraPositionX - fposx));
 
-								shoot( animalIndex, animalIndex,  game.animals[animalIndex].position, angleToTarget);
+										if (distanceToTarget < closestTargetDistance)
+										{
+											targetAcquired = true;
+											closestTargetDistance  = distanceToTarget;
+											// closestTargetPos = targetPosI;
+											closestvx = vx;
+											closestvy = vy;
+										}
+									}
+								}
 							}
+
+
 						}
 					}
 
 
 
+					// float diffx = cellWorldPositionX - targetPosX;
+					// float diffy = cellWorldPositionY - targetPosY;
 
+					if (targetAcquired)
+					{
+
+
+						float angleToTarget =  atan2( closestvy  , closestvx );
+
+						shoot( animalIndex, animalIndex,  game.animals[animalIndex].position, angleToTarget);
+					}
+
+					break;
 				}
 
 				case ORGAN_GRABBER:
@@ -4389,20 +4466,10 @@ void drawGameInterfaceText()
 void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width )
 {
 
-	// resetAnimal(animalIndex);
-	// std::string gunDescription = std::string("human");
-	// strcpy( &game.animals[animalIndex].displayName[0] , newName.c_str() );
 
-
-	// if (newMachineCallback >= 0)
-	// {
-	// 	game.animals[animalIndex].isMachine = true;
-	// 	game.animals[animalIndex].machineCallback = newMachineCallback;
-	// }
 
 	Vec_i2 o = Vec_i2(0, 0);
 	Vec_i2 p = Vec_i2(0, 0);
-	// Color c = color_peach_light;
 	if (len > animalSquareSize)
 	{
 		len = animalSquareSize;
@@ -4430,47 +4497,8 @@ void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 		case 'V':
 			newColor = color_charcoal;
 			break;
-			// case 'E':
-			// 	newOrgan = ORGAN_SENSOR_EYE;
-			// 	break;
-			// case 'N':
-			// 	newOrgan = ORGAN_SENSOR_PHEROMONE;
-			// 	break;
-			// case 'S':
-			// 	newOrgan = ORGAN_SPEAKER;
-			// 	break;
-			// case 'M':
-			// 	newOrgan = ORGAN_MUSCLE;
-			// 	break;
-			// case 'T':
-			// 	newOrgan = ORGAN_MUSCLE_TURN;
-			// 	break;
-			// case 'A':
-			// 	newOrgan = ORGAN_MUSCLE_STRAFE;
-			// 	break;
-			// case 'G':
-			// 	newOrgan = ORGAN_GRABBER;
-			// 	break;
-			// case 'L':
-			// 	newOrgan = ORGAN_LIVER;
-			// 	break;
-			// case 'U':
-			// 	newOrgan = ORGAN_LUNG;
-			// 	break;
-			// case 'D':
-			// 	newOrgan = ORGAN_GONAD;
-			// 	break;
-			// case 'O':
-			// 	newOrgan = ORGAN_ADDOFFSPRINGENERGY;
-			// case '1':
-			// 	newOrgan = MATERIAL_METAL;
-			// case '2':
-			// 	newOrgan = MATERIAL_GLASS;
 
 		}
-		// if (newOrgan != MATERIAL_NOTHING)
-		// {
-		// appendCell( animalIndex, newOrgan, p);
 
 
 		for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
@@ -4482,9 +4510,6 @@ void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 		}
 
 
-		// isAnimalInSquare(  animalIndex , worldI    );
-
-		// }
 		p.x++;
 		if (p.x == width)
 		{
@@ -4495,12 +4520,20 @@ void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 }
 
 
+void printAnimalCells(unsigned int animalIndex)
+{
+	printf( "%s\n",   game.animals[animalIndex].displayName  );
+
+	for (int i = 0; i < animalSquareSize; ++i)
+	{
+		printf( "%s\n",   tileShortNames(game.animals[animalIndex].body[i].organ).c_str()  );
+	}
+}
 
 void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback )
 {
 
 	resetAnimal(animalIndex);
-	// std::string gunDescription = std::string("human");
 	strcpy( &game.animals[animalIndex].displayName[0] , newName.c_str() );
 
 
@@ -4513,14 +4546,19 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 	Vec_i2 o = Vec_i2(0, 0);
 	Vec_i2 p = Vec_i2(0, 0);
 	Color c = color_peach_light;
-	if (len > animalSquareSize)
-	{
-		len = animalSquareSize;
-	}
-	for (unsigned int i = 0; i < len; ++i)
+	// if (len > animalSquareSize)
+	// {
+	// 	len = animalSquareSize;
+	// }
+
+
+	// unsigned int cellsSoFar = 0;
+	int i = 0;
+	for (;;)
 	{
 		char c = start[i];
 		unsigned int newOrgan = MATERIAL_NOTHING;
+
 		switch (c)
 		{
 
@@ -4589,6 +4627,8 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 		if (newOrgan != MATERIAL_NOTHING)
 		{
 			appendCell( animalIndex, newOrgan, p);
+// cellsSoFar
+			if (game.animals[animalIndex].cellsUsed >= (animalSquareSize - 1)) { break;}
 		}
 		p.x++;
 		if (p.x == width)
@@ -4596,8 +4636,15 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 			p.x = 0;
 			p.y --;
 		}
+		i++;
+		if (i > len) { break;}
 	}
+
+
+
+	// printAnimalCells( animalIndex);
 }
+
 
 
 
@@ -5283,7 +5330,10 @@ void mapSupervisor()
 {
 	while (true)
 	{
-		updateMap();
+		if (!(game.paused))
+		{
+			updateMap();
+		}
 	}
 }
 
