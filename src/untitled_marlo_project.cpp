@@ -1745,6 +1745,9 @@ void growPlants(unsigned int worldI)
 			{
 				unsigned int nextGene = game.world[worldI].geneCursor + 1;
 				skipTo = game.world[worldI].plantGenes[nextGene];
+
+				if (skipTo < nextGene) { skipTo = nextGene; }  // otherwise individual plants can will get into loops and grow enormously large. it's a good but boring strategy.
+
 				skip = true;
 				break;
 			}
@@ -1873,7 +1876,7 @@ void updatePlants(unsigned int worldI)
 	case MATERIAL_GRASS:
 	{
 
-						// printf("bone lasse\n");
+		// printf("bone lasse\n");
 		for (int n = 0; n < nNeighbours; ++n)
 		{
 			// if (extremelyFastNumberFromZeroTo(10) == 0)
@@ -3329,10 +3332,12 @@ void move_all()
 			unsigned int newPosition  =  (newPosY * worldSize) + newPosX;
 			if (newPosition < worldSquareSize)
 			{
+
+
 				if (  materialBlocksMovement( game.world[newPosition].wall ) )
 				{
-					game.animals[animalIndex].fPosX  = game.animals[animalIndex].uPosX;
-					game.animals[animalIndex].fPosY  = game.animals[animalIndex].uPosY;
+					game.animals[animalIndex].fPosX  = game.animals[animalIndex].uPosX + ( (RNG() - 0.5f) * 1.0f  );
+					game.animals[animalIndex].fPosY  = game.animals[animalIndex].uPosY + ( (RNG() - 0.5f) * 1.0f  );
 				}
 				else
 				{
@@ -3340,6 +3345,10 @@ void move_all()
 					game.animals[animalIndex].uPosY  = game.animals[animalIndex].fPosY;
 				}
 				game.animals[animalIndex].position = newPosition;
+
+
+
+				// animal temperature limits
 				if (false)
 				{
 					if (game.world[newPosition].temperature > game.animals[animalIndex].temp_limit_high)
@@ -3454,6 +3463,8 @@ void move_all()
 					// 		// }
 					// 	}
 					// }
+
+
 					game.world[cellWorldPositionI].identity = animalIndex;
 					game.world[cellWorldPositionI].occupyingCell = cellIndex;
 					if (trailUpdate)
@@ -4742,26 +4753,50 @@ unsigned int getRandomPosition(bool underwater)
 	{
 		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
 
-		if (underwater)
+
+
+
+		bool hasAir = false;
+		bool hasWater = false;
+		bool unsuitable = false;
+
+		for (int k = -(baseSize / 2); k < (baseSize / 2); ++k)
 		{
-			if (game.world[randomI].height < seaLevel)
+			for (int j = -(baseSize / 2); j < (baseSize / 2); ++j)
 			{
-				if (game.world[randomI] .wall == MATERIAL_WATER )
-				{
-					return randomI;
-				}
+
+				unsigned int scan = randomI + (k * worldSize) + j;
+				if (game.world[scan].wall == MATERIAL_NOTHING) { hasAir = true; }
+				if (game.world[scan].wall == MATERIAL_WATER) { hasWater = true; }
+				if (game.world[scan].wall == MATERIAL_VOIDMETAL) { unsuitable = true;}
+
 			}
 		}
 
-		else
-		{
-			if (game.world[randomI].height > biome_coastal)
-			{
-				if (game.world[randomI] .wall != MATERIAL_WATER  )
+		if (unsuitable) { continue; }
 
-				{
-					return randomI;
-				}
+
+
+
+
+
+
+
+
+
+		if (underwater)
+		{
+			if (!hasAir)
+			{
+				return randomI;
+			}
+		}
+
+		if (!underwater)
+		{
+			if (!hasWater)
+			{
+				return randomI;
 			}
 		}
 	}
@@ -4966,10 +5001,10 @@ void setupRandomWorld()
 		{
 			game.world[worldPositionI].wall = MATERIAL_VOIDMETAL;
 		}
-		if (game.world[worldPositionI].height < seaLevel)
-		{
-			game.world[worldPositionI].plantState = MATERIAL_GRASS;
-		}
+		// if (game.world[worldPositionI].height < seaLevel)
+		// {
+		// 	game.world[worldPositionI].plantState = MATERIAL_GRASS;
+		// }
 	}
 	detailTerrain();
 	worldCreationStage = 8;
@@ -5008,21 +5043,41 @@ void tournamentController()
 				{
 
 
-					if (materialSupportsGrowth(game.world[game.animals[game.adversary].position].terrain ))
+					for (int i = 0; i < nNeighbours; ++i)
 					{
-						// spawn some grass
-						// game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
-						// game.world[game.animals[game.adversary].position].grassColor =  addColor( color_green , multiplyColorByScalar(game.animals[animalIndex].identityColor, 0.5f ));//
-
-
-						// spawn some plants
-						game.world[game.animals[game.adversary].position].plantState = MATERIAL_SEED;
-						for (int k = 0; k < plantGenomeSize; ++k)
+						unsigned int neighbour = game.animals[game.adversary].position + neighbourOffsets[i];
+						if (neighbour < worldSquareSize)
 						{
-							game.world[game.animals[game.adversary].position].seedGenes[k] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
-						}
 
+							if (materialSupportsGrowth(game.world[game.animals[game.adversary].position].terrain ))
+							{
+								if (extremelyFastNumberFromZeroTo(1) == 0)
+								{
+// spawn some grass
+									game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
+									// game.world[game.animals[game.adversary].position].grassColor =  addColor( color_green , multiplyColorByScalar(game.animals[animalIndex].identityColor, 0.5f ));//
+
+								}
+								else
+								{
+									// spawn some plants
+									game.world[game.animals[game.adversary].position].plantState = MATERIAL_SEED;
+									for (int k = 0; k < plantGenomeSize; ++k)
+									{
+										game.world[game.animals[game.adversary].position].seedGenes[k] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+									}
+								}
+
+
+
+
+							}
+
+						}
 					}
+
+
+
 
 
 					game.adversaryRespawnPos = game.animals[game.adversary].position;

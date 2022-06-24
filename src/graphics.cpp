@@ -658,20 +658,20 @@ void threadGraphics()
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
 	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
 
-	unsigned int endOfWorldVertexRegion = colorGridCursor;
+	// unsigned int endOfWorldVertexRegion = colorGridCursor;
 
 	prepareForMenuDraw();
 	// addExamplePanelToBuffer();
-	drawPanels();
+	// drawPanels();
 	drawInterfacePanel();
 
 
-	glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
-	glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
+	// glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
+	// glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
 
 	drawGameInterfaceText();
 
-	drawAllMenuText ();
+	// drawAllMenuText ();
 
 	postDraw();
 }

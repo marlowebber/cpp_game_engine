@@ -47,9 +47,9 @@ void threadMainMenuInterface()
 void threadInterface()
 {
 	ZoneScoped;
-#ifdef THREAD_TIMING
-	auto start = std::chrono::steady_clock::now();
-#endif
+// #ifdef THREAD_TIMING
+// 	auto start = std::chrono::steady_clock::now();
+// #endif
 	SDL_Event event;
 	while ( SDL_PollEvent( &event ) )
 	{
@@ -293,11 +293,11 @@ void threadInterface()
 		}
 		}
 	}
-#ifdef THREAD_TIMING
-	auto end = std::chrono::steady_clock::now();
-	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	std::cout << "threadInterface " << elapsed.count() << " microseconds." << std::endl;
-#endif
+// #ifdef THREAD_TIMING
+// 	auto end = std::chrono::steady_clock::now();
+// 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+// 	std::cout << "threadInterface " << elapsed.count() << " microseconds." << std::endl;
+// #endif
 }
 
 void setFlagReady()
