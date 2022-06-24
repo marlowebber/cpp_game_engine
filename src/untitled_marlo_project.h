@@ -66,13 +66,14 @@ struct Square
     Color seedColor;
 
     char plantGenes[plantGenomeSize];
-     int plantState;
-     int geneCursor;
+    int plantState;
+    int geneCursor;
     int plantIdentity;
     float energy;
     float energyDebt;
     int sequenceNumber;
     int sequenceReturn;
+    // int sequenceDepth;
     bool grown;
     bool growthMatrix[nNeighbours];
 };

@@ -1627,6 +1627,7 @@ void growInto(unsigned int from, unsigned int to, unsigned int organ)
 
 		game.world[to].sequenceNumber = game.world[from].sequenceNumber;
 		game.world[to].sequenceReturn = game.world[from].sequenceReturn;
+		// game.world[to].sequenceDepth  = game.world[from].sequenceDepth;
 
 		game.world[to].grown = false;
 
@@ -1740,11 +1741,14 @@ void growPlants(unsigned int worldI)
 			{
 
 
-				if (game.world[worldI].geneCursor + 2 < plantGenomeSize)
+				if (game.world[worldI].geneCursor + 1 < plantGenomeSize)
 				{
 					unsigned int nextGene = game.world[worldI].geneCursor + 1;
 					game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[nextGene];
-					game.world[worldI].sequenceReturn = nextGene + 1 ;
+
+					game.world[worldI].sequenceReturn = game.world[worldI].geneCursor;
+					// game.world[worldI].sequenceDepth++;
+
 				}
 
 
@@ -1755,11 +1759,25 @@ void growPlants(unsigned int worldI)
 			case PLANTGENE_BREAK:
 			{
 
-				// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number.
+				// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number and depth.
+
 				if (game.world[worldI].sequenceNumber > 0)
 				{
 					game.world[worldI].geneCursor = game.world[worldI].sequenceReturn;
 					game.world[worldI].sequenceNumber--;
+				}
+				else
+				{
+					// if it is 0, you've completed doing the sequence n times, so you can exit it.
+					// In this case, sequenceReturn of the next cells will be sampled from a cell before the sequence start, which allows nested sequences.
+					int innerSequenceReturn = game.world[worldI].sequenceReturn;
+
+					if (innerSequenceReturn > 0)
+					{
+						game.world[worldI].sequenceReturn = game.world[innerSequenceReturn - 1].sequenceReturn;
+					}
+
+
 				}
 				break;
 			}
@@ -1948,7 +1966,7 @@ void updatePlants(unsigned int worldI)
 			}
 		}
 
-		if (extremelyFastNumberFromZeroTo(100)==0)
+		if (extremelyFastNumberFromZeroTo(100) == 0)
 		{
 			game.world[neighbour].seedState = MATERIAL_NOTHING;
 		}
@@ -2119,7 +2137,7 @@ void updatePlants(unsigned int worldI)
 
 
 							if (
-								// plant species is basically organized by the color of their seeds.
+							    // plant species is basically organized by the color of their seeds.
 							    game.world[neighbour].seedColor.r > (game.world[worldI].grassColor.r * plantSpeciesThreshold) &&
 							    game.world[neighbour].seedColor.g > (game.world[worldI].grassColor.g * plantSpeciesThreshold) &&
 							    game.world[neighbour].seedColor.b > (game.world[worldI].grassColor.b * plantSpeciesThreshold) &&
