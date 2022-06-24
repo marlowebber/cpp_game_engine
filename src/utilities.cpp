@@ -159,6 +159,10 @@ void setupExtremelyFastNumberGenerators()
 	y = 0;
 	z = 0;
 	a = 1;
+
+	
+	srand((unsigned int)time(NULL));
+	seedExtremelyFastNumberGenerators();
 }
 
 

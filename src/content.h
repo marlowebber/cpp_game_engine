@@ -45,7 +45,11 @@
 #define ORGAN_SENSOR_PAIN          38
 #define ORGAN_HAIR                 39
 
-#define numberOfOrganTypes        39 // the number limit of growable genes
+#define ORGAN_GENITAL_A            40
+#define ORGAN_GENITAL_B            41
+#define ORGAN_SENSOR_PLEASURE      42
+
+#define numberOfOrganTypes        42 // the number limit of growable genes
 
 #define MARKER                    50  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        51 
@@ -118,10 +122,13 @@
 #define PLANTGENE_SEQUENCE    15
 #define PLANTGENE_BREAK		  16
 
+#define PLANTGENE_RED     17
+#define PLANTGENE_GREEN   18
+#define PLANTGENE_BLUE    19
+#define PLANTGENE_LIGHT   20
+#define PLANTGENE_DARK    21
 
-
-
-#define numberOfPlantGenes 17
+#define numberOfPlantGenes 21
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {
@@ -778,7 +785,9 @@ bool organIsASensor(unsigned int organ)
 	        organ == ORGAN_SENSOR_AGE ||
 	        organ == ORGAN_SENSOR_BIRTHPLACE ||
 	        organ == ORGAN_SENSOR_PARENT ||
-	        organ == ORGAN_SENSOR_PAIN)
+	        organ == ORGAN_SENSOR_PAIN ||
+	        organ == ORGAN_SENSOR_PLEASURE
+	        )
 	{
 		return true;
 	}

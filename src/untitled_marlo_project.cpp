@@ -5,23 +5,24 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <cstring>
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include "SDL.h"
-
-#include <boost/thread.hpp>
 #include <random>
 #include <time.h>
 #include <pthread.h>
+#include <chrono>
+#include <thread>
 #include <iostream>
-#include <fstream>
-
-#define TRACY_ENABLE
-
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string>
 #include <fstream>
+
+#include <boost/thread.hpp>
+
+#include <SDL.h>
+#include <SDL_opengl.h>
+#include "SDL.h"
+
+#define TRACY_ENABLE
 
 #ifdef TRACY_ENABLE
 #include <Tracy.hpp>
@@ -32,14 +33,8 @@
 #include "untitled_marlo_project.h"
 #include "menus.h"
 #include "main.h"
-
-#include <chrono>
-#include <thread>
-
 #include "SimplexNoise.h"
-
 #include "TinyErode.h"
-
 #include "content.h"
 
 const bool doReproduction        = true;
@@ -51,38 +46,28 @@ const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
 const bool doGroundCover    = false;
-
 const int prelimSize = 256;
 const int cameraPanSpeed = 10;
-
 const float baseLungCapacity = 1.0f;
 const unsigned int prelimSquareSize = prelimSize * prelimSize;
 const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size of a terminal window
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
-
-// const float taxEnergyScale         = 0.00000f;        // a multiplier for how much it animals just to exist.
-// const float movementEnergyScale    = 0.00000f;        // a multiplier for how much it animals to move.
-// const float foodEnergy             = 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
-// const float grassEnergy            = 0.25f;         // how much you get from eating a square of grass
 const float neuralNoise = 0.1f;
 const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 20000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
 const float musclePower = 40.0f;
 const float const_pi = 3.1415f;
-
 const float aBreath = 0.01f;
-
 const float neuralMutationStrength = 0.1f;
-
 const int paletteMenuX = 300;
 const int paletteMenuY = 50;
 const int paletteTextSize = 10;
 const int paletteSpacing = 20;
 const unsigned int paletteWidth = 4;
-// these are the parameters that set up the physical geography of the game.world.
+// these are the parameters that set up the physical geography of the world.
 const float seaLevel =  0.5f * worldSize;;;
 const float biome_marine  = seaLevel + (worldSize / 20);
 const float biome_coastal = seaLevel + (worldSize / 3);
@@ -91,8 +76,6 @@ const float sunYangle = 0.35f;
 const unsigned int baseSize = 100;
 const unsigned int wallThickness = 8;
 const unsigned int doorThickness = 16;
-
-
 const int neighbourOffsets[] =
 {
 	- 1,
@@ -105,13 +88,9 @@ const int neighbourOffsets[] =
 	+worldSize - 1
 };
 
-
-
-
 GameState game;
 
 // these are variables which are only needed per session, and never need to be stored.
-
 float prelimMap[prelimSquareSize];
 float prelimWater[prelimSquareSize];
 // tinyerode stuff
@@ -153,7 +132,6 @@ unsigned int modelFrameCount = 0;
 unsigned int usPerFrame = 0;
 float fps = 1.0f;
 
-
 int adversaryLoiter = 0;
 unsigned int adversaryLoiterPos = 0;
 
@@ -168,13 +146,7 @@ int mouseX;
 int mouseY;
 int worldCreationStage = 0;
 
-
-
-
 // --------------------- DeepSea public methods
-
-
-
 
 void viewAdversary()
 {
@@ -527,8 +499,8 @@ void resetGameState()
 	game.logs[logLength][nLogs];
 	game.paletteSelectedOrgan = 0;
 
-	game.ecoSettings[3]       = 0.000001f; // tax energy scale
-	game.ecoSettings[2]     = 0.000001f;      // movement energy scale
+	game.ecoSettings[3]       = 0.00000001f; // tax energy scale
+	game.ecoSettings[2]     = 0.00000001f;      // movement energy scale
 	game.ecoSettings[0]           = 0.95f; // food (meat) energy
 	game.ecoSettings[1]          = 0.25f; // grass energy
 
@@ -1659,10 +1631,46 @@ void growInto(unsigned int from, unsigned int to, unsigned int organ)
 
 void growPlants(unsigned int worldI)
 {
+
+	if (game.world[worldI].plantState == MATERIAL_GRASS)
+	{
+
+		for (int n = 0; n < nNeighbours; ++n)
+		{
+			// if (extremelyFastNumberFromZeroTo(10) == 0)
+			// {
+			unsigned int neighbour = worldI + neighbourOffsets[n];
+			if (neighbour < worldSquareSize)
+			{
+				if (game.world[neighbour].plantState == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
+				{
+					// float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[worldI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
+
+					// growthChance *= 0.10f;
+
+					// if (RNG() < growthChance )
+					// {
+					// printf("grone grasse\n");
+					// game.world[neighbour].plantState = MATERIAL_GRASS;
+					// game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
+					// game.world[neighbour].pheromoneChannel = 6;
+					// game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
+
+
+					growInto(worldI, neighbour, MATERIAL_GRASS);
+					// }
+				}
+			}
+		}
+		return;
+	}
+
+
+
+
 	unsigned int skipTo = game.world[worldI].geneCursor;
 	bool skip = false;
 	unsigned int turns = 0;
-	game.world[worldI].grown = true;
 	while (true)
 	{
 		turns++; if (turns > plantGenomeSize) { return; }
@@ -1670,6 +1678,10 @@ void growPlants(unsigned int worldI)
 		if (game.world[worldI].geneCursor >= plantGenomeSize) {return;}
 		char c = game.world[worldI].plantGenes[game.world[worldI].geneCursor];
 		bool done = false;
+
+
+
+
 		if (c < nNeighbours)
 		{
 			game.world[worldI].growthMatrix[c] = !(game.world[worldI].growthMatrix[c]);
@@ -1711,10 +1723,12 @@ void growPlants(unsigned int worldI)
 			{
 
 
-				unsigned int nextGene = game.world[worldI].geneCursor + 1;
-				game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[nextGene];
-				game.world[worldI].sequenceReturn = game.world[worldI].geneCursor ;
-
+				if (game.world[worldI].geneCursor + 2 < plantGenomeSize)
+				{
+					unsigned int nextGene = game.world[worldI].geneCursor + 1;
+					game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[nextGene];
+					game.world[worldI].sequenceReturn = nextGene + 1 ;
+				}
 
 
 				break;
@@ -1795,9 +1809,53 @@ void growPlants(unsigned int worldI)
 				skip = true;
 				break;
 			}
+
+
+			case PLANTGENE_RED:
+			{
+				game.world[worldI].grassColor.r *= 1.35f;
+				game.world[worldI].grassColor = clampColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_GREEN:
+			{
+				game.world[worldI].grassColor.b *= 1.35f;
+
+				game.world[worldI].grassColor = clampColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_BLUE:
+			{
+				game.world[worldI].grassColor.b *= 1.35f;
+				game.world[worldI].grassColor = clampColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_LIGHT:
+			{
+				game.world[worldI].grassColor.r *= 1.35f;
+				game.world[worldI].grassColor.g *= 1.35f;
+				game.world[worldI].grassColor.b *= 1.35f;
+
+				game.world[worldI].grassColor = clampColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_DARK:
+			{
+				game.world[worldI].grassColor.r *= 0.75f;
+				game.world[worldI].grassColor.g *= 0.75f;
+				game.world[worldI].grassColor.b *= 0.75f;
+
+				break;
+			}
+
+
+
+
 			}
 			if (done)
 			{
+
+				game.world[worldI].grown = true;
 				return;
 			}
 		}
@@ -1807,35 +1865,37 @@ void growPlants(unsigned int worldI)
 void updatePlants(unsigned int worldI)
 {
 
-	// if (game.world[worldI].plantState != MATERIAL_NOTHING)
-	// {
-	if (game.world[worldI].energyDebt < 0.0f)
+	if (game.world[worldI].plantState == MATERIAL_BUD || game.world[worldI].plantState == MATERIAL_GRASS ||
+	        game.world[worldI].plantState == MATERIAL_LEAF || game.world[worldI].plantState == MATERIAL_SEED ||
+	        game.world[worldI].plantState == MATERIAL_WOOD )
 	{
-		if (!(game.world[worldI].grown))
+		if (game.world[worldI].energyDebt < 0.0f)
 		{
-			if (game.world[worldI].plantState == MATERIAL_WOOD)
+			// if (!(game.world[worldI].grown))
+			// {
+			// if (game.world[worldI].plantState == MATERIAL_WOOD)
+			// {
+			growPlants(worldI);
+			// }
+			// }
+
+		}
+		else
+		{
+			if (game.world[worldI].energy > 0.0f)
 			{
-				growPlants(worldI);
+				game.world[worldI].energyDebt -= game.world[worldI].energy;
+				game.world[worldI].energy = 0.0f;
 			}
 		}
 
+
+		// grow plant into neighboring squares if applicable
+
+
+
+
 	}
-	else
-	{
-		if (game.world[worldI].energy > 0.0f)
-		{
-			game.world[worldI].energyDebt -= game.world[worldI].energy;
-			game.world[worldI].energy = 0.0f;
-		}
-	}
-
-
-	// grow plant into neighboring squares if applicable
-
-
-
-
-	// }
 
 
 
@@ -1844,7 +1904,7 @@ void updatePlants(unsigned int worldI)
 	{
 	case MATERIAL_LEAF:
 	{
-		game.world[worldI].energy +=  colorAmplitude(    multiplyColor(  game.world[worldI].light , game.world[worldI].grassColor)) ;
+		game.world[worldI].energy += colorAmplitude(    multiplyColor(  game.world[worldI].light , game.world[worldI].grassColor)) ;
 
 
 
@@ -1881,6 +1941,8 @@ void updatePlants(unsigned int worldI)
 				game.world[worldI].geneCursor = 0;
 				game.world[worldI].energy = 1.0f;
 				game.world[worldI].energyDebt = 0.0f;
+
+				game.world[worldI].grassColor = color_green;//0.0f;
 
 				memset(&(game.world[worldI].growthMatrix), false, sizeof(bool) * nNeighbours);
 				memcpy( & (game.world[worldI].plantGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
@@ -1922,37 +1984,42 @@ void updatePlants(unsigned int worldI)
 
 	case MATERIAL_GRASS:
 	{
+		// game.world[worldI].energy += lightEnergy;
+		game.world[worldI].energy += colorAmplitude(    multiplyColor(  game.world[worldI].light , game.world[worldI].grassColor)) ;
 
-		// printf("bone lasse\n");
-		for (int n = 0; n < nNeighbours; ++n)
-		{
-			// if (extremelyFastNumberFromZeroTo(10) == 0)
-			// {
-			unsigned int neighbour = worldI + neighbourOffsets[n];
-			if (neighbour < worldSquareSize)
-			{
-				if (game.world[neighbour].plantState == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
-				{
-					float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[worldI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
 
-					growthChance *= 0.10f;
-
-					if (RNG() < growthChance )
-					{
-						// printf("grone grasse\n");
-						game.world[neighbour].plantState = MATERIAL_GRASS;
-						game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
-
-						game.world[neighbour].pheromoneChannel = 6;
-						game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
-
-					}
-				}
-			}
-			// }
-		}
-		break;
 	}
+
+		// 	// printf("bone lasse\n");
+		// 	for (int n = 0; n < nNeighbours; ++n)
+		// 	{
+		// 		// if (extremelyFastNumberFromZeroTo(10) == 0)
+		// 		// {
+		// 		unsigned int neighbour = worldI + neighbourOffsets[n];
+		// 		if (neighbour < worldSquareSize)
+		// 		{
+		// 			if (game.world[neighbour].plantState == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
+		// 			{
+		// 				// float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[worldI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
+
+		// 				// growthChance *= 0.10f;
+
+		// 				// if (RNG() < growthChance )
+		// 				// {
+		// 					// printf("grone grasse\n");
+		// 					game.world[neighbour].plantState = MATERIAL_GRASS;
+		// 					game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
+
+		// 					game.world[neighbour].pheromoneChannel = 6;
+		// 					game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
+
+		// 				// }
+		// 			}
+		// 		}
+		// 		// }
+		// 	}
+		// 	break;
+		// }
 	}
 	// }
 }
@@ -2064,33 +2131,33 @@ void updateMapI(unsigned int randomI)
 	}
 }
 
-bool mapPhase;
+// bool mapPhase;
 void updateMap()
 {
 	ZoneScoped;
 
-	if (mapPhase)
+	// if (mapPhase)
+	// {
+
+
+	for (unsigned int randomI = 0; randomI < worldSquareSize; ++randomI)
 	{
 
 
-		for (unsigned int randomI = 0; randomI < worldSquareSize; ++randomI)
-		{
-
-
-			updateMapI(randomI);
-		}
+		updateMapI(randomI);
 	}
-	else
-	{
+	// }
+	// else
+	// {
 
-		for (unsigned int randomI = worldSquareSize; randomI > 0; --randomI)
-		{
+	// 	for (unsigned int randomI = worldSquareSize; randomI > 0; --randomI)
+	// 	{
 
 
-			updateMapI(randomI);
-		}
-	}
-	mapPhase = !mapPhase;
+	// 		updateMapI(randomI);
+	// 	}
+	// }
+	// mapPhase = !mapPhase;
 }
 
 int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPositionI)
@@ -2845,7 +2912,7 @@ void organs_all()
 
 				case ORGAN_SENSOR_PAIN:
 				{
-					game.animals[animalIndex].body[cellIndex].signalIntensity *= 0.95f;
+					game.animals[animalIndex].body[cellIndex].signalIntensity *= 0.99f;
 				}
 
 				case ORGAN_SENSOR_HUNGER:
@@ -3376,6 +3443,25 @@ void organs_all()
 					}
 					break;
 				}
+
+
+
+				case ORGAN_GENITAL_A:
+				{
+					break;
+				}
+				case ORGAN_GENITAL_B:
+				{
+
+					break;
+				}
+				case ORGAN_SENSOR_PLEASURE:
+				{
+					game.animals[animalIndex].body[cellIndex].signalIntensity *= 0.99f;
+					break;
+				}
+
+
 				}
 			}
 			game.animals[animalIndex].totalGonads = totalGonads;
@@ -3389,6 +3475,51 @@ void organs_all()
 		game.speakerChannels[i] = 0.0f;
 	}
 }
+
+
+
+
+void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
+{
+	if ( game.animals[a].energyDebt <= 0.0f && game.animals[b].energyDebt <= 0.0f  )
+	{
+		if (game.animals[a].energy > game.animals[a].offspringEnergy && game.animals[b].energy > game.animals[b].offspringEnergy )
+		{
+			float energyDonation = game.animals[a].offspringEnergy + game.animals[b].offspringEnergy ;
+			game.animals[a].energy -= game.animals[a].offspringEnergy;
+			game.animals[b].energy -= game.animals[b].offspringEnergy;
+			unsigned int bSpecies = b % numberOfAnimalsPerSpecies;
+			int newAnimal = spawnAnimal( bSpecies, game.animals[b], game.animals[b].position, true );
+			if (newAnimal >= 0)
+			{
+				for (int i = 0; i < animalSquareSize; ++i)
+				{
+					if (extremelyFastNumberFromZeroTo(1) == 0)
+					{
+						game.animals[newAnimal].genes[i] = game.animals[a].genes[i];
+					}
+				}
+				rebuildBodyFromGenes( newAnimal);
+				game.animals[newAnimal].energy += energyDonation;
+			}
+
+
+			int pleasureCellA = getRandomCellOfType(a,ORGAN_SENSOR_PLEASURE);
+			if (pleasureCellA >= 0)
+			{
+				game.animals[a].body[pleasureCellA].signalIntensity += 1.0f;
+			}
+
+			int pleasureCellB = getRandomCellOfType(b,ORGAN_SENSOR_PLEASURE);
+			if (pleasureCellB >= 0)
+			{
+				game.animals[b].body[pleasureCellB].signalIntensity += 1.0f;
+			}
+
+		}
+	}
+}
+
 
 void move_all()
 {
@@ -3475,6 +3606,27 @@ void move_all()
 							if (fellowSpeciesIndex == speciesIndex)
 							{
 								game.animals[animalIndex].lastTouchedKin = game.world[cellWorldPositionI].identity;
+
+
+								// you can have sex with this !
+								// top
+								if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_GENITAL_A &&
+								        game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_B )
+								{
+
+									sexBetweenTwoCreatures( animalIndex, game.world[cellWorldPositionI].identity );
+								}
+								// bottom
+								else if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_GENITAL_B &&
+								         game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_A )
+								{
+
+									sexBetweenTwoCreatures( game.world[cellWorldPositionI].identity , animalIndex);
+								}
+
+
+
+
 							}
 							else
 							{
@@ -4885,6 +5037,16 @@ unsigned int getRandomPosition(bool underwater)
 }
 
 
+
+
+
+
+
+
+
+
+
+
 void setupBuilding_playerBase(unsigned int worldPositionI)
 {
 	unsigned int worldPositionX = worldPositionI % worldSize;
@@ -4897,7 +5059,7 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 		int y = i / worldSize;
 		int xdiff = x - worldPositionX;
 		int ydiff = y - worldPositionY;
-		if (abs(xdiff) < baseSize && abs(ydiff) < baseSize)// set all the tiles around the position to a floor tile
+		if (abs(xdiff) < baseSize && abs(ydiff) < (baseSize + wallThickness )) // set all the tiles around the position to a floor tile
 		{
 			avgHeight += game.world[i].height;
 			tally++;
@@ -4939,74 +5101,96 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 
 void setupGameItems()
 {
+
+
+
+
 	unsigned int targetWorldPositionI =  getRandomPosition(false);
 
 	setupBuilding_playerBase(targetWorldPositionI);
 
 	int i = 1;
 	setupEcologyCompter( i);
-	spawnAnimalIntoSlot(3, game.animals[i], targetWorldPositionI, false);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
 
 	targetWorldPositionI += 25;
 	setupMessageComputer( i);
-	spawnAnimalIntoSlot(9, game.animals[i], targetWorldPositionI, false);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
 
 
 
-	targetWorldPositionI =  getRandomPosition(true);
-	game.adversaryRespawnPos = targetWorldPositionI;
-	spawnAdversary(targetWorldPositionI);
+
+
+
+
+
+
 
 	targetWorldPositionI =  getRandomPosition(false);
-	setupBuilding_playerBase(targetWorldPositionI);
-	setupHospitalComputer(i);
-	spawnAnimalIntoSlot(5, game.animals[i], targetWorldPositionI, false);
+	game.adversaryRespawnPos = targetWorldPositionI;
+	spawnAdversary(targetWorldPositionI);
 
 	targetWorldPositionI += 25 * worldSize;
 	game.playerRespawnPos = targetWorldPositionI;
 	spawnPlayer();
 
 
-	targetWorldPositionI += 25;
-	setupDestroyer( i);
-	spawnAnimalIntoSlot(12, game.animals[i], targetWorldPositionI, false);
 
 
+
+
+
+
+
+	targetWorldPositionI =  getRandomPosition(false);
+	setupBuilding_playerBase(targetWorldPositionI);
+	setupHospitalComputer(i);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
 
 	targetWorldPositionI += 25 * worldSize;
 	setupMessageComputer( i);
-	spawnAnimalIntoSlot(10, game.animals[i], targetWorldPositionI, false);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+
+
+
+
+
+
+
+
 
 	targetWorldPositionI =  getRandomPosition(true);
 	setupBuilding_playerBase(targetWorldPositionI);
 	setupTrackerGlasses(i);
-	spawnAnimalIntoSlot(4, game.animals[i], targetWorldPositionI, false);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
 
 	targetWorldPositionI += 25;
 	setupExampleGun(i);
-	spawnAnimalIntoSlot(2, game.animals[i], targetWorldPositionI, false);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
 
 	targetWorldPositionI += 25 * worldSize;
 	setupMessageComputer( i);
-	spawnAnimalIntoSlot(11, game.animals[i], targetWorldPositionI, false);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+
+
+
+
+
 
 	targetWorldPositionI =  getRandomPosition(false);
 	setupBuilding_playerBase(targetWorldPositionI);
 	setupExampleKnife(i);
-	spawnAnimalIntoSlot(6, game.animals[i], targetWorldPositionI, false);
-
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
 
 	targetWorldPositionI += 25;
 	setupExampleLighter(i);
-	spawnAnimalIntoSlot(7, game.animals[i], targetWorldPositionI, false);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+
+	targetWorldPositionI += 25;
+	setupDestroyer( i);
+	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
 
 
-	// targetWorldPositionI += 25;
-	// setupDestroyer( i);
-	// spawnAnimalIntoSlot(12, game.animals[i], targetWorldPositionI, false);
-
-	// targetWorldPositionI =  getRandomPosition(true);
-	// setupBuilding_playerBase(targetWorldPositionI);
 }
 
 
@@ -5431,8 +5615,6 @@ void startSimulation()
 {
 
 	worldCreationStage = 0;
-	srand((unsigned int)time(NULL));
-	seedExtremelyFastNumberGenerators();
 	int j = 1;
 	setupExampleAnimal2(j, true);
 	game.champion = game.animals[j];
