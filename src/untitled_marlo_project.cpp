@@ -50,6 +50,7 @@ const bool cameraFollowsPlayer   = true;
 const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
+const bool doGroundCover    = false;
 
 const int prelimSize = 256;
 const int cameraPanSpeed = 10;
@@ -426,7 +427,7 @@ void resetAnimals()
 		resetAnimal(animalIndex);
 	}
 	int j = 1;
-	setupExampleAnimal2(j);
+	setupExampleAnimal2(j, true);
 	game.champion = game.animals[j];
 	game.championScore = 0;
 }
@@ -1491,7 +1492,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 
 		//2. wall
 		Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
-		if (game.world[worldI].wall == MATERIAL_GRASS) { wallColor = game.world[worldI].grassColor;}
+		// if (game.world[worldI].wall == MATERIAL_GRASS) { wallColor = game.world[worldI].grassColor;}
 		displayColor = filterColor( displayColor, wallColor  );
 
 
@@ -1506,24 +1507,30 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 
 		if ( game.world[worldI].plantState == MATERIAL_LEAF )
 		{
-			Color woodColor = mixColor(game.world[worldI].grassColor, color_green, 0.8f);
+			Color woodColor = mixColor(game.world[worldI].grassColor, color_green, 0.5f);
 			displayColor = filterColor( displayColor, woodColor  );
 		}
 		else if ( game.world[worldI].plantState == MATERIAL_SEED )
 		{
-			Color woodColor = mixColor(game.world[worldI].grassColor, color_yellow, 0.8f);
+			Color woodColor = mixColor(game.world[worldI].grassColor, color_yellow, 0.5f);
 			displayColor = filterColor( displayColor, woodColor  );
 		}
 		else if ( game.world[worldI].plantState == MATERIAL_BUD )
 		{
-			Color woodColor = mixColor(game.world[worldI].grassColor, color_white, 0.8f);
+			Color woodColor = mixColor(game.world[worldI].grassColor, color_white, 0.5f);
 			displayColor = filterColor( displayColor, woodColor  );
 		}
 		else if ( game.world[worldI].plantState == MATERIAL_WOOD )
 		{
-			Color woodColor = mixColor(game.world[worldI].grassColor, color_brown, 0.8f);
+			Color woodColor = mixColor(game.world[worldI].grassColor, color_brown, 0.5f);
 			displayColor = filterColor( displayColor, woodColor  );
 		}
+		else if ( game.world[worldI].plantState == MATERIAL_GRASS )
+		{
+			Color woodColor = mixColor(game.world[worldI].grassColor, color_charcoal, 0.5f);
+			displayColor = filterColor( displayColor, woodColor  );
+		}
+
 
 
 
@@ -1610,23 +1617,26 @@ int getNewPlantIdentity()
 
 void growInto(unsigned int from, unsigned int to, unsigned int organ)
 {
-	game.world[to].plantState = organ;
-	game.world[to].identity = game.world[from].identity;
-	game.world[to].energy = 0.0f;
-	game.world[to].geneCursor = game.world[from].geneCursor;
-	game.world[to].grassColor = game.world[from].grassColor;
-	if (organ == MATERIAL_SEED)
+	if (!( materialBlocksMovement (game.world[to].wall)))
 	{
-		game.world[to].energyDebt = 2.0f;
+		game.world[to].plantState = organ;
+
+		game.world[to].identity = game.world[from].identity;
+		game.world[to].energy = 0.0f;
+		game.world[to].geneCursor = game.world[from].geneCursor;
+		game.world[to].grassColor = game.world[from].grassColor;
+		if (organ == MATERIAL_SEED)
+		{
+			game.world[to].energyDebt = 2.0f;
+		}
+		else
+		{
+
+			game.world[to].energyDebt = 1.0f;
+		}
+		memcpy( &(game.world[to].plantGenes[0]), &(game.world[from].plantGenes[0]), sizeof(char) * plantGenomeSize   );
+
 	}
-	else
-	{
-
-		game.world[to].energyDebt = 1.0f;
-	}
-	memcpy( &(game.world[to].plantGenes[0]), &(game.world[from].plantGenes[0]), sizeof(char) * plantGenomeSize   );
-
-
 
 }
 
@@ -1814,20 +1824,22 @@ void updatePlants(unsigned int worldI)
 		// spawn plants from seeds if applicable
 		if (extremelyFastNumberFromZeroTo(10) == 0)
 		{
-			game.world[worldI].plantState = MATERIAL_WOOD;
-			game.world[worldI].plantIdentity = getNewPlantIdentity();
-			game.world[worldI].geneCursor = 0;
-			game.world[worldI].energy = 1.0f;
-			game.world[worldI].energyDebt = 0.0f;
+			if (materialSupportsGrowth(game.world[worldI].terrain))
+			{
+				game.world[worldI].plantState = MATERIAL_WOOD;
+				game.world[worldI].plantIdentity = getNewPlantIdentity();
+				game.world[worldI].geneCursor = 0;
+				game.world[worldI].energy = 1.0f;
+				game.world[worldI].energyDebt = 0.0f;
 
-			memset(&(game.world[worldI].growthMatrix), false, sizeof(bool) * nNeighbours);
-			memcpy( & (game.world[worldI].plantGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
+				memset(&(game.world[worldI].growthMatrix), false, sizeof(bool) * nNeighbours);
+				memcpy( & (game.world[worldI].plantGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
 
-			unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
-			game.world[worldI].plantGenes[mutationIndex] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
-			game.world[worldI].grassColor = mutateColor(game.world[worldI].grassColor);
+				unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
+				game.world[worldI].plantGenes[mutationIndex] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+				game.world[worldI].grassColor = mutateColor(game.world[worldI].grassColor);
 
-
+			}
 		}
 		else
 		{
@@ -1855,7 +1867,41 @@ void updatePlants(unsigned int worldI)
 
 
 		}
+		break;
+	}
 
+	case MATERIAL_GRASS:
+	{
+
+						// printf("bone lasse\n");
+		for (int n = 0; n < nNeighbours; ++n)
+		{
+			// if (extremelyFastNumberFromZeroTo(10) == 0)
+			// {
+			unsigned int neighbour = worldI + neighbourOffsets[n];
+			if (neighbour < worldSquareSize)
+			{
+				if (game.world[neighbour].plantState == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
+				{
+					float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[worldI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
+
+					growthChance *= 0.10f;
+
+					if (RNG() < growthChance )
+					{
+						// printf("grone grasse\n");
+						game.world[neighbour].plantState = MATERIAL_GRASS;
+						game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
+
+						game.world[neighbour].pheromoneChannel = 6;
+						game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
+
+					}
+				}
+			}
+			// }
+		}
+		break;
 	}
 	}
 	// }
@@ -1921,42 +1967,42 @@ void updateMapI(unsigned int randomI)
 	// }
 
 
-	if (game.world[randomI].wall == MATERIAL_GRASS)
-	{
-		// if (extremelyFastNumberFromZeroTo(1) == 0)
-		// {
-		for (int n = 0; n < nNeighbours; ++n)
-		{
-			// if (extremelyFastNumberFromZeroTo(10) == 0)
-			// {
-			unsigned int neighbour = randomI + neighbourOffsets[n];
-			if (neighbour < worldSquareSize)
-			{
-				if (game.world[neighbour].wall == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
-				{
-					float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[randomI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
+	// if (game.world[randomI].wall == MATERIAL_GRASS)
+	// {
+	// 	// if (extremelyFastNumberFromZeroTo(1) == 0)
+	// 	// {
+	// 	for (int n = 0; n < nNeighbours; ++n)
+	// 	{
+	// 		// if (extremelyFastNumberFromZeroTo(10) == 0)
+	// 		// {
+	// 		unsigned int neighbour = randomI + neighbourOffsets[n];
+	// 		if (neighbour < worldSquareSize)
+	// 		{
+	// 			if (game.world[neighbour].wall == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
+	// 			{
+	// 				float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[randomI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
 
-					growthChance *= 0.10f;
+	// 				growthChance *= 0.10f;
 
-					if (RNG() < growthChance )
-					{
-						game.world[neighbour].wall = MATERIAL_GRASS;
-						game.world[neighbour].grassColor = mutateColor (game.world[randomI].grassColor);
-						// game.world[neighbour].grassColor.r += (RNG() - 0.5f) * 0.1f;
-						// game.world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
-						// game.world[neighbour].grassColor.b += (RNG() - 0.5f) * 0.1f;
-						// game.world[neighbour].grassColor = clampColor(game.world[neighbour].grassColor);
+	// 				if (RNG() < growthChance )
+	// 				{
+	// 					game.world[neighbour].wall = MATERIAL_GRASS;
+	// 					game.world[neighbour].grassColor = mutateColor (game.world[randomI].grassColor);
+	// 					// game.world[neighbour].grassColor.r += (RNG() - 0.5f) * 0.1f;
+	// 					// game.world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
+	// 					// game.world[neighbour].grassColor.b += (RNG() - 0.5f) * 0.1f;
+	// 					// game.world[neighbour].grassColor = clampColor(game.world[neighbour].grassColor);
 
-						game.world[neighbour].pheromoneChannel = 6;
-						game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
+	// 					game.world[neighbour].pheromoneChannel = 6;
+	// 					game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
 
-					}
-				}
-			}
-			// }
-		}
-		// }
-	}
+	// 				}
+	// 			}
+	// 		}
+	// 		// }
+	// 	}
+	// 	// }
+	// }
 	if ( materialDegrades( game.world[randomI].wall) )
 	{
 		game.world[randomI].wall = MATERIAL_NOTHING;
@@ -2333,7 +2379,7 @@ void lighterCallback( int gunIndex, int shooterIndex )
 		int cursorPosY = game.cameraPositionY + game.mousePositionY;
 		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 
-		if ( game.world[worldCursorPos].wall == MATERIAL_NOTHING ||  game.world[worldCursorPos].wall == MATERIAL_GRASS )
+		if ( game.world[worldCursorPos].wall == MATERIAL_NOTHING  )
 		{
 			game.world[worldCursorPos].wall = MATERIAL_FIRE;
 		}
@@ -3108,10 +3154,10 @@ void organs_all()
 						game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
 					}
 
-					else if (game.world[cellWorldPositionI].wall == MATERIAL_GRASS)
+					else if (game.world[cellWorldPositionI].plantState == MATERIAL_GRASS)
 					{
 						game.animals[animalIndex].energy += game.ecoSettings[1] ;
-						game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
+						game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
 					}
 
 
@@ -4922,7 +4968,7 @@ void setupRandomWorld()
 		}
 		if (game.world[worldPositionI].height < seaLevel)
 		{
-			game.world[worldPositionI].wall = MATERIAL_GRASS;
+			game.world[worldPositionI].plantState = MATERIAL_GRASS;
 		}
 	}
 	detailTerrain();
@@ -4965,7 +5011,7 @@ void tournamentController()
 					if (materialSupportsGrowth(game.world[game.animals[game.adversary].position].terrain ))
 					{
 						// spawn some grass
-						game.world[game.animals[game.adversary].position].wall = MATERIAL_GRASS;
+						// game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
 						// game.world[game.animals[game.adversary].position].grassColor =  addColor( color_green , multiplyColorByScalar(game.animals[animalIndex].identityColor, 0.5f ));//
 
 
@@ -5002,10 +5048,10 @@ void tournamentController()
 
 
 
-					if (game.world[ game.adversaryRespawnPos  ]. wall != MATERIAL_WATER)
-					{
-						game.adversaryRespawnPos = getRandomPosition(true);
-					}
+					// if (game.world[ game.adversaryRespawnPos  ]. wall != MATERIAL_WATER)
+					// {
+					// 	game.adversaryRespawnPos = getRandomPosition(true);
+					// }
 
 				}
 
@@ -5073,6 +5119,13 @@ void tournamentController()
 				int j = 1;
 
 
+				bool underwater = false;
+				if (  game.world[  game.animals[game.adversary].position ].wall == MATERIAL_WATER )
+				{
+					underwater = true;
+				}
+
+
 				for (int k = 0; k < 12; ++k)// spawn lots of the example animal
 				{
 
@@ -5085,7 +5138,7 @@ void tournamentController()
 
 
 						{
-							setupExampleAnimal2(j);
+							setupExampleAnimal2(j, underwater);
 
 							unsigned int randomPos = game.animals[game.adversary].position;
 
@@ -5096,13 +5149,9 @@ void tournamentController()
 							}
 
 							domingo = spawnAnimal( 1, game.animals[j], randomPos, true);
-
-
-
 						}
 						else
 						{
-
 							unsigned int randomPos = game.animals[game.adversary].position;
 							int randomCell = getRandomPopulatedCell(game.adversary);
 							if (randomCell >= 0)
@@ -5111,8 +5160,6 @@ void tournamentController()
 							}
 
 							domingo = spawnAnimal( 1,  game.champion, randomPos, true);
-
-
 						}
 
 						if (domingo >= 0)
@@ -5123,8 +5170,6 @@ void tournamentController()
 						}
 					}
 				}
-
-
 			}
 		}
 	}
@@ -5132,7 +5177,6 @@ void tournamentController()
 
 void model()
 {
-	// auto start = std::chrono::steady_clock::now();
 	ZoneScoped;
 	if (!game.paused && !flagSave)
 	{
@@ -5140,15 +5184,6 @@ void model()
 		computeAllAnimalsOneTurn();
 	}
 	modelFrameCount++;
-	// auto end = std::chrono::steady_clock::now();
-	// auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	// usPerFrame = elapsed.count();
-
-	// if (!game.lockfps && usPerFrame > 0)
-	// {
-	// 	fps = (1000000.0f / usPerFrame) ;
-	// }
-	// if (game.lockfps) { fps = 1.0f;}
 }
 
 void modelSupervisor()
@@ -5259,7 +5294,7 @@ void startSimulation()
 	srand((unsigned int)time(NULL));
 	seedExtremelyFastNumberGenerators();
 	int j = 1;
-	setupExampleAnimal2(j);
+	setupExampleAnimal2(j, true);
 	game.champion = game.animals[j];
 	boost::thread t7{ modelSupervisor };
 	boost::thread t8{ mapSupervisor };

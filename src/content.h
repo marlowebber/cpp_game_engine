@@ -804,11 +804,20 @@ bool isCellConnectable(unsigned int organ)
 	return false;
 }
 
-void setupExampleAnimal2(int i)
+void setupExampleAnimal2(int i, bool underwater)
 {
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
+	if (underwater)
+	{
+
 	animalAppendCell( i, ORGAN_GILL );
+	}
+	else
+	{
+
+	animalAppendCell( i, ORGAN_LUNG );
+	}
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_GONAD );
