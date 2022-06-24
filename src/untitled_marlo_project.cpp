@@ -1473,10 +1473,12 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		displayColor = materialColors(game.world[worldI].terrain);
 
 		//2. wall
-		Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
-		// if (game.world[worldI].wall == MATERIAL_GRASS) { wallColor = game.world[worldI].grassColor;}
-		displayColor = filterColor( displayColor, wallColor  );
-
+		if (game.world[worldI].wall != MATERIAL_NOTHING)
+		{
+			Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
+			// if (game.world[worldI].wall == MATERIAL_GRASS) { wallColor = game.world[worldI].grassColor;}
+			displayColor = filterColor( displayColor, wallColor  );
+		}
 
 		//3. plant
 		// if (game.world[worldI].plantState == MATERIAL_LEAF ||
@@ -1499,8 +1501,8 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		// }
 		else if ( game.world[worldI].plantState == MATERIAL_BUD )
 		{
-			Color woodColor = mixColor(game.world[worldI].grassColor, color_white, 0.5f);
-			displayColor = filterColor( displayColor, woodColor  );
+			// Color woodColor = mixColor(game.world[worldI].grassColor, color_white, 0.5f);
+			displayColor = game.world[worldI].grassColor;//filterColor( displayColor, woodColor  );
 		}
 		else if ( game.world[worldI].plantState == MATERIAL_WOOD )
 		{
@@ -1518,13 +1520,13 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 
 		if ( game.world[worldI].seedState == MATERIAL_SEED )
 		{
-			Color woodColor = mixColor(game.world[worldI].seedColor, color_tan, 0.5f);
-			displayColor = filterColor( displayColor, woodColor  );
+			// Color woodColor = mixColor(game.world[worldI].seedColor, color_tan, 0.5f);
+			displayColor = game.world[worldI].seedColor;//filterColor( displayColor, woodColor  );
 		}
 		else if ( game.world[worldI].seedState == MATERIAL_POLLEN )
 		{
-			Color woodColor = mixColor(game.world[worldI].seedColor, color_yellow, 0.5f);
-			displayColor = filterColor( displayColor, woodColor  );
+			// Color woodColor = mixColor(game.world[worldI].seedColor, color_yellow, 0.5f);
+			displayColor = game.world[worldI].seedColor; // filterColor( displayColor, woodColor  );
 		}
 
 
@@ -1950,15 +1952,23 @@ void updatePlants(unsigned int worldI)
 							unsigned int neighbour = worldI + neighbourOffsets[n];
 							if (neighbour < worldSquareSize)
 							{
-								if (game.world[neighbour].identity != game.world[worldI].identity)
-								{
-									// game.world[neighbour].plantState = MATERIAL_POLLEN;
-									growInto(worldI, neighbour, MATERIAL_POLLEN);
+								// if (game.world[neighbour].identity != game.world[worldI].identity)
+								// {
+								// game.world[neighbour].plantState = MATERIAL_POLLEN;
+								// growInto(worldI, neighbour, MATERIAL_POLLEN);
 
+								// create a pollen in the neighbouring square, it's not the same as normal growing.
+								if (game.world[neighbour].seedState == MATERIAL_NOTHING)
+								{
 									memcpy( &(game.world[neighbour].seedGenes[0]), &(game.world[worldI].plantGenes[0]), sizeof(char) * plantGenomeSize   );
 									game.world[neighbour].seedColor  = game.world[worldI].grassColor;
+									game.world[neighbour].seedIdentity = game.world[worldI].identity;
+									game.world[neighbour].seedState = MATERIAL_POLLEN;
 									break;
 								}
+
+
+								// }
 							}
 
 						}
@@ -2022,7 +2032,7 @@ void updatePlants(unsigned int worldI)
 						if (game.world[neighbour].seedState == MATERIAL_POLLEN)
 						{
 
-							const float plantSpeciesThreshold = 0.65f;
+							const float plantSpeciesThreshold = 0.85f;
 
 							if (colorAmplitude( multiplyColor(game.world[neighbour].seedColor, game.world[worldI].seedColor  )  )  > plantSpeciesThreshold)
 							{
@@ -2038,10 +2048,10 @@ void updatePlants(unsigned int worldI)
 									}
 								}
 
-								
+
 								game.world[neighbour].seedState = MATERIAL_NOTHING;
 								game.world[worldI].plantState = MATERIAL_SEED;
-
+								game.world[worldI].seedColor = game.world[worldI].grassColor;
 								break;
 							}
 						}
@@ -5150,6 +5160,22 @@ unsigned int getRandomPosition(bool underwater)
 	{
 		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
 
+
+
+		if (underwater)
+		{
+			if (game.world[randomI].height > seaLevel)
+			{
+				continue;
+			}
+		}
+		else
+		{
+			if (game.world[randomI].height < seaLevel)
+			{
+				continue;
+			}
+		}
 
 
 

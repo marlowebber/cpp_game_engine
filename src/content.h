@@ -427,6 +427,11 @@ case MATERIAL_LEAF:
 
 
 
+case MATERIAL_POLLEN:
+	{
+		return std::string("Fragrant, dusty pollen.");
+	}
+
 
 
 		
@@ -682,6 +687,42 @@ std::string tileShortNames(unsigned int tile)
 	{
 		return std::string("Fabric.");
 	}
+
+
+	case MATERIAL_SEED:
+	{
+		return std::string("Seed.");
+	}
+
+
+case MATERIAL_BUD:
+	{
+		return std::string("Flower.");
+	}
+
+
+case MATERIAL_WOOD:
+	{
+		return std::string("Wood.");
+	}
+
+
+case MATERIAL_LEAF:
+	{
+		return std::string("Leaf.");
+	}
+
+
+
+case MATERIAL_POLLEN:
+	{
+		return std::string("Pollen.");
+	}
+
+
+
+
+
 	}
 	return std::string("Unknown");
 }
