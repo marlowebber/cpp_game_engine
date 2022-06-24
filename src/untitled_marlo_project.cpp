@@ -4047,14 +4047,69 @@ void drawGameInterfaceText()
 
 	unsigned int worldCursorPos = ((cursorPosY * worldSize) + cursorPosX ) % worldSquareSize;
 
+	if (game.paused)
+	{
+		printText2D(   std::string("FPS 0 (Paused)")   , menuX, menuY, textSize);
+		menuY += spacing;
+	}
+	else
+	{
+		printText2D(   std::string("FPS ") + std::to_string(modelFrameCount ) , menuX, menuY, textSize);
+		menuY += spacing;
+	}
 
-	printText2D(   std::string("FPS ") + std::to_string(modelFrameCount ) , menuX, menuY, textSize);
-	menuY += spacing;
 	modelFrameCount = 0;
 
 
 	if (game.showInstructions)
 	{
+
+
+		menuY += spacing;
+		printText2D(   std::string("[esc] quit"), menuX, menuY, textSize);
+		menuY += spacing;
+		printText2D(   std::string("[arrows] pan, [-,=] zoom"), menuX, menuY, textSize);
+		menuY += spacing;
+		std::string pauseString = std::string("[p] pause ");
+		if (game.paused)
+		{
+			pauseString = std::string("[p] resume ");
+		}
+
+		if (game.lockfps)
+		{
+			printText2D(   std::string("[l] max simulation speed"), menuX, menuY, textSize);
+			menuY += spacing;
+		}
+		else
+		{
+			printText2D(   std::string("[l] limit simulation speed"), menuX, menuY, textSize);
+			menuY += spacing;
+		}
+
+		printText2D(   std::string("[o] save, ") + pauseString, menuX, menuY, textSize);
+		menuY += spacing;
+		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
+		menuY += spacing;
+		if (game.playerCreature >= 0)
+		{
+			printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
+			menuY += spacing;
+			printText2D(   std::string("[r] despawn") , menuX, menuY, textSize);
+			menuY += spacing;
+			printText2D(   std::string("Start by finding items in the world and picking them up.") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+		else
+		{
+			printText2D(   std::string("[r] spawn") , menuX, menuY, textSize);
+			menuY += spacing;
+		}
+
+
+
+
+
 		printText2D(   std::string("[u] hide instructions"), menuX, menuY, textSize);
 		menuY += spacing;
 	}
@@ -4118,7 +4173,7 @@ void drawGameInterfaceText()
 
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_HOSPITAL)
 				{
-					stringToPrint += std::string("[lmb] add [rmb] erase [y] next [h] prev");
+					stringToPrint += std::string("[lmb, rmb] add, erase [y, h] next, prev");
 
 
 					healAnimal(game.playerCreature);
@@ -4127,7 +4182,7 @@ void drawGameInterfaceText()
 
 				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_ECOLOGYCOMPUTER)
 				{
-					stringToPrint += std::string("[lmb] + [rmb] - [y] next [h] last");
+					stringToPrint += std::string("[lmb, rmb] +, - [y, h] next, last");
 					game.ecologyComputerDisplay = true;
 				}
 
@@ -4319,39 +4374,7 @@ void drawGameInterfaceText()
 		}
 		menuY += spacing;
 	}
-	if (game.showInstructions)
-	{
-		menuY += spacing;
-		printText2D(   std::string("[esc] quit"), menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("[arrows] pan, [-,=] zoom"), menuX, menuY, textSize);
-		menuY += spacing;
-		std::string pauseString = std::string("[p] pause ");
-		if (game.paused)
-		{
-			pauseString = std::string("[p] resume ");
-		}
-		printText2D(   std::string("[l] limit frame rate"), menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("[o] save, ") + pauseString, menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
-		menuY += spacing;
-		if (game.playerCreature >= 0)
-		{
-			printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
-			menuY += spacing;
-			printText2D(   std::string("[r] despawn") , menuX, menuY, textSize);
-			menuY += spacing;
-			printText2D(   std::string("Start by finding items in the world and picking them up.") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
-		else
-		{
-			printText2D(   std::string("[r] spawn") , menuX, menuY, textSize);
-			menuY += spacing;
-		}
-	}
+
 
 	if (game.palette)
 	{
@@ -5053,7 +5076,7 @@ void tournamentController()
 							{
 								if (extremelyFastNumberFromZeroTo(1) == 0)
 								{
-// spawn some grass
+									// spawn some grass
 									game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
 									// game.world[game.animals[game.adversary].position].grassColor =  addColor( color_green , multiplyColorByScalar(game.animals[animalIndex].identityColor, 0.5f ));//
 
