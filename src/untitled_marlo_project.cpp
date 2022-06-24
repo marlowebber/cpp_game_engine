@@ -1296,6 +1296,11 @@ void rebuildBodyFromGenes(unsigned int animalIndex)
 
 
 
+
+
+
+
+
 void spawnAnimalIntoSlot( unsigned int animalIndex,
                           Animal parent,
                           unsigned int position, bool mutation) // copy genes from the parent and then copy body from own new genes.
@@ -1722,11 +1727,8 @@ void growPlants(unsigned int worldI)
 				// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number.
 				if (game.world[worldI].sequenceNumber > 0)
 				{
-
-				}
-				else
-				{
-					; // if the sequence number is greater than zero, a break doesn't do anything.
+					game.world[worldI].geneCursor = game.world[worldI].sequenceReturn;
+					game.world[worldI].sequenceNumber--;
 				}
 				break;
 			}
@@ -2387,7 +2389,7 @@ void shoot(unsigned int gunIndex, int shooterIndex,  unsigned int shootWorldPosi
 		{
 			if (game.world[shootWorldPosition].identity >= 0 && game.world[shootWorldPosition].identity != gunIndex && game.world[shootWorldPosition].identity < numberOfAnimals && game.world[shootWorldPosition].identity != shooterIndex)
 			{
-				unsigned int shotOffNub = isAnimalInSquare(game.world[shootWorldPosition].identity, shootWorldPosition);
+				int shotOffNub = isAnimalInSquare(game.world[shootWorldPosition].identity, shootWorldPosition);
 				if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
 				{
 					hurtAnimal(game.world[shootWorldPosition].identity, shotOffNub, 0.35f + RNG(), shooterIndex);
@@ -2618,14 +2620,15 @@ void organs_all()
 
 					const int destroyerRange = 250;
 
-					int closestvx ; int closestvy;
+					int closestvx ;
+					int closestvy;
 					float closestTargetDistance = destroyerRange;
 
 					bool targetAcquired = false;
 
-					for (int vy = -destroyerRange; vy < destroyerRange; ++vy)
+					for (int vy = -destroyerRange; vy < destroyerRange; vy += 4)
 					{
-						for (int vx = -destroyerRange; vx < destroyerRange; ++vx)
+						for (int vx = -destroyerRange; vx < destroyerRange; vx += 4)
 						{
 
 
@@ -2637,22 +2640,26 @@ void organs_all()
 
 							if (targetPosI < worldSquareSize)
 							{
-								if (game.world[targetPosI].identity >= 0)
+								if (game.world[targetPosI].identity >= 0 && game.world[targetPosI].identity != animalIndex)
 								{
-									if (isAnimalInSquare( game.world[targetPosI].identity , targetPosI ) >= 0)
+
+									if ( ! (game.animals[game.world[targetPosI].identity ].isMachine) )
 									{
-
-										float distanceToTarget = magnitude_int(  vx , vy   );
-										// float angleToCursor = atan2(   fmousePositionY - (  game.cameraPositionY - fposy)  ,  fmousePositionX - (game.cameraPositionX - fposx));
-
-
-										if (distanceToTarget < closestTargetDistance)
+										if (isAnimalInSquare( game.world[targetPosI].identity , targetPosI ) >= 0)
 										{
-											targetAcquired = true;
-											closestTargetDistance  = distanceToTarget;
-											// closestTargetPos = targetPosI;
-											closestvx = vx;
-											closestvy = vy;
+
+											float distanceToTarget = magnitude_int(  vx , vy   );
+											// float angleToCursor = atan2(   fmousePositionY - (  game.cameraPositionY - fposy)  ,  fmousePositionX - (game.cameraPositionX - fposx));
+
+
+											if (distanceToTarget < closestTargetDistance)
+											{
+												targetAcquired = true;
+												closestTargetDistance  = distanceToTarget;
+												// closestTargetPos = targetPosI;
+												closestvx = vx;
+												closestvy = vy;
+											}
 										}
 									}
 								}
@@ -2673,6 +2680,11 @@ void organs_all()
 
 						float angleToTarget =  atan2( closestvy  , closestvx );
 
+						const float destroyerInaccuracy = 0.1f;
+
+						angleToTarget += (RNG() - 0.5f) * destroyerInaccuracy;
+
+						// printf("destroyer target %i %i %f\n", closestvx, closestvy, angleToTarget);
 						shoot( animalIndex, animalIndex,  game.animals[animalIndex].position, angleToTarget);
 					}
 
