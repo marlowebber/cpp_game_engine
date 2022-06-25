@@ -1472,13 +1472,6 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		//1. terrain.
 		displayColor = materialColors(game.world[worldI].terrain);
 
-		//2. wall
-		if (game.world[worldI].wall != MATERIAL_NOTHING)
-		{
-			Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
-			// if (game.world[worldI].wall == MATERIAL_GRASS) { wallColor = game.world[worldI].grassColor;}
-			displayColor = filterColor( displayColor, wallColor  );
-		}
 
 		//3. plant
 		// if (game.world[worldI].plantState == MATERIAL_LEAF ||
@@ -1530,6 +1523,15 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		}
 
 
+
+
+		//2. wall
+		if (game.world[worldI].wall != MATERIAL_NOTHING)
+		{
+			Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
+			// if (game.world[worldI].wall == MATERIAL_GRASS) { wallColor = game.world[worldI].grassColor;}
+			displayColor = filterColor( displayColor,  multiplyColorByScalar( wallColor, 0.5f ) );
+		}
 
 
 	}
@@ -1612,6 +1614,8 @@ int getNewPlantIdentity()
 
 void mutatePlants(unsigned int worldI)
 {
+
+
 	unsigned int mutationChoice = extremelyFastNumberFromZeroTo(2);
 	unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
 
@@ -1627,8 +1631,8 @@ void mutatePlants(unsigned int worldI)
 	else if (mutationChoice == 1)
 	{	// insert a letter
 
-
-		for (int i = plantGenomeSize - 1; i > mutationIndex; ++i)
+		if (mutationIndex == 0) {mutationIndex = 1;}
+		for (int i = plantGenomeSize - 1; i > mutationIndex; --i)
 		{
 			game.world[worldI].plantGenes[i] = game.world[worldI].plantGenes[i - 1] ;
 		}
@@ -1640,13 +1644,16 @@ void mutatePlants(unsigned int worldI)
 
 
 
-		for (int i = mutationIndex ; i < plantGenomeSize; ++i)
+		for (int i = mutationIndex ; i < plantGenomeSize - 1; ++i)
 		{
 			game.world[worldI].plantGenes[i] = game.world[worldI].plantGenes[i + 1] ;
 		}
-		game.world[worldI].plantGenes[plantGenomeSize-1] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+		game.world[worldI].plantGenes[plantGenomeSize - 1] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
 
 	}
+
+
+
 }
 
 void growInto(unsigned int from, unsigned int to, unsigned int organ)
@@ -1699,22 +1706,22 @@ void growPlants(unsigned int worldI)
 			{
 				if (game.world[neighbour].plantState == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
 				{
-					// float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[worldI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
+					float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[worldI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
 
-					// growthChance *= 0.10f;
+					growthChance *= 0.10f;
 
-					// if (RNG() < growthChance )
-					// {
-					// printf("grone grasse\n");
-					// game.world[neighbour].plantState = MATERIAL_GRASS;
-					// game.world[neighbour].pheromoneChannel = 6;
-					// game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
+					if (RNG() < growthChance )
+					{
+						// printf("grone grasse\n");
+						// game.world[neighbour].plantState = MATERIAL_GRASS;
+						// game.world[neighbour].pheromoneChannel = 6;
+						// game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
 
 
-					growInto(worldI, neighbour, MATERIAL_GRASS);
+						growInto(worldI, neighbour, MATERIAL_GRASS);
 
-					game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
-					// }
+						game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
+					}
 				}
 			}
 		}
@@ -2031,7 +2038,10 @@ void updatePlants(unsigned int worldI)
 				memset(&(game.world[worldI].growthMatrix), false, sizeof(bool) * nNeighbours);
 				memcpy( & (game.world[worldI].plantGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
 
-				mutatePlants(worldI);
+				if (extremelyFastNumberFromZeroTo(1) == 0)
+				{
+					mutatePlants(worldI);
+				}
 
 				// unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
 				// game.world[worldI].plantGenes[mutationIndex] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
@@ -2774,7 +2784,7 @@ int getGrabbableItem(unsigned int animalIndex, unsigned int cellIndex)
 					if (targetLocalPositionI >= 0)
 					{
 						bool grabbedByAnotherGrabber = false;// finally, make sure the item is not grabbed by another of your own grabbers.
-						for (unsigned int cellIndexB = 0; cellIndexB < game.animals[animalIndex].cellsUsed; cellIndexB++)                                      // place animalIndex on grid and attack / eat. add captured energy
+						for (unsigned int cellIndexB = 0; cellIndexB < game.animals[animalIndex].cellsUsed; ++cellIndexB)                                      // place animalIndex on grid and attack / eat. add captured energy
 						{
 							if (game.animals[animalIndex].body[cellIndexB].organ == ORGAN_GRABBER)
 							{
@@ -2911,7 +2921,7 @@ void organs_all()
 			float totalLiver = 0;
 			unsigned int totalGonads = 0;
 			float highestIntensity = 0.0f;
-			for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; cellIndex++)
+			for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 			{
 				unsigned int cellWorldPositionI = game.animals[animalIndex].body[cellIndex].worldPositionI;
 				unsigned int cellWorldPositionX = cellWorldPositionI % worldSize;
@@ -3806,10 +3816,10 @@ void move_all()
 			{
 
 
-				if (  materialBlocksMovement( game.world[newPosition].wall ) )
+				if (  materialBlocksMovement( game.world[newPosition].wall ) ) // if an animal gets stuck in a wall, vibrate it out.
 				{
-					game.animals[animalIndex].fPosX  = game.animals[animalIndex].uPosX + ( (RNG() - 0.5f) * 1.0f  );
-					game.animals[animalIndex].fPosY  = game.animals[animalIndex].uPosY + ( (RNG() - 0.5f) * 1.0f  );
+					game.animals[animalIndex].fPosX  = game.animals[animalIndex].uPosX + ( (RNG() - 0.5f) * 10.0f  );
+					game.animals[animalIndex].fPosY  = game.animals[animalIndex].uPosY + ( (RNG() - 0.5f) * 10.0f  );
 				}
 				else
 				{
