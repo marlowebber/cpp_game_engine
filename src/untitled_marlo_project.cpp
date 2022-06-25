@@ -1741,13 +1741,10 @@ void growPlants(unsigned int worldI)
 			{
 
 
-				if (game.world[worldI].geneCursor + 1 < plantGenomeSize)
+				if (game.world[worldI].geneCursor + 2 < plantGenomeSize)
 				{
-					unsigned int nextGene = game.world[worldI].geneCursor + 1;
-					game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[nextGene];
-
-					game.world[worldI].sequenceReturn = game.world[worldI].geneCursor;
-					// game.world[worldI].sequenceDepth++;
+					game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1];
+					game.world[worldI].sequenceReturn = game.world[worldI].geneCursor + 2;
 
 				}
 
@@ -1772,9 +1769,14 @@ void growPlants(unsigned int worldI)
 					// In this case, sequenceReturn of the next cells will be sampled from a cell before the sequence start, which allows nested sequences.
 					int innerSequenceReturn = game.world[worldI].sequenceReturn;
 
-					if (innerSequenceReturn > 0)
+					if (innerSequenceReturn > 3) // impossible to have a complete sequence header earlier than 3
 					{
-						game.world[worldI].sequenceReturn = game.world[innerSequenceReturn - 1].sequenceReturn;
+						// Why 3? Because sequence returns don't point at the sequence gene itself, they point at the first gene IN the sequence. 
+						// The header goes <last cell of outer sequence> <sequence gene> <length> <first cell> .. . you always return to the first cell inside the sequence
+						// when breaking an inner sequence,  return to the last cell of outer sequence, which is 3 cells behind where the inner sequence returns to.
+						unsigned int lastCellOfOuterSequence = innerSequenceReturn - 3;
+						game.world[worldI].sequenceReturn = game.world[lastCellOfOuterSequence].sequenceReturn;
+						game.world[worldI].sequenceNumber = game.world[lastCellOfOuterSequence].sequenceNumber;
 					}
 
 
