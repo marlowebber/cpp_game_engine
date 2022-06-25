@@ -1610,7 +1610,44 @@ int getNewPlantIdentity()
 
 
 
+void mutatePlants(unsigned int worldI)
+{
+	unsigned int mutationChoice = extremelyFastNumberFromZeroTo(2);
+	unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
 
+	if (mutationChoice == 0)
+	{	// swap a letter
+
+
+
+		// unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
+		game.world[worldI].plantGenes[mutationIndex] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+
+	}
+	else if (mutationChoice == 1)
+	{	// insert a letter
+
+
+		for (int i = plantGenomeSize - 1; i > mutationIndex; ++i)
+		{
+			game.world[worldI].plantGenes[i] = game.world[worldI].plantGenes[i - 1] ;
+		}
+		game.world[worldI].plantGenes[mutationIndex] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+
+	}
+	else if (mutationChoice == 2)
+	{	// remove a letter
+
+
+
+		for (int i = mutationIndex ; i < plantGenomeSize; ++i)
+		{
+			game.world[worldI].plantGenes[i] = game.world[worldI].plantGenes[i + 1] ;
+		}
+		game.world[worldI].plantGenes[plantGenomeSize-1] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+
+	}
+}
 
 void growInto(unsigned int from, unsigned int to, unsigned int organ)
 {
@@ -1675,7 +1712,7 @@ void growPlants(unsigned int worldI)
 
 
 					growInto(worldI, neighbour, MATERIAL_GRASS);
-					
+
 					game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
 					// }
 				}
@@ -1772,7 +1809,7 @@ void growPlants(unsigned int worldI)
 
 					if (innerSequenceReturn > 3) // impossible to have a complete sequence header earlier than 3
 					{
-						// Why 3? Because sequence returns don't point at the sequence gene itself, they point at the first gene IN the sequence. 
+						// Why 3? Because sequence returns don't point at the sequence gene itself, they point at the first gene IN the sequence.
 						// The header goes <last cell of outer sequence> <sequence gene> <length> <first cell> .. . you always return to the first cell inside the sequence
 						// when breaking an inner sequence,  return to the last cell of outer sequence, which is 3 cells behind where the inner sequence returns to.
 						unsigned int lastCellOfOuterSequence = innerSequenceReturn - 3;
@@ -1994,9 +2031,11 @@ void updatePlants(unsigned int worldI)
 				memset(&(game.world[worldI].growthMatrix), false, sizeof(bool) * nNeighbours);
 				memcpy( & (game.world[worldI].plantGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
 
-				unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
-				game.world[worldI].plantGenes[mutationIndex] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
-				game.world[worldI].grassColor = mutateColor(game.world[worldI].grassColor);
+				mutatePlants(worldI);
+
+				// unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
+				// game.world[worldI].plantGenes[mutationIndex] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+				// game.world[worldI].grassColor = mutateColor(game.world[worldI].grassColor);
 
 			}
 		}
