@@ -1670,12 +1670,13 @@ void growPlants(unsigned int worldI)
 					// {
 					// printf("grone grasse\n");
 					// game.world[neighbour].plantState = MATERIAL_GRASS;
-					// game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
 					// game.world[neighbour].pheromoneChannel = 6;
 					// game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
 
 
 					growInto(worldI, neighbour, MATERIAL_GRASS);
+					
+					game.world[neighbour].grassColor = mutateColor (game.world[worldI].grassColor);
 					// }
 				}
 			}
