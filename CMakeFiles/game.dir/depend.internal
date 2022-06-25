@@ -60,6 +60,27 @@ CMakeFiles/game.dir/src/graphics.cpp.o
  /usr/local/include/SDL2/SDL_video.h
  /usr/local/include/SDL2/begin_code.h
  /usr/local/include/SDL2/close_code.h
+ tracy/Tracy.hpp
+ tracy/client/TracyCallstack.h
+ tracy/client/TracyCallstack.hpp
+ tracy/client/TracyFastVector.hpp
+ tracy/client/TracyLock.hpp
+ tracy/client/TracyProfiler.hpp
+ tracy/client/TracyScoped.hpp
+ tracy/client/TracySysTime.hpp
+ tracy/client/tracy_SPSCQueue.h
+ tracy/client/tracy_concurrentqueue.h
+ tracy/client/tracy_rpmalloc.hpp
+ tracy/common/TracyAlign.hpp
+ tracy/common/TracyAlloc.hpp
+ tracy/common/TracyApi.h
+ tracy/common/TracyColor.hpp
+ tracy/common/TracyForceInline.hpp
+ tracy/common/TracyMutex.hpp
+ tracy/common/TracyProtocol.hpp
+ tracy/common/TracyQueue.hpp
+ tracy/common/TracySystem.hpp
+ tracy/common/TracyUwp.hpp
 CMakeFiles/game.dir/src/main.cpp.o
  /home/marlo/Documents/cpp_game_engine/src/graphics.h
  /home/marlo/Documents/cpp_game_engine/src/main.cpp
@@ -327,6 +348,27 @@ CMakeFiles/game.dir/src/utilities.cpp.o
  /usr/local/include/SDL2/SDL_video.h
  /usr/local/include/SDL2/begin_code.h
  /usr/local/include/SDL2/close_code.h
+ tracy/Tracy.hpp
+ tracy/client/TracyCallstack.h
+ tracy/client/TracyCallstack.hpp
+ tracy/client/TracyFastVector.hpp
+ tracy/client/TracyLock.hpp
+ tracy/client/TracyProfiler.hpp
+ tracy/client/TracyScoped.hpp
+ tracy/client/TracySysTime.hpp
+ tracy/client/tracy_SPSCQueue.h
+ tracy/client/tracy_concurrentqueue.h
+ tracy/client/tracy_rpmalloc.hpp
+ tracy/common/TracyAlign.hpp
+ tracy/common/TracyAlloc.hpp
+ tracy/common/TracyApi.h
+ tracy/common/TracyColor.hpp
+ tracy/common/TracyForceInline.hpp
+ tracy/common/TracyMutex.hpp
+ tracy/common/TracyProtocol.hpp
+ tracy/common/TracyQueue.hpp
+ tracy/common/TracySystem.hpp
+ tracy/common/TracyUwp.hpp
 CMakeFiles/game.dir/tracy/TracyClient.cpp.o
  /home/marlo/Documents/cpp_game_engine/tracy/TracyC.h
  /home/marlo/Documents/cpp_game_engine/tracy/TracyClient.cpp

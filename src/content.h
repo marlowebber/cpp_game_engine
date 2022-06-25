@@ -4,6 +4,9 @@
 
 #include "untitled_marlo_project.h"
 
+#ifdef TRACY_ENABLE
+#include <Tracy.hpp>
+#endif
 
 #define MATERIAL_NOTHING           0
 #define ORGAN_MOUTH_VEG            1   // genes from here are organ types, they must go no higher than 26 so they correspond to a gene letter.
@@ -863,6 +866,8 @@ bool isCellConnectable(unsigned int organ)
 
 void setupExampleAnimal2(int i, bool underwater)
 {
+	
+	ZoneScoped;
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
 	if (underwater)

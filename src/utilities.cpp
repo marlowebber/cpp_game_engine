@@ -2,6 +2,12 @@
 
 #include <fstream>
 #include<iostream>
+
+
+#ifdef TRACY_ENABLE
+#include <Tracy.hpp>
+#endif
+
 //https://github.com/edrosten/8bit_rng/blob/master/rng-4261412736.c
 uint32_t x, y, z, a;
 
@@ -117,6 +123,8 @@ int distanceBetweenPoints( Vec_i2 a, Vec_i2 b )
 
 float RNG()
 {
+
+	ZoneScoped;
 	static std::default_random_engine e;
 	e.seed(std::chrono::system_clock::now().time_since_epoch().count());
 	static std::uniform_real_distribution<> dis(0, 1);
@@ -142,6 +150,8 @@ uint32_t extremelyFastNumberInRange(uint32_t from, uint32_t to)
 
 uint32_t extremelyFastNumberFromZeroTo( uint32_t to)
 {
+
+	ZoneScoped;
 	return ( extremelyFastRandomByte() % ( to + 1 ) );
 }
 
@@ -160,7 +170,7 @@ void setupExtremelyFastNumberGenerators()
 	z = 0;
 	a = 1;
 
-	
+
 	srand((unsigned int)time(NULL));
 	seedExtremelyFastNumberGenerators();
 }

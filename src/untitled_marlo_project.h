@@ -58,9 +58,9 @@ struct Square
     float temperature;
     float pheromoneIntensity;
     int pheromoneChannel;
-    Color grassColor;
-
     #ifdef PLANTS
+
+    Color grassColor;
 
     char seedGenes[plantGenomeSize];
     int seedIdentity;

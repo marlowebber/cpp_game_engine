@@ -24,9 +24,6 @@
 
 #define TRACY_ENABLE
 
-#ifdef TRACY_ENABLE
-#include <Tracy.hpp>
-#endif
 
 #include "utilities.h"
 #include "graphics.h"
@@ -38,7 +35,6 @@
 #include "content.h"
 
 const bool doReproduction        = true;
-const bool doMuscles             = true;
 const bool taxIsByMass           = true;
 const bool cameraFollowsChampion = false;
 const bool cameraFollowsPlayer   = true;
@@ -314,8 +310,8 @@ void appendLog( std::string input)
 void resetConnection(unsigned int animalIndex, unsigned int cellLocalPositionI, unsigned int i)
 {
 	game.animals[animalIndex].body[cellLocalPositionI].connections[i].used = true;
-	game.animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-	game.animals[animalIndex].body[cellLocalPositionI].connections[i].weight = RNG() - 0.5f;
+	game.animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = 0;//extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+	game.animals[animalIndex].body[cellLocalPositionI].connections[i].weight = 0.0f;//RNG() - 0.5f;
 }
 
 
@@ -324,7 +320,7 @@ void resetCell(unsigned int animalIndex, unsigned int cellLocalPositionI)
 {
 	game.animals[animalIndex].body[cellLocalPositionI].organ  = MATERIAL_NOTHING;
 	game.animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
-	game.animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
+	// game.animals[animalIndex].body[cellLocalPositionI].color  = color_darkgrey;
 	game.animals[animalIndex].body[cellLocalPositionI].damage = 0.0f;
 	game.animals[animalIndex].body[cellLocalPositionI].eyeLookX = 0;
 	game.animals[animalIndex].body[cellLocalPositionI].eyeLookY = 0;
@@ -341,6 +337,7 @@ void resetCell(unsigned int animalIndex, unsigned int cellLocalPositionI)
 
 void paintAnimal(unsigned int animalIndex)
 {
+	ZoneScoped;
 	Color newAnimalColorA = Color(RNG(), RNG(), RNG(), 1.0f);
 	Color newAnimalColorB = Color(RNG(), RNG(), RNG(), 1.0f);
 	for (int i = 0; i < animalSquareSize; ++i)
@@ -350,8 +347,21 @@ void paintAnimal(unsigned int animalIndex)
 	}
 }
 
+void resetIdentityColors()
+{
+	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+	{
+		resetAnimal(animalIndex);
+		if (animalIndex == game.adversary)
+		{
+			game.animals[animalIndex].identityColor = color_white;
+		}
+	}
+}
+
 void resetAnimal(unsigned int animalIndex)
 {
+	ZoneScoped;
 	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
 		std::string gunDescription = std::string("An animal");
@@ -376,11 +386,8 @@ void resetAnimal(unsigned int animalIndex)
 		game.animals[animalIndex].parentAmnesty = true;
 		game.animals[animalIndex].retired = true;
 		game.animals[animalIndex].cellsUsed = 0;
-		game.animals[animalIndex].identityColor = Color(RNG(), RNG(), RNG(), 1.0f);
-		if (animalIndex == game.adversary)
-		{
-			game.animals[animalIndex].identityColor = color_white;
-		}
+		// game.animals[animalIndex].identityColor = Color(RNG(), RNG(), RNG(), 1.0f);
+
 		game.animals[animalIndex].isMachine = false;
 		game.animals[animalIndex].machineCallback = MATERIAL_NOTHING;
 		game.animals[animalIndex].temp_limit_low = 273.0f;
@@ -397,7 +404,11 @@ void resetAnimals()
 	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 	{
 		resetAnimal(animalIndex);
+		paintAnimal(animalIndex);
 	}
+
+	resetIdentityColors();
+
 	int j = 1;
 	setupExampleAnimal2(j, true);
 	game.champion = game.animals[j];
@@ -409,7 +420,6 @@ void resetGrid()
 	for (int i = 0; i < worldSquareSize; ++i)
 	{
 		game.world[i].terrain = MATERIAL_NOTHING;
-		// game.world[i].material = MATERIAL_NOTHING;
 		game.world[i].wall = MATERIAL_NOTHING;
 		game.world[i].identity = -1;
 		game.world[i].trail = 0.0f;
@@ -417,10 +427,11 @@ void resetGrid()
 		game.world[i].light = color_white;
 		game.world[i].pheromoneIntensity = 0.0f;
 		game.world[i].pheromoneChannel = -1;
+
+
+#ifdef PLANTS
+
 		game.world[i].grassColor =  color_green;
-
-
-		#ifdef PLANTS
 		memset(&(game.world[i].plantGenes[0]), MATERIAL_NOTHING, sizeof(char) * plantGenomeSize);
 		game.world[i].plantState = MATERIAL_NOTHING;
 		game.world[i].geneCursor = 0;
@@ -435,7 +446,7 @@ void resetGrid()
 		game.world[i].seedState = MATERIAL_NOTHING;
 		game.world[i].seedIdentity =  0;
 		game.world[i].seedColor = color_yellow;
-		#endif
+#endif
 
 	}
 }
@@ -512,7 +523,10 @@ void resetGameState()
 
 
 	resetAnimals();
+
 	resetGrid();
+
+
 }
 
 
@@ -674,6 +688,7 @@ void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosi
 // add a cell to an animal germline in a guided but random way. Used to messily construct new game.animals, for situations where lots of variation is desirable.
 void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 {
+	ZoneScoped;
 	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
 	appendCell(animalIndex, organType,  newPosition);
 }
@@ -1288,9 +1303,7 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	}
 	game.animals[animalIndex].isMachine = parent.isMachine;
 	game.animals[animalIndex].machineCallback = parent.machineCallback;
-	game.animals[animalIndex].cellsUsed = parent.cellsUsed;
-	game.animals[animalIndex].retired = false;
-	game.animals[animalIndex].position = position;
+	game.animals[animalIndex].cellsUsed = parent.cellsUsed;	game.animals[animalIndex].position = position;
 	game.animals[animalIndex].fPosX = position % worldSize; // set the new creature to the desired position
 	game.animals[animalIndex].fPosY = position / worldSize;
 	game.animals[animalIndex].birthLocation = position;
@@ -1304,6 +1317,8 @@ void spawnAnimalIntoSlot( unsigned int animalIndex,
 	}
 
 	memcpy( &( game.animals[animalIndex].displayName[0]), &(parent.displayName[0]), sizeof(char) * displayNameSize  );
+	game.animals[animalIndex].retired = false;
+
 }
 
 int spawnAnimal( unsigned int speciesIndex,
@@ -1366,6 +1381,7 @@ void killAnimal(int animalIndex)
 // check if an animal is currently occupying a square. return the local index of the occupying cell, otherwise, return -1 if not occupied.
 int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
 {
+	ZoneScoped;
 	if (cellWorldPositionI < worldSquareSize && game.world[cellWorldPositionI].identity >= 0 )
 	{
 		if (!game.animals[animalIndex].retired)
@@ -1411,6 +1427,7 @@ void selectCursorAnimal()
 
 Color whatColorIsThisSquare(  unsigned int worldI)
 {
+	ZoneScoped;
 	Color displayColor = color_black;
 	int viewedAnimal = -1;
 	unsigned int animalIndex = game.world[worldI].identity;
@@ -1425,6 +1442,8 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	}
 	if (viewedAnimal != -1)
 	{
+
+
 
 
 		if (organVisible(game.animals[viewedAnimal].body[occupyingCell].organ ))
@@ -1525,7 +1544,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 			displayColor = game.world[worldI].seedColor; // filterColor( displayColor, woodColor  );
 		}
 
-		#endif
+#endif
 
 
 
@@ -2381,23 +2400,25 @@ void updateMapI(unsigned int randomI)
 			{
 				if (game.world[neighbour].wall == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
 				{
-					float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[randomI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
+					// float growthChance =  1.0f - colorAmplitude(  multiplyColor( game.world[randomI].grassColor , game.world[neighbour].light )); // grow speed proportional to light brightness
 
-					growthChance *= 0.10f;
+					// growthChance *= 0.10f;
 
-					if (RNG() < growthChance )
-					{
-						game.world[neighbour].wall = MATERIAL_GRASS;
-						game.world[neighbour].grassColor = mutateColor (game.world[randomI].grassColor);
-						// game.world[neighbour].grassColor.r += (RNG() - 0.5f) * 0.1f;
-						// game.world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
-						// game.world[neighbour].grassColor.b += (RNG() - 0.5f) * 0.1f;
-						// game.world[neighbour].grassColor = clampColor(game.world[neighbour].grassColor);
 
-						game.world[neighbour].pheromoneChannel = 6;
-						game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
 
-					}
+					// if (RNG() < growthChance )
+					// {
+					game.world[neighbour].wall = MATERIAL_GRASS;
+					// game.world[neighbour].grassColor = mutateColor (game.world[randomI].grassColor);
+					// game.world[neighbour].grassColor.r += (RNG() - 0.5f) * 0.1f;
+					// game.world[neighbour].grassColor.g += (RNG() - 0.5f) * 0.1f;
+					// game.world[neighbour].grassColor.b += (RNG() - 0.5f) * 0.1f;
+					// game.world[neighbour].grassColor = clampColor(game.world[neighbour].grassColor);
+
+					game.world[neighbour].pheromoneChannel = 6;
+					game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
+
+					// }
 				}
 			}
 			// }
@@ -2425,18 +2446,18 @@ void updateMap()
 		updateMapI(randomI);
 	}
 
-	#else
+#else
 
 
-	for (int i = 0; i < (worldSquareSize/1000); ++i)
+	for (int i = 0; i < (worldSquareSize / 1000); ++i)
 	{
-		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize-1);
+		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
 
 		updateMapI(randomI);
 	}
 
 
-	#endif
+#endif
 	// }
 	// else
 	// {
@@ -3637,111 +3658,117 @@ void organs_all()
 
 				case ORGAN_MUSCLE :
 				{
-					if (doMuscles)
+					// if (doMuscles)
+					// {
+					if (animalIndex != game.playerCreature)
 					{
-						if (animalIndex != game.playerCreature)
-						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+						game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 
-							for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+						for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+						{
+							if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
 							{
-								if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
+								unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
+								if (connected_to_cell < animalSquareSize)
 								{
-									unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-									if (connected_to_cell < animalSquareSize)
-									{
-										game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-									}
+									game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
 								}
 							}
 						}
-						if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
-						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
-						}
-						else if (game.animals[animalIndex].body[cellIndex].signalIntensity < -1.0f)
-						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
-						}
-						game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * cos(game.animals[animalIndex].fAngle);
-						game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * sin(game.animals[animalIndex].fAngle);
-						game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 					}
+					if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
+					{
+						game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
+					}
+					else if (game.animals[animalIndex].body[cellIndex].signalIntensity < -1.0f)
+					{
+						game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
+					}
+					game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * cos(game.animals[animalIndex].fAngle);
+					game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * sin(game.animals[animalIndex].fAngle);
+					game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+					// }
 					break;
 				}
 
 				case ORGAN_MUSCLE_STRAFE :
 				{
-					if (doMuscles)
+					// if (doMuscles)
+					// {
+					if (animalIndex != game.playerCreature)
 					{
-						if (animalIndex != game.playerCreature)
+						game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;	// go through the list of connections and sum their values.
+						for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;	// go through the list of connections and sum their values.
-							for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+							if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
 							{
-								if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
+								unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
+								if (connected_to_cell < animalSquareSize)
 								{
-									unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-									if (connected_to_cell < animalSquareSize)
-									{
-										game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-									}
+									game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
 								}
 							}
 						}
-						if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
-						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
-						}
-						else if (game.animals[animalIndex].body[cellIndex].signalIntensity < -1.0f)
-						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
-						}
-						game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * sin(game.animals[animalIndex].fAngle);// on the strafe muscle the sin and cos are reversed, that's all.
-						game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * cos(game.animals[animalIndex].fAngle);
-
-						game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 					}
+					if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
+					{
+						game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
+					}
+					else if (game.animals[animalIndex].body[cellIndex].signalIntensity < -1.0f)
+					{
+						game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
+					}
+					game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * sin(game.animals[animalIndex].fAngle);// on the strafe muscle the sin and cos are reversed, that's all.
+					game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * cos(game.animals[animalIndex].fAngle);
+
+					game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+					// }
 					break;
 				}
 
 				case ORGAN_MUSCLE_TURN:
 				{
-					if (doMuscles)
+					// if (doMuscles)
+					// {
+					if (animalIndex != game.playerCreature)
 					{
-						if (animalIndex != game.playerCreature)
+						game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;// go through the list of connections and sum their values.
+						for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;// go through the list of connections and sum their values.
-							for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+							if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
 							{
-								if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
+								unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
+								if (connected_to_cell < animalSquareSize)
 								{
-									unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-									if (connected_to_cell < animalSquareSize)
-									{
-										game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-									}
+									game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
 								}
 							}
 						}
-						if (setOrSteerAngle)
-						{
-							game.animals[animalIndex].fAngle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) ;
-						}
-						else
-						{
-							game.animals[animalIndex].fAngle += (game.animals[animalIndex].body[cellIndex].signalIntensity ) * 0.1f;
-						}
-						if (game.animals[animalIndex].fAngle > const_pi)
-						{
-							game.animals[animalIndex].fAngle -= 2 * const_pi;
-						}
-						if (game.animals[animalIndex].fAngle < -const_pi)
-						{
-							game.animals[animalIndex].fAngle += 2 * const_pi;
-						}
-						game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 					}
+					if (setOrSteerAngle)
+					{
+						game.animals[animalIndex].fAngle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) ;
+					}
+					else
+					{
+						game.animals[animalIndex].fAngle += (game.animals[animalIndex].body[cellIndex].signalIntensity ) * 0.1f;
+					}
+					if (game.animals[animalIndex].fAngle > const_pi)
+					{
+						game.animals[animalIndex].fAngle -= 2 * const_pi;
+					}
+					if (game.animals[animalIndex].fAngle < -const_pi)
+					{
+						game.animals[animalIndex].fAngle += 2 * const_pi;
+					}
+					game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+
+
+					game.animals[animalIndex].fAngleCos = cos(game.animals[animalIndex].fAngle);
+					game.animals[animalIndex].fAngleSin = sin(game.animals[animalIndex].fAngle);
+
+
+					// }
 					break;
 				}
 
@@ -3845,27 +3872,36 @@ void move_all()
 				trailUpdate = true;
 				game.animals[animalIndex].lastfposx = game.animals[animalIndex].fPosX;
 				game.animals[animalIndex].lastfposy = game.animals[animalIndex].fPosY;
+
+
 			}
-			game.animals[animalIndex].fAngleCos = cos(game.animals[animalIndex].fAngle);
-			game.animals[animalIndex].fAngleSin = sin(game.animals[animalIndex].fAngle);
+
+
 			unsigned int newPosX  = game.animals[animalIndex].fPosX;
 			unsigned int newPosY  = game.animals[animalIndex].fPosY;
 			unsigned int newPosition  =  (newPosY * worldSize) + newPosX;
 			if (newPosition < worldSquareSize)
 			{
 
-
-				if (  materialBlocksMovement( game.world[newPosition].wall ) ) // if an animal gets stuck in a wall, vibrate it out.
+				if (  materialBlocksMovement( game.world[game.animals[animalIndex].position].wall ) ) // vibrate out of wall if stuck.
 				{
-					game.animals[animalIndex].fPosX  = game.animals[animalIndex].uPosX + ( (RNG() - 0.5f) * 10.0f  );
-					game.animals[animalIndex].fPosY  = game.animals[animalIndex].uPosY + ( (RNG() - 0.5f) * 10.0f  );
+					game.animals[animalIndex].fPosX += ( (RNG() - 0.5f) * 10.0f  );
+					game.animals[animalIndex].fPosY += ( (RNG() - 0.5f) * 10.0f  );
+				}
+
+
+				if (  materialBlocksMovement( game.world[newPosition].wall ) ) // don't move into walls.
+				{
+					game.animals[animalIndex].fPosX  = game.animals[animalIndex].uPosX;// + ( (RNG() - 0.5f) * 10.0f  );
+					game.animals[animalIndex].fPosY  = game.animals[animalIndex].uPosY;// + ( (RNG() - 0.5f) * 10.0f  );
 				}
 				else
 				{
 					game.animals[animalIndex].uPosX  = game.animals[animalIndex].fPosX;
 					game.animals[animalIndex].uPosY  = game.animals[animalIndex].fPosY;
+					game.animals[animalIndex].position = newPosition;
 				}
-				game.animals[animalIndex].position = newPosition;
+
 
 
 
@@ -3887,7 +3923,7 @@ void move_all()
 			{
 				if (taxIsByMass)
 				{
-					game.animals[animalIndex].energy -= game.ecoSettings[3] *  organUpkeepCost(game.animals[animalIndex].body[cellIndex].organ); // * speciesEnergyOuts[speciesIndex] ;
+					game.animals[animalIndex].energy -= game.ecoSettings[3] ;//*  ;//organUpkeepCost(game.animals[animalIndex].body[cellIndex].organ); // * speciesEnergyOuts[speciesIndex] ;
 				}
 				bool okToStep = true;
 				int rotatedX = game.animals[animalIndex].body[cellIndex].localPosX * game.animals[animalIndex].fAngleCos - game.animals[animalIndex].body[cellIndex].localPosY * game.animals[animalIndex].fAngleSin;
@@ -4061,27 +4097,36 @@ void energy_all() // perform energies.
 				}
 			}
 			bool execute = false;
-			if ( !game.animals[animalIndex].isMachine) // reasons an npc can die
+			if ( !game.animals[animalIndex].isMachine && game.animals[animalIndex].age > 0) // reasons an npc can die
 			{
 				if (game.speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) && animalIndex != game.playerCreature) // only kill off weak game.animals if there is some population.
 					if (game.animals[animalIndex].energy < 0.0f)
 					{
+						printf("died low energy\n");
 						execute = true;
 					}
 				if (game.animals[animalIndex].age > game.animals[animalIndex].lifespan && animalIndex != game.playerCreature)
 				{
+
+					printf("died old age\n");
 					execute = true;
 				}
 				if (game.animals[animalIndex].totalGonads == 0)
 				{
+
+					printf("died no gonads\n");
 					execute = true;
 				}
 				if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].mass / 2)
 				{
+
+					printf("died too damaged\n");
 					execute = true;
 				}
 				if (game.animals[animalIndex].mass <= 0)
 				{
+
+					printf("died low mass\n");
 					execute = true;
 				}
 			}
@@ -4145,6 +4190,7 @@ void computeAllAnimalsOneTurn()
 
 void camera()
 {
+	ZoneScoped;
 	if (flagSave) { return;}
 
 	if (game.cameraTargetCreature >= 0)
@@ -4819,9 +4865,9 @@ void drawGameInterfaceText()
 		if (!animalInSquare)
 		{
 
-		
+
 #ifdef PLANTS
-				std::string plantInfo =  std::string(" energy ") + std::to_string( game.world[worldCursorPos].energy) + std::string(", debt ") + std::to_string( game.world[worldCursorPos].energyDebt  );
+			std::string plantInfo =  std::string(" energy ") + std::to_string( game.world[worldCursorPos].energy) + std::string(", debt ") + std::to_string( game.world[worldCursorPos].energyDebt  );
 
 			if (game.world[worldCursorPos].plantState != MATERIAL_NOTHING)
 			{
@@ -5597,6 +5643,15 @@ void setupRandomWorld()
 		{
 			game.world[worldPositionI].wall = MATERIAL_VOIDMETAL;
 		}
+		else
+		{
+
+#ifndef PLANTS
+			game.world[worldPositionI].wall = MATERIAL_GRASS;
+#endif
+
+
+		}
 		// if (game.world[worldPositionI].height < seaLevel)
 		// {
 		// 	game.world[worldPositionI].plantState = MATERIAL_GRASS;
@@ -5648,7 +5703,7 @@ void tournamentController()
 							if (materialSupportsGrowth(game.world[game.animals[game.adversary].position].terrain ))
 							{
 
-								#ifdef PLANTS
+#ifdef PLANTS
 								if (extremelyFastNumberFromZeroTo(1) == 0)
 								{
 									// spawn some grass
@@ -5666,7 +5721,7 @@ void tournamentController()
 									}
 								}
 
-								#else
+#else
 
 								if (game.world[game.animals[game.adversary].position].wall == MATERIAL_NOTHING)
 								{
@@ -5674,7 +5729,7 @@ void tournamentController()
 									game.world[game.animals[game.adversary].position].wall = MATERIAL_GRASS;
 								}
 
-								#endif
+#endif
 
 
 							}
@@ -5810,6 +5865,7 @@ void tournamentController()
 							}
 
 							domingo = spawnAnimal( 1, game.animals[j], randomPos, true);
+							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
 						}
 						else
 						{
@@ -5821,14 +5877,14 @@ void tournamentController()
 							}
 
 							domingo = spawnAnimal( 1,  game.champion, randomPos, true);
+							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+							// game.animals[domingo].damageReceived = 0;
 						}
 
-						if (domingo >= 0)
-						{
-							paintAnimal(domingo);
-							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-							game.animals[domingo].damageReceived = 0;
-						}
+						// if (domingo >= 0)
+						// {
+
+						// }
 					}
 				}
 			}
@@ -5855,9 +5911,7 @@ void modelSupervisor()
 		{
 			model();
 		}
-#ifdef TRACY_ENABLE
-		FrameMark;
-#endif
+
 	}
 }
 
@@ -5962,7 +6016,10 @@ void startSimulation()
 	boost::thread t8{ mapSupervisor };
 	for ( ;; )
 	{
-		boost::thread t2{ threadInterface };
+#ifdef TRACY_ENABLE
+		FrameMark;
+#endif
+		boost::thread t2 { threadInterface };
 		threadGraphics();// graphics only works in this thread, because it is the process the SDL context was created in.
 		t2.join();
 		if (flagReturn)

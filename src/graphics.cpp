@@ -7,6 +7,13 @@
 #include <math.h> // sin, fmod
 
 #include <stdio.h> // printf
+
+
+#ifdef TRACY_ENABLE
+#include <Tracy.hpp>
+#endif
+
+
 const unsigned int width = 1920;
 const unsigned int height = 1080;
 const float fwidth = 1920;
@@ -643,6 +650,8 @@ void mainMenuDraw()
 
 void threadGraphics()
 {
+
+	ZoneScoped;
 	preDraw();
 
 	prepareForWorldDraw ();
