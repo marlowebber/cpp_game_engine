@@ -43,6 +43,8 @@ extern unsigned int longestMenu;
 const unsigned int plantGenomeSize = 24;
 const float lightEnergy = 1.0f;
 
+// #define PLANTS
+
 struct Square
 {
     unsigned int wall;      //  material filling the volume of the square. You may not be able to move through it.
@@ -58,7 +60,7 @@ struct Square
     int pheromoneChannel;
     Color grassColor;
 
-
+    #ifdef PLANTS
 
     char seedGenes[plantGenomeSize];
     int seedIdentity;
@@ -76,6 +78,8 @@ struct Square
     // int sequenceDepth;
     bool grown;
     bool growthMatrix[nNeighbours];
+
+    #endif
 };
 
 struct Connection
