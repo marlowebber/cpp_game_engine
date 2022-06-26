@@ -3647,7 +3647,7 @@ void move_all()
 					{
 						if (game.world[cellWorldPositionI].identity < 0)
 						{
-							if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING && materialSupportsGrowth(game.world[cellWorldPositionI].terrain)  )
+							if (materialSupportsGrowth(game.world[cellWorldPositionI].terrain) && ! materialBlocksMovement(game.world[cellWorldPositionI].wall) )
 							{
 #ifdef PLANTS
 								if (game.world[cellWorldPositionI].plantState == MATERIAL_NOTHING)
@@ -3655,8 +3655,11 @@ void move_all()
 									game.world[cellWorldPositionI].plantState = MATERIAL_GRASS;
 								}
 #else
+								if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
+								{
 
-								game.world[cellWorldPositionI].wall = MATERIAL_GRASS;
+									game.world[cellWorldPositionI].wall = MATERIAL_GRASS;
+								}
 #endif
 							}
 						}
@@ -4919,7 +4922,7 @@ void setupRandomWorld()
 
 	for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
 	{
-prelimMap[pp] *= prelimSize;
+		prelimMap[pp] *= prelimSize;
 	}
 
 	worldCreationStage = 3;
@@ -5026,20 +5029,28 @@ void tournamentController()
 							{
 
 #ifdef PLANTS
-								// if (extremelyFastNumberFromZeroTo(1) == 0)
-								// {
-								// 	// spawn some grass
-								// 	// game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
-								// }
-								// else
-								// {
-								// spawn some plants
-								game.world[game.animals[game.adversary].position].seedState = MATERIAL_SEED;
-								for (int k = 0; k < plantGenomeSize; ++k)
+								if (extremelyFastNumberFromZeroTo(10) == 0)
 								{
-									game.world[game.animals[game.adversary].position].seedGenes[k] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+
+
+									// spawn some plants
+									if (game.world[game.animals[game.adversary].position].seedState == MATERIAL_NOTHING)
+									{
+										game.world[game.animals[game.adversary].position].seedState = MATERIAL_SEED;
+										for (int k = 0; k < plantGenomeSize; ++k)
+										{
+											game.world[game.animals[game.adversary].position].seedGenes[k] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+										}
+									}
 								}
-								// }
+								else
+								{
+									// spawn some grass
+									if (game.world[game.animals[game.adversary].position].plantState == MATERIAL_NOTHING)
+									{
+										game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
+									}
+								}
 
 #else
 
