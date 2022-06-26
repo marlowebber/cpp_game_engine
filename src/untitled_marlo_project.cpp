@@ -91,6 +91,7 @@ float prelimMap[prelimSquareSize];
 float prelimWater[prelimSquareSize];
 
 // tinyerode stuff
+const float initWaterLevel = 1.0f;
 auto getHeight = [](int x, int y) -> float {
 	unsigned int address = (y * prelimSize) + x;
 	return  prelimMap[address];  ///* return height value at (x, y) */ 0.0f;
@@ -114,16 +115,16 @@ auto addWater = [](int x, int y, float deltaWater) -> float {/* Note: 'deltaWate
 	return std::max(0.0f, previousWaterLevel + deltaWater);
 };
 auto carryCapacity = [](int x, int y) -> float {
-	return 0.2;
+	return 0.025;
 };
 auto deposition = [](int x, int y) -> float {
-	return 0.2;
+	return 0.5;
 };
 auto erosion = [](int x, int y) -> float {
-	return 0.2;
+	return 0.5;
 };
 auto evaporation = [](int x, int y) -> float {
-	return 0.2;
+	return 0.000001;
 };
 unsigned int modelFrameCount = 0;
 unsigned int usPerFrame = 0;
@@ -853,7 +854,7 @@ bool measureAnimalQualities( int animalIndex)
 int getRandomConnectingCell(  int animalIndex)
 {
 	std::list< int> cellsOfType;
-	 int found = 0;
+	int found = 0;
 	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (isCellConnecting(  game.animals[animalIndex].genes[cellIndex].organ ))
@@ -877,7 +878,7 @@ int getRandomConnectingCell(  int animalIndex)
 int getRandomConnectedCell(  int animalIndex)
 {
 	std::list< int> cellsOfType;
-	 int found = 0;
+	int found = 0;
 	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (isCellConnecting(  game.animals[animalIndex].genes[cellIndex].organ ))
@@ -889,7 +890,7 @@ int getRandomConnectedCell(  int animalIndex)
 
 	if (found > 0)
 	{
-		 int tries = 0;
+		int tries = 0;
 		while (true)
 		{
 			tries++; if (tries > game.animals[animalIndex].cellsUsed) {return -1; }
@@ -916,10 +917,10 @@ int getRandomUsedConnection(   int animalIndex,  int cellIndex)
 {
 
 
-	 int randomStart = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
+	int randomStart = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
 	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 	{
-		 int connectionIndex = (i + randomStart) % NUMBER_OF_CONNECTIONS;
+		int connectionIndex = (i + randomStart) % NUMBER_OF_CONNECTIONS;
 
 		if (game.animals[animalIndex].body[cellIndex].connections[i].used)
 		{
@@ -935,10 +936,10 @@ int getRandomUnusedConnection(   int animalIndex,  int cellIndex)
 {
 
 
-	 int randomStart = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
+	int randomStart = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
 	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 	{
-		 int connectionIndex = (i + randomStart) % NUMBER_OF_CONNECTIONS;
+		int connectionIndex = (i + randomStart) % NUMBER_OF_CONNECTIONS;
 
 		if (!(game.animals[animalIndex].body[cellIndex].connections[i].used))
 		{
@@ -961,7 +962,7 @@ int getRandomUnusedConnection(   int animalIndex,  int cellIndex)
 int getRandomCellOfType( int animalIndex,  int organType)
 {
 	std::list< int> cellsOfType;
-	 int found = 0;
+	int found = 0;
 	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (game.animals[animalIndex].genes[cellIndex].organ == organType)
@@ -984,7 +985,7 @@ int getRandomCellOfType( int animalIndex,  int organType)
 int getCellWithAir( int animalIndex)
 {
 	std::list< int> cellsOfType;
-	 int found = 0;
+	int found = 0;
 	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_GILL || game.animals[animalIndex].body[cellIndex].organ == ORGAN_LUNG )
@@ -1020,7 +1021,7 @@ int getCellWithAir( int animalIndex)
 int findOccupiedChannel( int animalIndex,  int organType)
 {
 	std::list< int> cellsOfType;
-	 int found = 0;
+	int found = 0;
 	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (game.animals[animalIndex].genes[cellIndex].organ == organType)
@@ -1058,7 +1059,7 @@ void modifyChannel( int animalIndex, int channel, int increment)
 int getRandomPopulatedCell( int animalIndex)
 {
 	std::list< int> cellsOfType;
-	 int found = 0;
+	int found = 0;
 	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		cellsOfType.push_back(cellIndex);
@@ -1265,10 +1266,10 @@ void mutateAnimal( int animalIndex)
 				// connect it to whatever
 
 				int target = getRandomConnectableCell(animalIndex);
-				if (target >=0)
+				if (target >= 0)
 				{
 					game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].connectedTo = target;
-					game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight = ((RNG()-0.5f) * 2.0f );
+					game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight = ((RNG() - 0.5f) * 2.0f );
 				}
 			}
 		}
@@ -4891,38 +4892,43 @@ void setupRandomWorld()
 	worldCreationStage = 1;
 	resetGameState();
 	worldCreationStage = 2;
-	float initWaterLevel = 1.0f;
 	for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
 	{
 		unsigned int x = pp % prelimSize;
 		unsigned int y = pp / prelimSize;
 		float hDistance = x;
-		float hMax = worldSize;
+		float hMax = prelimSize;
 		prelimMap[pp] = hDistance / hMax;
 		float noiseScaleFactor = 0.005f;
 		float fx = x * noiseScaleFactor;
 		float fy = y * noiseScaleFactor;
-		float noise =   SimplexNoise::noise(fx, fy);   // Get the noise value for the coordinate
+		float noise =   SimplexNoise::noise(fx, fy) * 0.35;   // Get the noise value for the coordinate
 		prelimMap[pp] += noise;
-		noiseScaleFactor = 0.05f;
+		noiseScaleFactor = 0.05;
 		fx = x * noiseScaleFactor;
 		fy = y * noiseScaleFactor;
-		noise =   SimplexNoise::noise(fx, fy) * 0.1f;   // Get the noise value for the coordinate
+		noise =   SimplexNoise::noise(fx, fy) * 0.075;   // Get the noise value for the coordinate
 		prelimMap[pp] += noise;
 		noiseScaleFactor = 0.5f;
 		fx = x * noiseScaleFactor;
 		fy = y * noiseScaleFactor;
-		noise =   SimplexNoise::noise(fx, fy) * 0.01f;   // Get the noise value for the coordinate
+		noise =   SimplexNoise::noise(fx, fy) * 0.005;   // Get the noise value for the coordinate
 		prelimMap[pp] += noise;
 		prelimWater[pp] = initWaterLevel;
 	}
+
+	for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
+	{
+prelimMap[pp] *= prelimSize;
+	}
+
 	worldCreationStage = 3;
 	if (erode)
 	{
 		TinyErode::Simulation simulation(prelimSize, prelimSize);
-		simulation.SetMetersPerX(1000.0f / prelimSize);
-		simulation.SetMetersPerY(1000.0f / prelimSize);
-		const int iterations = 256;
+		simulation.SetMetersPerX(150.0f / prelimSize);
+		simulation.SetMetersPerY(150.0f / prelimSize);
+		const int iterations = 512;
 		for (int i = 0; i < iterations; i++)
 		{
 
@@ -4946,7 +4952,7 @@ void setupRandomWorld()
 	worldCreationStage = 4;
 	copyPrelimToRealMap();
 	worldCreationStage = 5;
-	smoothHeightMap( 6, 0.5f );
+	smoothHeightMap( 5, 0.5f );
 	worldCreationStage = 6;
 	normalizeTerrainHeight();
 	worldCreationStage = 7;
