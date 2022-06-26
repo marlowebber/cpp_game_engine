@@ -40,7 +40,7 @@ const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
 const bool erode = true;
-const int prelimSize = worldSize/10;
+const int prelimSize = worldSize / 10;
 const int cameraPanSpeed = 10;
 const float baseLungCapacity = 1.0f;
 const unsigned int prelimSquareSize = prelimSize * prelimSize;
@@ -2012,6 +2012,7 @@ void updatePlants(unsigned int worldI)
 	{
 	case MATERIAL_POLLEN:
 	{
+
 		// move seeds randomly
 		unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
 		if (neighbour < worldSquareSize)
@@ -2024,9 +2025,23 @@ void updatePlants(unsigned int worldI)
 				game.world[worldI].seedState = MATERIAL_NOTHING;
 			}
 		}
-		if (extremelyFastNumberFromZeroTo(100) == 0)
+
+
+		// pollen degrades if not attached to an animal
+		bool bonded = false;
+		if (game.world[worldI].identity >= 0)
 		{
-			game.world[neighbour].seedState = MATERIAL_NOTHING;
+			if (  isAnimalInSquare( game.world[worldI].identity , worldI )   )
+			{
+				bonded = true;
+			}
+		}
+		if (!bonded)
+		{
+			if (extremelyFastNumberFromZeroTo(100) == 0)
+			{
+				game.world[neighbour].seedState = MATERIAL_NOTHING;
+			}
 		}
 		break;
 	}
@@ -3700,7 +3715,27 @@ void move_all()
 					{
 						game.world[cellWorldPositionI].trail    = dAngle;
 					}
+
+
+
+					// move pollen along with animal
+
+					if (game.world[game.animals[animalIndex].body[cellIndex].worldPositionI ].seedState == MATERIAL_POLLEN)
+					{
+
+						if (game.world[cellWorldPositionI].seedState == MATERIAL_NOTHING)
+						{
+							game.world[cellWorldPositionI].seedState = MATERIAL_POLLEN;
+							memcpy( &(game.world[cellWorldPositionI].seedGenes[0]), &(game.world[game.animals[animalIndex].body[cellIndex].worldPositionI ].seedGenes[0]) , sizeof(char)*plantGenomeSize);
+							game.world[game.animals[animalIndex].body[cellIndex].worldPositionI ].seedState = MATERIAL_NOTHING;
+						}
+
+
+					}
+
 					game.animals[animalIndex].body[cellIndex].worldPositionI = cellWorldPositionI;
+
+
 				}
 			}
 		}
