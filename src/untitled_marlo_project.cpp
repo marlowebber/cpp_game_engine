@@ -2105,25 +2105,62 @@ void updateMapI(unsigned int randomI)
 #endif
 }
 
-void updateMap()
+
+const int sectors = 4;
+const int sectorSize = worldSquareSize / sectors;
+const unsigned int updateSize = (worldSquareSize / 1000) / sectors;
+
+void updateMapSector( unsigned int sector )
 {
 	ZoneScoped;
-#ifdef PLANTS
-	for (int i = 0; i < (worldSquareSize / 1000); ++i)
+
+
+
+	unsigned int from = sector * sectorSize;
+	unsigned int to   = ((sector + 1 ) * sectorSize ) - 1;
+
+
+	// generate a huge ass list of the map squares you're going to update. Then update them all at once. will it be faster?
+
+	unsigned int squaresToUpdate[updateSize];
+
+	for (int i = 0; i < updateSize; ++i)
 	{
-		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-		updateMapI(randomI);
+		squaresToUpdate[i] =  from + extremelyFastNumberFromZeroTo(to);
 	}
 
-#else
-	for (int i = 0; i < (worldSquareSize / 1000); ++i)
+
+	for (int i = 0; i < updateSize; ++i)
 	{
-		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
-		updateMapI(randomI);
+		if (squaresToUpdate[i] < worldSquareSize)
+		{
+
+			updateMapI(squaresToUpdate[i]);
+		}
+
 	}
 
-#endif
 }
+
+void updateMap()
+{
+
+
+	for (int i = 0; i < sectors; ++i)
+	{
+
+
+
+		// updateMapSector(  , );
+
+		boost::thread t1{ updateMapSector, i };
+	}
+
+
+
+
+}
+
 
 int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPositionI)
 {
@@ -3573,15 +3610,15 @@ void energy_all() // perform energies.
 	}
 }
 
-void computeAllAnimalsOneTurn()
-{
-	boost::thread t8{ organs_all };
-	boost::thread t9{ move_all   };
-	boost::thread t10{ energy_all };
-	t10.join();
-	t9.join();
-	t8.join();
-}
+// void computeAllAnimalsOneTurn()
+// {
+// 	boost::thread t8{ organs_all };
+// 	boost::thread t9{ move_all   };
+// 	boost::thread t10{ energy_all };
+// 	t10.join();
+// 	t9.join();
+// 	t8.join();
+// }
 
 void camera()
 {
@@ -4981,8 +5018,19 @@ void model()
 	ZoneScoped;
 	if (!game.paused && !flagSave)
 	{
-		tournamentController();
-		computeAllAnimalsOneTurn();
+		// tournamentController();
+
+		boost::thread t1{ tournamentController };
+		boost::thread t2{ updateMap };
+		boost::thread t3{ organs_all };
+		boost::thread t4{ move_all   };
+		boost::thread t5{ energy_all };
+		t1.join();
+		t2.join();
+		t3.join();
+		t4.join();
+		t5.join();
+
 	}
 	modelFrameCount++;
 }
@@ -4999,16 +5047,16 @@ void modelSupervisor()
 	}
 }
 
-void mapSupervisor()
-{
-	while (true)
-	{
-		if (!(game.paused))
-		{
-			updateMap();
-		}
-	}
-}
+// void mapSupervisor()
+// {
+// 	while (true)
+// 	{
+// 		if (!(game.paused))
+// 		{
+
+// 		}
+// 	}
+// }
 
 
 void drawMainMenuText()
@@ -5096,7 +5144,7 @@ void startSimulation()
 	setupExampleAnimal2(j, true);
 	game.champion = game.animals[j];
 	boost::thread t7{ modelSupervisor };
-	boost::thread t8{ mapSupervisor };
+	// boost::thread t8{ mapSupervisor };
 	for ( ;; )
 	{
 #ifdef TRACY_ENABLE
