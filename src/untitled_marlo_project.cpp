@@ -36,12 +36,10 @@
 
 const bool doReproduction        = true;
 const bool taxIsByMass           = true;
-const bool cameraFollowsChampion = false;
-const bool cameraFollowsPlayer   = true;
 const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
-const bool doGroundCover    = false;
+const bool erode = true;
 const int prelimSize = 256;
 const int cameraPanSpeed = 10;
 const float baseLungCapacity = 1.0f;
@@ -83,6 +81,8 @@ const int neighbourOffsets[] =
 	+worldSize,
 	+worldSize - 1
 };
+
+std::string progressString = std::string("");
 
 GameState game;
 
@@ -389,6 +389,41 @@ void resetAnimal(unsigned int animalIndex)
 		}
 	}
 }
+
+
+
+
+void scrambleAnimal(unsigned int animalIndex)
+{
+	for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
+	{
+		for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+		{
+			// game.animals[animalIndex].body[cellLocalPositionI].connections
+
+			if (extremelyFastNumberFromZeroTo(1) == 0)
+			{
+
+				game.animals[animalIndex].body[cellLocalPositionI].connections[i].used = true;//extremelyFastNumberFromZeroTo(1);
+			}
+			else
+			{
+				game.animals[animalIndex].body[cellLocalPositionI].connections[i].used = false; // extremelyFastNumberFromZeroTo(1);
+
+			}
+			game.animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
+			game.animals[animalIndex].body[cellLocalPositionI].connections[i].weight = RNG() - 0.5f;
+
+			game.animals[animalIndex].genes[cellLocalPositionI].connections[i].used        = game.animals[animalIndex].body[cellLocalPositionI].connections[i].used;
+			game.animals[animalIndex].genes[cellLocalPositionI].connections[i].connectedTo = game.animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo;
+			game.animals[animalIndex].genes[cellLocalPositionI].connections[i].weight      = game.animals[animalIndex].body[cellLocalPositionI].connections[i].weight;
+
+
+		}
+	}
+}
+
+
 
 void resetAnimals()
 {
@@ -1490,6 +1525,10 @@ void smoothHeightMap(unsigned int passes, float strength)
 {
 	for (int pass = 0; pass < passes ; ++pass)
 	{
+
+
+		progressString = std::string(" ") + std::to_string(pass) + std::string("/") + std::to_string(passes);
+
 		for (unsigned int i = 0; i < worldSquareSize; ++i)
 		{
 			smoothSquare(i,  strength);
@@ -3278,6 +3317,9 @@ void move_all()
 					game.animals[animalIndex].uPosX  = game.animals[animalIndex].fPosX;
 					game.animals[animalIndex].uPosY  = game.animals[animalIndex].fPosY;
 					game.animals[animalIndex].position = newPosition;
+
+
+
 				}
 
 				// animal temperature limits
@@ -3382,6 +3424,31 @@ void move_all()
 				}
 				if (okToStep)
 				{
+
+
+
+					// spawn grass
+					if (speciesIndex > 0)
+					{
+						if (game.world[cellWorldPositionI].identity < 0)
+						{
+							if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING && materialSupportsGrowth(game.world[cellWorldPositionI].terrain)  )
+							{
+#ifdef PLANTS
+								if (game.world[cellWorldPositionI].plantState == MATERIAL_NOTHING)
+								{
+									game.world[cellWorldPositionI].plantState = MATERIAL_GRASS;
+								}
+#else
+
+								game.world[cellWorldPositionI].wall = MATERIAL_GRASS;
+#endif
+							}
+						}
+					}
+
+
+
 					game.world[cellWorldPositionI].identity = animalIndex;
 					game.world[cellWorldPositionI].occupyingCell = cellIndex;
 					if (trailUpdate)
@@ -3440,31 +3507,31 @@ void energy_all() // perform energies.
 				if (game.speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) && animalIndex != game.playerCreature) // only kill off weak game.animals if there is some population.
 					if (game.animals[animalIndex].energy < 0.0f)
 					{
-						printf("died low energy\n");
+						// printf("died low energy\n");
 						execute = true;
 					}
 				if (game.animals[animalIndex].age > game.animals[animalIndex].lifespan && animalIndex != game.playerCreature)
 				{
 
-					printf("died old age\n");
+					// printf("died old age\n");
 					execute = true;
 				}
 				if (game.animals[animalIndex].totalGonads == 0)
 				{
 
-					printf("died no gonads\n");
+					// printf("died no gonads\n");
 					execute = true;
 				}
 				if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].mass / 2)
 				{
 
-					printf("died too damaged\n");
+					// printf("died too damaged\n");
 					execute = true;
 				}
 				if (game.animals[animalIndex].mass <= 0)
 				{
 
-					printf("died low mass\n");
+					// printf("died low mass\n");
 					execute = true;
 				}
 			}
@@ -4608,7 +4675,7 @@ void setupGameItems()
 void setupRandomWorld()
 {
 	worldCreationStage = 1;
-		resetGameState();
+	resetGameState();
 	worldCreationStage = 2;
 	float initWaterLevel = 1.0f;
 	for (unsigned int pp = 0; pp < prelimSquareSize; pp++)
@@ -4636,15 +4703,17 @@ void setupRandomWorld()
 		prelimWater[pp] = initWaterLevel;
 	}
 	worldCreationStage = 3;
-	bool erode = false;
 	if (erode)
 	{
 		TinyErode::Simulation simulation(prelimSize, prelimSize);
 		simulation.SetMetersPerX(1000.0f / prelimSize);
 		simulation.SetMetersPerY(1000.0f / prelimSize);
-		int iterations = 256;
+		const int iterations = 256;
 		for (int i = 0; i < iterations; i++)
 		{
+
+			progressString = std::string(" ") + std::to_string(i) + std::string("/") + std::to_string(iterations);
+
 			// Determines where the water will flow.
 			simulation.ComputeFlowAndTilt(getHeight, getWater);
 			// Moves the water around the terrain based on the previous computed values.
@@ -4663,7 +4732,7 @@ void setupRandomWorld()
 	worldCreationStage = 4;
 	copyPrelimToRealMap();
 	worldCreationStage = 5;
-	smoothHeightMap( 8, 0.5f );
+	smoothHeightMap( 6, 0.5f );
 	worldCreationStage = 6;
 	normalizeTerrainHeight();
 	worldCreationStage = 7;
@@ -4734,20 +4803,20 @@ void tournamentController()
 							{
 
 #ifdef PLANTS
-								if (extremelyFastNumberFromZeroTo(1) == 0)
+								// if (extremelyFastNumberFromZeroTo(1) == 0)
+								// {
+								// 	// spawn some grass
+								// 	// game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
+								// }
+								// else
+								// {
+								// spawn some plants
+								game.world[game.animals[game.adversary].position].seedState = MATERIAL_SEED;
+								for (int k = 0; k < plantGenomeSize; ++k)
 								{
-									// spawn some grass
-									game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
+									game.world[game.animals[game.adversary].position].seedGenes[k] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
 								}
-								else
-								{
-									// spawn some plants
-									game.world[game.animals[game.adversary].position].seedState = MATERIAL_SEED;
-									for (int k = 0; k < plantGenomeSize; ++k)
-									{
-										game.world[game.animals[game.adversary].position].seedGenes[k] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
-									}
-								}
+								// }
 
 #else
 
@@ -4852,7 +4921,9 @@ void tournamentController()
 					underwater = true;
 				}
 
-				for (int k = 0; k < 12; ++k)// spawn lots of the example animal
+				const unsigned int numberOfAnimalsToRespawn = 64;
+
+				for (int k = 0; k < numberOfAnimalsToRespawn; ++k)// spawn lots of the example animal
 				{
 
 
@@ -4860,7 +4931,7 @@ void tournamentController()
 					{
 
 						int domingo = -1;
-						if (extremelyFastNumberFromZeroTo(1) == 0)
+						if (true)
 						{
 							setupExampleAnimal2(j, underwater);
 
@@ -4872,10 +4943,17 @@ void tournamentController()
 								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
 							}
 
-							domingo = spawnAnimal( 1, game.animals[j], randomPos, true);
-							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+							domingo = spawnAnimal( 1 + extremelyFastNumberFromZeroTo(numberOfSpecies - 2), game.animals[j], randomPos, true);
+							if (domingo >= 0)
+							{
+
+								game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+								scrambleAnimal(domingo);
+							}
 						}
-						else
+
+
+						if (false)
 						{
 							unsigned int randomPos = game.animals[game.adversary].position;
 							int randomCell = getRandomPopulatedCell(game.adversary);
@@ -4884,8 +4962,12 @@ void tournamentController()
 								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
 							}
 
-							domingo = spawnAnimal( 1,  game.champion, randomPos, true);
-							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+							domingo = spawnAnimal( 1 + extremelyFastNumberFromZeroTo(numberOfSpecies - 2),  game.champion, randomPos, true);
+							if (domingo >= 0)
+							{
+
+								game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+							}
 						}
 					}
 				}
@@ -4971,13 +5053,13 @@ void drawMainMenuText()
 		printText2D(   std::string("seed preliminary map with noise "), menuX, menuY, textSize);
 		break;
 	case 3:
-		printText2D(   std::string("hydraulic erosion "), menuX, menuY, textSize);
+		printText2D(   std::string("hydraulic erosion ") + progressString, menuX, menuY, textSize);
 		break;
 	case 4:
 		printText2D(   std::string("copy prelim to real map "), menuX, menuY, textSize);
 		break;
 	case 5:
-		printText2D(   std::string("smooth heightmap "), menuX, menuY, textSize);
+		printText2D(   std::string("smooth heightmap ") + progressString, menuX, menuY, textSize);
 		break;
 	case 6:
 		printText2D(   std::string("normalize heightmap "), menuX, menuY, textSize);
@@ -5052,3 +5134,15 @@ void load()
 	setFlagReady();
 }
 
+
+
+
+
+// void
+
+
+
+// void test_all()
+// {
+
+// }
