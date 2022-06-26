@@ -87,12 +87,18 @@
 #define MACHINECALLBACK_PISTOL           100
 #define MACHINECALLBACK_KNIFE            101
 #define MACHINECALLBACK_HOSPITAL         102
-#define MACHINECALLBACK_MESSAGECOMPUTER  103
 #define MACHINECALLBACK_TRACKERGLASSES   104
 #define MACHINECALLBACK_NEUROGLASSES     105
 #define MACHINECALLBACK_ECOLOGYCOMPUTER  106
 #define MACHINECALLBACK_LIGHTER          107
 #define MACHINECALLBACK_DESTROYER        108
+
+
+#define MACHINECALLBACK_MESSAGECOMPUTER1  110
+#define MACHINECALLBACK_MESSAGECOMPUTER2  111
+#define MACHINECALLBACK_MESSAGECOMPUTER3  112
+#define MACHINECALLBACK_MESSAGECOMPUTER4  113
+#define MACHINECALLBACK_MESSAGECOMPUTER5  114
 
 #define MUTATION_CONNECTIONWEIGHT 10001
 #define MUTATION_ALTERBIAS        10002
@@ -1085,7 +1091,37 @@ void setupDestroyer(int i)
 		' ', ' ', '1', ' ', ' ',
 		' ', ' ', '1', ' ', ' ',
 	};
+
+	char destroyerPaint[] =
+	{
+		' ', ' ', 'V', ' ', ' ',
+		' ', 'V', 'V', 'V', ' ',
+		' ', 'V', 'V', 'V', ' ',
+		'V', 'B', 'B', 'B', 'V',
+		'V', 'B', 'K', 'B', 'V',
+		'V', 'B', 'B', 'B', 'V',
+		' ', 'V', 'V', 'V', ' ',
+		' ', 'V', 'V', 'V', ' ',
+		' ', 'V', 'V', 'V', ' ',
+		' ', 'V', 'V', 'V', ' ',
+		' ', 'V', 'V', 'V', ' ',
+		' ', 'V', 'V', 'V', ' ',
+		' ', 'V', 'V', 'V', ' ',
+		' ', ' ', 'V', ' ', ' ',
+		' ', ' ', 'V', ' ', ' ',
+		' ', ' ', 'V', ' ', ' ',
+		' ', ' ', 'V', ' ', ' ',
+		' ', ' ', 'V', ' ', ' ',
+		' ', ' ', 'V', ' ', ' ',
+		' ', ' ', 'V', ' ', ' ',
+	};
+
+
+
 	setupCreatureFromCharArray( i, destroyer, 20*5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
+
+
+	paintCreatureFromCharArray( i, destroyerPaint, (20*5), 5);
 }
 
 
@@ -1099,18 +1135,41 @@ void setupTrackerGlasses(int i)
 		'2', '2', '1', '2', '2',
 		' ', '2', ' ', '2', ' ',
 	};
+
+
+char trackerGlassesPaint[] =
+	{
+		' ', 'W', ' ', 'W', ' ',
+		'W', 'L', 'M', 'L', 'W',
+		' ', 'W', ' ', 'W', ' ',
+	};
+
 	setupCreatureFromCharArray( i, trackerGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_TRACKERGLASSES);
+
+
+	paintCreatureFromCharArray( i, trackerGlassesPaint, 15, 5 );
 }
 
 void setupNeuroGlasses(int i)
 {
-	char neuroGlasses[] =
+
+char neuroGlasses[] =
 	{
 		'1', '1', ' ', '1', '1',
 		'1', '2', '1', '2', '1',
 		'1', '1', ' ', '1', '1',
 	};
+
+	char neuroGlassesPaint[] =
+	{
+		'W', 'W', ' ', 'W', 'W',
+		'W', 'K', 'M', 'K', 'W',
+		'W', 'W', ' ', 'W', 'W',
+	};
 	setupCreatureFromCharArray( i, neuroGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_NEUROGLASSES);
+
+
+	paintCreatureFromCharArray( i, neuroGlassesPaint, 15, 5 );
 }
 
 void setupExampleGun(int i)
@@ -1122,7 +1181,18 @@ void setupExampleGun(int i)
 		' ', '1', '1', ' ',
 		'1', '1', ' ', ' ',
 	};
+
+	char pistolPaint[] =
+	{
+		'M', 'M', 'M', 'M',
+		'V', 'V', 'V', 'V',
+		' ', 'V', 'D', ' ',
+		'V', 'V', ' ', ' ',
+	};
 	setupCreatureFromCharArray( i, pistol, 16, 4 , std::string("pistol") , MACHINECALLBACK_PISTOL);
+
+
+	paintCreatureFromCharArray( i, pistolPaint, 16, 4 );
 }
 
 void setupExampleKnife(int i)
@@ -1133,8 +1203,16 @@ void setupExampleKnife(int i)
 		'1', '1', '1', '1',
 		' ', '1', ' ', ' ',
 	};
+
+	char knifePaint[] =
+	{
+		' ', 'D', ' ', ' ',
+		'V', 'D', 'M', 'M',
+		' ', 'D', ' ', ' ',
+	};
 	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") , MACHINECALLBACK_KNIFE);
 
+	paintCreatureFromCharArray( i, knifePaint, 12, 4 );
 }
 
 
@@ -1149,10 +1227,26 @@ void setupEcologyCompter(int i)
 		' ', ' ', '1', ' ', ' ',
 		'1', '1', '1', '1', '1',
 	};
+
+	char computerPaint[] =
+	{
+		'B', 'B', 'B', 'B', 'B',
+		'B', 'L', 'L', 'L', 'B',
+		'B', 'L', 'L', 'L', 'B',
+		'B', 'B', 'B', 'B', 'B',
+		' ', ' ', 'B', ' ', ' ',
+		'B', 'B', 'B', 'B', 'B',
+	};
+
 	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("ecology terminal") , MACHINECALLBACK_ECOLOGYCOMPUTER);
+
+	paintCreatureFromCharArray( i, computerPaint, 30, 5 );
 }
 
-void setupMessageComputer(int i)
+
+
+
+void setupMessageComputer(int i, unsigned int messageComputerNumber)
 {
 	char computer[] =
 	{
@@ -1163,8 +1257,29 @@ void setupMessageComputer(int i)
 		' ', ' ', '1', ' ', ' ',
 		'1', '1', '1', '1', '1',
 	};
-	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("message terminal") , MACHINECALLBACK_MESSAGECOMPUTER);
+
+	char computerPaint[] =
+	{
+		'L', 'L', 'L', 'L', 'L',
+		'L', 'L', 'L', 'L', 'L',
+		'L', 'L', 'L', 'L', 'L',
+		'L', 'L', 'L', 'L', 'L',
+		' ', ' ', 'G', ' ', ' ',
+		'G', 'G', 'G', 'G', 'G',
+	};
+	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("message terminal") , MACHINECALLBACK_MESSAGECOMPUTER1 + messageComputerNumber);
+
+
+	paintCreatureFromCharArray( i, computerPaint, 30, 5 );
 }
+
+
+
+
+
+
+
+
 
 void setupHospitalComputer(int i)
 {
@@ -1178,6 +1293,22 @@ void setupHospitalComputer(int i)
 		'2', '2', '2',
 	};
 	setupCreatureFromCharArray( i, hospital, 18, 3 , std::string("hospital terminal") , MACHINECALLBACK_HOSPITAL);
+
+
+
+char hospitalPaint[] =
+	{
+		' ', 'M', ' ',
+		'M', 'M', 'M',
+		'D', 'M', 'D',
+		'D', 'D', 'D',
+		' ', 'V', ' ',
+		'M', 'M', 'M',
+	};
+
+
+	paintCreatureFromCharArray( i, hospitalPaint, 30, 5 );
+
 }
 
 

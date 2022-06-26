@@ -1396,7 +1396,7 @@ void mutateAnimal( int animalIndex)
 	}
 }
 
-void rebuildBodyFromGenes(unsigned int animalIndex)
+void rebuildBodyFromGenes( int animalIndex)
 {
 	if (animalIndex < numberOfAnimals)
 	{
@@ -1412,9 +1412,9 @@ void rebuildBodyFromGenes(unsigned int animalIndex)
 }
 
 
-void spawnAnimalIntoSlot( unsigned int animalIndex,
-                          Animal parent,
-                          unsigned int position, bool mutation) // copy genes from the parent and then copy body from own new genes.
+void spawnAnimalIntoSlot(  int animalIndex,
+                           Animal parent,
+                           unsigned int position, bool mutation) // copy genes from the parent and then copy body from own new genes.
 {
 	resetAnimal(animalIndex);
 	for (int i = 0; i < animalSquareSize; ++i)
@@ -2429,14 +2429,14 @@ void drawPalette(int menuX, int menuY)
 	}
 }
 
-void communicationComputerCallback( int gunIndex, int shooterIndex)
-{
-	if (gunIndex == 9) { game.computerdisplays[0] = !game.computerdisplays[0] ;}
-	if (gunIndex == 10) { game.computerdisplays[1] = !game.computerdisplays[1] ;}
-	if (gunIndex == 11) { game.computerdisplays[2] = !game.computerdisplays[2] ;}
-	if (gunIndex == 12 ) { game.computerdisplays[3] = !game.computerdisplays[3] ;}
-	if (gunIndex == 13) { game.computerdisplays[4] = !game.computerdisplays[4] ;}
-}
+// void communicationComputerCallback( int gunIndex, int shooterIndex)
+// {
+// 	if (gunIndex == 2) { game.computerdisplays[0] = !game.computerdisplays[0] ;}
+// 	if (gunIndex == 3) { game.computerdisplays[1] = !game.computerdisplays[1] ;}
+// 	if (gunIndex == 4) { game.computerdisplays[2] = !game.computerdisplays[2] ;}
+// 	if (gunIndex == 5) { game.computerdisplays[3] = !game.computerdisplays[3] ;}
+// 	if (gunIndex == 6) { game.computerdisplays[4] = !game.computerdisplays[4] ;}
+// }
 
 void spillBlood(unsigned int worldPositionI)
 {
@@ -2724,9 +2724,36 @@ void activateGrabbedMachine()// occurs whenever a left click is received.
 					case MACHINECALLBACK_HOSPITAL :
 						paletteCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
 						break;
-					case MACHINECALLBACK_MESSAGECOMPUTER :
-						communicationComputerCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+
+
+
+					case MACHINECALLBACK_MESSAGECOMPUTER1:
+						game.computerdisplays[0] = ! game.computerdisplays[0] ;
+						// communicationComputerCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
 						break;
+					case MACHINECALLBACK_MESSAGECOMPUTER2 :
+
+						game.computerdisplays[1] = ! game.computerdisplays[1] ;
+						// communicationComputerCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
+					case MACHINECALLBACK_MESSAGECOMPUTER3 :
+
+						game.computerdisplays[2] = ! game.computerdisplays[2] ;
+						// communicationComputerCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
+					case MACHINECALLBACK_MESSAGECOMPUTER4 :
+
+						game.computerdisplays[3] = ! game.computerdisplays[3] ;
+						// communicationComputerCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
+					case MACHINECALLBACK_MESSAGECOMPUTER5:
+
+						game.computerdisplays[4] = ! game.computerdisplays[4] ;
+						// communicationComputerCallback(game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature , game.playerCreature  );
+						break;
+
+
+
 					}
 				}
 			}
@@ -4036,14 +4063,29 @@ void displayComputerText()
 	else if (game.computerdisplays[3])
 	{
 
-		printText2D(   std::string("The adversary has been destroyed. Life will no longer be created in the world, but will persist from its current state,") , menuX, menuY, textSize);
-		menuY -= spacing;
-		printText2D(   std::string("or eventually be driven to extinction.") , menuX, menuY, textSize);
-		menuY -= spacing;
-		printText2D(   std::string("Neuro glasses allow you to see the minute electrical activity of living flesh.") , menuX, menuY, textSize);
-		menuY -= spacing;
-		printText2D(   std::string("You can use them, in combination with the hospital, to edit the connection map of a living creature.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		if (game.adversaryDefeated)
+		{
+
+			printText2D(   std::string("The adversary has been destroyed. Life will no longer be created in the world, but will persist from its current state,") , menuX, menuY, textSize);
+			menuY -= spacing;
+			printText2D(   std::string("or eventually be driven to extinction.") , menuX, menuY, textSize);
+			menuY -= spacing;
+			printText2D(   std::string("The adversary posessed neuro glasses, which allow you to see the minute electrical activity of living flesh.") , menuX, menuY, textSize);
+			menuY -= spacing;
+			printText2D(   std::string("You can use them, in combination with the hospital, to edit the connection map of a living creature.") , menuX, menuY, textSize);
+			menuY -= spacing;
+
+		}
+		else
+		{
+
+			printText2D(   std::string("You must defeat the adversary. Return here when it is done.") , menuX, menuY, textSize);
+			menuY -= spacing;
+		}
+
+
+
+
 	}
 	printText2D(  "    \n" , menuX, menuY, textSize);
 	menuY -= spacing;
@@ -4207,7 +4249,13 @@ void drawGameInterfaceText()
 					game.ecologyComputerDisplay = true;
 				}
 
-				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_MESSAGECOMPUTER)
+				if (game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_MESSAGECOMPUTER1 ||
+				        game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_MESSAGECOMPUTER2 ||
+				        game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_MESSAGECOMPUTER3 ||
+				        game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_MESSAGECOMPUTER4 ||
+				        game.animals[  game.animals[game.playerCreature].body[game.playerActiveGrabber].grabbedCreature ].machineCallback == MACHINECALLBACK_MESSAGECOMPUTER5
+
+				   )
 				{
 					stringToPrint += std::string("[lmb] read messages");
 				}
@@ -4435,6 +4483,33 @@ void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 			newColor = color_charcoal;
 			break;
 
+		case 'W':
+			newColor = color_white;
+			break;
+
+		case 'L':
+			newColor = color_lightblue;
+			break;
+
+		case 'D':
+			newColor = color_darkgrey;
+			break;
+
+		case 'G':
+			newColor = color_grey;
+			break;
+
+		case 'M':
+			newColor = color_lightgrey;
+			break;
+
+		case 'K':
+			newColor = color_brightred;
+			break;
+
+
+
+
 		}
 
 		for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
@@ -4565,6 +4640,15 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 		}
 		i++;
 		if (i > len) { break;}
+	}
+
+
+
+	for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+	{
+		game.animals[animalIndex].body[i].localPosX -= width / 2;
+		game.animals[animalIndex].body[i].localPosY -= p.y / 2;
+
 	}
 }
 
@@ -4833,61 +4917,100 @@ void setupBuilding_playerBase(unsigned int worldPositionI)
 void setupGameItems()
 {
 
-	unsigned int targetWorldPositionI =  getRandomPosition(false);
 
-	setupBuilding_playerBase(targetWorldPositionI);
+	// BUILDING 1
+	// contains eco computer, player, adversary, and message terminal 1
+	unsigned int building1 =  getRandomPosition(false);
+
+	setupBuilding_playerBase(building1);
 
 	int i = 1;
 	setupEcologyCompter( i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	spawnAnimalIntoSlot(2, game.animals[i], building1, false);
 
-	targetWorldPositionI += 25;
-	setupMessageComputer( i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	building1 += 25;
+	setupMessageComputer( i, 0);
+	spawnAnimalIntoSlot(3, game.animals[i], building1, false);
 
+	game.adversaryRespawnPos = building1;
+	spawnAdversary(building1);
 
-	targetWorldPositionI =  getRandomPosition(false);
-	game.adversaryRespawnPos = targetWorldPositionI;
-	spawnAdversary(targetWorldPositionI);
-
-	targetWorldPositionI += 25 * worldSize;
-	game.playerRespawnPos = targetWorldPositionI;
+	building1 += 25 * worldSize;
+	game.playerRespawnPos = building1;
 	spawnPlayer();
 
-	targetWorldPositionI =  getRandomPosition(false);
-	setupBuilding_playerBase(targetWorldPositionI);
+
+
+
+
+
+	// BUILDING 2
+	// contains hospital and message computer 2
+
+
+	unsigned int building2 =  getRandomPosition(false);
+	setupBuilding_playerBase(building2);
 	setupHospitalComputer(i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	spawnAnimalIntoSlot(4, game.animals[i], building2, false);
 
-	targetWorldPositionI += 25 * worldSize;
-	setupMessageComputer( i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	building2 += 25 * worldSize;
+	setupMessageComputer( i, 1);
+	spawnAnimalIntoSlot(5, game.animals[i], building2, false);
 
-	targetWorldPositionI =  getRandomPosition(true);
-	setupBuilding_playerBase(targetWorldPositionI);
+
+
+
+
+
+	// BUILDING 3 contains tracker glasses, pistol, and message computer 3
+
+	unsigned int building3 =  getRandomPosition(true);
+	setupBuilding_playerBase(building3);
 	setupTrackerGlasses(i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	spawnAnimalIntoSlot(6, game.animals[i], building3, false);
 
-	targetWorldPositionI += 25;
+	building3 += 25;
 	setupExampleGun(i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	spawnAnimalIntoSlot(7, game.animals[i], building3, false);
 
-	targetWorldPositionI += 25 * worldSize;
-	setupMessageComputer( i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	building3 += 25 * worldSize;
+	setupMessageComputer( i, 2);
+	spawnAnimalIntoSlot(8, game.animals[i], building3, false);
 
-	targetWorldPositionI =  getRandomPosition(false);
-	setupBuilding_playerBase(targetWorldPositionI);
+
+
+
+
+
+	// BUILDING 4 contains knife, lighter, and message computer 4
+
+	unsigned int building4 =  getRandomPosition(true);
+	setupBuilding_playerBase(building4);
 	setupExampleKnife(i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	spawnAnimalIntoSlot(9, game.animals[i], building4, false);
 
-	targetWorldPositionI += 25;
+	building4 += 25;
 	setupExampleLighter(i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	spawnAnimalIntoSlot(10, game.animals[i], building4, false);
 
-	targetWorldPositionI += 25;
+	building4 += 25 * worldSize;
+	setupMessageComputer( i, 3);
+	spawnAnimalIntoSlot(11, game.animals[i], building3, false);
+
+	building4 -= 25;
 	setupDestroyer( i);
-	spawnAnimal(0, game.animals[i], targetWorldPositionI, false);
+	spawnAnimalIntoSlot(12, game.animals[i], building4, false);
+
+
+
+
+
+
+
+
+
+
+
 }
 
 void setupRandomWorld()
