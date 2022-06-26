@@ -114,16 +114,16 @@ auto addWater = [](int x, int y, float deltaWater) -> float {/* Note: 'deltaWate
 	return std::max(0.0f, previousWaterLevel + deltaWater);
 };
 auto carryCapacity = [](int x, int y) -> float {
-	return 0.1;
+	return 0.2;
 };
 auto deposition = [](int x, int y) -> float {
-	return 0.1;
+	return 0.2;
 };
 auto erosion = [](int x, int y) -> float {
-	return 0.1;
+	return 0.2;
 };
 auto evaporation = [](int x, int y) -> float {
-	return 0.1;
+	return 0.2;
 };
 unsigned int modelFrameCount = 0;
 unsigned int usPerFrame = 0;
@@ -638,6 +638,7 @@ int getRandomConnectableCell( unsigned int animalIndex)
 	return -1;
 }
 
+
 void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosition)
 {
 	// pick a random location for the new cell which is adjacent to a normal cell.
@@ -793,7 +794,7 @@ int getNewIdentity(unsigned int speciesIndex)
 // // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
 // this function studies the phenotype, not the genotype.
 // returns whether the animal is fit to live.
-bool measureAnimalQualities(unsigned int animalIndex)
+bool measureAnimalQualities( int animalIndex)
 {
 	game.animals[animalIndex].mass = 0;
 	game.animals[animalIndex].energyDebt = 0.0f;
@@ -849,11 +850,11 @@ bool measureAnimalQualities(unsigned int animalIndex)
 }
 
 // choose a random cell of any type that can put forth a connection, which includes all neurons and actuators.
-int getRandomConnectingCell( unsigned int animalIndex)
+int getRandomConnectingCell(  int animalIndex)
 {
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	std::list< int> cellsOfType;
+	 int found = 0;
+	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (isCellConnecting(  game.animals[animalIndex].genes[cellIndex].organ ))
 		{
@@ -864,19 +865,104 @@ int getRandomConnectingCell( unsigned int animalIndex)
 
 	if (found > 0)
 	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::list< int>::iterator iterator = cellsOfType.begin();
 		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
 		return *iterator;
 	}
 	return -1;
 }
 
-// choose a random cell of a particular organ type in a given animal, or MATERIAL_NOTHING if the organ doesn't exist.
-int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
+
+// choose a random cell of any type that has a pre-existing connection.
+int getRandomConnectedCell(  int animalIndex)
 {
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	std::list< int> cellsOfType;
+	 int found = 0;
+	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		if (isCellConnecting(  game.animals[animalIndex].genes[cellIndex].organ ))
+		{
+			cellsOfType.push_back(cellIndex);
+			found++;
+		}
+	}
+
+	if (found > 0)
+	{
+		 int tries = 0;
+		while (true)
+		{
+			tries++; if (tries > game.animals[animalIndex].cellsUsed) {return -1; }
+			std::list< int>::iterator iterator = cellsOfType.begin();
+			std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
+
+			for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+			{
+				if (game.animals[animalIndex].body[(*iterator)].connections[i].used)
+				{
+
+					return *iterator;
+				}
+			}
+
+		}
+
+	}
+	return -1;
+}
+
+
+int getRandomUsedConnection(   int animalIndex,  int cellIndex)
+{
+
+
+	 int randomStart = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
+	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+	{
+		 int connectionIndex = (i + randomStart) % NUMBER_OF_CONNECTIONS;
+
+		if (game.animals[animalIndex].body[cellIndex].connections[i].used)
+		{
+
+			return i;//*iterator;
+		}
+
+	}
+	return -1;
+}
+
+int getRandomUnusedConnection(   int animalIndex,  int cellIndex)
+{
+
+
+	 int randomStart = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
+	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+	{
+		 int connectionIndex = (i + randomStart) % NUMBER_OF_CONNECTIONS;
+
+		if (!(game.animals[animalIndex].body[cellIndex].connections[i].used))
+		{
+
+			return i;
+		}
+
+	}
+	return -1;
+}
+
+
+
+
+
+
+
+
+// choose a random cell of a particular organ type in a given animal, or MATERIAL_NOTHING if the organ doesn't exist.
+int getRandomCellOfType( int animalIndex,  int organType)
+{
+	std::list< int> cellsOfType;
+	 int found = 0;
+	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (game.animals[animalIndex].genes[cellIndex].organ == organType)
 		{
@@ -886,7 +972,7 @@ int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
 	}
 	if (found > 0)
 	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::list< int>::iterator iterator = cellsOfType.begin();
 		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
 		return *iterator;
 	}
@@ -895,11 +981,11 @@ int getRandomCellOfType(unsigned int animalIndex, unsigned int organType)
 
 
 
-int getCellWithAir(unsigned int animalIndex)
+int getCellWithAir( int animalIndex)
 {
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	std::list< int> cellsOfType;
+	 int found = 0;
+	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_GILL || game.animals[animalIndex].body[cellIndex].organ == ORGAN_LUNG )
 		{
@@ -914,7 +1000,7 @@ int getCellWithAir(unsigned int animalIndex)
 
 		float best = 0.0f;
 
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::list< int>::iterator iterator = cellsOfType.begin();
 
 		for (iterator = cellsOfType.begin(); iterator != cellsOfType.end(); ++iterator)
 		{
@@ -931,11 +1017,11 @@ int getCellWithAir(unsigned int animalIndex)
 
 
 // find a random speaker channel that cells of organType are using.
-int findOccupiedChannel(unsigned int animalIndex, unsigned int organType)
+int findOccupiedChannel( int animalIndex,  int organType)
 {
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	std::list< int> cellsOfType;
+	 int found = 0;
+	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (game.animals[animalIndex].genes[cellIndex].organ == organType)
 		{
@@ -945,7 +1031,7 @@ int findOccupiedChannel(unsigned int animalIndex, unsigned int organType)
 	}
 	if (found > 0)
 	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::list< int>::iterator iterator = cellsOfType.begin();
 		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
 		return game.animals[animalIndex] .body[(*iterator)].speakerChannel;
 	}
@@ -956,7 +1042,7 @@ int findOccupiedChannel(unsigned int animalIndex, unsigned int organType)
 }
 
 // modify every cell which uses channel, into using a cnew hannel which is the sum of channel and increment. Increment may be negative.
-void modifyChannel(unsigned int animalIndex, int channel, int increment)
+void modifyChannel( int animalIndex, int channel, int increment)
 {
 	int newChannel = abs((channel + increment)) % numberOfSpeakerChannels;
 	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
@@ -969,18 +1055,18 @@ void modifyChannel(unsigned int animalIndex, int channel, int increment)
 }
 
 // choose any random populated cell.
-int getRandomPopulatedCell(unsigned int animalIndex)
+int getRandomPopulatedCell( int animalIndex)
 {
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	std::list< int> cellsOfType;
+	 int found = 0;
+	for ( int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		cellsOfType.push_back(cellIndex);
 		found++;
 	}
 	if (found > 0)
 	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::list< int>::iterator iterator = cellsOfType.begin();
 		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
 		return *iterator;
 	}
@@ -988,7 +1074,7 @@ int getRandomPopulatedCell(unsigned int animalIndex)
 }
 
 // the opposite of append cell- remove a cell from the genes and body, shifting all other cells backwards and updating all connections.
-void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
+void eliminateCell(  int animalIndex,  int cellToDelete )
 {
 	// record the signal intensities, so when you reconstruct the cells from their genes, you can put the intensities back just so.
 	float signalIntensities[animalSquareSize];
@@ -1025,7 +1111,10 @@ void eliminateCell( unsigned int animalIndex, unsigned int cellToDelete )
 	}
 }
 
-void mutateAnimal(unsigned int animalIndex)
+
+
+
+void mutateAnimal( int animalIndex)
 {
 	// some mutations are chosen more commonly than others. They are classed into groups, and each group is associated with a normalized likelyhood of occurring.
 	// the reason for this is that the development of the brain must always occur faster and in more detail than the development of the body, or else intelligent behavior can never arise.
@@ -1059,10 +1148,25 @@ void mutateAnimal(unsigned int animalIndex)
 		// printf("group 4 mutation\n");
 		group = 4;
 	}
+
+
+
+	// animal receives a skin color mutation every time.
+	// case MUTATION_SKINCOLOR:// mutate a cell's skin color
+	// {
+	int mutantSkinCell = getRandomPopulatedCell(animalIndex);
+	if (mutantSkinCell >= 0 && mutantSkinCell < animalSquareSize)
+	{
+		game.animals[animalIndex].genes[mutantSkinCell].color = mutateColor(	game.animals[animalIndex].genes[mutantSkinCell].color);
+	}
+	// break;
+	// }
+
+
 	int mutation = MATERIAL_NOTHING;// choose a mutation from the group randomly.
 	if (group == 1)
 	{
-		int mutationChoice = extremelyFastNumberFromZeroTo(2);
+		int mutationChoice = extremelyFastNumberFromZeroTo(1);
 
 		if (mutationChoice == 0)
 		{
@@ -1072,20 +1176,24 @@ void mutateAnimal(unsigned int animalIndex)
 		{
 			mutation = MUTATION_ALTERBIAS;
 		}
-		else if (mutationChoice == 2)
-		{
-			mutation = MUTATION_SKINCOLOR;
-		}
+		// else if (mutationChoice == 2)
+		// {
+		// 	mutation = MUTATION_SKINCOLOR;
+		// }
 	}
 	else if (group == 2)
 	{
-		int mutationChoice = extremelyFastNumberFromZeroTo(1);
+		int mutationChoice = extremelyFastNumberFromZeroTo(2);
 
 		if (mutationChoice == 0)
 		{
-			mutation = MUTATION_SWITCHCONNECTION;
+			mutation = MUTATION_MAKECONNECTION;
 		}
 		else if (mutationChoice == 1)
+		{
+			mutation = MUTATION_BREAKCONNECTION;
+		}
+		else if (mutationChoice == 2)
 		{
 			mutation = MUTATION_RECONNECT;
 		}
@@ -1136,16 +1244,61 @@ void mutateAnimal(unsigned int animalIndex)
 		animalAppendCell(animalIndex, extremelyFastNumberFromZeroTo(numberOfOrganTypes));
 		break;
 	}
-	case MUTATION_SWITCHCONNECTION:
+
+
+
+
+	case MUTATION_MAKECONNECTION:
 	{
 		int mutantCell =  getRandomConnectingCell(animalIndex);
 		if (mutantCell >= 0)
 		{
-			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-			game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].used = !(game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].used );
+
+			int mutantConnection = getRandomUnusedConnection(animalIndex, mutantCell);
+
+			// unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+			if (mutantConnection >= 0)
+			{
+
+				game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].used = true;//!(game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].used );
+
+				// connect it to whatever
+
+				int target = getRandomConnectableCell(animalIndex);
+				if (target >=0)
+				{
+					game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].connectedTo = target;
+					game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].weight = ((RNG()-0.5f) * 2.0f );
+				}
+			}
 		}
 		break;
 	}
+
+
+
+	case MUTATION_BREAKCONNECTION:  // find an existing connection and break it
+	{
+		int mutantCell =  getRandomConnectedCell(animalIndex);
+		if (mutantCell >= 0)
+		{
+
+			int mutantConnection = getRandomUsedConnection(animalIndex, mutantCell);
+
+			// unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+			if (mutantConnection >= 0)
+			{
+
+				game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].used = false;//!(game.animals[animalIndex].genes[mutantCell].connections[mutantConnection].used );
+			}
+		}
+		break;
+	}
+
+
+
+
+
 	case MUTATION_RECONNECT:// randomise a connection partner.
 	{
 		int mutantCell =  getRandomConnectingCell( animalIndex);
@@ -1230,15 +1383,15 @@ void mutateAnimal(unsigned int animalIndex)
 		}
 		break;
 	}
-	case MUTATION_SKINCOLOR:// mutate a cell's skin color
-	{
-		int mutantCell = getRandomPopulatedCell(animalIndex);
-		if (mutantCell >= 0 && mutantCell < animalSquareSize)
-		{
-			game.animals[animalIndex].genes[mutantCell].color = mutateColor(	game.animals[animalIndex].genes[mutantCell].color);
-		}
-		break;
-	}
+		// case MUTATION_SKINCOLOR:// mutate a cell's skin color
+		// {
+		// 	int mutantCell = getRandomPopulatedCell(animalIndex);
+		// 	if (mutantCell >= 0 && mutantCell < animalSquareSize)
+		// 	{
+		// 		game.animals[animalIndex].genes[mutantCell].color = mutateColor(	game.animals[animalIndex].genes[mutantCell].color);
+		// 	}
+		// 	break;
+		// }
 	}
 }
 
@@ -1404,6 +1557,8 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 			viewedAnimal = animalIndex;
 		}
 	}
+
+
 	if (viewedAnimal != -1)
 	{
 		if (organVisible(game.animals[viewedAnimal].body[occupyingCell].organ ))
@@ -1434,25 +1589,14 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		displayColor = materialColors(game.world[worldI].terrain);
 
 #ifdef PLANTS
-		if ( game.world[worldI].plantState == MATERIAL_LEAF )
-		{
-			Color woodColor = mixColor(game.world[worldI].grassColor, color_green, 0.5f);
-			displayColor = filterColor( displayColor, woodColor  );
-		}
-		else if ( game.world[worldI].plantState == MATERIAL_BUD )
-		{
-			displayColor = game.world[worldI].grassColor;
-		}
-		else if ( game.world[worldI].plantState == MATERIAL_WOOD )
-		{
-			Color woodColor = mixColor(game.world[worldI].grassColor, color_brown, 0.5f);
-			displayColor = filterColor( displayColor, woodColor  );
-		}
-		else if ( game.world[worldI].plantState == MATERIAL_GRASS )
-		{
-			Color woodColor = mixColor(game.world[worldI].grassColor, color_charcoal, 0.5f);
-			displayColor = filterColor( displayColor, woodColor  );
-		}
+		// if ( game.world[worldI].plantState == MATERIAL_LEAF )
+		// {
+		// 	Color woodColor = mixColor(game.world[worldI].grassColor, color_green, 0.5f);
+		// 	displayColor = filterColor( displayColor, woodColor  );
+		// }
+		// else if ( game.world[worldI].plantState == MATERIAL_BUD )
+		// {
+
 
 
 		if ( game.world[worldI].seedState == MATERIAL_SEED )
@@ -1463,14 +1607,47 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		{
 			displayColor = game.world[worldI].seedColor;
 		}
+		else if ( game.world[worldI].plantState != MATERIAL_NOTHING)
+		{
+			displayColor = game.world[worldI].grassColor;
+		}
+		// }
+		// else if ( game.world[worldI].plantState == MATERIAL_WOOD )
+		// {
+		// 	Color woodColor = mixColor(game.world[worldI].grassColor, color_brown, 0.5f);
+		// 	displayColor = filterColor( displayColor, woodColor  );
+		// }
+		// else if ( game.world[worldI].plantState == MATERIAL_GRASS )
+		// {
+		// 	Color woodColor = mixColor(game.world[worldI].grassColor, color_charcoal, 0.5f);
+		// 	displayColor = filterColor( displayColor, woodColor  );
+		// }
+
+
+		// if ( game.world[worldI].seedState == MATERIAL_SEED )
+		// {
+		// 	displayColor = game.world[worldI].seedColor;
+		// }
+		// else if ( game.world[worldI].seedState == MATERIAL_POLLEN )
+		// {
+		// 	displayColor = game.world[worldI].seedColor;
+		// }
 
 #endif
 
 		//2. wall
 		if (game.world[worldI].wall != MATERIAL_NOTHING)
 		{
-			Color wallColor = addColor(materialColors(game.world[worldI].wall), tint_wall);
-			displayColor = filterColor( displayColor,  multiplyColorByScalar( wallColor, 0.5f ) );
+			if (materialIsTransparent(game.world[worldI].wall))
+			{
+
+				displayColor = filterColor( displayColor,  multiplyColorByScalar( materialColors(game.world[worldI].wall), 0.5f ) );
+			}
+			else
+			{
+
+				displayColor = materialColors(game.world[worldI].wall);//filterColor( displayColor,  multiplyColorByScalar( wallColor, 0.5f ) );
+			}
 		}
 	}
 	displayColor = multiplyColor(displayColor, game.world[worldI].light);
@@ -4829,6 +5006,9 @@ void tournamentController()
 				if (game.animals[game.adversary].position >= 0 && game.animals[game.adversary].position < worldSquareSize)
 				{
 
+					game.animals[game.adversary].fPosX += RNG() - 0.5f;
+					game.animals[game.adversary].fPosY += RNG() - 0.5f;
+
 
 					for (int i = 0; i < nNeighbours; ++i)
 					{
@@ -4964,49 +5144,58 @@ void tournamentController()
 				{
 
 
-					if (k != game.adversary)
+					// if (k != game.adversary)
+					// {
+
+					int domingo = -1;
+					if (true)
 					{
+						setupExampleAnimal2(j, underwater);
 
-						int domingo = -1;
-						if (true)
+						unsigned int randomPos =  game.animals[game.adversary].position;
+
+						// while(true)
+						// {
+						// 	randomPos = extremelyFastNumberFromZeroTo(worldSquareSize-1);
+						// 	if (game.world[randomPos].height < seaLevel)
+						// 	{
+						// 		break;
+						// 	}
+						// }
+
+						int randomCell = getRandomPopulatedCell(game.adversary);
+						if (randomCell >= 0)
 						{
-							setupExampleAnimal2(j, underwater);
-
-							unsigned int randomPos = game.animals[game.adversary].position;
-
-							int randomCell = getRandomPopulatedCell(game.adversary);
-							if (randomCell >= 0)
-							{
-								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
-							}
-
-							domingo = spawnAnimal( 1 + extremelyFastNumberFromZeroTo(numberOfSpecies - 2), game.animals[j], randomPos, true);
-							if (domingo >= 0)
-							{
-
-								game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-								scrambleAnimal(domingo);
-							}
+							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
 						}
 
-
-						if (false)
+						domingo = spawnAnimal( 1 + extremelyFastNumberFromZeroTo(numberOfSpecies - 2), game.animals[j], randomPos, true);
+						if (domingo >= 0)
 						{
-							unsigned int randomPos = game.animals[game.adversary].position;
-							int randomCell = getRandomPopulatedCell(game.adversary);
-							if (randomCell >= 0)
-							{
-								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
-							}
 
-							domingo = spawnAnimal( 1 + extremelyFastNumberFromZeroTo(numberOfSpecies - 2),  game.champion, randomPos, true);
-							if (domingo >= 0)
-							{
-
-								game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-							}
+							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+							scrambleAnimal(domingo);
 						}
 					}
+
+
+					if (false)
+					{
+						unsigned int randomPos = game.animals[game.adversary].position;
+						int randomCell = getRandomPopulatedCell(game.adversary);
+						if (randomCell >= 0)
+						{
+							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+						}
+
+						domingo = spawnAnimal( 1 + extremelyFastNumberFromZeroTo(numberOfSpecies - 2),  game.champion, randomPos, true);
+						if (domingo >= 0)
+						{
+
+							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+						}
+					}
+					// }
 				}
 			}
 		}

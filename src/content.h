@@ -94,16 +94,17 @@
 #define MACHINECALLBACK_LIGHTER          107
 #define MACHINECALLBACK_DESTROYER        108
 
-#define MUTATION_CONNECTIONWEIGHT 10006
-#define MUTATION_ALTERBIAS        10007
-#define MUTATION_SKINCOLOR        10009
-#define MUTATION_SWITCHCONNECTION 10004
+#define MUTATION_CONNECTIONWEIGHT 10001
+#define MUTATION_ALTERBIAS        10002
+#define MUTATION_SKINCOLOR        10003
+#define MUTATION_MAKECONNECTION   10004
 #define MUTATION_RECONNECT        10005
-#define MUTATION_MOVECELL         10008
-#define MUTATION_EYELOOK          10011
-#define MUTATION_ERASEORGAN       10002
-#define MUTATION_ADDORGAN         10003
+#define MUTATION_MOVECELL         10006
+#define MUTATION_EYELOOK          10007
+#define MUTATION_ERASEORGAN       10008
+#define MUTATION_ADDORGAN         10009
 #define MUTATION_SPEAKERCHANNEL   10010
+#define MUTATION_BREAKCONNECTION  10011
 
 
 #define VISUALIZER_TRUECOLOR           1001
@@ -844,6 +845,18 @@ bool organIsASensor(unsigned int organ)
 	return false;
 }
 
+
+bool materialIsTransparent(unsigned int material)
+{
+
+if (material == MATERIAL_WATER)
+{
+	return true;
+}
+return false;
+}
+
+
 bool isCellConnecting(unsigned int organ)
 {
 	if ( organIsAnActuator(organ) ||
@@ -866,7 +879,7 @@ bool isCellConnectable(unsigned int organ)
 
 void setupExampleAnimal2(int i, bool underwater)
 {
-	
+
 	ZoneScoped;
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
