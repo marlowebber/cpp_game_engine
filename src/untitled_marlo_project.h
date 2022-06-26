@@ -43,12 +43,11 @@ extern unsigned int longestMenu;
 const unsigned int plantGenomeSize = 24;
 const float lightEnergy = 1.0f;
 
-// #define PLANTS
+#define PLANTS
 
 struct Square
 {
     unsigned int wall;      //  material filling the volume of the square. You may not be able to move through it.
-    // unsigned int material;  // a piece of material sitting on the ground. You can move over it, no matter what it is made of.
     unsigned int terrain;   // the floor itself. If it is not solid, you may have to swim in it.
     int identity;           // id of the last animal to cross the tile
     int occupyingCell;      // id of the last cell to cross this tile
@@ -75,7 +74,6 @@ struct Square
     float energyDebt;
     int sequenceNumber;
     int sequenceReturn;
-    // int sequenceDepth;
     bool grown;
     bool growthMatrix[nNeighbours];
 
@@ -147,16 +145,6 @@ struct Animal
 };
 
 
-// struct EcologySettings
-// {
-// float taxEnergyScale         ;//= 0.00000f;        // a multiplier for how much it animals just to exist.
-// float movementEnergyScale    ;//= 0.00000f;        // a multiplier for how much it animals to move.
-// float foodEnergy             ;//= 0.9f;         // how much you get from eating a piece of meat. should be less than 1 to avoid meat tornado
-// float grassEnergy            ;//= 0.25f;         // how much you get from eating a square of grass
-
-// };
-
-
 
 // these parts need to be recorded in between sessions.
 struct GameState
@@ -217,7 +205,6 @@ struct GameState
 
     struct Square world[worldSquareSize];
 
-    // EcologySettings ecoSettings;
     float ecoSettings[numberOfEcologySettings];
 
     unsigned int activeEcoSetting;
