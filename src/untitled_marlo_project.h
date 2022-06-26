@@ -40,6 +40,8 @@ extern int mouseY;
 extern int worldCreationStage;
 extern unsigned int longestMenu;
 
+extern bool fastCam;
+
 const unsigned int plantGenomeSize = 24;
 const float lightEnergy = 1.0f;
 
@@ -243,6 +245,9 @@ void notifyLMBUp();
 void drawInterfacePanel();
 
 void checkLongestMenu(std::string in);
+void toggleFastCam();
+
+void drawFastCamText();
 
 // the following are used privately to create the game content.
 void animalAppendCell(unsigned int animalIndex, unsigned int organType);

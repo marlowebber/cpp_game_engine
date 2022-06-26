@@ -652,34 +652,45 @@ void threadGraphics()
 {
 
 	ZoneScoped;
+
+
 	preDraw();
 
-	prepareForWorldDraw ();
 
-
-	camera();
-
-	if (getFPSLimit())
+	if (!fastCam)
 	{
-		model();
+		prepareForWorldDraw ();
+
+
+		camera();
+
+		if (getFPSLimit())
+		{
+			model();
+		}
+
+		glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
+		glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
+
+		// unsigned int endOfWorldVertexRegion = colorGridCursor;
+
+		prepareForMenuDraw();
+		// addExamplePanelToBuffer();
+		// drawPanels();
+		drawInterfacePanel();
+
+
+		// glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
+		// glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
+
+		drawGameInterfaceText();
 	}
+	else
+	{
 
-	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
-	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
-
-	// unsigned int endOfWorldVertexRegion = colorGridCursor;
-
-	prepareForMenuDraw();
-	// addExamplePanelToBuffer();
-	// drawPanels();
-	drawInterfacePanel();
-
-
-	// glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
-	// glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
-
-	drawGameInterfaceText();
-
+		prepareForMenuDraw();
+		drawFastCamText();
+	}
 	// drawAllMenuText ();
 
 	postDraw();

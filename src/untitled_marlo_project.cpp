@@ -144,6 +144,11 @@ int mouseX;
 int mouseY;
 int worldCreationStage = 0;
 
+bool fastCam = false;
+void toggleFastCam()
+{
+	fastCam = !fastCam;
+}
 
 void viewAdversary()
 {
@@ -4146,6 +4151,27 @@ void drawInterfacePanel()
 	drawRectangle( Vec_f2 (0.0f, 0.0f) , color_black, 100.0f, 100.0f);
 }
 
+void drawFastCamText()
+{
+	int menuX = 50;
+	int menuY = 50;
+	int textSize = 10;
+	int spacing = 20;
+
+	if (flagSave)
+	{
+		printText2D(   std::string("saving") , menuX, menuY, textSize);
+		menuY += spacing;
+		return;
+	}
+
+	printText2D(   std::string("[x] leave fast cam mode. FPS ") + std::to_string(modelFrameCount ) , menuX, menuY, textSize);
+	menuY += spacing;
+	modelFrameCount = 0;
+
+
+}
+
 void drawGameInterfaceText()
 {
 	int menuX = 50;
@@ -4540,6 +4566,9 @@ void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 
 		case 'K':
 			newColor = color_brightred;
+			break;
+		case 'Q':
+			newColor = color_darkred;
 			break;
 
 
@@ -5187,7 +5216,7 @@ void tournamentController()
 							{
 
 #ifdef PLANTS
-								if (extremelyFastNumberFromZeroTo(10) == 0)
+								if (extremelyFastNumberFromZeroTo(1000) == 0)
 								{
 
 
@@ -5323,7 +5352,9 @@ void tournamentController()
 					// {
 
 					int domingo = -1;
-					if (true)
+
+
+					if (extremelyFastNumberFromZeroTo(1)==0)
 					{
 						setupExampleAnimal2(j, underwater);
 
@@ -5353,8 +5384,8 @@ void tournamentController()
 						}
 					}
 
-
-					if (false)
+					else
+					// if (false)
 					{
 						unsigned int randomPos = game.animals[game.adversary].position;
 						int randomCell = getRandomPopulatedCell(game.adversary);

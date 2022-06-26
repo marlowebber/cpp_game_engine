@@ -443,6 +443,11 @@ case MATERIAL_POLLEN:
 	}
 
 
+case TILE_DESTROYER_EYE:
+	{
+		return std::string("A menacing red lens that flickers with energy.");
+	}
+
 
 		
 
@@ -727,6 +732,11 @@ case MATERIAL_LEAF:
 case MATERIAL_POLLEN:
 	{
 		return std::string("Pollen.");
+	}
+
+case TILE_DESTROYER_EYE:
+	{
+		return std::string("A destroyer's eye.");
 	}
 
 
@@ -1076,8 +1086,8 @@ void setupDestroyer(int i)
 		'1', '1', '1', '1', '1',
 		'1', '1', '3', '1', '1',
 		'1', '1', '1', '1', '1',
-		' ', '1', '1', '1', ' ',
-		' ', '1', '1', '1', ' ',
+		'1', '1', '1', '1', '1',
+		'1', '1', '1', '1', '1',
 		' ', '1', '1', '1', ' ',
 		' ', '1', '1', '1', ' ',
 		' ', '1', '1', '1', ' ',
@@ -1098,10 +1108,10 @@ void setupDestroyer(int i)
 		' ', 'V', 'V', 'V', ' ',
 		' ', 'V', 'V', 'V', ' ',
 		'V', 'B', 'B', 'B', 'V',
-		'V', 'B', 'K', 'B', 'V',
+		'V', 'B', 'Q', 'B', 'V',
 		'V', 'B', 'B', 'B', 'V',
-		' ', 'V', 'V', 'V', ' ',
-		' ', 'V', 'V', 'V', ' ',
+		'V', 'V', 'V', 'V', 'V',
+		'V', 'V', 'V', 'V', 'V',
 		' ', 'V', 'V', 'V', ' ',
 		' ', 'V', 'V', 'V', ' ',
 		' ', 'V', 'V', 'V', ' ',
@@ -1519,6 +1529,8 @@ Color organColors(unsigned int organ)
 		return color_peach_light;
 	case ORGAN_HAIR              :
 		return color_clear;
+	case TILE_DESTROYER_EYE              :
+		return color_brightred;
 	}
 	return color_yellow;
 }
