@@ -39,7 +39,7 @@ const bool taxIsByMass           = true;
 const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
-const bool erode = true;
+const bool erode = false;
 const int prelimSize = worldSize / 10;
 const int cameraPanSpeed = 10;
 const float baseLungCapacity = 1.0f;
@@ -48,7 +48,7 @@ const unsigned int viewFieldX = 512; //80 columns, 24 rows is the default size o
 const unsigned int viewFieldY = 512; //203 columns, 55 rows is the max size i can make one on my pc.
 const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
-const float neuralNoise = 0.1f;
+const float neuralNoise = 0.2f;
 const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 20000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
 const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
@@ -343,6 +343,12 @@ void paintAnimal(unsigned int animalIndex)
 	{
 		game.animals[animalIndex].body[i].color = filterColor(  newAnimalColorA , multiplyColorByScalar( newAnimalColorB , RNG())  );
 		game.animals[animalIndex].genes[i].color = game.animals[animalIndex].body[i].color ;
+
+		if (game.animals[animalIndex].body[i].organ == ORGAN_SENSOR_EYE)
+		{
+			game.animals[animalIndex].body[i].color = color_green;
+			game.animals[animalIndex].genes[i].color = color_green;
+		}
 	}
 }
 
@@ -397,6 +403,27 @@ void resetAnimal(unsigned int animalIndex)
 }
 
 
+// choose a random cell of any type that can be connected to, which includes all neurons and all sensors.
+int getRandomConnectableCell( unsigned int animalIndex)
+{
+	std::list<unsigned int> cellsOfType;
+	unsigned int found = 0;
+	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+		if (isCellConnectable(  game.animals[animalIndex].genes[cellIndex].organ ))
+		{
+			cellsOfType.push_back(cellIndex);
+			found++;
+		}
+	}
+	if (found > 0)
+	{
+		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
+		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
+		return *iterator;
+	}
+	return -1;
+}
 
 
 void scrambleAnimal(unsigned int animalIndex)
@@ -410,20 +437,23 @@ void scrambleAnimal(unsigned int animalIndex)
 			if (extremelyFastNumberFromZeroTo(1) == 0)
 			{
 
-				game.animals[animalIndex].body[cellLocalPositionI].connections[i].used = true;//extremelyFastNumberFromZeroTo(1);
+				game.animals[animalIndex].genes[cellLocalPositionI].connections[i].used = true;//extremelyFastNumberFromZeroTo(1);
+				game.animals[animalIndex].genes[cellLocalPositionI].connections[i].connectedTo = getRandomConnectableCell(animalIndex) ;//game.animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo;
+				game.animals[animalIndex].genes[cellLocalPositionI].connections[i].weight      = (RNG() - 0.5f ) * 2.0f; //game.animals[animalIndex].body[cellLocalPositionI].connections[i].weight;
+
+
 			}
 			else
 			{
-				game.animals[animalIndex].body[cellLocalPositionI].connections[i].used = false; // extremelyFastNumberFromZeroTo(1);
+				game.animals[animalIndex].genes[cellLocalPositionI].connections[i].used = false; // extremelyFastNumberFromZeroTo(1);
 
 			}
-			game.animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = extremelyFastNumberFromZeroTo(animalSquareSize - 1);
-			game.animals[animalIndex].body[cellLocalPositionI].connections[i].weight = RNG() - 0.5f;
 
-			game.animals[animalIndex].genes[cellLocalPositionI].connections[i].used        = game.animals[animalIndex].body[cellLocalPositionI].connections[i].used;
-			game.animals[animalIndex].genes[cellLocalPositionI].connections[i].connectedTo = game.animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo;
-			game.animals[animalIndex].genes[cellLocalPositionI].connections[i].weight      = game.animals[animalIndex].body[cellLocalPositionI].connections[i].weight;
 
+
+
+
+			game.animals[animalIndex].body[cellLocalPositionI].connections[i] = game.animals[animalIndex].genes[cellLocalPositionI].connections[i];
 
 		}
 	}
@@ -442,9 +472,13 @@ void resetAnimals()
 	resetIdentityColors();
 
 	int j = 1;
-	setupExampleAnimal2(j, true);
-	game.champion = game.animals[j];
-	game.championScore = 0;
+	for (int i = 0; i < numberOfSpecies; ++i)
+	{
+
+		setupExampleAnimal2(j, true);
+		game.champions[i] = game.animals[j];
+		game.championScores[i] = 0;
+	}
 }
 
 void resetGrid()
@@ -499,10 +533,9 @@ void resetGameState()
 	game.mousePositionY =  330;
 
 
-	// these variables keep track of the main characters in the game game.world.
+	// these variables keep track of the main characters in the game
 	game.playerCreature = -1;
-	game.championScore = 0;
-	game.championEnergyScore = 0.0f;
+
 	game.adversary = -1;
 	game.adversaryRespawnPos;
 	game.selectedAnimal = -1;
@@ -622,27 +655,7 @@ Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
 
 
 
-// choose a random cell of any type that can be connected to, which includes all neurons and all sensors.
-int getRandomConnectableCell( unsigned int animalIndex)
-{
-	std::list<unsigned int> cellsOfType;
-	unsigned int found = 0;
-	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		if (isCellConnectable(  game.animals[animalIndex].genes[cellIndex].organ ))
-		{
-			cellsOfType.push_back(cellIndex);
-			found++;
-		}
-	}
-	if (found > 0)
-	{
-		std::list<unsigned int>::iterator iterator = cellsOfType.begin();
-		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
-		return *iterator;
-	}
-	return -1;
-}
+
 
 
 void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosition)
@@ -660,8 +673,8 @@ void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosi
 
 		if (  isCellConnecting(organType)) // if the cell is supposed to have connections, go hook it up
 		{
-			unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
-			for (int i = 0; i < randomNumberOfConnections; ++i)
+			// unsigned int randomNumberOfConnections = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS);
+			for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 			{
 
 				unsigned int connectableCell = getRandomConnectableCell( animalIndex);// pick a random connectable cell to connect to.
@@ -2432,6 +2445,9 @@ void drawPalette(int menuX, int menuY)
 	unsigned int tempClosestToMouse = 0;
 	int paletteFinalX ;//= menuX + (paletteX * paletteSpacing * 10);
 	int paletteFinalY ;//= menuY + (paletteY * paletteSpacing);
+
+
+	// draw the available tiles.
 	for (int i = 0; i < numberOfOrganTypes; ++i)
 	{
 		unsigned int paletteX = i % paletteWidth;
@@ -2447,6 +2463,13 @@ void drawPalette(int menuX, int menuY)
 			printText2D(   tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
 		}
 	}
+
+
+
+	// draw the selected creature all big like, i guess.
+
+
+	//
 }
 
 // void communicationComputerCallback( int gunIndex, int shooterIndex)
@@ -2805,6 +2828,10 @@ void organs_all()
 				if (cellWorldPositionI >= worldSquareSize) {continue;}
 				if (game.animals[animalIndex].body[cellIndex].damage > 1.0f) { continue;}
 				unsigned int organ = game.animals[animalIndex].body[cellIndex].organ;
+
+
+
+
 				switch (organ)
 				{
 
@@ -3271,7 +3298,7 @@ void organs_all()
 				case ORGAN_NEURON:
 				{
 					float sum = 0.0f; // go through the list of connections and sum their values.
-					sum += neuralNoise * ((RNG() - 0.5f) * 2); // add noise all throughout the brain, this makes everything more robust and lifelike
+					// sum += neuralNoise * ((RNG() - 0.5f) * 2); // add noise all throughout the brain, this makes everything more robust and lifelike
 					for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 					{
 						if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
@@ -3440,14 +3467,17 @@ void organs_all()
 							}
 						}
 					}
+
 					if (setOrSteerAngle)
 					{
 						game.animals[animalIndex].fAngle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) ;
 					}
 					else
 					{
-						game.animals[animalIndex].fAngle += (game.animals[animalIndex].body[cellIndex].signalIntensity ) * 0.1f;
+						game.animals[animalIndex].fAngle += (game.animals[animalIndex].body[cellIndex].signalIntensity ) * 0.01f;
 					}
+
+
 					if (game.animals[animalIndex].fAngle > const_pi)
 					{
 						game.animals[animalIndex].fAngle -= 2 * const_pi;
@@ -3476,6 +3506,20 @@ void organs_all()
 
 
 				}
+
+
+
+				// add noise to all neural pathways, except for bias neurons which would mess them up.
+				if (organIsASensor(organ) || organIsAnActuator(organ) || organIsANeuron(organ))
+				{
+
+					if (organ != ORGAN_BIASNEURON)
+					{
+						const float neuralNoise = 0.01f;
+						game.animals[animalIndex].body[cellIndex].signalIntensity += (RNG() - 0.5f) * neuralNoise;
+					}
+				}
+
 			}
 			game.animals[animalIndex].totalGonads = totalGonads;
 			game.animals[animalIndex].maxEnergy = game.animals[animalIndex].mass + (totalLiver * liverStorage);
@@ -3538,6 +3582,7 @@ void move_all()
 		unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 		if (!game.animals[animalIndex].retired)
 		{
+			// game.animals[animalIndex].fAngle += (RNG() - 0.5f ) * 0.05f;
 			game.animals[animalIndex].fAngleCos = cos(game.animals[animalIndex].fAngle);
 			game.animals[animalIndex].fAngleSin = sin(game.animals[animalIndex].fAngle);
 
@@ -3831,23 +3876,16 @@ void energy_all() // perform energies.
 			int animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + game.animals[animalIndex].numberOfTimesReproduced ;
 			if (animalIndex != game.playerCreature && speciesIndex > 0) // player & player species cannot be nominated
 			{
-				if ( animalScore > game.championScore)
+				if ( animalScore > game.championScores[speciesIndex])
 				{
 					nominate = true;
 				}
-				else if (animalScore == game.championScore)
-				{
-					if (game.animals[animalIndex].energy > game.championEnergyScore)
-					{
-						nominate = true;
-					}
-				}
+
 			}
 			if (nominate)
 			{
-				game.championScore = animalScore;
-				game.championEnergyScore = game.animals[animalIndex].energy;
-				game.champion = game.animals[animalIndex];
+				game.championScores[speciesIndex] = animalScore;
+				game.champions[speciesIndex] = game.animals[animalIndex];
 			}
 		}
 	}
@@ -4719,7 +4757,7 @@ void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigne
 void spawnAdversary(unsigned int targetWorldPositionI)
 {
 	game.adversary = numberOfAnimalsPerSpecies + 1; // game.adversary animal is a low number index in the 1th species. 0th is for players and machines.
-	spawnAnimalIntoSlot(game.adversary, game.champion, targetWorldPositionI, true);
+	spawnAnimalIntoSlot(game.adversary, game.champions[1], targetWorldPositionI, true);
 	game.animals[game.adversary].position = targetWorldPositionI;
 	game.animals[game.adversary].uPosX = targetWorldPositionI % worldSize;
 	game.animals[game.adversary].uPosY = targetWorldPositionI / worldSize;
@@ -4860,7 +4898,7 @@ void recomputeTerrainLighting()
 
 			game.world[worldPositionI].light = multiplyColorByScalar(game.world[worldPositionI].light, brightness   );
 		}
-		float steps = 16;
+		float steps = 8;
 		float b = game.world[worldPositionI].light.a * steps;//100.0f;
 		int ib = b;
 		float betoot =  (ib / steps);
@@ -5118,7 +5156,7 @@ void setupRandomWorld()
 		TinyErode::Simulation simulation(prelimSize, prelimSize);
 		simulation.SetMetersPerX(150.0f / prelimSize);
 		simulation.SetMetersPerY(150.0f / prelimSize);
-		const int iterations = 512;
+		const int iterations = 350;
 		for (int i = 0; i < iterations; i++)
 		{
 
@@ -5158,6 +5196,13 @@ void setupRandomWorld()
 		else
 		{
 
+#ifdef PLANTS
+
+			game.world[worldPositionI].plantState = MATERIAL_GRASS;
+#endif
+
+
+
 #ifndef PLANTS
 			game.world[worldPositionI].wall = MATERIAL_GRASS;
 #endif
@@ -5184,6 +5229,8 @@ void tournamentController()
 {
 	ZoneScoped;
 
+
+
 	if (! game.adversaryDefeated)
 	{
 
@@ -5202,8 +5249,8 @@ void tournamentController()
 				if (game.animals[game.adversary].position >= 0 && game.animals[game.adversary].position < worldSquareSize)
 				{
 
-					game.animals[game.adversary].fPosX += RNG() - 0.5f;
-					game.animals[game.adversary].fPosY += RNG() - 0.5f;
+					// game.animals[game.adversary].fPosX += RNG() - 0.5f;
+					// game.animals[game.adversary].fPosY += RNG() - 0.5f;
 
 
 					for (int i = 0; i < nNeighbours; ++i)
@@ -5333,18 +5380,18 @@ void tournamentController()
 				}
 			}
 
-			if (totalpop <= 1 && game.adversary >= 0)// life went extinct but the game.adversary is still alive. Spawn a bunch more stuff to get it going again.
+			if (totalpop < numberOfSpecies && game.adversary >= 0)// life went extinct but the game.adversary is still alive. Spawn a bunch more stuff to get it going again.
 			{
 				int j = 1;
-				bool underwater = false;
-				if (  game.world[  game.animals[game.adversary].position ].wall == MATERIAL_WATER )
-				{
-					underwater = true;
-				}
+				// bool underwater = false;
+				// if (  game.world[  game.animals[game.adversary].position ].wall == MATERIAL_WATER )
+				// {
+				// 	underwater = true;
+				// }
 
-				const unsigned int numberOfAnimalsToRespawn = 64;
+				// const unsigned int numberOfAnimalsToRespawn = 128;
 
-				for (int k = 0; k < numberOfAnimalsToRespawn; ++k)// spawn lots of the example animal
+				for (int k = 0; k < numberOfSpecies; ++k)// spawn lots of the example animal
 				{
 
 
@@ -5354,53 +5401,36 @@ void tournamentController()
 					int domingo = -1;
 
 
-					if (extremelyFastNumberFromZeroTo(1)==0)
-					{
-						setupExampleAnimal2(j, underwater);
-
-						unsigned int randomPos =  game.animals[game.adversary].position;
-
-						// while(true)
-						// {
-						// 	randomPos = extremelyFastNumberFromZeroTo(worldSquareSize-1);
-						// 	if (game.world[randomPos].height < seaLevel)
-						// 	{
-						// 		break;
-						// 	}
-						// }
-
-						int randomCell = getRandomPopulatedCell(game.adversary);
-						if (randomCell >= 0)
-						{
-							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
-						}
-
-						domingo = spawnAnimal( 1 + extremelyFastNumberFromZeroTo(numberOfSpecies - 2), game.animals[j], randomPos, true);
-						if (domingo >= 0)
-						{
-
-							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-							scrambleAnimal(domingo);
-						}
-					}
-
-					else
 					// if (false)
+
+					unsigned int randomPos = game.animals[game.adversary].position;
+					// int randomCell = getRandomPopulatedCell(game.adversary);
+					// if (randomCell >= 0)
+					// {
+					// 	randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+					// }
+
+					domingo = spawnAnimal( k,  game.champions[k], randomPos, false);
+					if (domingo >= 0)
 					{
-						unsigned int randomPos = game.animals[game.adversary].position;
-						int randomCell = getRandomPopulatedCell(game.adversary);
-						if (randomCell >= 0)
-						{
-							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
-						}
 
-						domingo = spawnAnimal( 1 + extremelyFastNumberFromZeroTo(numberOfSpecies - 2),  game.champion, randomPos, true);
-						if (domingo >= 0)
-						{
-
-							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-						}
+						game.animals[domingo].energy = game.animals[domingo].maxEnergy;
 					}
+
+
+
+
+					Animal parent;
+					setupExampleAnimal2(j, false);
+					parent = game.animals[j];
+
+					domingo = spawnAnimal( k,  parent, randomPos, false);
+					if (domingo >= 0)
+					{
+
+						game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+					}
+
 					// }
 				}
 			}
@@ -5535,9 +5565,9 @@ void startSimulation()
 {
 
 	worldCreationStage = 0;
-	int j = 1;
-	setupExampleAnimal2(j, true);
-	game.champion = game.animals[j];
+	// int j = 1;
+	// setupExampleAnimal2(j, true);
+	// game.champion = game.animals[j];
 	boost::thread t7{ modelSupervisor };
 	// boost::thread t8{ mapSupervisor };
 	for ( ;; )

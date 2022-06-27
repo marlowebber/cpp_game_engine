@@ -9,8 +9,8 @@ const unsigned int nNeighbours     = 8;
 const int worldSize = 2500;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
-const unsigned int numberOfAnimals = 8000;
-const unsigned int numberOfSpecies = 4;
+const unsigned int numberOfAnimals = 10000;
+const unsigned int numberOfSpecies = 6;
 const unsigned int animalSquareSize      = 256;
 const unsigned int displayNameSize = 32;
 const unsigned int nLogs = 32;
@@ -171,14 +171,15 @@ struct GameState
 
     // these variables keep track of the main characters in the game world.
     int playerCreature ;
-    int championScore ;
-    float championEnergyScore ;
     int adversary = -1;
     unsigned int adversaryRespawnPos;
     int selectedAnimal ;
     int cursorAnimal ;
     unsigned int playerRespawnPos;
-    Animal champion;
+
+    Animal champions[numberOfSpecies];
+    int championScores[numberOfSpecies] ;
+
     bool adversaryDefeated;
     bool adversaryCreated;
 

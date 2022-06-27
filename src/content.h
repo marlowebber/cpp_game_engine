@@ -899,17 +899,16 @@ void setupExampleAnimal2(int i, bool underwater)
 	ZoneScoped;
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
-	if (underwater)
-	{
+	// if (underwater)
+	// {
 
 	animalAppendCell( i, ORGAN_GILL );
-	}
-	else
-	{
+	// }
+	// else
+	// {
 
 	animalAppendCell( i, ORGAN_LUNG );
-	}
-	animalAppendCell( i, ORGAN_LIVER );
+	// }
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
@@ -918,13 +917,10 @@ void setupExampleAnimal2(int i, bool underwater)
 
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
-	animalAppendCell( i, ORGAN_SENSOR_EAR );
-	animalAppendCell( i, ORGAN_SENSOR_PHEROMONE );
-	animalAppendCell( i, ORGAN_SENSOR_TRACKER );
 
-	animalAppendCell( i, ORGAN_SENSOR_AGE );
-	animalAppendCell( i, ORGAN_SENSOR_HUNGER );
 
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
 	animalAppendCell( i, ORGAN_BIASNEURON );
 	animalAppendCell( i, ORGAN_BIASNEURON );
 	animalAppendCell( i, ORGAN_NEURON );
@@ -933,10 +929,7 @@ void setupExampleAnimal2(int i, bool underwater)
 	animalAppendCell( i, ORGAN_NEURON );
 
 	animalAppendCell( i, ORGAN_MUSCLE );
-	animalAppendCell( i, ORGAN_MUSCLE );
 	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
-	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
-	animalAppendCell( i, ORGAN_MUSCLE_TURN );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
 	animalAppendCell( i, ORGAN_EMITTER_PHEROMONE );
 	animalAppendCell( i, ORGAN_SPEAKER );
