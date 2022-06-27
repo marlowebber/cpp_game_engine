@@ -947,9 +947,6 @@ void setupExampleAnimal2(int i, bool underwater)
 
 
 
-
-
-
 void setupExampleLighter(int i)
 {
 	// game.animals[i].isMachine = true;

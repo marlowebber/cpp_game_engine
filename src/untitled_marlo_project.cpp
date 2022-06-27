@@ -715,6 +715,50 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 }
 
 
+void setupTestAnimal(int i)
+{
+	
+
+
+
+
+	appendCell( i, ORGAN_LUNG, Vec_i2(0,0) );
+	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(-1,0) );
+	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(1,0) );
+	appendCell( i, ORGAN_MUSCLE_TURN, Vec_i2(0,-1) );
+
+	game.animals[i].body[3].connections[0].used = true;
+	game.animals[i].body[3].connections[0].connectedTo = 1;
+	game.animals[i].body[3].connections[0].weight = 1.0f;
+
+
+	game.animals[i].body[3].connections[1].used = true;
+	game.animals[i].body[3].connections[1].connectedTo = 2;
+	game.animals[i].body[3].connections[1].weight = -1.0f;
+
+
+
+
+	appendCell( i, ORGAN_GONAD, Vec_i2(1,1) );
+	appendCell( i, ORGAN_LIVER, Vec_i2(0,1) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(-1,1) );
+
+
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(1,2) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0,2) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(-1,2) );
+
+	appendCell( i, ORGAN_BIASNEURON, Vec_i2(-1,3) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(1,3) );
+
+
+	game.animals[i].body[11].connections[0].used = true;
+	game.animals[i].body[11].connections[0].connectedTo = 10;
+	game.animals[i].body[11].connections[0].weight = 1.0f;
+
+}
+
+
 
 
 Vec_f2 getTerrainSlope(unsigned int worldPositionI)
@@ -5420,11 +5464,13 @@ void tournamentController()
 
 
 
-					Animal parent;
-					setupExampleAnimal2(j, false);
-					parent = game.animals[j];
+					// Animal parent;
+					// setupExampleAnimal2(j, false);
 
-					domingo = spawnAnimal( k,  parent, randomPos, false);
+					// parent = game.animals[j];
+
+					 setupTestAnimal( j);
+					domingo = spawnAnimal( k,  game.animals[j], randomPos, false);
 					if (domingo >= 0)
 					{
 
@@ -5615,7 +5661,20 @@ void load()
 
 
 
-// void test_all()
-// {
+void test_all()
+{
 
-// }
+
+
+
+	resetGameState();
+
+
+
+
+
+
+
+
+
+}
