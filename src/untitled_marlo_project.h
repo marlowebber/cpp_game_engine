@@ -108,7 +108,6 @@ struct Cell
 struct Animal
 {
     Cell body[animalSquareSize];
-    Cell genes[animalSquareSize];
     unsigned int mass;
     unsigned int numberOfTimesReproduced;
     unsigned int damageDone;
