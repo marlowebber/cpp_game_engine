@@ -718,7 +718,7 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 void setupTestAnimal(int i)
 {
 
-resetAnimal(i);
+	resetAnimal(i);
 
 	appendCell( i, ORGAN_LUNG, Vec_i2(0, 0) );
 	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(-1, 0) );
@@ -763,7 +763,7 @@ void setupTestAnimal2(int i)
 // test animal 2 is little more than a mouth that moves at a constant pace.
 
 
-resetAnimal(i);
+	resetAnimal(i);
 
 	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 0) );
 	appendCell( i, ORGAN_BIASNEURON, Vec_i2(0, 1) );
@@ -901,6 +901,10 @@ bool measureAnimalQualities( int animalIndex)
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_ADDOFFSPRINGENERGY)
 		{
 			game.animals[animalIndex].offspringEnergy += game.animals[animalIndex].offspringEnergy ;
+			if (game.animals[animalIndex].offspringEnergy > game.animals[animalIndex].mass / 2)
+			{
+				game.animals[animalIndex].offspringEnergy = game.animals[animalIndex].mass / 2; // if its bigger than this, the animal will never be able to reproduce.
+			}
 		}
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_ADDLIFESPAN)
 		{
@@ -5714,7 +5718,7 @@ void test_all()
 	bool testResult_6 = false;
 
 
-int j = 1;
+	int j = 1;
 
 // 1. grass grows
 	// set a map square to grass and make sure there is light shining on it.
@@ -5741,8 +5745,8 @@ int j = 1;
 	// measure it's energy to see that it ate the food.
 
 
-	unsigned int testAnimalIndex=  2;
-	 setupTestAnimal2(j);
+	unsigned int testAnimalIndex =  2;
+	setupTestAnimal2(j);
 
 	spawnAnimalIntoSlot(  testAnimalIndex, game.animals[j], testPos, false);
 
@@ -5767,15 +5771,101 @@ int j = 1;
 
 
 	if (game.animals[testAnimalIndex].energy == (
-		(howManyPlantsToEat * game.ecoSettings[1])   // how much energy it got
-		 - (game.ecoSettings[3] * game.animals[testAnimalIndex].mass)    // minus the resting tax
-		 - (game.ecoSettings[2] * game.animals[testAnimalIndex].mass * howManyPlantsToEat)  // minus the movement tax
+	            (howManyPlantsToEat * game.ecoSettings[1])   // how much energy it got
+	            - (game.ecoSettings[3] * game.animals[testAnimalIndex].mass)    // minus the resting tax
+	            - (game.ecoSettings[2] * game.animals[testAnimalIndex].mass * howManyPlantsToEat)  // minus the movement tax
 
-		 )
-	 )
+	        )
+	   )
 	{
 		testResult_2 = true;
 	}
+
+
+
+
+// 3. animals reproduce when they have enough energy and their debt is 0
+	setupTestAnimal2(j);
+
+	unsigned int testSpecies = numberOfSpecies - 1;
+	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+
+
+	game.animals[testAnimalIndex].energy = game.animals[testAnimalIndex].maxEnergy;
+
+	game.animals[testAnimalIndex].energyDebt = 0;
+
+	model();
+
+	if (speciesPopulationCounts[testSpecies] == 2)
+	{
+		testResult_3 = true;
+	}
+
+
+
+
+
+
+
+// 4. reproduction copies the animal wholly and exactly, except that lifetime stats are reset to 0 in the new generation, and some mutation may be carried along
+	setupTestAnimal2(j);
+
+	int parent =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+
+
+	game.animals[testAnimalIndex].energy = game.animals[testAnimalIndex].maxEnergy;
+
+	game.animals[testAnimalIndex].energyDebt = 0;
+
+	model();
+
+
+	for (int i = 0; i < numberOfAnimalsPerSpecies; ++i)
+	{
+		int child = (testSpecies * numberOfAnimalsPerSpecies) + i;
+		if (game.animals[child].retired == false  )
+		{
+			if (game.animals[child].parentIdentity == parent  )
+			{
+
+
+				Cell * childBody = game.animals[child].body;
+				Cell * parentBody = game.animals[parent].body;
+
+				char * cchild = (char*)childBody;
+				char * cparent = (char*)parentBody;
+
+				unsigned int diffs = 0 ;
+				for (int k = 0; k < ((animalSquareSize * sizeof(Cell)) / sizeof(char))  ; ++k)
+				{
+					if (cchild[k] != cparent[k])
+					{
+						diffs++;
+					}
+				}
+
+
+				break;
+
+			}
+
+		}
+	}
+
+	if (diffs == 0)
+	{
+		testResult_4 = true;
+	}
+
+
+
+
+
+  // 5 and 6, the animal can sense stimulus from the environment, it can propagate through the brain and trigger an actuator.
+
+
+
 
 
 }
