@@ -3369,7 +3369,14 @@ void organs_all()
 							if (cellWorldPositionI < worldSquareSize)
 							{
 								unsigned int speciesIndex  = animalIndex / numberOfAnimalsPerSpecies;
-								int result = spawnAnimal( speciesIndex, game.animals[animalIndex], game.animals[animalIndex].position, true );
+
+								bool mutate = false;
+								if (extremelyFastNumberFromZeroTo(1)==0)
+								{
+									mutate = true;
+								}
+
+								int result = spawnAnimal( speciesIndex, game.animals[animalIndex], game.animals[animalIndex].position, mutate );
 								if (result >= 0)
 								{
 									game.animals[animalIndex].body[cellIndex].organ = MATERIAL_NOTHING;
