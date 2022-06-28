@@ -1543,7 +1543,7 @@ void killAnimal(int animalIndex)
 		unsigned int cellWorldPositionI  = (cellWorldPositionY * worldSize) + cellWorldPositionX;
 		if (cellWorldPositionI < worldSquareSize)
 		{
-			if (game.animals[animalIndex].body[cellIndex].organ != MATERIAL_NOTHING)
+			if (game.animals[animalIndex].body[cellIndex].organ != MATERIAL_NOTHING && game.animals[animalIndex].body[cellIndex].damage < 1.0f)
 			{
 				game.world[cellWorldPositionI].pheromoneChannel = 13;
 				game.world[cellWorldPositionI].pheromoneIntensity = 1.0f;
@@ -3918,7 +3918,7 @@ void energy_all() // perform energies.
 			}
 			bool nominate = false;
 			int animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + game.animals[animalIndex].numberOfTimesReproduced ;
-			if (animalIndex != game.playerCreature && speciesIndex > 0) // player & player species cannot be nominated
+			if (animalIndex != game.playerCreature &&animalIndex != game.adversary && speciesIndex > 0 && game.animals[animalIndex].machineCallback == MATERIAL_NOTHING) // player & player species cannot be nominated, and machines cannot be nominated
 			{
 				if ( animalScore > game.championScores[speciesIndex])
 				{
@@ -5066,7 +5066,7 @@ void setupGameItems()
 
 	// BUILDING 1
 	// contains eco computer, player, adversary, and message terminal 1
-	unsigned int building1 =  getRandomPosition(false);
+	 int building1 =  getRandomPosition(false);
 
 	setupBuilding_playerBase(building1);
 
@@ -5094,7 +5094,7 @@ void setupGameItems()
 	// contains hospital and message computer 2
 
 
-	unsigned int building2 =  getRandomPosition(false);
+	 int building2 =  getRandomPosition(false);
 	setupBuilding_playerBase(building2);
 	setupHospitalComputer(i);
 	spawnAnimalIntoSlot(4, game.animals[i], building2, false);
@@ -5110,7 +5110,7 @@ void setupGameItems()
 
 	// BUILDING 3 contains tracker glasses, pistol, and message computer 3
 
-	unsigned int building3 =  getRandomPosition(true);
+	 int building3 =  getRandomPosition(true);
 	setupBuilding_playerBase(building3);
 	setupTrackerGlasses(i);
 	spawnAnimalIntoSlot(6, game.animals[i], building3, false);
@@ -5130,7 +5130,7 @@ void setupGameItems()
 
 	// BUILDING 4 contains knife, lighter, and message computer 4
 
-	unsigned int building4 =  getRandomPosition(true);
+	 int building4 =  getRandomPosition(true);
 	setupBuilding_playerBase(building4);
 	setupExampleKnife(i);
 	spawnAnimalIntoSlot(9, game.animals[i], building4, false);
@@ -5141,7 +5141,7 @@ void setupGameItems()
 
 	building4 += 25 * worldSize;
 	setupMessageComputer( i, 3);
-	spawnAnimalIntoSlot(11, game.animals[i], building3, false);
+	spawnAnimalIntoSlot(11, game.animals[i], building4, false);
 
 	building4 -= 25;
 	setupDestroyer( i);
