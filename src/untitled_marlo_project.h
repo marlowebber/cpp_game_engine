@@ -244,6 +244,9 @@ void incrementSelectedGrabber();
 void notifyLMBUp();
 void drawInterfacePanel();
 
+
+void test_all();
+
 void checkLongestMenu(std::string in);
 void toggleFastCam();
 

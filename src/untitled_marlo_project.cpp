@@ -715,49 +715,32 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 }
 
 
-void setupTestAnimal(int i)
+void setupTestAnimal_eye(int i)
 {
 
 	resetAnimal(i);
 
-	appendCell( i, ORGAN_LUNG, Vec_i2(0, 0) );
-	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(-1, 0) );
-	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(1, 0) );
-	appendCell( i, ORGAN_MUSCLE_TURN, Vec_i2(0, -1) );
+	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(0, 1) );
+	appendCell( i, ORGAN_NEURON, Vec_i2(0, 2) );
+	appendCell( i, ORGAN_MUSCLE_TURN, Vec_i2(0, 3) );
 
-	game.animals[i].body[3].connections[0].used = true;
-	game.animals[i].body[3].connections[0].connectedTo = 1;
-	game.animals[i].body[3].connections[0].weight = 1.0f;
+	game.animals[i].body[1].connections[0].used = true;
+	game.animals[i].body[1].connections[0].connectedTo = 0;
+	game.animals[i].body[1].connections[0].weight = 1.0f;
 
 
-	game.animals[i].body[3].connections[1].used = true;
-	game.animals[i].body[3].connections[1].connectedTo = 2;
-	game.animals[i].body[3].connections[1].weight = -1.0f;
-
+	game.animals[i].body[2].connections[0].used = true;
+	game.animals[i].body[2].connections[0].connectedTo = 1;
+	game.animals[i].body[2].connections[0].weight = 1.0f;
 
 
 
-	appendCell( i, ORGAN_GONAD, Vec_i2(1, 1) );
-	appendCell( i, ORGAN_LIVER, Vec_i2(0, 1) );
-	appendCell( i, ORGAN_GONAD, Vec_i2(-1, 1) );
-
-
-	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(1, 2) );
-	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 2) );
-	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(-1, 2) );
-
-	appendCell( i, ORGAN_BIASNEURON, Vec_i2(-1, 3) );
-	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, 3) );
-
-
-	game.animals[i].body[11].connections[0].used = true;
-	game.animals[i].body[11].connections[0].connectedTo = 10;
-	game.animals[i].body[11].connections[0].weight = 1.0f;
-
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 4) );
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, 5) );
 }
 
 
-void setupTestAnimal2(int i)
+void setupTestAnimal_straightline(int i)
 {
 
 // test animal 2 is little more than a mouth that moves at a constant pace.
@@ -776,6 +759,8 @@ void setupTestAnimal2(int i)
 	game.animals[i].body[2].connections[0].used = true;
 	game.animals[i].body[2].connections[0].connectedTo = 1;
 	game.animals[i].body[2].connections[0].weight = 1.0f;
+
+	game.animals[i].body[1].signalIntensity = 1.0f;
 }
 
 
@@ -3316,8 +3301,18 @@ void organs_all()
 					unsigned int eyeLookWorldPositionY = cellWorldPositionY + rotatedEyeLook.y;
 					unsigned int eyeLookWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
 					Color receivedColor = whatColorIsThisSquare(eyeLookWorldPositionI);
-					Color perceivedColor = multiplyColor( receivedColor, game.animals[animalIndex].body[cellIndex].color  );
-					game.animals[animalIndex].body[cellIndex].signalIntensity = colorAmplitude(perceivedColor );
+					// Color perceivedColor = multiplyColor( receivedColor, game.animals[animalIndex].body[cellIndex].color  );
+
+
+					float diff = 0.0f;
+
+					diff += (game.animals[animalIndex].body[cellIndex].color.r - receivedColor.r );
+					diff += (game.animals[animalIndex].body[cellIndex].color.g - receivedColor.g );
+					diff += (game.animals[animalIndex].body[cellIndex].color.b - receivedColor.b );
+					diff = diff / 3;
+
+
+					game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f - diff;//colorAmplitude(perceivedColor );
 					break;
 				}
 
@@ -5496,11 +5491,11 @@ void tournamentController()
 
 
 					// Animal parent;
-					// setupExampleAnimal2(j, false);
+					setupExampleAnimal2(j, false);
 
 					// parent = game.animals[j];
 
-					setupTestAnimal( j);
+					// setupTestAnimal( j);
 					domingo = spawnAnimal( k,  game.animals[j], randomPos, false);
 					if (domingo >= 0)
 					{
@@ -5702,21 +5697,11 @@ void test_all()
 
 
 
-
-// 1. grass grows
-// 2. animals eat grass and gain energy
-// 3. animals reproduce when they have enough energy
-// 4. reproduction copies the animal wholly and exactly, except that lifetime stats are reset to 0 in the new generation, and some mutation may be carried along
-// 5. sensors take measurements of the game world to produce a signal
-// 6. actuators use signals to move the animal.
-
 	bool testResult_1 = false;
 	bool testResult_2 = false;
 	bool testResult_3 = false;
 	bool testResult_4 = false;
 	bool testResult_5 = false;
-	bool testResult_6 = false;
-
 
 	int j = 1;
 
@@ -5745,10 +5730,13 @@ void test_all()
 	// measure it's energy to see that it ate the food.
 
 
-	unsigned int testAnimalIndex =  2;
-	setupTestAnimal2(j);
+	// unsigned int testAnimalIndex =  2;
 
-	spawnAnimalIntoSlot(  testAnimalIndex, game.animals[j], testPos, false);
+	unsigned int testSpecies = numberOfSpecies - 1;
+	setupTestAnimal_straightline(j);
+
+	int testAnimal = spawnAnimal(  testSpecies, game.animals[j], testPos, false);
+
 
 	unsigned int howManyPlantsToEat = 10;
 
@@ -5770,10 +5758,10 @@ void test_all()
 	// game.ecoSettings[1]          = 0.25f; // grass energy
 
 
-	if (game.animals[testAnimalIndex].energy == (
+	if (game.animals[testAnimal].energy == (
 	            (howManyPlantsToEat * game.ecoSettings[1])   // how much energy it got
-	            - (game.ecoSettings[3] * game.animals[testAnimalIndex].mass)    // minus the resting tax
-	            - (game.ecoSettings[2] * game.animals[testAnimalIndex].mass * howManyPlantsToEat)  // minus the movement tax
+	            - (game.ecoSettings[3] * game.animals[testAnimal].mass)    // minus the resting tax
+	            - (game.ecoSettings[2] * game.animals[testAnimal].mass * howManyPlantsToEat)  // minus the movement tax
 
 	        )
 	   )
@@ -5785,19 +5773,18 @@ void test_all()
 
 
 // 3. animals reproduce when they have enough energy and their debt is 0
-	setupTestAnimal2(j);
+	setupTestAnimal_straightline(j);
 
-	unsigned int testSpecies = numberOfSpecies - 1;
-	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+	testAnimal = spawnAnimal( testSpecies , game.animals[j], testPos, false);
 
 
-	game.animals[testAnimalIndex].energy = game.animals[testAnimalIndex].maxEnergy;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
 
-	game.animals[testAnimalIndex].energyDebt = 0;
+	game.animals[testAnimal].energyDebt = 0;
 
 	model();
 
-	if (speciesPopulationCounts[testSpecies] == 2)
+	if (game.speciesPopulationCounts[testSpecies] == 2)
 	{
 		testResult_3 = true;
 	}
@@ -5809,16 +5796,18 @@ void test_all()
 
 
 // 4. reproduction copies the animal wholly and exactly, except that lifetime stats are reset to 0 in the new generation, and some mutation may be carried along
-	setupTestAnimal2(j);
+	setupTestAnimal_straightline(j);
 
-	int parent =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+	testAnimal =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
 
 
-	game.animals[testAnimalIndex].energy = game.animals[testAnimalIndex].maxEnergy;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
 
-	game.animals[testAnimalIndex].energyDebt = 0;
+	game.animals[testAnimal].energyDebt = 0;
 
 	model();
+
+	int diffs = 0;
 
 
 	for (int i = 0; i < numberOfAnimalsPerSpecies; ++i)
@@ -5826,12 +5815,12 @@ void test_all()
 		int child = (testSpecies * numberOfAnimalsPerSpecies) + i;
 		if (game.animals[child].retired == false  )
 		{
-			if (game.animals[child].parentIdentity == parent  )
+			if (game.animals[child].parentIdentity == testAnimal  )
 			{
 
 
 				Cell * childBody = game.animals[child].body;
-				Cell * parentBody = game.animals[parent].body;
+				Cell * parentBody = game.animals[testAnimal].body;
 
 				char * cchild = (char*)childBody;
 				char * cparent = (char*)parentBody;
@@ -5862,8 +5851,104 @@ void test_all()
 
 
 
-  // 5 and 6, the animal can sense stimulus from the environment, it can propagate through the brain and trigger an actuator.
+	// 5, the animal can sense stimulus from the environment, it can propagate through the brain and trigger an actuator.
 
+	// note that this test uses a different test animal.
+	setupTestAnimal_eye(j);
+
+	testAnimal =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+
+	game.animals[testAnimal].energy = (game.animals[testAnimal].maxEnergy / 2) - 1.0f; // give it enough energy for the test
+
+	int testEye = getRandomCellOfType(testAnimal, ORGAN_SENSOR_EYE);
+
+
+	move_all(); // run this so that the creature can place
+
+
+	float originalAngle = game.animals[testAnimal].fAngle;
+
+
+	unsigned int testEyePosition ;
+	if (testEye >= 0)
+	{
+		testEyePosition = game.animals[testAnimal].body[testEye].worldPositionI;
+		game.animals[testAnimal].body[testEye].color = color_white;
+		game.world[testEyePosition].light = color_white;
+	}
+
+
+	model();
+
+	if (game.animals[testAnimal].fAngle != originalAngle)
+	{
+		testResult_5 = true;
+	}
+
+
+
+// 1. grass grows
+// 2. animals eat grass and gain energy
+// 3. animals reproduce when they have enough energy
+// 4. reproduction copies the animal wholly and exactly, except that lifetime stats are reset to 0 in the new generation, and some mutation may be carried along
+// 5. sensors take measurements of the game world to produce a signal
+// 6. actuators use signals to move the animal.
+
+
+
+
+// print the test report
+	printf("DEEP SEA self test report\n");
+
+	if (testResult_1)
+	{
+		printf("test 1: grass growing: PASS\n");
+	}
+	else
+	{
+		printf("test 1: grass growing: FAIL\n");
+	}
+
+
+	if (testResult_2)
+	{
+		printf("test 2: eat grass: PASS\n");
+	}
+	else
+	{
+		printf("test 2: eat grass: FAIL\n");
+	}
+
+
+
+	if (testResult_3)
+	{
+		printf("test 3: have baby: PASS\n");
+	}
+	else
+	{
+		printf("test 3: have baby: FAIL\n");
+	}
+
+
+	if (testResult_4)
+	{
+		printf("test 4: baby check: PASS\n");
+	}
+	else
+	{
+		printf("test 4: baby check: FAIL\n");
+	}
+
+
+	if (testResult_5)
+	{
+		printf("test 5: neural pathway: PASS\n");
+	}
+	else
+	{
+		printf("test 5: neural pathway: FAIL\n");
+	}
 
 
 
