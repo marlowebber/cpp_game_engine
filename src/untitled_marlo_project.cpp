@@ -717,15 +717,13 @@ void animalAppendCell(unsigned int animalIndex, unsigned int organType)
 
 void setupTestAnimal(int i)
 {
-	
 
+resetAnimal(i);
 
-
-
-	appendCell( i, ORGAN_LUNG, Vec_i2(0,0) );
-	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(-1,0) );
-	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(1,0) );
-	appendCell( i, ORGAN_MUSCLE_TURN, Vec_i2(0,-1) );
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, 0) );
+	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(-1, 0) );
+	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(1, 0) );
+	appendCell( i, ORGAN_MUSCLE_TURN, Vec_i2(0, -1) );
 
 	game.animals[i].body[3].connections[0].used = true;
 	game.animals[i].body[3].connections[0].connectedTo = 1;
@@ -739,23 +737,45 @@ void setupTestAnimal(int i)
 
 
 
-	appendCell( i, ORGAN_GONAD, Vec_i2(1,1) );
-	appendCell( i, ORGAN_LIVER, Vec_i2(0,1) );
-	appendCell( i, ORGAN_GONAD, Vec_i2(-1,1) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(1, 1) );
+	appendCell( i, ORGAN_LIVER, Vec_i2(0, 1) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(-1, 1) );
 
 
-	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(1,2) );
-	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0,2) );
-	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(-1,2) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(1, 2) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 2) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(-1, 2) );
 
-	appendCell( i, ORGAN_BIASNEURON, Vec_i2(-1,3) );
-	appendCell( i, ORGAN_MUSCLE, Vec_i2(1,3) );
+	appendCell( i, ORGAN_BIASNEURON, Vec_i2(-1, 3) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(1, 3) );
 
 
 	game.animals[i].body[11].connections[0].used = true;
 	game.animals[i].body[11].connections[0].connectedTo = 10;
 	game.animals[i].body[11].connections[0].weight = 1.0f;
 
+}
+
+
+void setupTestAnimal2(int i)
+{
+
+// test animal 2 is little more than a mouth that moves at a constant pace.
+
+
+resetAnimal(i);
+
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 0) );
+	appendCell( i, ORGAN_BIASNEURON, Vec_i2(0, 1) );
+	appendCell( i, ORGAN_MUSCLE, Vec_i2(0, 2) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, 4) );
+
+
+
+	game.animals[i].body[2].connections[0].used = true;
+	game.animals[i].body[2].connections[0].connectedTo = 1;
+	game.animals[i].body[2].connections[0].weight = 1.0f;
 }
 
 
@@ -3371,7 +3391,7 @@ void organs_all()
 								unsigned int speciesIndex  = animalIndex / numberOfAnimalsPerSpecies;
 
 								bool mutate = false;
-								if (extremelyFastNumberFromZeroTo(1)==0)
+								if (extremelyFastNumberFromZeroTo(1) == 0)
 								{
 									mutate = true;
 								}
@@ -3925,7 +3945,7 @@ void energy_all() // perform energies.
 			}
 			bool nominate = false;
 			int animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + game.animals[animalIndex].numberOfTimesReproduced ;
-			if (animalIndex != game.playerCreature &&animalIndex != game.adversary && speciesIndex > 0 && game.animals[animalIndex].machineCallback == MATERIAL_NOTHING) // player & player species cannot be nominated, and machines cannot be nominated
+			if (animalIndex != game.playerCreature && animalIndex != game.adversary && speciesIndex > 0 && game.animals[animalIndex].machineCallback == MATERIAL_NOTHING) // player & player species cannot be nominated, and machines cannot be nominated
 			{
 				if ( animalScore > game.championScores[speciesIndex])
 				{
@@ -5073,7 +5093,7 @@ void setupGameItems()
 
 	// BUILDING 1
 	// contains eco computer, player, adversary, and message terminal 1
-	 int building1 =  getRandomPosition(false);
+	int building1 =  getRandomPosition(false);
 
 	setupBuilding_playerBase(building1);
 
@@ -5101,7 +5121,7 @@ void setupGameItems()
 	// contains hospital and message computer 2
 
 
-	 int building2 =  getRandomPosition(false);
+	int building2 =  getRandomPosition(false);
 	setupBuilding_playerBase(building2);
 	setupHospitalComputer(i);
 	spawnAnimalIntoSlot(4, game.animals[i], building2, false);
@@ -5117,7 +5137,7 @@ void setupGameItems()
 
 	// BUILDING 3 contains tracker glasses, pistol, and message computer 3
 
-	 int building3 =  getRandomPosition(true);
+	int building3 =  getRandomPosition(true);
 	setupBuilding_playerBase(building3);
 	setupTrackerGlasses(i);
 	spawnAnimalIntoSlot(6, game.animals[i], building3, false);
@@ -5137,7 +5157,7 @@ void setupGameItems()
 
 	// BUILDING 4 contains knife, lighter, and message computer 4
 
-	 int building4 =  getRandomPosition(true);
+	int building4 =  getRandomPosition(true);
 	setupBuilding_playerBase(building4);
 	setupExampleKnife(i);
 	spawnAnimalIntoSlot(9, game.animals[i], building4, false);
@@ -5476,7 +5496,7 @@ void tournamentController()
 
 					// parent = game.animals[j];
 
-					 setupTestAnimal( j);
+					setupTestAnimal( j);
 					domingo = spawnAnimal( k,  game.animals[j], randomPos, false);
 					if (domingo >= 0)
 					{
@@ -5679,9 +5699,83 @@ void test_all()
 
 
 
+// 1. grass grows
+// 2. animals eat grass and gain energy
+// 3. animals reproduce when they have enough energy
+// 4. reproduction copies the animal wholly and exactly, except that lifetime stats are reset to 0 in the new generation, and some mutation may be carried along
+// 5. sensors take measurements of the game world to produce a signal
+// 6. actuators use signals to move the animal.
+
+	bool testResult_1 = false;
+	bool testResult_2 = false;
+	bool testResult_3 = false;
+	bool testResult_4 = false;
+	bool testResult_5 = false;
+	bool testResult_6 = false;
+
+
+int j = 1;
+
+// 1. grass grows
+	// set a map square to grass and make sure there is light shining on it.
+	// update the map.
+	// see that the grass grows.
+
+	unsigned int testPos = worldSquareSize / 2;
+	game.world[testPos].plantState = MATERIAL_GRASS;
+	game.world[testPos].light = color_white;
+
+	updateMapI(testPos);
+
+	unsigned int samplePos = testPos + worldSize;
+	if (game.world[samplePos].plantState == MATERIAL_GRASS)
+	{
+		testResult_1 = true;
+	}
 
 
 
+// 2. animals eat grass and gain energy
+	// make a test animal which moves in a straight line at a constant pace, and a row of food for it to eat.
+	// run the sim enough that it will eat the food.
+	// measure it's energy to see that it ate the food.
+
+
+	unsigned int testAnimalIndex=  2;
+	 setupTestAnimal2(j);
+
+	spawnAnimalIntoSlot(  testAnimalIndex, game.animals[j], testPos, false);
+
+	unsigned int howManyPlantsToEat = 10;
+
+	for (int i = 0; i < howManyPlantsToEat; ++i)
+	{
+		game.world[testPos + (i * worldSize)].plantState = MATERIAL_GRASS;
+	}
+
+	for (int i = 0; i < howManyPlantsToEat; ++i)
+	{
+		model();
+	}
+
+
+
+	// game.ecoSettings[3]       = 0.00000001f; // tax energy scale
+	// game.ecoSettings[2]     = 0.00000001f;      // movement energy scale
+	// game.ecoSettings[0]           = 0.95f; // food (meat) energy
+	// game.ecoSettings[1]          = 0.25f; // grass energy
+
+
+	if (game.animals[testAnimalIndex].energy == (
+		(howManyPlantsToEat * game.ecoSettings[1])   // how much energy it got
+		 - (game.ecoSettings[3] * game.animals[testAnimalIndex].mass)    // minus the resting tax
+		 - (game.ecoSettings[2] * game.animals[testAnimalIndex].mass * howManyPlantsToEat)  // minus the movement tax
+
+		 )
+	 )
+	{
+		testResult_2 = true;
+	}
 
 
 }
