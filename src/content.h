@@ -951,7 +951,7 @@ void setupExampleLighter(int i)
 {
 	// game.animals[i].isMachine = true;
 	// game.animals[i].machineCallback = MACHINECALLBACK_LIGHTER;
-	char lighter[] =
+	const  char lighter[] =
 	{
 		'1', ' ',
 		'1', '1',
@@ -966,7 +966,7 @@ void setupExampleHuman(int i)
 	// resetAnimal(i);
 	// std::string gunDescription = std::string("human");
 	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-	char humanBody[] =
+ const 	char humanBody[] =
 	{
 		' ', ' ', ' ', '/', 'B', '/', ' ', ' ', ' ',
 		' ', ' ', '/', 'B', 'B', 'B', '/', ' ', ' ',
@@ -1007,7 +1007,7 @@ void setupExampleHuman(int i)
 
 
 
-	char humanPaint[] =
+const 	char humanPaint[] =
 	{
 		' ', ' ', ' ', 'R', 'R', 'R', ' ', ' ', ' ', 
 		' ', ' ', 'R', 'R', 'R', 'R', 'R', ' ', ' ', 
@@ -1068,7 +1068,7 @@ void setupExampleHuman(int i)
 
 void setupDestroyer(int i)
 {
-	char destroyer[] =
+const 	char destroyer[] =
 	{
 		' ', ' ', '1', ' ', ' ',
 		' ', '1', '1', '1', ' ',
@@ -1092,7 +1092,7 @@ void setupDestroyer(int i)
 		' ', ' ', '1', ' ', ' ',
 	};
 
-	char destroyerPaint[] =
+const 	char destroyerPaint[] =
 	{
 		' ', ' ', 'V', ' ', ' ',
 		' ', 'V', 'V', 'V', ' ',
@@ -1129,7 +1129,7 @@ void setupDestroyer(int i)
 
 void setupTrackerGlasses(int i)
 {
-	char trackerGlasses[] =
+	const  char trackerGlasses[] =
 	{
 		' ', '2', ' ', '2', ' ',
 		'2', '2', '1', '2', '2',
@@ -1137,7 +1137,7 @@ void setupTrackerGlasses(int i)
 	};
 
 
-char trackerGlassesPaint[] =
+const char trackerGlassesPaint[] =
 	{
 		' ', 'W', ' ', 'W', ' ',
 		'W', 'L', 'M', 'L', 'W',
@@ -1153,14 +1153,14 @@ char trackerGlassesPaint[] =
 void setupNeuroGlasses(int i)
 {
 
-char neuroGlasses[] =
+const  char neuroGlasses[] =
 	{
 		'1', '1', ' ', '1', '1',
 		'1', '2', '1', '2', '1',
 		'1', '1', ' ', '1', '1',
 	};
 
-	char neuroGlassesPaint[] =
+	const  char neuroGlassesPaint[] =
 	{
 		'W', 'W', ' ', 'W', 'W',
 		'W', 'K', 'M', 'K', 'W',
@@ -1174,7 +1174,7 @@ char neuroGlasses[] =
 
 void setupExampleGun(int i)
 {
-	char pistol[] =
+const 	char pistol[] =
 	{
 		'1', '1', '1', '1',
 		'1', '1', '1', '1',
@@ -1182,7 +1182,7 @@ void setupExampleGun(int i)
 		'1', '1', ' ', ' ',
 	};
 
-	char pistolPaint[] =
+const 	char pistolPaint[] =
 	{
 		'M', 'M', 'M', 'M',
 		'V', 'V', 'V', 'V',
@@ -1197,14 +1197,14 @@ void setupExampleGun(int i)
 
 void setupExampleKnife(int i)
 {
-	char knife[] =
+	const char knife[] =
 	{
 		' ', '1', ' ', ' ',
 		'1', '1', '1', '1',
 		' ', '1', ' ', ' ',
 	};
 
-	char knifePaint[] =
+	const char knifePaint[] =
 	{
 		' ', 'D', ' ', ' ',
 		'V', 'D', 'M', 'M',
@@ -1218,7 +1218,7 @@ void setupExampleKnife(int i)
 
 void setupEcologyCompter(int i)
 {
-	char computer[] =
+	const char computer[] =
 	{
 		'1', '1', '1', '1', '1',
 		'1', '2', '2', '2', '1',
@@ -1228,7 +1228,7 @@ void setupEcologyCompter(int i)
 		'1', '1', '1', '1', '1',
 	};
 
-	char computerPaint[] =
+	const char computerPaint[] =
 	{
 		'B', 'B', 'B', 'B', 'B',
 		'B', 'L', 'L', 'L', 'B',

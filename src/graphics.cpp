@@ -679,6 +679,7 @@ void threadGraphics()
 		// drawPanels();
 		drawInterfacePanel();
 
+	 drawPalette2();
 
 		// glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
 		// glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));

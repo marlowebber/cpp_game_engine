@@ -244,6 +244,7 @@ void incrementSelectedGrabber();
 void notifyLMBUp();
 void drawInterfacePanel();
 
+void drawPalette2();
 
 void test_all();
 
@@ -254,10 +255,10 @@ void drawFastCamText();
 
 // the following are used privately to create the game content.
 void animalAppendCell(unsigned int animalIndex, unsigned int organType);
-void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );
+void setupCreatureFromCharArray( unsigned int animalIndex, const char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );
 void resetAnimal(unsigned int animalIndex);
 
-void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width );
+void paintCreatureFromCharArray( unsigned int animalIndex, const char * start, unsigned int len, unsigned int width );
 
 void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosition);
 #endif //MARLO_H

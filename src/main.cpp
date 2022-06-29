@@ -316,11 +316,7 @@ void setFlagReady()
 
 void initDeepSea()
 {
-
-
- test_all();
-
-
+	test_all();
 	worldCreationStage = 0;
 }
 

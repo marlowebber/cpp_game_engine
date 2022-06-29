@@ -466,7 +466,6 @@ void resetAnimals()
 	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 	{
 		resetAnimal(animalIndex);
-		paintAnimal(animalIndex);
 	}
 
 	resetIdentityColors();
@@ -476,6 +475,7 @@ void resetAnimals()
 	{
 
 		setupExampleAnimal2(j, true);
+		paintAnimal(j);
 		game.champions[i] = game.animals[j];
 		game.championScores[i] = 0;
 	}
@@ -2522,9 +2522,48 @@ void drawPalette(int menuX, int menuY)
 	// draw the selected creature all big like, i guess.
 
 
+// void drawRectangle( Vec_f2 position , Color finalColor, float panelWidth, float panelHeight)
+
+
+
+
+
+
+
+
+
+
+
+
+
 	//
 }
 
+
+
+void drawPalette2()
+
+{
+
+	if (game.selectedAnimal >= 0)
+	{
+		for (int i = 0; i < game.animals[game.selectedAnimal].cellsUsed; ++i)
+		{
+
+
+			float bigSquareSize = 10.0f;
+
+			drawRectangle( Vec_f2(game.animals[game.selectedAnimal].body[i].localPosX * bigSquareSize, game.animals[game.selectedAnimal].body[i].localPosY * bigSquareSize) ,
+			               organColors(game.animals[game.selectedAnimal].body[i].organ), bigSquareSize, bigSquareSize);
+
+		}
+	}
+
+
+
+
+
+}
 // void communicationComputerCallback( int gunIndex, int shooterIndex)
 // {
 // 	if (gunIndex == 2) { game.computerdisplays[0] = !game.computerdisplays[0] ;}
@@ -3580,9 +3619,8 @@ void organs_all()
 
 
 				// add noise to all neural pathways, except for bias neurons which would mess them up.
-				if (organIsASensor(organ) || organIsAnActuator(organ) || organIsANeuron(organ))
+				if (organIsASensor(organ) || organIsANeuron(organ))
 				{
-
 					if (organ != ORGAN_BIASNEURON)
 					{
 						const float neuralNoise = 0.01f;
@@ -3944,18 +3982,57 @@ void energy_all() // perform energies.
 			}
 			bool nominate = false;
 			int animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + game.animals[animalIndex].numberOfTimesReproduced ;
-			if (animalIndex != game.playerCreature && animalIndex != game.adversary && speciesIndex > 0 && game.animals[animalIndex].machineCallback == MATERIAL_NOTHING) // player & player species cannot be nominated, and machines cannot be nominated
-			{
-				if ( animalScore > game.championScores[speciesIndex])
+
+
+			if ( animalScore > game.championScores[speciesIndex])
+			{ 
+
+
+				// nominee must be reproductively viable (1 gonad is not enough!) and have a breathing apparatus and a mouth
+				unsigned int totalGonads = 0;
+				unsigned int totalMouths = 0;
+				unsigned int totalBreathing  = 0;
+				for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
 				{
-					nominate = true;
+					if ( game.animals[animalIndex].body[i].organ == ORGAN_GONAD)
+					{
+						totalGonads++;
+					}
+
+					if ( game.animals[animalIndex].body[i].organ == ORGAN_LUNG 
+						||game.animals[animalIndex].body[i].organ == ORGAN_GILL )
+					{
+						totalBreathing++;
+					}
+
+					if ( game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_CARNIVORE
+						|| game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_SCAVENGE 
+						|| game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_PARASITE 
+						|| game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_VEG 
+						)
+					{
+						totalMouths++;
+					}
 				}
 
-			}
-			if (nominate)
-			{
-				game.championScores[speciesIndex] = animalScore;
-				game.champions[speciesIndex] = game.animals[animalIndex];
+
+
+					// player & player species cannot be nominated, and machines cannot be nominated
+				if (animalIndex != game.playerCreature 
+					&& animalIndex != game.adversary 
+					&& speciesIndex > 0 
+					&& game.animals[animalIndex].machineCallback == MATERIAL_NOTHING
+					&& game.animals[animalIndex].mass > 0
+					&& totalGonads > 1 && totalMouths > 0 && totalBreathing > 0
+
+					)
+				{
+
+					game.championScores[speciesIndex] = animalScore;
+					game.champions[speciesIndex] = game.animals[animalIndex];
+
+
+				}
 			}
 		}
 	}
@@ -4619,7 +4696,7 @@ void drawGameInterfaceText()
 	}
 }
 
-void paintCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width )
+void paintCreatureFromCharArray( unsigned int animalIndex, const char * start, unsigned int len, unsigned int width )
 {
 
 	Vec_i2 o = Vec_i2(0, 0);
@@ -4712,7 +4789,7 @@ void printAnimalCells(unsigned int animalIndex)
 	}
 }
 
-void setupCreatureFromCharArray( unsigned int animalIndex, char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback )
+void setupCreatureFromCharArray( unsigned int animalIndex, const char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback )
 {
 
 	resetAnimal(animalIndex);
@@ -5689,55 +5766,56 @@ void load()
 
 void test_all()
 {
-
-
-
-
 	resetGameState();
-
-
-
-	bool testResult_1 = false;
+	// bool testResult_1 = false;
 	bool testResult_2 = false;
 	bool testResult_3 = false;
 	bool testResult_4 = false;
 	bool testResult_5 = false;
 
+
+
+
 	int j = 1;
 
-// 1. grass grows
+	// 1. grass grows
 	// set a map square to grass and make sure there is light shining on it.
 	// update the map.
 	// see that the grass grows.
 
 	unsigned int testPos = worldSquareSize / 2;
-	game.world[testPos].plantState = MATERIAL_GRASS;
-	game.world[testPos].light = color_white;
+	// game.world[testPos].plantState = MATERIAL_GRASS;
+	// game.world[testPos].light = color_white;
 
-	updateMapI(testPos);
+	// updateMapI(testPos);
 
-	unsigned int samplePos = testPos + worldSize;
-	if (game.world[samplePos].plantState == MATERIAL_GRASS)
-	{
-		testResult_1 = true;
-	}
+	// unsigned int samplePos = testPos + worldSize;
+	// if (game.world[samplePos].plantState == MATERIAL_GRASS)
+	// {
+	// 	testResult_1 = true;
+	// }
 
-
-
-// 2. animals eat grass and gain energy
+	// 2. animals eat grass and gain energy
 	// make a test animal which moves in a straight line at a constant pace, and a row of food for it to eat.
 	// run the sim enough that it will eat the food.
 	// measure it's energy to see that it ate the food.
-
-
-	// unsigned int testAnimalIndex =  2;
 
 	unsigned int testSpecies = numberOfSpecies - 1;
 	setupTestAnimal_straightline(j);
 
 	int testAnimal = spawnAnimal(  testSpecies, game.animals[j], testPos, false);
 
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 
+	move_all();
+
+	printf("test animal position before: %f %f \n", game.animals[testAnimal].fPosX, game.animals[testAnimal].fPosY);
+
+	game.animals[testAnimal].energy = game.animals[testAnimal].energy = 1.0f;
 	unsigned int howManyPlantsToEat = 10;
 
 	for (int i = 0; i < howManyPlantsToEat; ++i)
@@ -5757,6 +5835,9 @@ void test_all()
 	// game.ecoSettings[0]           = 0.95f; // food (meat) energy
 	// game.ecoSettings[1]          = 0.25f; // grass energy
 
+	printf("test animal position after: %f %f \n", game.animals[testAnimal].fPosX, game.animals[testAnimal].fPosY);
+
+	printf("test animal energy after eating 10 grass: %f \n", game.animals[testAnimal].energy);
 
 	if (game.animals[testAnimal].energy == (
 	            (howManyPlantsToEat * game.ecoSettings[1])   // how much energy it got
@@ -5777,12 +5858,21 @@ void test_all()
 
 	testAnimal = spawnAnimal( testSpecies , game.animals[j], testPos, false);
 
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
 
 	game.animals[testAnimal].energyDebt = 0;
 
+	move_all();
+
 	model();
+
+	printf("test species population count after reproducing once: %u\n", game.speciesPopulationCounts[testSpecies] );
 
 	if (game.speciesPopulationCounts[testSpecies] == 2)
 	{
@@ -5801,9 +5891,19 @@ void test_all()
 	testAnimal =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
 
 
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
+
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
 
 	game.animals[testAnimal].energyDebt = 0;
+
+
+	move_all();
+
 
 	model();
 
@@ -5842,6 +5942,7 @@ void test_all()
 		}
 	}
 
+
 	if (diffs == 0)
 	{
 		testResult_4 = true;
@@ -5857,6 +5958,19 @@ void test_all()
 	setupTestAnimal_eye(j);
 
 	testAnimal =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
+
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
+
+	game.animals[testAnimal].energyDebt = 0;
+
+
+	move_all();
 
 	game.animals[testAnimal].energy = (game.animals[testAnimal].maxEnergy / 2) - 1.0f; // give it enough energy for the test
 
@@ -5880,6 +5994,9 @@ void test_all()
 
 	model();
 
+
+	printf("spinning test animal angle before %f and after %f illumination.\n" , originalAngle, game.animals[testAnimal].fAngle  );
+
 	if (game.animals[testAnimal].fAngle != originalAngle)
 	{
 		testResult_5 = true;
@@ -5900,14 +6017,14 @@ void test_all()
 // print the test report
 	printf("DEEP SEA self test report\n");
 
-	if (testResult_1)
-	{
-		printf("test 1: grass growing: PASS\n");
-	}
-	else
-	{
-		printf("test 1: grass growing: FAIL\n");
-	}
+	// if (testResult_1)
+	// {
+	// 	printf("test 1: grass growing: PASS\n");
+	// }
+	// else
+	// {
+	// 	printf("test 1: grass growing: FAIL\n");
+	// }
 
 
 	if (testResult_2)
