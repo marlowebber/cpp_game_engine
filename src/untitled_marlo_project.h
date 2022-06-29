@@ -178,6 +178,7 @@ struct GameState
 
     Animal champions[numberOfSpecies];
     int championScores[numberOfSpecies] ;
+    float championEnergies[numberOfSpecies];
 
     bool adversaryDefeated;
     bool adversaryCreated;

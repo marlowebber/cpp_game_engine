@@ -2559,7 +2559,7 @@ void drawPalette2()
 			float startPosY = 500.0f;
 			float bigSquareSize = 100.0f;
 
-			               drawRectangle( Vec_f2(startPosX + (game.animals[game.selectedAnimal].body[i].localPosX * bigSquareSize), startPosY + (game.animals[game.selectedAnimal].body[i].localPosY * bigSquareSize)) ,
+			drawRectangle( Vec_f2(startPosX + (game.animals[game.selectedAnimal].body[i].localPosX * bigSquareSize), startPosY + (game.animals[game.selectedAnimal].body[i].localPosY * bigSquareSize)) ,
 			               organColors(game.animals[game.selectedAnimal].body[i].organ), bigSquareSize, bigSquareSize);
 
 		}
@@ -2716,7 +2716,7 @@ void hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, 
 			// {
 			if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
 			{
-				game.world[cellWorldPositionI].wall = MATERIAL_FOOD;
+				game.world[cellWorldPositionI].wall = organProduces(game.animals[animalIndex].body[cellIndex].organ);//MATERIAL_FOOD;
 			}
 			// }
 			// if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_MOUTH_CARNIVORE)
@@ -4156,7 +4156,7 @@ void energy_all() // perform energies.
 			int animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + game.animals[animalIndex].numberOfTimesReproduced ;
 
 
-			if ( animalScore > game.championScores[speciesIndex])
+			if ( animalScore >= game.championScores[speciesIndex])
 			{
 
 
@@ -4188,7 +4188,7 @@ void energy_all() // perform energies.
 				}
 
 
-
+				bool nominate = false;
 				// player & player species cannot be nominated, and machines cannot be nominated
 				if (animalIndex != game.playerCreature
 				        && animalIndex != game.adversary
@@ -4197,14 +4197,42 @@ void energy_all() // perform energies.
 				        && game.animals[animalIndex].mass > 0
 				        && totalGonads > 1 && totalMouths > 0 && totalBreathing > 0
 
+
+
 				   )
 				{
 
-					game.championScores[speciesIndex] = animalScore;
-					game.champions[speciesIndex] = game.animals[animalIndex];
+
+					if ( animalScore > game.championScores[speciesIndex])
+					{
+
+						nominate = true;
+					}
+
+					else if ( animalScore == game.championScores[speciesIndex])
+					{
+						if (game.animals[animalIndex].energy > game.championEnergies[speciesIndex])
+						{
+							nominate = true;
+						}
+					}
+
 
 
 				}
+
+
+
+
+				if (nominate)
+				{
+					game.championScores[speciesIndex] = animalScore;
+					game.champions[speciesIndex] = game.animals[animalIndex];
+					game.championEnergies[speciesIndex] = game.animals[animalIndex].energy;
+
+
+				}
+
 			}
 		}
 	}
@@ -4378,11 +4406,11 @@ void camera()
 
 					int animalCell = isAnimalInSquare(game.world[worldI].identity, worldI );
 
-					if (game.selectedAnimal >=0)
+					if (game.selectedAnimal >= 0)
 					{
 
 
-						if (game.world[worldI].identity == game.selectedAnimal  && animalCell >=0)
+						if (game.world[worldI].identity == game.selectedAnimal  && animalCell >= 0)
 						{
 							// displayColor
 						}
@@ -6012,7 +6040,11 @@ void test_all()
 
 	printf("test animal position before: %f %f \n", game.animals[testAnimal].fPosX, game.animals[testAnimal].fPosY);
 
+
 	game.animals[testAnimal].energy = game.animals[testAnimal].energy = 1.0f;
+
+	printf("test animal energy before eating 10 grass: %f \n", game.animals[testAnimal].energy);
+
 	unsigned int howManyPlantsToEat = 10;
 
 	for (int i = 0; i < howManyPlantsToEat; ++i)
@@ -6022,7 +6054,7 @@ void test_all()
 
 	for (int i = 0; i < howManyPlantsToEat; ++i)
 	{
-		// model();
+		model();
 
 		// threadGraphics();
 	}
