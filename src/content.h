@@ -14,7 +14,7 @@
 #define ORGAN_GONAD                3
 #define ORGAN_MUSCLE               4
 #define ORGAN_BONE                 5
-#define ORGAN_WEAPON               6
+#define ORGAN_CLAW                 6
 #define ORGAN_LIVER                7
 #define ORGAN_MUSCLE_TURN          8
 #define ORGAN_SENSOR_EYE           9
@@ -55,12 +55,12 @@
 #define numberOfOrganTypes        42 // the number limit of growable genes
 
 #define MARKER                    50  // there are some tiles which are used by the program, but can't be grown.
-#define TILE_DESTROYER_EYE        51 
+#define TILE_DESTROYER_EYE        51
 
 
 #define MATERIAL_FOOD             60
 #define MATERIAL_ROCK             61
-#define MATERIAL_MEAT             62
+// #define MATERIAL_MEAT             62
 #define MATERIAL_BONE             63
 #define MATERIAL_BLOOD            64
 #define MATERIAL_GRASS            65
@@ -78,11 +78,19 @@
 #define MATERIAL_GRAVEL  78
 #define MATERIAL_FABRIC  79
 
+
 #define MATERIAL_LEAF      80       // for energy capture and transmission.
 #define MATERIAL_SEED      81       // to produce copies of plant.
 #define MATERIAL_BUD       82       // a seed whose debt has not paid off.
-#define MATERIAL_WOOD      83       
-#define MATERIAL_POLLEN    84     
+#define MATERIAL_WOOD      83
+#define MATERIAL_POLLEN    84
+
+
+#define MATERIAL_SEMEN     85
+#define MATERIAL_VOMIT     86
+#define MATERIAL_HONEY     89
+#define MATERIAL_WAX       90
+
 
 #define MACHINECALLBACK_PISTOL           100
 #define MACHINECALLBACK_KNIFE            101
@@ -190,9 +198,9 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("A strong slab of bone.");
 	}
-	case ORGAN_WEAPON:
+	case ORGAN_CLAW:
 	{
-		return std::string("A wicked razor-sharp claw.");
+		return std::string("A wicked curved claw with a deadly point.");
 	}
 	case ORGAN_LIVER:
 	{
@@ -212,7 +220,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_MOUTH_PARASITE:
 	{
-		return std::string("A leech-like mouth that drains vital energy from victims.");
+		return std::string("A leech-like sucker lined with tiny razors.");
 	}
 	case ORGAN_ADDOFFSPRINGENERGY:
 	{
@@ -220,7 +228,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_ADDLIFESPAN:
 	{
-		return std::string("A mysterious organ that promotes long life.");
+		return std::string("A gland full of powerful antioxidants that promotes long life.");
 	}
 	case ORGAN_NEURON:
 	{
@@ -284,11 +292,11 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_SENSOR_LAST_STRANGER:
 	{
-		return std::string("A part of the brain which remembers meeting a stranger.");
+		return std::string("A part of the brain which remembers the last stranger the animal met.");
 	}
 	case ORGAN_SENSOR_LAST_KIN:
 	{
-		return std::string("A part of the brain which carries the memory of a friend.");
+		return std::string("A part of the brain which remembers the animal's most recent friend.");
 	}
 	case ORGAN_SENSOR_PARENT:
 	{
@@ -312,7 +320,7 @@ std::string tileDescriptions(unsigned int tile)
 
 	case ORGAN_SENSOR_PAIN:
 	{
-		return std::string("A part of the brain which feels the trauma of injury.");
+		return std::string("A part of the brain which feels agony and suffering.");
 	}
 	case ORGAN_HEATADAPT:
 	{
@@ -338,10 +346,10 @@ std::string tileDescriptions(unsigned int tile)
 		return std::string("There's a solid grey rock.");
 	}
 
-	case MATERIAL_MEAT:
-	{
-		return std::string("A bleeding chunk of flesh.");
-	}
+	// case MATERIAL_MEAT:
+	// {
+	// 	return std::string("A bleeding chunk of flesh.");
+	// }
 	case MATERIAL_BONE:
 	{
 		return std::string("A fragment of bone.");
@@ -412,44 +420,70 @@ std::string tileDescriptions(unsigned int tile)
 
 
 
-case MATERIAL_SEED:
+	case MATERIAL_SEED:
 	{
 		return std::string("A seed of a plant.");
 	}
 
 
-case MATERIAL_BUD:
+	case MATERIAL_BUD:
 	{
 		return std::string("A plant's flowers.");
 	}
 
 
-case MATERIAL_WOOD:
+	case MATERIAL_WOOD:
 	{
 		return std::string("A branch with bark.");
 	}
 
 
-case MATERIAL_LEAF:
+	case MATERIAL_LEAF:
 	{
 		return std::string("Leaves and twigs.");
 	}
 
 
 
-case MATERIAL_POLLEN:
+	case MATERIAL_POLLEN:
 	{
 		return std::string("Fragrant, dusty pollen.");
 	}
 
 
-case TILE_DESTROYER_EYE:
+	case TILE_DESTROYER_EYE:
 	{
 		return std::string("A menacing red lens that flickers with energy.");
 	}
 
 
-		
+
+
+
+
+	case MATERIAL_SEMEN:
+	{
+		return std::string("Globs of sticky, bleachy reproductive jelly.");
+	}
+
+	case MATERIAL_VOMIT:
+	{
+		return std::string("An acrid puddle of partially digested food.");
+	}
+
+
+	case MATERIAL_HONEY:
+	{
+		return std::string("A sweet, sticky sugar syrup.");
+	}
+
+	case MATERIAL_WAX:
+	{
+		return std::string("A clump of malleable, waterproof solid.");
+	}
+
+
+
 
 
 	}
@@ -483,7 +517,7 @@ std::string tileShortNames(unsigned int tile)
 	{
 		return std::string("Bone");
 	}
-	case ORGAN_WEAPON:
+	case ORGAN_CLAW:
 	{
 		return std::string("Claw");
 	}
@@ -634,10 +668,10 @@ std::string tileShortNames(unsigned int tile)
 		return std::string("Rock");
 	}
 
-	case MATERIAL_MEAT:
-	{
-		return std::string("Meat");
-	}
+	// case MATERIAL_MEAT:
+	// {
+	// 	return std::string("Meat");
+	// }
 	case MATERIAL_BONE:
 	{
 		return std::string("Bone");
@@ -710,33 +744,57 @@ std::string tileShortNames(unsigned int tile)
 	}
 
 
-case MATERIAL_BUD:
+	case MATERIAL_BUD:
 	{
 		return std::string("Flower.");
 	}
 
 
-case MATERIAL_WOOD:
+	case MATERIAL_WOOD:
 	{
 		return std::string("Wood.");
 	}
 
 
-case MATERIAL_LEAF:
+	case MATERIAL_LEAF:
 	{
 		return std::string("Leaf.");
 	}
 
 
 
-case MATERIAL_POLLEN:
+	case MATERIAL_POLLEN:
 	{
 		return std::string("Pollen.");
 	}
 
-case TILE_DESTROYER_EYE:
+	case TILE_DESTROYER_EYE:
 	{
 		return std::string("A destroyer's eye.");
+	}
+
+
+
+	case MATERIAL_SEMEN:
+	{
+		return std::string("Semen.");
+	}
+
+	case MATERIAL_VOMIT:
+	{
+		return std::string("Vomit.");
+	}
+
+
+
+	case MATERIAL_WAX:
+	{
+		return std::string("Wax.");
+	}
+
+	case MATERIAL_HONEY:
+	{
+		return std::string("Honey.");
 	}
 
 
@@ -746,6 +804,167 @@ case TILE_DESTROYER_EYE:
 	}
 	return std::string("Unknown");
 }
+
+
+// a list of what tiles produce on being destroyed.
+unsigned int organProduces(unsigned int organ)
+{
+
+	switch (organ)
+	{
+	case ORGAN_MOUTH_VEG:
+	{
+		return MATERIAL_VOMIT;
+	}
+	case ORGAN_MOUTH_SCAVENGE:
+	{
+		return MATERIAL_VOMIT;
+	}
+	case ORGAN_GONAD:
+	{
+		return MATERIAL_SEMEN;
+	}
+	case ORGAN_MUSCLE:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_BONE:
+	{
+		return MATERIAL_BONE;
+	}
+	case ORGAN_CLAW:
+	{
+		return MATERIAL_BONE;
+	}
+	case ORGAN_LIVER:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_MUSCLE_TURN:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_EYE:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_MOUTH_CARNIVORE:
+	{
+		return MATERIAL_VOMIT;
+	}
+	case ORGAN_MOUTH_PARASITE:
+	{
+		return MATERIAL_VOMIT;
+	}
+	case ORGAN_ADDOFFSPRINGENERGY:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_ADDLIFESPAN:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_NEURON:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_BIASNEURON:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_BODYANGLE:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_TRACKER:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SPEAKER:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_EAR:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_MUSCLE_STRAFE:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_PHEROMONE:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_EMITTER_PHEROMONE:
+	{
+		return MATERIAL_WAX;
+	}
+	case ORGAN_MEMORY_TX:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_MEMORY_RX:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_GILL:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_LUNG:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_HUNGER:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_AGE:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_LAST_STRANGER:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_LAST_KIN:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_PARENT:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_BIRTHPLACE:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_TOUCH:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_GRABBER:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_SENSOR_PAIN:
+	{
+		return MATERIAL_BLOOD;
+	}
+	case ORGAN_COLDADAPT:
+	{
+		return MATERIAL_HONEY;
+	}
+	case ORGAN_HEATADAPT:
+	{
+		return MATERIAL_HONEY;
+	}
+	}
+	return MATERIAL_SMOKE;
+}
+
+
 
 
 float organGrowthCost(unsigned int organ)
@@ -762,20 +981,20 @@ float organGrowthCost(unsigned int organ)
 			return 1.0f;
 		case ORGAN_BONE:
 			return 1.0f;
-		case ORGAN_WEAPON:
+		case ORGAN_CLAW:
 			return 1.0f;
 		case ORGAN_GONAD:
 			return 1.0f;
 		case ORGAN_MOUTH_VEG:
 			return 1.0f;
 		case ORGAN_MOUTH_SCAVENGE:
-			
+
 			return 1.0f;
 		case ORGAN_MOUTH_CARNIVORE:
-			
+
 			return 1.0f;
 		case ORGAN_MOUTH_PARASITE:
-			
+
 			return 1.0f;
 		}
 	}
@@ -854,7 +1073,7 @@ bool organIsASensor(unsigned int organ)
 	        organ == ORGAN_SENSOR_PARENT ||
 	        organ == ORGAN_SENSOR_PAIN ||
 	        organ == ORGAN_SENSOR_PLEASURE
-	        )
+	   )
 	{
 		return true;
 	}
@@ -865,11 +1084,11 @@ bool organIsASensor(unsigned int organ)
 bool materialIsTransparent(unsigned int material)
 {
 
-if (material == MATERIAL_WATER)
-{
-	return true;
-}
-return false;
+	if (material == MATERIAL_WATER)
+	{
+		return true;
+	}
+	return false;
 }
 
 
@@ -921,8 +1140,6 @@ void setupExampleAnimal2(int i, bool underwater)
 
 	animalAppendCell( i, ORGAN_BIASNEURON );
 	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
 	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_NEURON );
@@ -931,8 +1148,6 @@ void setupExampleAnimal2(int i, bool underwater)
 	animalAppendCell( i, ORGAN_MUSCLE );
 	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
-	animalAppendCell( i, ORGAN_EMITTER_PHEROMONE );
-	animalAppendCell( i, ORGAN_SPEAKER );
 
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
@@ -966,7 +1181,7 @@ void setupExampleHuman(int i)
 	// resetAnimal(i);
 	// std::string gunDescription = std::string("human");
 	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
- const 	char humanBody[] =
+	const 	char humanBody[] =
 	{
 		' ', ' ', ' ', '/', 'B', '/', ' ', ' ', ' ',
 		' ', ' ', '/', 'B', 'B', 'B', '/', ' ', ' ',
@@ -1007,40 +1222,40 @@ void setupExampleHuman(int i)
 
 
 
-const 	char humanPaint[] =
+	const 	char humanPaint[] =
 	{
-		' ', ' ', ' ', 'R', 'R', 'R', ' ', ' ', ' ', 
-		' ', ' ', 'R', 'R', 'R', 'R', 'R', ' ', ' ', 
-		' ', 'R', 'R', 'R', 'T', 'T', 'R', 'R', ' ', 
-		' ', 'R', 'R', 'T', 'T', 'T', 'T', 'R', ' ', 
-		' ', 'P', 'R', 'B', 'T', 'B', 'T', 'P', ' ', 
-		' ', 'R', 'R', 'T', 'P', 'T', 'R', 'R', ' ', 
-		' ', ' ', 'R', 'R', 'T', 'R', 'R', ' ', ' ', 
-		' ', ' ', ' ', 'T', 'T', 'T', ' ', ' ', ' ', 
-		' ', 'T', 'T', 'T', 'T', 'T', 'T', 'T', ' ', 
-		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 
-		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 
-		'T', 'R', 'P', 'T', 'T', 'T', 'P', 'R', 'T', 
-		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T', 
-		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T', 
-		'T', ' ', ' ', 'T', 'T', 'T', ' ', ' ', 'T', 
-		'T', ' ', ' ', 'T', 'P', 'T', ' ', ' ', 'T', 
-		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T', 
-		'P', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'P', 
-		' ', 'T', 'T', 'R', 'R', 'R', 'T', 'T', ' ', 
-		' ', 'T', 'T', 'T', 'R', 'T', 'T', 'T', ' ', 
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ', 
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ', 
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ', 
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ', 
-		' ', ' ', 'T', 'T', ' ', 'T', 'T', ' ', ' ', 
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ', 
-		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ', 
-		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ', 
-		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ', 
-		' ', ' ', 'T', ' ', ' ', ' ', 'T', ' ', ' ', 
-		' ', ' ', 'T', ' ', ' ', ' ', 'T', ' ', ' ', 
-		' ', ' ', 'P', ' ', ' ', ' ', 'P', ' ', ' ', 
+		' ', ' ', ' ', 'R', 'R', 'R', ' ', ' ', ' ',
+		' ', ' ', 'R', 'R', 'R', 'R', 'R', ' ', ' ',
+		' ', 'R', 'R', 'R', 'T', 'T', 'R', 'R', ' ',
+		' ', 'R', 'R', 'T', 'T', 'T', 'T', 'R', ' ',
+		' ', 'P', 'R', 'B', 'T', 'B', 'T', 'P', ' ',
+		' ', 'R', 'R', 'T', 'P', 'T', 'R', 'R', ' ',
+		' ', ' ', 'R', 'R', 'T', 'R', 'R', ' ', ' ',
+		' ', ' ', ' ', 'T', 'T', 'T', ' ', ' ', ' ',
+		' ', 'T', 'T', 'T', 'T', 'T', 'T', 'T', ' ',
+		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
+		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
+		'T', 'R', 'P', 'T', 'T', 'T', 'P', 'R', 'T',
+		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
+		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
+		'T', ' ', ' ', 'T', 'T', 'T', ' ', ' ', 'T',
+		'T', ' ', ' ', 'T', 'P', 'T', ' ', ' ', 'T',
+		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
+		'P', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'P',
+		' ', 'T', 'T', 'R', 'R', 'R', 'T', 'T', ' ',
+		' ', 'T', 'T', 'T', 'R', 'T', 'T', 'T', ' ',
+		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+		' ', ' ', 'T', 'T', ' ', 'T', 'T', ' ', ' ',
+		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
+		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
+		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
+		' ', ' ', 'T', ' ', ' ', ' ', 'T', ' ', ' ',
+		' ', ' ', 'T', ' ', ' ', ' ', 'T', ' ', ' ',
+		' ', ' ', 'P', ' ', ' ', ' ', 'P', ' ', ' ',
 
 	};
 
@@ -1050,7 +1265,7 @@ const 	char humanPaint[] =
 
 
 
-	paintCreatureFromCharArray( i, humanPaint, (9*33), 9 );
+	paintCreatureFromCharArray( i, humanPaint, (9 * 33), 9 );
 }
 
 
@@ -1068,7 +1283,7 @@ const 	char humanPaint[] =
 
 void setupDestroyer(int i)
 {
-const 	char destroyer[] =
+	const 	char destroyer[] =
 	{
 		' ', ' ', '1', ' ', ' ',
 		' ', '1', '1', '1', ' ',
@@ -1092,7 +1307,7 @@ const 	char destroyer[] =
 		' ', ' ', '1', ' ', ' ',
 	};
 
-const 	char destroyerPaint[] =
+	const 	char destroyerPaint[] =
 	{
 		' ', ' ', 'V', ' ', ' ',
 		' ', 'V', 'V', 'V', ' ',
@@ -1118,10 +1333,10 @@ const 	char destroyerPaint[] =
 
 
 
-	setupCreatureFromCharArray( i, destroyer, 20*5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
+	setupCreatureFromCharArray( i, destroyer, 20 * 5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
 
 
-	paintCreatureFromCharArray( i, destroyerPaint, (20*5), 5);
+	paintCreatureFromCharArray( i, destroyerPaint, (20 * 5), 5);
 }
 
 
@@ -1137,7 +1352,7 @@ void setupTrackerGlasses(int i)
 	};
 
 
-const char trackerGlassesPaint[] =
+	const char trackerGlassesPaint[] =
 	{
 		' ', 'W', ' ', 'W', ' ',
 		'W', 'L', 'M', 'L', 'W',
@@ -1153,7 +1368,7 @@ const char trackerGlassesPaint[] =
 void setupNeuroGlasses(int i)
 {
 
-const  char neuroGlasses[] =
+	const  char neuroGlasses[] =
 	{
 		'1', '1', ' ', '1', '1',
 		'1', '2', '1', '2', '1',
@@ -1174,7 +1389,7 @@ const  char neuroGlasses[] =
 
 void setupExampleGun(int i)
 {
-const 	char pistol[] =
+	const 	char pistol[] =
 	{
 		'1', '1', '1', '1',
 		'1', '1', '1', '1',
@@ -1182,7 +1397,7 @@ const 	char pistol[] =
 		'1', '1', ' ', ' ',
 	};
 
-const 	char pistolPaint[] =
+	const 	char pistolPaint[] =
 	{
 		'M', 'M', 'M', 'M',
 		'V', 'V', 'V', 'V',
@@ -1296,7 +1511,7 @@ void setupHospitalComputer(int i)
 
 
 
-char hospitalPaint[] =
+	char hospitalPaint[] =
 	{
 		' ', 'M', ' ',
 		'M', 'M', 'M',
@@ -1455,7 +1670,7 @@ Color organColors(unsigned int organ)
 		return color_darkred;
 	case ORGAN_BONE                 :
 		return color_offwhite;
-	case ORGAN_WEAPON               :
+	case ORGAN_CLAW               :
 		return color_offwhite;
 	case ORGAN_LIVER                :
 		return color_puce;
