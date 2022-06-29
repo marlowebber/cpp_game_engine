@@ -222,11 +222,11 @@ void threadInterface()
 
 
 
-			case SDLK_x:
-			{
-				toggleFastCam();
-				break;
-			}
+			// case SDLK_x:
+			// {
+			// 	toggleFastCam();
+			// 	break;
+			// }
 
 
 

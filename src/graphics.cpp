@@ -657,8 +657,8 @@ void threadGraphics()
 	preDraw();
 
 
-	if (!fastCam)
-	{
+	// if (!fastCam)
+	// {
 		prepareForWorldDraw ();
 
 
@@ -677,7 +677,7 @@ void threadGraphics()
 		prepareForMenuDraw();
 		// addExamplePanelToBuffer();
 		// drawPanels();
-		drawInterfacePanel();
+		// drawInterfacePanel();
 
 	 drawPalette2();
 
@@ -685,14 +685,14 @@ void threadGraphics()
 		// glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
 
 		drawGameInterfaceText();
-	}
-	else
-	{
+	// }
+	// else
+	// {
 
-		prepareForMenuDraw();
-		drawFastCamText();
-	}
-	// drawAllMenuText ();
+	// 	prepareForMenuDraw();
+	// 	drawFastCamText();
+	// }
+	// // drawAllMenuText ();
 
 	postDraw();
 }

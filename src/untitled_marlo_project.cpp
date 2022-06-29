@@ -144,11 +144,11 @@ int mouseX;
 int mouseY;
 int worldCreationStage = 0;
 
-bool fastCam = false;
-void toggleFastCam()
-{
-	fastCam = !fastCam;
-}
+// bool fastCam = false;
+// void toggleFastCam()
+// {
+// 	fastCam = !fastCam;
+// }
 
 void viewAdversary()
 {
@@ -1658,10 +1658,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		}
 
 
-		if (viewedAnimal == game.selectedAnimal) // highlight selected animal.
-		{
-			displayColor =  addColor(displayColor, tint_selected);
-		}
+
 	}
 	else
 	{
@@ -2558,10 +2555,11 @@ void drawPalette2()
 		for (int i = 0; i < game.animals[game.selectedAnimal].cellsUsed; ++i)
 		{
 
+			float startPosX = 500.0f;
+			float startPosY = 500.0f;
+			float bigSquareSize = 100.0f;
 
-			float bigSquareSize = 10.0f;
-
-			drawRectangle( Vec_f2(game.animals[game.selectedAnimal].body[i].localPosX * bigSquareSize, game.animals[game.selectedAnimal].body[i].localPosY * bigSquareSize) ,
+			               drawRectangle( Vec_f2(startPosX + (game.animals[game.selectedAnimal].body[i].localPosX * bigSquareSize), startPosY + (game.animals[game.selectedAnimal].body[i].localPosY * bigSquareSize)) ,
 			               organColors(game.animals[game.selectedAnimal].body[i].organ), bigSquareSize, bigSquareSize);
 
 		}
@@ -3886,7 +3884,7 @@ void organs_all()
 		if (!game.animals[animalIndex].retired)
 		{
 
-		 animal_organs( animalIndex);
+			animal_organs( animalIndex);
 		}
 	}
 
@@ -3903,8 +3901,8 @@ void organs_all()
 // updates the animal's position, and performs any actions resulting from that.
 void place(unsigned int animalIndex)
 {
-	
-		unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+
+	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	game.animals[animalIndex].fAngleCos = cos(game.animals[animalIndex].fAngle);
 	game.animals[animalIndex].fAngleSin = sin(game.animals[animalIndex].fAngle);
 
@@ -4227,6 +4225,8 @@ void energy_all() // perform energies.
 // 	t8.join();
 // }
 
+
+
 void camera()
 {
 	ZoneScoped;
@@ -4237,7 +4237,7 @@ void camera()
 		game.cameraPositionX = game.animals[game.cameraTargetCreature].position % worldSize;
 		game.cameraPositionY = game.animals[game.cameraTargetCreature].position / worldSize;
 	}
-	if (game.playerCreature >= 0 && game.cameraTargetCreature == game.playerCreature)	// if the player doesn't have any eyes, don't draw anything!
+	if (game.playerCreature >= 0 )	// if the player doesn't have any eyes, don't draw anything!
 	{
 		int playerEye = getRandomCellOfType(game.playerCreature, ORGAN_SENSOR_EYE);
 		if (playerEye >= 0)
@@ -4255,95 +4255,95 @@ void camera()
 	}
 	if (game.playerCanSee)
 	{
-		int viewFieldMax = +(viewFieldY / 2);
-		int viewFieldMin = -(viewFieldX / 2);
-		unsigned int shadowSquareSize = viewFieldX * viewFieldY;
+		const int viewFieldMax = +(viewFieldY / 2);
+		const int viewFieldMin = -(viewFieldX / 2);
+		const unsigned int shadowSquareSize = viewFieldX * viewFieldY;
 		bool shadows[shadowSquareSize];
 
 		for (int i = 0; i < shadowSquareSize; ++i)
 		{
 			shadows[i] = false;
 		}
-		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
-		{
-			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
-			{
-				unsigned int x = (vx + game.cameraPositionX) % worldSize;
-				unsigned int y = (vy + game.cameraPositionY) % worldSize;
-				unsigned int worldI = (y * worldSize) + x;
+		// for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
+		// {
+		// 	for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
+		// 	{
+		// 		unsigned int x = (vx + game.cameraPositionX) % worldSize;
+		// 		unsigned int y = (vy + game.cameraPositionY) % worldSize;
+		// 		unsigned int worldI = (y * worldSize) + x;
 
-				// blocking walls cast shadows.
-				bool wallPresent = false;
-				if ( materialBlocksMovement( game.world[worldI].wall  )  )
-				{
-					wallPresent = true;
-				}
+		// 		// blocking walls cast shadows.
+		// 		bool wallPresent = false;
+		// 		if ( materialBlocksMovement( game.world[worldI].wall  )  )
+		// 		{
+		// 			wallPresent = true;
+		// 		}
 
-				// animals cast shadows on the cells below them, if those cells are empty.
-				bool animalPresent = false;
-				int animalIndex = game.world[worldI].identity;
-				int occupyingCell = -1;
-				if (animalIndex >= 0 && animalIndex < numberOfAnimals)
-				{
-					occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
-					if (occupyingCell >= 0)
-					{
-						animalPresent = true;
-					}
-				}
+		// 		// animals cast shadows on the cells below them, if those cells are empty.
+		// 		bool animalPresent = false;
+		// 		int animalIndex = game.world[worldI].identity;
+		// 		int occupyingCell = -1;
+		// 		if (animalIndex >= 0 && animalIndex < numberOfAnimals)
+		// 		{
+		// 			occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
+		// 			if (occupyingCell >= 0)
+		// 			{
+		// 				animalPresent = true;
+		// 			}
+		// 		}
 
-				if (wallPresent || animalPresent)
-				{
-					unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
-					shadowIndex += viewFieldX - 1;
-					if (shadowIndex < shadowSquareSize)
-					{
-						shadows[shadowIndex] = true;
-					}
+		// 		if (wallPresent || animalPresent)
+		// 		{
+		// 			unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
+		// 			shadowIndex += viewFieldX - 1;
+		// 			if (shadowIndex < shadowSquareSize)
+		// 			{
+		// 				shadows[shadowIndex] = true;
+		// 			}
 
-				}
-			}
-		}
+		// 		}
+		// 	}
+		// }
 
-		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
-		{
-			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
-			{
-				unsigned int x = (vx + game.cameraPositionX) % worldSize;
-				unsigned int y = (vy + game.cameraPositionY) % worldSize;
-				unsigned int worldI = (y * worldSize) + x;
+		// for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
+		// {
+		// 	for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
+		// 	{
+		// 		unsigned int x = (vx + game.cameraPositionX) % worldSize;
+		// 		unsigned int y = (vy + game.cameraPositionY) % worldSize;
+		// 		unsigned int worldI = (y * worldSize) + x;
 
-				// blocking walls cast shadows.
-				bool wallPresent = false;
-				if ( materialBlocksMovement( game.world[worldI].wall  )  )
-				{
-					wallPresent = true;
-				}
+		// 		// blocking walls cast shadows.
+		// 		bool wallPresent = false;
+		// 		if ( materialBlocksMovement( game.world[worldI].wall  )  )
+		// 		{
+		// 			wallPresent = true;
+		// 		}
 
-				// animals cast shadows on the cells below them, if those cells are empty.
-				bool animalPresent = false;
-				int animalIndex = game.world[worldI].identity;
-				int occupyingCell = -1;
-				if (animalIndex >= 0 && animalIndex < numberOfAnimals)
-				{
-					occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
-					if (occupyingCell >= 0)
-					{
-						animalPresent = true;
-					}
-				}
+		// 		// animals cast shadows on the cells below them, if those cells are empty.
+		// 		bool animalPresent = false;
+		// 		int animalIndex = game.world[worldI].identity;
+		// 		int occupyingCell = -1;
+		// 		if (animalIndex >= 0 && animalIndex < numberOfAnimals)
+		// 		{
+		// 			occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
+		// 			if (occupyingCell >= 0)
+		// 			{
+		// 				animalPresent = true;
+		// 			}
+		// 		}
 
-				if (wallPresent || animalPresent)
-				{
-					unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
+		// 		if (wallPresent || animalPresent)
+		// 		{
+		// 			unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
 
-					if (shadowIndex < shadowSquareSize)
-					{
-						shadows[shadowIndex] = false;
-					}
-				}
-			}
-		}
+		// 			if (shadowIndex < shadowSquareSize)
+		// 			{
+		// 				shadows[shadowIndex] = false;
+		// 			}
+		// 		}
+		// 	}
+		// }
 
 		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
 		{
@@ -4363,6 +4363,8 @@ void camera()
 
 					displayColor = whatColorIsThisSquare(worldI);
 
+
+
 					unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
 
 					if (shadowIndex < shadowSquareSize)
@@ -4372,6 +4374,28 @@ void camera()
 							displayColor = filterColor(displayColor, tint_shadow);
 						}
 					}
+
+
+					int animalCell = isAnimalInSquare(game.world[worldI].identity, worldI );
+
+					if (game.selectedAnimal >=0)
+					{
+
+
+						if (game.world[worldI].identity == game.selectedAnimal  && animalCell >=0)
+						{
+							// displayColor
+						}
+						else
+						{
+
+							displayColor = filterColor(displayColor, tint_shadow);
+						}
+
+
+					}
+
+
 					drawTile( Vec_f2( fx, fy ), displayColor);
 				}
 			}
@@ -4430,6 +4454,8 @@ void displayComputerText()
 	if (game.computerdisplays[0])
 	{
 		menuY -= spacing;
+		printText2D(   std::string("Animals are groups of tiles. Each tile is an organ that performs a dedicated bodily function. ") , menuX, menuY, textSize);
+		menuY -= spacing;
 		printText2D(   std::string("Your body is made this way too. ") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("If your tiles are damaged, you will lose the tile's function,") , menuX, menuY, textSize);
@@ -4445,9 +4471,11 @@ void displayComputerText()
 		menuY -= spacing;
 		printText2D(   std::string("It can also be used to alter your body and mind.") , menuX, menuY, textSize);
 		menuY -= spacing;
-		printText2D(   std::string("Use it to add a gill anywhere on your body, so that you can survive under water") , menuX, menuY, textSize);
+		printText2D(   std::string("Use it to add a gill anywhere on your body, so that you can survive underwater") , menuX, menuY, textSize);
 		menuY -= spacing;
-		printText2D(   std::string("Find a building under the water and retrieve the tracker glasses.") , menuX, menuY, textSize);
+		printText2D(   std::string("Find a building in the ocean and retrieve the tracker glasses.") , menuX, menuY, textSize);
+		menuY -= spacing;
+		printText2D(   std::string("But beware, there are dangers other than the water itself.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (game.computerdisplays[2])
@@ -4457,6 +4485,10 @@ void displayComputerText()
 		printText2D(   std::string("You will recognize the adversary by its white trail.") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("Take the weapon, find the adversary and destroy it.") , menuX, menuY, textSize);
+		menuY -= spacing;
+		printText2D(   std::string("The adversary posesses neuro glasses, which allow you to see the minute electrical activity of living flesh.") , menuX, menuY, textSize);
+		menuY -= spacing;
+		printText2D(   std::string("You can use them, in combination with the hospital, to edit the mind of a living creature.") , menuX, menuY, textSize);
 		menuY -= spacing;
 	}
 	else if (game.computerdisplays[3])
@@ -4469,10 +4501,7 @@ void displayComputerText()
 			menuY -= spacing;
 			printText2D(   std::string("or eventually be driven to extinction.") , menuX, menuY, textSize);
 			menuY -= spacing;
-			printText2D(   std::string("The adversary posessed neuro glasses, which allow you to see the minute electrical activity of living flesh.") , menuX, menuY, textSize);
-			menuY -= spacing;
-			printText2D(   std::string("You can use them, in combination with the hospital, to edit the connection map of a living creature.") , menuX, menuY, textSize);
-			menuY -= spacing;
+
 
 		}
 		else
@@ -4505,31 +4534,31 @@ void incrementSelectedGrabber()
 	}
 }
 
-void drawInterfacePanel()
-{
-	drawRectangle( Vec_f2 (0.0f, 0.0f) , color_black, 100.0f, 100.0f);
-}
+// void drawInterfacePanel()
+// {
+// 	drawRectangle( Vec_f2 (0.0f, 0.0f) , color_black, 100.0f, 100.0f);
+// // }
 
-void drawFastCamText()
-{
-	int menuX = 50;
-	int menuY = 50;
-	int textSize = 10;
-	int spacing = 20;
+// void drawFastCamText()
+// {
+// 	int menuX = 50;
+// 	int menuY = 50;
+// 	int textSize = 10;
+// 	int spacing = 20;
 
-	if (flagSave)
-	{
-		printText2D(   std::string("saving") , menuX, menuY, textSize);
-		menuY += spacing;
-		return;
-	}
+// 	if (flagSave)
+// 	{
+// 		printText2D(   std::string("saving") , menuX, menuY, textSize);
+// 		menuY += spacing;
+// 		return;
+// 	}
 
-	printText2D(   std::string("[x] leave fast cam mode. FPS ") + std::to_string(modelFrameCount ) , menuX, menuY, textSize);
-	menuY += spacing;
-	modelFrameCount = 0;
+// 	printText2D(   std::string("[x] leave fast cam mode. FPS ") + std::to_string(modelFrameCount ) , menuX, menuY, textSize);
+// 	menuY += spacing;
+// 	modelFrameCount = 0;
 
 
-}
+// }
 
 void drawGameInterfaceText()
 {
