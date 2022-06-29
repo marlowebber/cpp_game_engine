@@ -478,6 +478,16 @@ void resetAnimals()
 		paintAnimal(j);
 		game.champions[i] = game.animals[j];
 		game.championScores[i] = 0;
+
+		// bool speciesVacancies [numberOfSpecies];
+		// unsigned int speciesPopulationCounts [numberOfSpecies];
+		// unsigned int populationCountUpdates  [numberOfSpecies];
+		// unsigned int speciesAttacksPerTurn   [numberOfSpecies];
+
+		game.speciesVacancies[i] = true;
+		game.speciesPopulationCounts[i] = 0;
+		game.populationCountUpdates[i] = 0;
+		game.speciesAttacksPerTurn[i] = 0;
 	}
 }
 
@@ -6036,6 +6046,8 @@ void test_all()
 
 	// organs_all();
 	move_all();
+
+	printf("TEST 2: spawned animal with ID %i \n", testAnimal);
 
 
 	printf("test animal position before: %f %f \n", game.animals[testAnimal].fPosX, game.animals[testAnimal].fPosY);
