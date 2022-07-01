@@ -248,7 +248,7 @@ void drawPalette2();
 
 void resetGameState();
 
-void test_all();
+bool test_all();
 
 void checkLongestMenu(std::string in);
 // void toggleFastCam();

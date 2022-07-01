@@ -771,6 +771,17 @@ void setupTestAnimal_eye(int i)
 }
 
 
+void setupTestAnimal_reproducer(int i)
+{
+	resetAnimal(i);
+
+
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 0) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 1) );
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, 2) );
+
+}
+
 void setupTestAnimal_straightline(int i)
 {
 
@@ -3465,7 +3476,7 @@ void animal_organs( int animalIndex)
 					{
 
 
-						printf("animal %i hurt- no gill\n", animalIndex);
+						// printf("animal %i hurt- no gill\n", animalIndex);
 						game.animals[animalIndex].damageReceived++;
 
 
@@ -3508,7 +3519,7 @@ void animal_organs( int animalIndex)
 					{
 
 
-						printf("animal %i hurt- no lung\n", animalIndex);
+						// printf("animal %i hurt- no lung\n", animalIndex);
 						game.animals[animalIndex].damageReceived++;
 
 
@@ -3758,7 +3769,9 @@ void animal_organs( int animalIndex)
 			totalGonads++;
 			if (doReproduction && game.animals[animalIndex].energyDebt <= 0.0f )
 			{
-				if (game.animals[animalIndex].energy > ((game.animals[animalIndex].mass / 2 ) + game.animals[animalIndex].offspringEnergy ))
+				float reproducesAt = ((game.animals[animalIndex].mass / 2 ) + game.animals[animalIndex].offspringEnergy );
+				// printf("ENRGY %f REPODUCES %f\n" ,game.animals[animalIndex].energy, reproducesAt);
+				if (game.animals[animalIndex].energy > reproducesAt)
 				{
 					if (cellWorldPositionI < worldSquareSize)
 					{
@@ -3778,7 +3791,7 @@ void animal_organs( int animalIndex)
 							game.animals[animalIndex].energy -= game.animals[animalIndex].offspringEnergy;
 							game.animals[result].energy       =  game.animals[animalIndex].offspringEnergy;
 							game.animals[result].parentIdentity       = animalIndex;
-							printf("animal %i produced animal %i asexually\n", animalIndex, result);
+							// printf("animal %i produced animal %i asexually\n", animalIndex, result);
 						}
 					}
 				}
@@ -4219,31 +4232,31 @@ void animalEnergy(int animalIndex)
 		if (game.speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) && animalIndex != game.playerCreature) // only kill off weak game.animals if there is some population.
 			if (game.animals[animalIndex].energy < 0.0f)
 			{
-				printf("animal %i died low energy\n", animalIndex);
+				// printf("animal %i died low energy\n", animalIndex);
 				execute = true;
 			}
 		if (game.animals[animalIndex].age > game.animals[animalIndex].lifespan && animalIndex != game.playerCreature)
 		{
 
-			printf("animal %i died old age\n", animalIndex);
+			// printf("animal %i died old age\n", animalIndex);
 			execute = true;
 		}
 		if (game.animals[animalIndex].totalGonads == 0)
 		{
 
-			printf("animal %i died no gonads\n", animalIndex);
+			// printf("animal %i died no gonads\n", animalIndex);
 			execute = true;
 		}
 		if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].mass / 2)
 		{
 
-			printf("animal %i died too damaged\n", animalIndex);
+			// printf("animal %i died too damaged\n", animalIndex);
 			execute = true;
 		}
 		if (game.animals[animalIndex].mass <= 0)
 		{
 
-			printf("animal %i died low mass\n", animalIndex);
+			// printf("animal %i died low mass\n", animalIndex);
 			execute = true;
 		}
 	}
@@ -6178,7 +6191,7 @@ void load()
 
 
 
-void test_all()
+bool test_all()
 {
 	resetGameState();
 	// bool testResult_1 = false;
@@ -6219,15 +6232,15 @@ void test_all()
 
 	// organs_all();
 
-	printf("\n\nTEST 2: eat grass: spawned animal with ID %i \n", testAnimal);
+	// printf("\n\nTEST 2: eat grass: spawned animal with ID %i \n", testAnimal);
 
 
-	printf("test animal position before: %f %f \n", game.animals[testAnimal].fPosX, game.animals[testAnimal].fPosY);
+	// printf("test animal position before: %f %f \n", game.animals[testAnimal].fPosX, game.animals[testAnimal].fPosY);
 
 
 	game.animals[testAnimal].energy = game.animals[testAnimal].energy = 1.0f;
 
-	printf("test animal energy before eating 10 grass: %f \n", game.animals[testAnimal].energy);
+	// printf("test animal energy before eating 10 grass: %f \n", game.animals[testAnimal].energy);
 
 	unsigned int howManyPlantsToEat = 10;
 
@@ -6250,9 +6263,9 @@ void test_all()
 	// game.ecoSettings[0]           = 0.95f; // food (meat) energy
 	// game.ecoSettings[1]          = 0.25f; // grass energy
 
-	printf("test animal position after: %f %f \n", game.animals[testAnimal].fPosX, game.animals[testAnimal].fPosY);
+	// printf("test animal position after: %f %f \n", game.animals[testAnimal].fPosX, game.animals[testAnimal].fPosY);
 
-	printf("test animal energy after eating 10 grass: %f \n", game.animals[testAnimal].energy);
+	// printf("test animal energy after eating 10 grass: %f \n", game.animals[testAnimal].energy);
 
 	if (game.animals[testAnimal].energy == (
 	            // (howManyPlantsToEat * game.ecoSettings[1])   // how much energy it got
@@ -6277,12 +6290,12 @@ void test_all()
 
 
 // 3. animals reproduce when they have enough energy and their debt is 0
-	setupTestAnimal_straightline(j);
+	setupTestAnimal_reproducer(j);
 
 	testAnimal = spawnAnimal( testSpecies , game.animals[j], testPos, false);
 
 
-	printf("\n\nTEST 3: reproduce: spawned animal with ID %i \n", testAnimal);
+	// printf("\n\nTEST 3: reproduce: spawned animal with ID %i \n", testAnimal);
 
 	game.animals[testAnimal].position = testPos;
 	game.animals[testAnimal].uPosX = testPos % worldSize;
@@ -6290,15 +6303,17 @@ void test_all()
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
+	game.animals[testAnimal].energy = 2.5f ;//game.animals[testAnimal].maxEnergy;
 
-	game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energyDebt = 0.0f;
 
 	// move_all();
 
 	// model();
+	census();
+	// printf("test species population before after reproducing once: %u\n", game.speciesPopulationCounts[testSpecies] );
 
-	for (int i = 0; i < 1; ++i)
+	for (int i = 0; i < 5; ++i)
 	{
 		// model();
 		animalTurn(testAnimal);
@@ -6306,8 +6321,10 @@ void test_all()
 	}
 
 
+	census();
 
-	printf("test species population count after reproducing once: %u\n", game.speciesPopulationCounts[testSpecies] );
+
+	// printf("test species population count after reproducing once: %u\n", game.speciesPopulationCounts[testSpecies] );
 
 	if (game.speciesPopulationCounts[testSpecies] == 2)
 	{
@@ -6325,7 +6342,7 @@ void test_all()
 
 
 // 4. reproduction copies the animal wholly and exactly, except that lifetime stats are reset to 0 in the new generation, and some mutation may be carried along
-	setupTestAnimal_straightline(j);
+	setupTestAnimal_reproducer(j);
 
 	testAnimal =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
 
@@ -6339,8 +6356,6 @@ void test_all()
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
 
 	game.animals[testAnimal].energyDebt = 0;
-
-	place(testAnimal);
 
 
 	animalTurn(testAnimal);
@@ -6444,7 +6459,7 @@ void test_all()
 	animalTurn(testAnimal);
 
 
-	printf("spinning test animal angle before %f and after %f illumination.\n" , originalAngle, game.animals[testAnimal].fAngle  );
+	// printf("spinning test animal angle before %f and after %f illumination.\n" , originalAngle, game.animals[testAnimal].fAngle  );
 
 	if (game.animals[testAnimal].fAngle != originalAngle)
 	{
@@ -6473,7 +6488,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
-	printf("testAnimal_air_in_air %i \n", testAnimal_air_in_air);
+	// printf("testAnimal_air_in_air %i \n", testAnimal_air_in_air);
 
 
 	setupTestAnimal_airbreathing(j);
@@ -6487,7 +6502,7 @@ void test_all()
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 	game.world[testPos].wall = MATERIAL_WATER;
-	printf("testAnimal_air_in_water %i \n", testAnimal_air_in_water);
+	// printf("testAnimal_air_in_water %i \n", testAnimal_air_in_water);
 
 
 
@@ -6503,7 +6518,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
-	printf("testAnimal_water_in_air %i \n", testAnimal_water_in_air);
+	// printf("testAnimal_water_in_air %i \n", testAnimal_water_in_air);
 
 
 
@@ -6519,7 +6534,7 @@ void test_all()
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 	game.world[testPos].wall = MATERIAL_WATER;
-	printf("testAnimal_water_in_water %i \n", testAnimal_water_in_water);
+	// printf("testAnimal_water_in_water %i \n", testAnimal_water_in_water);
 
 
 
@@ -6535,7 +6550,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
-	printf("testAnimal_amphi_in_air %i \n", testAnimal_amphi_in_air);
+	// printf("testAnimal_amphi_in_air %i \n", testAnimal_amphi_in_air);
 
 
 
@@ -6550,7 +6565,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
-	printf("testAnimal_amphi_in_water %i \n", testAnimal_amphi_in_water);
+	// printf("testAnimal_amphi_in_water %i \n", testAnimal_amphi_in_water);
 
 	game.world[testPos].wall = MATERIAL_WATER;
 	testPos +=worldSize;
@@ -6621,7 +6636,25 @@ void test_all()
 
 
 
-// print the test report
+
+
+
+
+	if (
+
+		testResult_2 &&
+		testResult_3 &&
+		testResult_4 &&
+		testResult_5 &&
+		testResult_6 
+
+		)
+	{
+		return true;
+	}
+	else
+	{
+		// print the test report
 	printf("DEEP SEA self test report\n");
 
 	// if (testResult_1)
@@ -6684,8 +6717,9 @@ void test_all()
 	{
 		printf("test 6: breathing: FAIL\n");
 	}
-
-
-
+	}
+	return false;
 
 }
+
+

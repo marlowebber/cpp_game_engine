@@ -316,7 +316,6 @@ void setFlagReady()
 
 void initDeepSea()
 {
-	test_all();
 	worldCreationStage = 0;
 }
 
@@ -325,11 +324,17 @@ int main( int argc, char * argv[] )
 	printf("a\n");
 	// resetGameState();
 
- fastReset();
+	fastReset();
 
 	printf("b\n");
 	setupGraphics();
 	setupExtremelyFastNumberGenerators();
+
+	if ( ! test_all())
+	{
+		return 1;
+	}
+
 	initText2D();
 	initDeepSea();
 
