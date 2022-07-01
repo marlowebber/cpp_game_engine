@@ -795,6 +795,33 @@ void setupTestAnimal_straightline(int i)
 }
 
 
+void setupTestAnimal_amphibious(int i)
+{
+	resetAnimal(i);
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, 0) );
+	appendCell( i, ORGAN_GILL, Vec_i2(0, 1) );
+	appendCell( i, ORGAN_LIVER, Vec_i2(0, 2) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
+}
+
+void setupTestAnimal_airbreathing(int i)
+{
+	resetAnimal(i);
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, 0) );
+	appendCell( i, ORGAN_LIVER, Vec_i2(0, 1) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 2) );
+}
+
+
+void setupTestAnimal_waterbreathing(int i)
+{
+	resetAnimal(i);
+	appendCell( i, ORGAN_GILL, Vec_i2(0, 0) );
+	appendCell( i, ORGAN_LIVER, Vec_i2(0, 1) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 2) );
+}
+
+
 
 
 Vec_f2 getTerrainSlope(unsigned int worldPositionI)
@@ -927,10 +954,10 @@ bool measureAnimalQualities( int animalIndex)
 			game.animals[animalIndex].lifespan += baseLifespan;
 		}
 		if (
-			game.animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD
+		    game.animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD
 
 
-			)
+		)
 		{
 			totalGonads ++;
 		}
@@ -4192,7 +4219,7 @@ void animalEnergy(int animalIndex)
 	{
 		// if ()
 		// {
-			killAnimal( animalIndex);
+		killAnimal( animalIndex);
 		// }
 	}
 	bool nominate = false;
@@ -6128,6 +6155,8 @@ void test_all()
 	bool testResult_4 = false;
 	bool testResult_5 = false;
 
+	bool testResult_6 = false;
+
 
 
 
@@ -6256,6 +6285,10 @@ void test_all()
 
 
 
+	killAnimal(testAnimal);
+
+
+
 
 
 
@@ -6328,6 +6361,10 @@ void test_all()
 	}
 
 
+	killAnimal(testAnimal);
+
+
+
 
 
 
@@ -6384,13 +6421,60 @@ void test_all()
 
 
 
+	killAnimal(testAnimal);
+
+
+
+
+
+
+// lungs
+
+	// note that this test uses a different test animal.
+	setupTestAnimal_lungus(j);
+
+	testAnimal =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
+
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
+
+	game.animals[testAnimal].energyDebt = 0;
+
+
+
+
+	// an air breathing animal in air is fine
+	// a water breathing animal in water is fine
+	// a water breathing animal in air dies
+	// an air breathing animal in water dies
+	// an amphibious animal is fine in both situations
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // 1. grass grows
 // 2. animals eat grass and gain energy
 // 3. animals reproduce when they have enough energy
 // 4. reproduction copies the animal wholly and exactly, except that lifetime stats are reset to 0 in the new generation, and some mutation may be carried along
 // 5. sensors take measurements of the game world to produce a signal
 // 6. actuators use signals to move the animal.
-
+// 7 lungs
 
 
 
