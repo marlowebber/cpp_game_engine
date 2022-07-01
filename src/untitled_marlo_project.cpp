@@ -3446,49 +3446,81 @@ void animal_organs( int animalIndex)
 			}
 			else
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity -= aBreath;
-			}
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
-			{
 
-				int otherLung =  getCellWithAir( animalIndex);
-
-				if (otherLung < 0)
+				bool hasGill = false;
+				for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
 				{
-					printf("animal %i hurt- no lung\n", animalIndex);
-					game.animals[animalIndex].damageReceived++;
+					if (game.animals[animalIndex].body[i].organ == ORGAN_GILL)
+					{
+						hasGill = true;
+						break;
+					}
+				}
+				if (!hasGill)
+				{
+
+					game.animals[animalIndex].body[cellIndex].signalIntensity -= aBreath;
+
+					if (game.animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
+					{
+
+
+						printf("animal %i hurt- no gill\n", animalIndex);
+						game.animals[animalIndex].damageReceived++;
+
+
+					}
 				}
 
+
 			}
+
 			break;
 
 
 		}
 		case ORGAN_GILL:
 		{
+
+
 			if (game.world[cellWorldPositionI].wall == MATERIAL_WATER)
 			{
 				game.animals[animalIndex].body[cellIndex].signalIntensity = baseLungCapacity;
 			}
 			else
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity -= aBreath;
-			}
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
-			{
 
-				int otherLung =  getCellWithAir( animalIndex);
-
-				if (otherLung < 0)
+				bool hasLung = false;
+				for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+				{
+					if (game.animals[animalIndex].body[i].organ == ORGAN_LUNG)
+					{
+						hasLung = true;
+						break;
+					}
+				}
+				if (!hasLung)
 				{
 
-					printf("animal %i hurt- no gill\n", animalIndex);
-					game.animals[animalIndex].damageReceived++;
+					game.animals[animalIndex].body[cellIndex].signalIntensity -= aBreath;
 
+					if (game.animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
+					{
+
+
+						printf("animal %i hurt- no lung\n", animalIndex);
+						game.animals[animalIndex].damageReceived++;
+
+
+					}
 				}
 
+
 			}
+
 			break;
+
+
 		}
 		case ORGAN_MEMORY_RX:
 		{
@@ -6430,20 +6462,102 @@ void test_all()
 
 // lungs
 
-	// note that this test uses a different test animal.
-	setupTestAnimal_lungus(j);
 
-	testAnimal =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
-
+	setupTestAnimal_airbreathing(j);
+	testPos += 10;
+	int testAnimal_air_in_air =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
 	game.animals[testAnimal].position = testPos;
 	game.animals[testAnimal].uPosX = testPos % worldSize;
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
-
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
+
+
+	setupTestAnimal_airbreathing(j);
+	testPos += 10;
+	int testAnimal_air_in_water =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	game.animals[testAnimal].energyDebt = 0;
+	game.world[testPos].wall = MATERIAL_WATER;
+
+
+
+
+
+	setupTestAnimal_waterbreathing(j);
+	testPos += 10;
+	int testAnimal_water_in_air =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	game.animals[testAnimal].energyDebt = 0;
+
+
+
+
+	setupTestAnimal_waterbreathing(j);
+	testPos += 10;
+	int testAnimal_water_in_water =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	game.animals[testAnimal].energyDebt = 0;
+	game.world[testPos].wall = MATERIAL_WATER;
+
+
+
+
+
+
+	setupTestAnimal_amphibious(j);
+	int testAnimal_amphi_in_air =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	game.animals[testAnimal].energyDebt = 0;
+
+
+
+
+	setupTestAnimal_amphibious(j);
+	testPos += 10;
+	int testAnimal_amphi_in_water =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+	game.animals[testAnimal].position = testPos;
+	game.animals[testAnimal].uPosX = testPos % worldSize;
+	game.animals[testAnimal].uPosY = testPos / worldSize;
+	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
+	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	game.animals[testAnimal].energyDebt = 0;
+
+	game.world[testPos].wall = MATERIAL_WATER;
+	testPos +=worldSize;
+	game.world[testPos].wall = MATERIAL_WATER;
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6456,13 +6570,36 @@ void test_all()
 
 
 
+	const int how_long_it_takes_to_make_sure = (baseLungCapacity / aBreath) * 2;
+
+
+
+	for (int i = 0; i < how_long_it_takes_to_make_sure; ++i)
+	{
+		animalTurn(testAnimal_air_in_air);
+		animalTurn(testAnimal_air_in_water);
+		animalTurn(testAnimal_water_in_air);
+		animalTurn(testAnimal_water_in_water);
+		animalTurn(testAnimal_amphi_in_air);
+		animalTurn(testAnimal_amphi_in_water);
+	}
 
 
 
 
+	if (
 
+	    !(game.animals[testAnimal_air_in_air].retired     ) &&
+	    (game.animals[testAnimal_air_in_water].retired   ) &&
+	    (game.animals[testAnimal_water_in_air].retired   ) &&
+	    !(game.animals[testAnimal_water_in_water].retired ) &&
+	    !(game.animals[testAnimal_amphi_in_air].retired   ) &&
+	    !(game.animals[testAnimal_amphi_in_water].retired )
+	)
 
-
+	{
+		testResult_6 = true;
+	}
 
 
 
@@ -6529,6 +6666,17 @@ void test_all()
 	else
 	{
 		printf("test 5: neural pathway: FAIL\n");
+	}
+
+
+
+	if (testResult_6)
+	{
+		printf("test 6: breathing: PASS\n");
+	}
+	else
+	{
+		printf("test 6: breathing: FAIL\n");
 	}
 
 
