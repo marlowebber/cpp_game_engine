@@ -322,10 +322,18 @@ void initDeepSea()
 
 int main( int argc, char * argv[] )
 {
+	printf("a\n");
+	// resetGameState();
+
+ fastReset();
+
+	printf("b\n");
 	setupGraphics();
 	setupExtremelyFastNumberGenerators();
 	initText2D();
 	initDeepSea();
+
+	printf("c\n");
 	for (;;)
 	{
 		flagCreate = false;

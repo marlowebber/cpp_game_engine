@@ -135,7 +135,6 @@ struct Animal
     unsigned int lastTouchedStranger;
     unsigned int lastTouchedKin;
     unsigned int cellsUsed;
-    Color identityColor;
     float temp_limit_low;
     float temp_limit_high;
     char displayName[displayNameSize];
@@ -247,19 +246,22 @@ void drawInterfacePanel();
 
 void drawPalette2();
 
+void resetGameState();
+
 void test_all();
 
 void checkLongestMenu(std::string in);
 // void toggleFastCam();
 
+void fastReset();
 // void drawFastCamText();
 
 // the following are used privately to create the game content.
-void animalAppendCell(unsigned int animalIndex, unsigned int organType);
-void setupCreatureFromCharArray( unsigned int animalIndex, const char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );
-void resetAnimal(unsigned int animalIndex);
+void animalAppendCell(int animalIndex, unsigned int organType);
+void setupCreatureFromCharArray( int animalIndex, const char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );
+void resetAnimal(int animalIndex);
 
-void paintCreatureFromCharArray( unsigned int animalIndex, const char * start, unsigned int len, unsigned int width );
+void paintCreatureFromCharArray( int animalIndex, const char * start, unsigned int len, unsigned int width );
 
-void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosition);
+void appendCell(int animalIndex, unsigned int organType, Vec_i2 newPosition);
 #endif //MARLO_H

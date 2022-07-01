@@ -35,10 +35,13 @@
 #include "content.h"
 
 const bool doReproduction        = true;
+// const bool horizontalTransfer    = false;
 const bool taxIsByMass           = true;
 const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
+
+const bool killLoiteringAdversary = false;
 const bool erode = false;
 const int prelimSize = worldSize / 10;
 const int cameraPanSpeed = 10;
@@ -307,7 +310,7 @@ void appendLog( std::string input)
 
 
 
-void resetConnection(unsigned int animalIndex, unsigned int cellLocalPositionI, unsigned int i)
+void resetConnection(int animalIndex, unsigned int cellLocalPositionI, unsigned int i)
 {
 	game.animals[animalIndex].body[cellLocalPositionI].connections[i].used = true;
 	game.animals[animalIndex].body[cellLocalPositionI].connections[i].connectedTo = 0;//extremelyFastNumberFromZeroTo(animalSquareSize - 1);
@@ -316,7 +319,7 @@ void resetConnection(unsigned int animalIndex, unsigned int cellLocalPositionI, 
 
 
 
-void resetCell(unsigned int animalIndex, unsigned int cellLocalPositionI)
+void resetCell(int animalIndex, unsigned int cellLocalPositionI)
 {
 	game.animals[animalIndex].body[cellLocalPositionI].organ  = MATERIAL_NOTHING;
 	game.animals[animalIndex].body[cellLocalPositionI].signalIntensity = 0.0f;
@@ -334,7 +337,7 @@ void resetCell(unsigned int animalIndex, unsigned int cellLocalPositionI)
 	// game.animals[animalIndex].genes[cellLocalPositionI] = game.animals[animalIndex].body[cellLocalPositionI];
 }
 
-void paintAnimal(unsigned int animalIndex)
+void paintAnimal(int animalIndex)
 {
 	ZoneScoped;
 	Color newAnimalColorA = Color(RNG(), RNG(), RNG(), 1.0f);
@@ -352,19 +355,19 @@ void paintAnimal(unsigned int animalIndex)
 	}
 }
 
-void resetIdentityColors()
-{
-	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
-	{
-		resetAnimal(animalIndex);
-		if (animalIndex == game.adversary)
-		{
-			game.animals[animalIndex].identityColor = color_white;
-		}
-	}
-}
+// void resetIdentityColors()
+// {
+// 	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+// 	{
+// 		resetAnimal(animalIndex);
+// 		if (animalIndex == game.adversary)
+// 		{
+// 			game.animals[animalIndex].identityColor = color_white;
+// 		}
+// 	}
+// }
 
-void resetAnimal(unsigned int animalIndex)
+void resetAnimal(int animalIndex)
 {
 	ZoneScoped;
 	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
@@ -404,7 +407,7 @@ void resetAnimal(unsigned int animalIndex)
 
 
 // choose a random cell of any type that can be connected to, which includes all neurons and all sensors.
-int getRandomConnectableCell( unsigned int animalIndex)
+int getRandomConnectableCell( int animalIndex)
 {
 	std::list<unsigned int> cellsOfType;
 	unsigned int found = 0;
@@ -426,7 +429,7 @@ int getRandomConnectableCell( unsigned int animalIndex)
 }
 
 
-void scrambleAnimal(unsigned int animalIndex)
+void scrambleAnimal(int animalIndex)
 {
 	for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
 	{
@@ -461,6 +464,11 @@ void scrambleAnimal(unsigned int animalIndex)
 
 
 
+
+
+
+
+
 void resetAnimals()
 {
 	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
@@ -468,7 +476,7 @@ void resetAnimals()
 		resetAnimal(animalIndex);
 	}
 
-	resetIdentityColors();
+	// resetIdentityColors();
 
 	int j = 1;
 	for (int i = 0; i < numberOfSpecies; ++i)
@@ -478,11 +486,6 @@ void resetAnimals()
 		paintAnimal(j);
 		game.champions[i] = game.animals[j];
 		game.championScores[i] = 0;
-
-		// bool speciesVacancies [numberOfSpecies];
-		// unsigned int speciesPopulationCounts [numberOfSpecies];
-		// unsigned int populationCountUpdates  [numberOfSpecies];
-		// unsigned int speciesAttacksPerTurn   [numberOfSpecies];
 
 		game.speciesVacancies[i] = true;
 		game.speciesPopulationCounts[i] = 0;
@@ -525,6 +528,24 @@ void resetGrid()
 #endif
 
 	}
+}
+
+void fastReset()
+{
+
+	memset( &game, 0x00, sizeof(GameState)  );
+
+	for (int i = 0; i < numberOfAnimals; ++i)
+	{
+		game.animals[i].retired = true;
+	}
+	for (int i = 0; i < worldSquareSize; ++i)
+	{
+		game.world[i].plantState = MATERIAL_NOTHING;
+		game.world[i].seedState  = MATERIAL_NOTHING;
+	}
+
+
 }
 
 void resetGameState()
@@ -580,7 +601,7 @@ void resetGameState()
 }
 
 
-bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)// check if a cell has an empty neighbour.
+bool isCellAnEdge(int animalIndex, unsigned int cellIndex)// check if a cell has an empty neighbour.
 {
 	// go through the list of other cells and see if any of neighbour indexes match any of them. if so, mark the square as not an edge.
 	unsigned int neighbourtally = 0;
@@ -613,7 +634,7 @@ bool isCellAnEdge(unsigned int animalIndex, unsigned int cellIndex)// check if a
 	return false;
 }
 
-unsigned int getRandomEdgeCell(unsigned int animalIndex)
+unsigned int getRandomEdgeCell(int animalIndex)
 {
 	while (true)
 	{
@@ -628,7 +649,7 @@ unsigned int getRandomEdgeCell(unsigned int animalIndex)
 	}
 }
 
-Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
+Vec_i2 getRandomEmptyEdgeLocation(int animalIndex)
 {
 	unsigned int cellIndex = getRandomEdgeCell(animalIndex);
 	Vec_i2 result = Vec_i2(0, 0);
@@ -668,7 +689,7 @@ Vec_i2 getRandomEmptyEdgeLocation(unsigned int animalIndex)
 
 
 
-void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosition)
+void appendCell( int animalIndex, unsigned int organType, Vec_i2 newPosition)
 {
 	// pick a random location for the new cell which is adjacent to a normal cell.
 	// we can avoid ever having to check for valid placement of the cell if we are careful about where to place it!
@@ -717,7 +738,7 @@ void appendCell(unsigned int animalIndex, unsigned int organType, Vec_i2 newPosi
 }
 
 // add a cell to an animal germline in a guided but random way. Used to messily construct new game.animals, for situations where lots of variation is desirable.
-void animalAppendCell(unsigned int animalIndex, unsigned int organType)
+void animalAppendCell(int animalIndex, unsigned int organType)
 {
 	ZoneScoped;
 	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
@@ -770,7 +791,7 @@ void setupTestAnimal_straightline(int i)
 	game.animals[i].body[2].connections[0].connectedTo = 1;
 	game.animals[i].body[2].connections[0].weight = 1.0f;
 
-	game.animals[i].body[1].signalIntensity = 1.0f;
+	game.animals[i].body[1].signalIntensity = 0.1f;
 }
 
 
@@ -905,7 +926,11 @@ bool measureAnimalQualities( int animalIndex)
 		{
 			game.animals[animalIndex].lifespan += baseLifespan;
 		}
-		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD)
+		if (
+			game.animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD
+
+
+			)
 		{
 			totalGonads ++;
 		}
@@ -921,7 +946,8 @@ bool measureAnimalQualities( int animalIndex)
 		}
 	}
 	game.animals[animalIndex].lifespan *= 0.75 + (RNG() * 0.5);
-	if (game.animals[animalIndex].mass > 0 && totalGonads > 0 )
+
+	if (game.animals[animalIndex].mass > 0 && totalGonads > 1 ) // the animal needs at least two gonads to be viable.
 	{
 		return true;
 	}
@@ -1525,7 +1551,7 @@ void spawnAnimalIntoSlot(  int animalIndex,
 
 
 // check if an animal is currently occupying a square. return the local index of the occupying cell, otherwise, return -1 if not occupied.
-int isAnimalInSquare(unsigned int animalIndex, unsigned int cellWorldPositionI)
+int isAnimalInSquare(int animalIndex, unsigned int cellWorldPositionI)
 {
 	ZoneScoped;
 	if (cellWorldPositionI < worldSquareSize && game.world[cellWorldPositionI].identity >= 0 )
@@ -1571,7 +1597,7 @@ void selectCursorAnimal()
 
 
 // updates the animal's position, and performs any actions resulting from that.
-void place(unsigned int animalIndex)
+void place( int animalIndex)
 {
 
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
@@ -1746,8 +1772,9 @@ int spawnAnimal( unsigned int speciesIndex,
 		                    // genes,
 		                    parent,
 		                    position, mutation);
+
+		place(animalIndex);
 	}
-	place(animalIndex);
 	return animalIndex;
 }
 
@@ -1799,12 +1826,12 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	ZoneScoped;
 	Color displayColor = color_black;
 	int viewedAnimal = -1;
-	unsigned int animalIndex = game.world[worldI].identity;
+	int animalIndex = game.world[worldI].identity;
 	int occupyingCell = -1;
 	if (animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
 		occupyingCell = isAnimalInSquare(  animalIndex , worldI    );
-		if (occupyingCell != -1)
+		if (occupyingCell >= 0)
 		{
 			viewedAnimal = animalIndex;
 		}
@@ -2287,7 +2314,8 @@ void updatePlants(unsigned int worldI)
 		bool bonded = false;
 		if (game.world[worldI].identity >= 0)
 		{
-			if (  isAnimalInSquare( game.world[worldI].identity , worldI )   )
+			int bond = isAnimalInSquare( game.world[worldI].identity , worldI )  ;
+			if (  bond >= 0 )
 			{
 				bonded = true;
 			}
@@ -2618,7 +2646,7 @@ void updateMap()
 }
 
 
-int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPositionI)
+int defenseAtWorldPoint( int animalIndex, unsigned int cellWorldPositionI)
 {
 	int nBones = 0;
 	for (unsigned int n = 0; n < nNeighbours; ++n)
@@ -2636,7 +2664,7 @@ int defenseAtWorldPoint(unsigned int animalIndex, unsigned int cellWorldPosition
 	return nBones;
 }
 
-Vec_i2 getMousePositionRelativeToAnimal(unsigned int animalIndex)
+Vec_i2 getMousePositionRelativeToAnimal( int animalIndex)
 {
 	int newPosX = game.mousePositionX -   ( game.cameraPositionX  - game.animals[animalIndex].uPosX);
 	int newPosY = game.mousePositionY -   ( game.cameraPositionY  - game.animals[animalIndex].uPosY);
@@ -2801,7 +2829,7 @@ void defeatAdversary()
 	appendLog( std::string("the adversary was killed!") );
 }
 
-void healAnimal(unsigned int animalIndex)
+void healAnimal( int animalIndex)
 {
 
 	int pre = 0;
@@ -2843,7 +2871,7 @@ void healAnimal(unsigned int animalIndex)
 }
 
 // return true if you blow the limb off, false if its still attached.
-void hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
+void hurtAnimal( int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
 {
 
 	std::string damageLog = std::string("");
@@ -2994,7 +3022,7 @@ void lighterCallback( int gunIndex, int shooterIndex )
 	}
 }
 
-int getGrabbableItem(unsigned int animalIndex, unsigned int cellIndex)
+int getGrabbableItem( int animalIndex, unsigned int cellIndex)
 {
 	int grabArea = 5;
 	int result = -1;
@@ -3149,7 +3177,7 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 }
 
 
-void animal_organs(unsigned int animalIndex)
+void animal_organs( int animalIndex)
 {
 
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
@@ -3202,7 +3230,8 @@ void animal_organs(unsigned int animalIndex)
 						{
 							if ( ! (game.animals[game.world[targetPosI].identity ].isMachine) )
 							{
-								if (isAnimalInSquare( game.world[targetPosI].identity , targetPosI ) >= 0)
+								int targetCell = isAnimalInSquare( game.world[targetPosI].identity , targetPosI );
+								if (targetCell >= 0)
 								{
 									float distanceToTarget = magnitude_int(  vx , vy   );
 									if (distanceToTarget < closestTargetDistance)
@@ -3399,6 +3428,7 @@ void animal_organs(unsigned int animalIndex)
 
 				if (otherLung < 0)
 				{
+					printf("animal %i hurt- no lung\n", animalIndex);
 					game.animals[animalIndex].damageReceived++;
 				}
 
@@ -3424,6 +3454,8 @@ void animal_organs(unsigned int animalIndex)
 
 				if (otherLung < 0)
 				{
+
+					printf("animal %i hurt- no gill\n", animalIndex);
 					game.animals[animalIndex].damageReceived++;
 
 				}
@@ -3687,6 +3719,7 @@ void animal_organs(unsigned int animalIndex)
 							game.animals[animalIndex].energy -= game.animals[animalIndex].offspringEnergy;
 							game.animals[result].energy       =  game.animals[animalIndex].offspringEnergy;
 							game.animals[result].parentIdentity       = animalIndex;
+							printf("animal %i produced animal %i asexually\n", animalIndex, result);
 						}
 					}
 				}
@@ -3754,7 +3787,8 @@ void animal_organs(unsigned int animalIndex)
 			{
 
 
-				if (isAnimalInSquare(cellWorldPositionI, game.world[cellWorldPositionI].identity ))
+				int leechAttackVictim = isAnimalInSquare(cellWorldPositionI, game.world[cellWorldPositionI].identity );
+				if (leechAttackVictim >= 0)
 				{
 
 
@@ -3816,7 +3850,7 @@ void animal_organs(unsigned int animalIndex)
 					// game.speciesAttacksPerTurn[speciesIndex] ++;
 
 
-// bool hurtAnimal(unsigned int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
+// bool hurtAnimal(int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
 
 					// hurtAnimal();
 
@@ -3906,8 +3940,8 @@ void animal_organs(unsigned int animalIndex)
 			{
 				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
 			}
-			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * sin(game.animals[animalIndex].fAngle);
-			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * cos(game.animals[animalIndex].fAngle);
+			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10.0f * sin(game.animals[animalIndex].fAngle);
+			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10.0f * cos(game.animals[animalIndex].fAngle);
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
 		}
@@ -3937,8 +3971,8 @@ void animal_organs(unsigned int animalIndex)
 			{
 				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
 			}
-			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * cos(game.animals[animalIndex].fAngle);// on the strafe muscle the sin and cos are reversed, that's all.
-			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10 * sin(game.animals[animalIndex].fAngle);
+			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10.0f * cos(game.animals[animalIndex].fAngle);// on the strafe muscle the sin and cos are reversed, that's all.
+			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10.0f * sin(game.animals[animalIndex].fAngle);
 
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
@@ -4066,7 +4100,7 @@ void animal_organs(unsigned int animalIndex)
 void organs_all()
 {
 	ZoneScoped;
-	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+	for (int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 	{
 		if (!game.animals[animalIndex].retired)
 		{
@@ -4086,7 +4120,7 @@ void organs_all()
 // void move_all()
 // {
 // 	ZoneScoped;
-// 	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+// 	for (int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 // 	{
 // 		if (!game.animals[animalIndex].retired)
 // 		{
@@ -4096,7 +4130,7 @@ void organs_all()
 // }
 
 
-void animalEnergy(unsigned int animalIndex)
+void animalEnergy(int animalIndex)
 {
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	game.animals[animalIndex].age++;
@@ -4126,40 +4160,40 @@ void animalEnergy(unsigned int animalIndex)
 		if (game.speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) && animalIndex != game.playerCreature) // only kill off weak game.animals if there is some population.
 			if (game.animals[animalIndex].energy < 0.0f)
 			{
-				// printf("died low energy\n");
+				printf("animal %i died low energy\n", animalIndex);
 				execute = true;
 			}
 		if (game.animals[animalIndex].age > game.animals[animalIndex].lifespan && animalIndex != game.playerCreature)
 		{
 
-			// printf("died old age\n");
+			printf("animal %i died old age\n", animalIndex);
 			execute = true;
 		}
 		if (game.animals[animalIndex].totalGonads == 0)
 		{
 
-			// printf("died no gonads\n");
+			printf("animal %i died no gonads\n", animalIndex);
 			execute = true;
 		}
 		if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].mass / 2)
 		{
 
-			// printf("died too damaged\n");
+			printf("animal %i died too damaged\n", animalIndex);
 			execute = true;
 		}
 		if (game.animals[animalIndex].mass <= 0)
 		{
 
-			// printf("died low mass\n");
+			printf("animal %i died low mass\n", animalIndex);
 			execute = true;
 		}
 	}
 	if (execute)
 	{
-		if (animalIndex != game.adversary)
-		{
+		// if ()
+		// {
 			killAnimal( animalIndex);
-		}
+		// }
 	}
 	bool nominate = false;
 	int animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + game.animals[animalIndex].numberOfTimesReproduced ;
@@ -4245,14 +4279,14 @@ void animalEnergy(unsigned int animalIndex)
 	}
 }
 
-void energy_all() // perform energies.
+void census()
 {
 	ZoneScoped;
 	for (int i = 0; i < numberOfSpecies; ++i)
 	{
 		game.populationCountUpdates[i] = 0;
 	}
-	for (unsigned int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
+	for (int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
 	{
 		unsigned int speciesIndex  = animalIndex / numberOfAnimalsPerSpecies;
 		if (!game.animals[animalIndex].retired && speciesIndex < numberOfSpecies)
@@ -4952,7 +4986,7 @@ void drawGameInterfaceText()
 	}
 }
 
-void paintCreatureFromCharArray( unsigned int animalIndex, const char * start, unsigned int len, unsigned int width )
+void paintCreatureFromCharArray( int animalIndex, const char * start, unsigned int len, unsigned int width )
 {
 
 	Vec_i2 o = Vec_i2(0, 0);
@@ -5035,7 +5069,7 @@ void paintCreatureFromCharArray( unsigned int animalIndex, const char * start, u
 }
 
 
-void printAnimalCells(unsigned int animalIndex)
+void printAnimalCells(int animalIndex)
 {
 	printf( "%s\n",   game.animals[animalIndex].displayName  );
 
@@ -5045,7 +5079,7 @@ void printAnimalCells(unsigned int animalIndex)
 	}
 }
 
-void setupCreatureFromCharArray( unsigned int animalIndex, const char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback )
+void setupCreatureFromCharArray( int animalIndex, const char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback )
 {
 
 	resetAnimal(animalIndex);
@@ -5217,14 +5251,14 @@ void adjustPlayerPos(Vec_f2 pos)
 
 }
 
-void saveParticularAnimal(unsigned int animalIndex, std::string filename )
+void saveParticularAnimal(int animalIndex, std::string filename )
 {
 	std::ofstream out7( filename .c_str());
 	out7.write( (char*)(&game.animals[game.selectedAnimal]), sizeof(Animal));
 	out7.close();
 }
 
-void loadParticlarAnimal(unsigned int animalIndex, std::string filename)
+void loadParticlarAnimal(int animalIndex, std::string filename)
 {
 	std::ifstream in7(filename.c_str());
 	in7.read( (char*)(&game.animals[game.selectedAnimal]), sizeof(Animal));
@@ -5727,65 +5761,84 @@ void tournamentController()
 					game.adversaryRespawnPos = (adversaryRespawnPosY * worldSize ) + adversaryRespawnPosX;
 				}
 
-				if (game.animals[game.adversary].position != adversaryLoiterPos)
-				{
-					adversaryLoiterPos = game.animals[game.adversary].position ;
-					adversaryLoiter = 0;
-				}
-				else
-				{
-					adversaryLoiter++;
-				}
-				if (adversaryLoiter > 1000)
-				{
-					killAnimal(game.adversary);
-					game.animals[game.adversary].retired = true;
-				}
-			}
-		}
 
-		if (respawnLowSpecies)
-		{
-			unsigned int totalpop = 0;
-			for (unsigned int speciesIndex = 1; speciesIndex < numberOfSpecies; speciesIndex++) // start at 1 to ignore the non-natural species 0.
-			{
-				totalpop += game.speciesPopulationCounts[speciesIndex] ;
-				if (game.speciesPopulationCounts[speciesIndex] == 0)
+				if (killLoiteringAdversary)
 				{
-					int foundAnimal = -1;// if there is another species who is successful, duplicate an animal from them.
-					int foundSpecies = -1;
-					for (unsigned int j = 1; j < numberOfSpecies; ++j)
+					if (game.animals[game.adversary].position != adversaryLoiterPos)
 					{
-						if (game.speciesPopulationCounts[j] >= 1)
-						{
-							for (unsigned int k = extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 2); k < numberOfAnimalsPerSpecies; ++k)
-							{
-								unsigned int animalToCopy = (j * numberOfAnimalsPerSpecies) + k;
-								if (!game.animals[animalToCopy].retired)
-								{
-									foundAnimal = animalToCopy;
-									foundSpecies = j;
-									break;
-								}
-							}
-						}
-						if (foundAnimal >= 0)
-						{
-							break;
-						}
+						adversaryLoiterPos = game.animals[game.adversary].position ;
+						adversaryLoiter = 0;
 					}
-					if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
+					else
 					{
-						int ispeciesindex = speciesIndex;
-						memcpy(    &game.animals[ (speciesIndex * numberOfAnimalsPerSpecies) ] , &game.animals[ foundAnimal ], sizeof(Animal)    );
-						resetAnimal(foundAnimal);
+						adversaryLoiter++;
+					}
+					if (adversaryLoiter > 1000)
+					{
+						killAnimal(game.adversary);
+						game.animals[game.adversary].retired = true;
 					}
 				}
+
+
 			}
 
-			if (totalpop < numberOfSpecies && game.adversary >= 0)// life went extinct but the game.adversary is still alive. Spawn a bunch more stuff to get it going again.
+
+
+
+			if (respawnLowSpecies)
 			{
-				int j = 1;
+				// unsigned int totalpop = 0;
+
+
+				census();
+
+
+
+				// if (horizontalTransfer)
+				// {
+				// 	// if a species goes extinct, gift it an individual from a different species.
+				// 	for (unsigned int speciesIndex = 1; speciesIndex < numberOfSpecies; speciesIndex++) // start at 1 to ignore the non-natural species 0.
+				// 	{
+				// 		totalpop += game.speciesPopulationCounts[speciesIndex] ;
+				// 		if (game.speciesPopulationCounts[speciesIndex] == 0)
+				// 		{
+				// 			int foundAnimal = -1;// if there is another species who is successful, duplicate an animal from them.
+				// 			int foundSpecies = -1;
+				// 			for (unsigned int j = 1; j < numberOfSpecies; ++j)
+				// 			{
+				// 				if (game.speciesPopulationCounts[j] >= 1)
+				// 				{
+				// 					for (unsigned int k = extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 2); k < numberOfAnimalsPerSpecies; ++k)
+				// 					{
+				// 						unsigned int animalToCopy = (j * numberOfAnimalsPerSpecies) + k;
+				// 						if (!game.animals[animalToCopy].retired)
+				// 						{
+				// 							foundAnimal = animalToCopy;
+				// 							foundSpecies = j;
+				// 							break;
+				// 						}
+				// 					}
+				// 				}
+				// 				if (foundAnimal >= 0)
+				// 				{
+				// 					break;
+				// 				}
+				// 			}
+				// 			if (foundAnimal >= 0 && foundAnimal < numberOfAnimals)
+				// 			{
+				// 				int ispeciesindex = speciesIndex;
+				// 				memcpy(    &game.animals[ (speciesIndex * numberOfAnimalsPerSpecies) ] , &game.animals[ foundAnimal ], sizeof(Animal)    );
+				// 				resetAnimal(foundAnimal);
+				// 			}
+				// 		}
+				// 	}
+
+				// }
+
+
+				// if (totalpop < numberOfSpecies && game.adversary >= 0)// life went extinct but the game.adversary is still alive. Spawn a bunch more stuff to get it going again.
+				// {
 				// bool underwater = false;
 				// if (  game.world[  game.animals[game.adversary].position ].wall == MATERIAL_WATER )
 				// {
@@ -5798,70 +5851,83 @@ void tournamentController()
 				{
 
 
-					// if (k != game.adversary)
-					// {
-
-					int domingo = -1;
-
-
-					// if (false)
-
-					unsigned int randomPos = game.animals[game.adversary].position;
-
-					for (int ee = 0; ee < 3; ++ee)
+					if (game.speciesPopulationCounts[k] == 0 && k != 0)
 					{
-						/* code */
+						int j = 1;
+						// if (k != game.adversary)
+						// {
 
-						int randomCell = getRandomPopulatedCell(game.adversary);
-						if (randomCell >= 0)
-						{
-							randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
-						}
-
-						domingo = spawnAnimal( k,  game.champions[k], randomPos, false);
-						if (domingo >= 0)
-						{
-
-							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-						}
+						int domingo = -1;
 
 
+						// if (false)
 
+						unsigned int randomPos = game.animals[game.adversary].position;
 
-						// Animal parent;
-						setupExampleAnimal2(j, false);
-
-						// parent = game.animals[j];
-
-						// setupTestAnimal( j);
-						domingo = spawnAnimal( k,  game.animals[j], randomPos, false);
-						if (domingo >= 0)
+						for (int ee = 0; ee < 6; ++ee)
 						{
 
-							game.animals[domingo].energy = game.animals[domingo].maxEnergy;
-						}
 
+							// spawn 6 of the champion
+							int randomCell = getRandomPopulatedCell(game.adversary);
+							if (randomCell >= 0)
+							{
+								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+							}
+
+							domingo = spawnAnimal( k,  game.champions[k], randomPos, false);
+							if (domingo >= 0)
+							{
+
+								game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+							}
+
+
+
+
+							// // spawn 6 of the exa
+							// setupExampleAnimal2(j, false);
+
+							// // parent = game.animals[j];
+
+							// // setupTestAnimal( j);
+							// domingo = spawnAnimal( k,  game.animals[j], randomPos, false);
+							// if (domingo >= 0)
+							// {
+
+							// 	game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+							// }
+						}
 					}
 				}
+				// }
 			}
+
+
 		}
+
 	}
 }
 
-void animalTurn(unsigned int i)
+void animalTurn( int i)
 {
+	// printf("animalTurn %i \n", i);
 	place(i);
 	animal_organs( i);
 	animalEnergy( i);
 }
 
 
-void model_sector(unsigned int from, unsigned int to)
+void model_sector( int from,  int to)
 {
+	// printf("model_sector from %i to %i \n", from, to);
 	// includes 'from' but ends just before 'to'
-	for (unsigned int i = from; i < to; ++i)
+	for ( int i = from; i < to; ++i)
 	{
-		animalTurn(i);
+		if (! (game.animals[i].retired))
+		{
+			animalTurn(i);
+		}
 	}
 }
 
@@ -6088,7 +6154,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].fAngle = 0.0f;
 
-	place(testAnimal);
+	place(testAnimal); // apply the changes just made.
 
 	// organs_all();
 
@@ -6128,10 +6194,10 @@ void test_all()
 	printf("test animal energy after eating 10 grass: %f \n", game.animals[testAnimal].energy);
 
 	if (game.animals[testAnimal].energy == (
-	            (howManyPlantsToEat * game.ecoSettings[1])   // how much energy it got
-	            - (game.ecoSettings[3] * game.animals[testAnimal].mass)    // minus the resting tax
-	            - (game.ecoSettings[2] * game.animals[testAnimal].mass * howManyPlantsToEat)  // minus the movement tax
-
+	            // (howManyPlantsToEat * game.ecoSettings[1])   // how much energy it got
+	            // - (game.ecoSettings[3] * game.animals[testAnimal].mass)    // minus the resting tax
+	            // - (game.ecoSettings[2] * game.animals[testAnimal].mass * howManyPlantsToEat)  // minus the movement tax
+	            2.5f
 	        )
 	   )
 	{
@@ -6169,7 +6235,16 @@ void test_all()
 
 	// move_all();
 
-	model();
+	// model();
+
+	for (int i = 0; i < 1; ++i)
+	{
+		// model();
+		animalTurn(testAnimal);
+		// threadGraphics();
+	}
+
+
 
 	printf("test species population count after reproducing once: %u\n", game.speciesPopulationCounts[testSpecies] );
 
@@ -6200,11 +6275,16 @@ void test_all()
 
 	game.animals[testAnimal].energyDebt = 0;
 
+	place(testAnimal);
 
+
+	animalTurn(testAnimal);
 	// move_all();
 
 
-	model();
+	// model();
+
+
 
 	int diffs = 0;
 
@@ -6291,7 +6371,8 @@ void test_all()
 	}
 
 
-	model();
+	// model();
+	animalTurn(testAnimal);
 
 
 	printf("spinning test animal angle before %f and after %f illumination.\n" , originalAngle, game.animals[testAnimal].fAngle  );
