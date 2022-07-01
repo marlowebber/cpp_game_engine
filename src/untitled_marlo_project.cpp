@@ -3296,6 +3296,14 @@ void animal_organs( int animalIndex)
 			break;
 		}
 
+
+		case ORGAN_SENSOR_RANDOM:
+		{
+
+			game.animals[animalIndex].body[cellIndex].signalIntensity = (RNG() - 0.5f) * 2.0f;
+			break;
+		}
+
 		case ORGAN_GRABBER:
 		{
 			if (animalIndex == game.playerCreature)
@@ -4576,7 +4584,13 @@ void displayComputerText()
 	{
 		for (int i = 0; i < numberOfSpecies; ++i)
 		{
-			printText2D(   std::string("Species ") + std::to_string(i) +   std::string(" pop. " + std::to_string(game.speciesPopulationCounts[i])) + " hits " + std::to_string(game.speciesAttacksPerTurn[i]) , menuX, menuY, textSize);
+			printText2D(   "Species " + std::to_string(i) +
+			               " pop. " + std::to_string(game.speciesPopulationCounts[i]) +
+			               " hits " + std::to_string(game.speciesAttacksPerTurn[i])
+			               + " champion score " + std::to_string(game.championScores[i])
+			               + " champion energy " + std::to_string(game.championEnergies[i])
+
+			               , menuX, menuY, textSize);
 			menuY -= spacing;
 		}
 		for (int j = 0; j < numberOfEcologySettings; ++j)
@@ -5936,7 +5950,7 @@ void tournamentController()
 
 						unsigned int randomPos = game.animals[game.adversary].position;
 
-						for (int ee = 0; ee < 6; ++ee)
+						for (int ee = 0; ee < 60; ++ee)
 						{
 
 
@@ -5947,7 +5961,7 @@ void tournamentController()
 								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
 							}
 
-							domingo = spawnAnimal( k,  game.champions[k], randomPos, false);
+							domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
 							if (domingo >= 0)
 							{
 
@@ -6568,7 +6582,7 @@ bool test_all()
 	// printf("testAnimal_amphi_in_water %i \n", testAnimal_amphi_in_water);
 
 	game.world[testPos].wall = MATERIAL_WATER;
-	testPos +=worldSize;
+	testPos += worldSize;
 	game.world[testPos].wall = MATERIAL_WATER;
 
 
@@ -6642,81 +6656,81 @@ bool test_all()
 
 	if (
 
-		testResult_2 &&
-		testResult_3 &&
-		testResult_4 &&
-		testResult_5 &&
-		testResult_6 
+	    testResult_2 &&
+	    testResult_3 &&
+	    testResult_4 &&
+	    testResult_5 &&
+	    testResult_6
 
-		)
+	)
 	{
 		return true;
 	}
 	else
 	{
 		// print the test report
-	printf("DEEP SEA self test report\n");
+		printf("DEEP SEA self test report\n");
 
-	// if (testResult_1)
-	// {
-	// 	printf("test 1: grass growing: PASS\n");
-	// }
-	// else
-	// {
-	// 	printf("test 1: grass growing: FAIL\n");
-	// }
-
-
-	if (testResult_2)
-	{
-		printf("test 2: eat grass: PASS\n");
-	}
-	else
-	{
-		printf("test 2: eat grass: FAIL\n");
-	}
+		// if (testResult_1)
+		// {
+		// 	printf("test 1: grass growing: PASS\n");
+		// }
+		// else
+		// {
+		// 	printf("test 1: grass growing: FAIL\n");
+		// }
 
 
-
-	if (testResult_3)
-	{
-		printf("test 3: have baby: PASS\n");
-	}
-	else
-	{
-		printf("test 3: have baby: FAIL\n");
-	}
-
-
-	if (testResult_4)
-	{
-		printf("test 4: baby check: PASS\n");
-	}
-	else
-	{
-		printf("test 4: baby check: FAIL\n");
-	}
-
-
-	if (testResult_5)
-	{
-		printf("test 5: neural pathway: PASS\n");
-	}
-	else
-	{
-		printf("test 5: neural pathway: FAIL\n");
-	}
+		if (testResult_2)
+		{
+			printf("test 2: eat grass: PASS\n");
+		}
+		else
+		{
+			printf("test 2: eat grass: FAIL\n");
+		}
 
 
 
-	if (testResult_6)
-	{
-		printf("test 6: breathing: PASS\n");
-	}
-	else
-	{
-		printf("test 6: breathing: FAIL\n");
-	}
+		if (testResult_3)
+		{
+			printf("test 3: have baby: PASS\n");
+		}
+		else
+		{
+			printf("test 3: have baby: FAIL\n");
+		}
+
+
+		if (testResult_4)
+		{
+			printf("test 4: baby check: PASS\n");
+		}
+		else
+		{
+			printf("test 4: baby check: FAIL\n");
+		}
+
+
+		if (testResult_5)
+		{
+			printf("test 5: neural pathway: PASS\n");
+		}
+		else
+		{
+			printf("test 5: neural pathway: FAIL\n");
+		}
+
+
+
+		if (testResult_6)
+		{
+			printf("test 6: breathing: PASS\n");
+		}
+		else
+		{
+			printf("test 6: breathing: FAIL\n");
+		}
 	}
 	return false;
 

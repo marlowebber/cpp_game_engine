@@ -52,7 +52,9 @@
 #define ORGAN_GENITAL_B            41
 #define ORGAN_SENSOR_PLEASURE      42
 
-#define numberOfOrganTypes        42 // the number limit of growable genes
+#define ORGAN_SENSOR_RANDOM       43
+
+#define numberOfOrganTypes        43 // the number limit of growable genes
 
 #define MARKER                    50  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        51
@@ -333,6 +335,11 @@ std::string tileDescriptions(unsigned int tile)
 	case ORGAN_HAIR:
 	{
 		return std::string("Soft, shiny strands of hair.");
+	}
+
+	case ORGAN_SENSOR_RANDOM:
+	{
+		return std::string("Part of the brain which burbles with madness.");
 	}
 
 
@@ -656,6 +663,12 @@ std::string tileShortNames(unsigned int tile)
 	}
 
 
+	case ORGAN_SENSOR_RANDOM:
+	{
+		return std::string("Random sensor");
+	}
+
+
 
 
 
@@ -880,6 +893,10 @@ unsigned int organProduces(unsigned int organ)
 	{
 		return MATERIAL_BLOOD;
 	}
+	case ORGAN_SENSOR_RANDOM:
+	{
+		return MATERIAL_BLOOD;
+	}
 	case ORGAN_SPEAKER:
 	{
 		return MATERIAL_BLOOD;
@@ -1072,7 +1089,8 @@ bool organIsASensor(unsigned int organ)
 	        organ == ORGAN_SENSOR_BIRTHPLACE ||
 	        organ == ORGAN_SENSOR_PARENT ||
 	        organ == ORGAN_SENSOR_PAIN ||
-	        organ == ORGAN_SENSOR_PLEASURE
+	        organ == ORGAN_SENSOR_PLEASURE ||
+	        organ == ORGAN_SENSOR_RANDOM
 	   )
 	{
 		return true;
@@ -1136,6 +1154,7 @@ void setupExampleAnimal2(int i, bool underwater)
 
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
 
 
 	animalAppendCell( i, ORGAN_BIASNEURON );
@@ -1160,12 +1179,6 @@ void setupExampleAnimal2(int i, bool underwater)
 }
 
 
-
-
-void setupExampleLighter(int i)
-{
-	// game.animals[i].isMachine = true;
-	// game.animals[i].machineCallback = MACHINECALLBACK_LIGHTER;
 	const  char lighter[] =
 	{
 		'1', ' ',
@@ -1173,14 +1186,14 @@ void setupExampleLighter(int i)
 		'1', '1',
 		'1', '1',
 	};
+
+void setupExampleLighter(int i)
+{
+	// game.animals[i].isMachine = true;
+	// game.animals[i].machineCallback = MACHINECALLBACK_LIGHTER;
+
 	setupCreatureFromCharArray( i, lighter, 8, 2 , std::string("lighter"), MACHINECALLBACK_LIGHTER);
 }
-
-void setupExampleHuman(int i)
-{
-	// resetAnimal(i);
-	// std::string gunDescription = std::string("human");
-	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
 	const 	char humanBody[] =
 	{
 		' ', ' ', ' ', '/', 'B', '/', ' ', ' ', ' ',
@@ -1217,12 +1230,9 @@ void setupExampleHuman(int i)
 		' ', ' ', 'A', ' ', ' ', ' ', 'A', ' ', ' ',
 
 	};
-	setupCreatureFromCharArray( i, humanBody, (9 * 33), 9 ,  std::string("human"), -1 );
 
 
-
-
-	const 	char humanPaint[] =
+		const 	char humanPaint[] =
 	{
 		' ', ' ', ' ', 'R', 'R', 'R', ' ', ' ', ' ',
 		' ', ' ', 'R', 'R', 'R', 'R', 'R', ' ', ' ',
@@ -1259,6 +1269,18 @@ void setupExampleHuman(int i)
 
 	};
 
+void setupExampleHuman(int i)
+{
+	// resetAnimal(i);
+	// std::string gunDescription = std::string("human");
+	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
+
+	setupCreatureFromCharArray( i, humanBody, (9 * 33), 9 ,  std::string("human"), -1 );
+
+
+
+
+
 
 
 
@@ -1279,10 +1301,6 @@ void setupExampleHuman(int i)
 
 // }
 
-
-
-void setupDestroyer(int i)
-{
 	const 	char destroyer[] =
 	{
 		' ', ' ', '1', ' ', ' ',
@@ -1333,6 +1351,10 @@ void setupDestroyer(int i)
 
 
 
+void setupDestroyer(int i)
+{
+
+
 	setupCreatureFromCharArray( i, destroyer, 20 * 5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
 
 
@@ -1340,10 +1362,6 @@ void setupDestroyer(int i)
 }
 
 
-
-
-void setupTrackerGlasses(int i)
-{
 	const  char trackerGlasses[] =
 	{
 		' ', '2', ' ', '2', ' ',
@@ -1359,14 +1377,15 @@ void setupTrackerGlasses(int i)
 		' ', 'W', ' ', 'W', ' ',
 	};
 
+
+void setupTrackerGlasses(int i)
+{
+
 	setupCreatureFromCharArray( i, trackerGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_TRACKERGLASSES);
 
 
 	paintCreatureFromCharArray( i, trackerGlassesPaint, 15, 5 );
 }
-
-void setupNeuroGlasses(int i)
-{
 
 	const  char neuroGlasses[] =
 	{
@@ -1381,14 +1400,18 @@ void setupNeuroGlasses(int i)
 		'W', 'K', 'M', 'K', 'W',
 		'W', 'W', ' ', 'W', 'W',
 	};
+
+void setupNeuroGlasses(int i)
+{
+
+
 	setupCreatureFromCharArray( i, neuroGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_NEUROGLASSES);
 
 
 	paintCreatureFromCharArray( i, neuroGlassesPaint, 15, 5 );
 }
 
-void setupExampleGun(int i)
-{
+
 	const 	char pistol[] =
 	{
 		'1', '1', '1', '1',
@@ -1404,14 +1427,17 @@ void setupExampleGun(int i)
 		' ', 'V', 'D', ' ',
 		'V', 'V', ' ', ' ',
 	};
+
+void setupExampleGun(int i)
+{
+
 	setupCreatureFromCharArray( i, pistol, 16, 4 , std::string("pistol") , MACHINECALLBACK_PISTOL);
 
 
 	paintCreatureFromCharArray( i, pistolPaint, 16, 4 );
 }
 
-void setupExampleKnife(int i)
-{
+
 	const char knife[] =
 	{
 		' ', '1', ' ', ' ',
@@ -1425,14 +1451,14 @@ void setupExampleKnife(int i)
 		'V', 'D', 'M', 'M',
 		' ', 'D', ' ', ' ',
 	};
+
+void setupExampleKnife(int i)
+{
+
 	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") , MACHINECALLBACK_KNIFE);
 
 	paintCreatureFromCharArray( i, knifePaint, 12, 4 );
 }
-
-
-void setupEcologyCompter(int i)
-{
 	const char computer[] =
 	{
 		'1', '1', '1', '1', '1',
@@ -1453,17 +1479,17 @@ void setupEcologyCompter(int i)
 		'B', 'B', 'B', 'B', 'B',
 	};
 
+void setupEcologyCompter(int i)
+{
+
+
 	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("ecology terminal") , MACHINECALLBACK_ECOLOGYCOMPUTER);
 
 	paintCreatureFromCharArray( i, computerPaint, 30, 5 );
 }
 
 
-
-
-void setupMessageComputer(int i, unsigned int messageComputerNumber)
-{
-	char computer[] =
+	const char ecoComputer[] =
 	{
 		'2', '2', '2', '2', '2',
 		'2', '2', '2', '2', '2',
@@ -1473,7 +1499,7 @@ void setupMessageComputer(int i, unsigned int messageComputerNumber)
 		'1', '1', '1', '1', '1',
 	};
 
-	char computerPaint[] =
+	const char ecoComputerPaint[] =
 	{
 		'L', 'L', 'L', 'L', 'L',
 		'L', 'L', 'L', 'L', 'L',
@@ -1482,23 +1508,21 @@ void setupMessageComputer(int i, unsigned int messageComputerNumber)
 		' ', ' ', 'G', ' ', ' ',
 		'G', 'G', 'G', 'G', 'G',
 	};
-	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("message terminal") , MACHINECALLBACK_MESSAGECOMPUTER1 + messageComputerNumber);
+
+void setupMessageComputer(int i, unsigned int messageComputerNumber)
+{
+
+	setupCreatureFromCharArray( i, ecoComputer, 30, 5 , std::string("message terminal") , MACHINECALLBACK_MESSAGECOMPUTER1 + messageComputerNumber);
 
 
-	paintCreatureFromCharArray( i, computerPaint, 30, 5 );
+	paintCreatureFromCharArray( i, ecoComputerPaint, 30, 5 );
 }
 
 
 
 
 
-
-
-
-
-void setupHospitalComputer(int i)
-{
-	char hospital[] =
+	const char hospital[] =
 	{
 		' ', '2', ' ',
 		'2', '2', '2',
@@ -1507,11 +1531,10 @@ void setupHospitalComputer(int i)
 		' ', '2', ' ',
 		'2', '2', '2',
 	};
-	setupCreatureFromCharArray( i, hospital, 18, 3 , std::string("hospital terminal") , MACHINECALLBACK_HOSPITAL);
 
 
 
-	char hospitalPaint[] =
+	const char hospitalPaint[] =
 	{
 		' ', 'M', ' ',
 		'M', 'M', 'M',
@@ -1520,6 +1543,13 @@ void setupHospitalComputer(int i)
 		' ', 'V', ' ',
 		'M', 'M', 'M',
 	};
+
+
+void setupHospitalComputer(int i)
+{
+
+	setupCreatureFromCharArray( i, hospital, 18, 3 , std::string("hospital terminal") , MACHINECALLBACK_HOSPITAL);
+
 
 
 	paintCreatureFromCharArray( i, hospitalPaint, 30, 5 );
@@ -1736,6 +1766,8 @@ Color organColors(unsigned int organ)
 		return color_clear;
 	case TILE_DESTROYER_EYE              :
 		return color_brightred;
+	case ORGAN_SENSOR_RANDOM    :
+		return color_brains3;
 	}
 	return color_yellow;
 }
