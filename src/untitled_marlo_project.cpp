@@ -6473,6 +6473,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
+	printf("testAnimal_air_in_air %i \n", testAnimal_air_in_air);
 
 
 	setupTestAnimal_airbreathing(j);
@@ -6486,6 +6487,7 @@ void test_all()
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 	game.world[testPos].wall = MATERIAL_WATER;
+	printf("testAnimal_air_in_water %i \n", testAnimal_air_in_water);
 
 
 
@@ -6501,6 +6503,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
+	printf("testAnimal_water_in_air %i \n", testAnimal_water_in_air);
 
 
 
@@ -6516,6 +6519,7 @@ void test_all()
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 	game.world[testPos].wall = MATERIAL_WATER;
+	printf("testAnimal_water_in_water %i \n", testAnimal_water_in_water);
 
 
 
@@ -6531,6 +6535,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
+	printf("testAnimal_amphi_in_air %i \n", testAnimal_amphi_in_air);
 
 
 
@@ -6545,6 +6550,7 @@ void test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
+	printf("testAnimal_amphi_in_water %i \n", testAnimal_amphi_in_water);
 
 	game.world[testPos].wall = MATERIAL_WATER;
 	testPos +=worldSize;
