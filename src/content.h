@@ -1145,6 +1145,12 @@ void setupExampleAnimal2(int i, bool underwater)
 	// {
 
 	animalAppendCell( i, ORGAN_LUNG );
+
+
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+
 	// }
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_GONAD );
@@ -1154,6 +1160,7 @@ void setupExampleAnimal2(int i, bool underwater)
 
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
 	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
 
 

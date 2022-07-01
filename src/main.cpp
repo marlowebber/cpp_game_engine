@@ -146,7 +146,9 @@ void threadInterface()
 			{
 				// if (playerCreature >= 0)
 				// {
-				adjustPlayerPos(Vec_f2(playerSpeed, 0.0f));
+
+
+				adjustPlayerPos(Vec_f2(0.0f, playerSpeed));
 				// }
 
 				break;
@@ -155,7 +157,8 @@ void threadInterface()
 			{
 				// if (playerCreature >= 0)
 				// {
-				adjustPlayerPos(Vec_f2(0.0f, -playerSpeed));
+
+				adjustPlayerPos(Vec_f2(-playerSpeed, 0.0f));
 				// }
 				// else
 				// {
@@ -168,7 +171,7 @@ void threadInterface()
 			{
 				// if (playerCreature >= 0)
 				// {
-				adjustPlayerPos(Vec_f2(-playerSpeed, 0.0f));
+				adjustPlayerPos(Vec_f2(0.0f, -playerSpeed));
 				// }
 				// else
 				// {
@@ -179,9 +182,10 @@ void threadInterface()
 			}
 			case SDLK_w:
 			{
+				
+				adjustPlayerPos(Vec_f2(playerSpeed, 0.0f));
 				// if (playerCreature >= 0)
 				// {
-				adjustPlayerPos(Vec_f2(0.0f, playerSpeed));
 				// }
 				// else
 				// {
@@ -321,12 +325,12 @@ void initDeepSea()
 
 int main( int argc, char * argv[] )
 {
-	printf("a\n");
+	// printf("a\n");
 	// resetGameState();
 
 	fastReset();
 
-	printf("b\n");
+	// printf("b\n");
 	setupGraphics();
 	setupExtremelyFastNumberGenerators();
 
@@ -338,7 +342,7 @@ int main( int argc, char * argv[] )
 	initText2D();
 	initDeepSea();
 
-	printf("c\n");
+	// printf("c\n");
 	for (;;)
 	{
 		flagCreate = false;

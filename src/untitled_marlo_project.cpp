@@ -3774,7 +3774,10 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_GONAD:
 		{
-			totalGonads++;
+			if (game.animals[animalIndex].body[cellIndex].damage < 1.0f)
+			{
+				totalGonads++;
+			}
 			if (doReproduction && game.animals[animalIndex].energyDebt <= 0.0f )
 			{
 				float reproducesAt = ((game.animals[animalIndex].mass / 2 ) + game.animals[animalIndex].offspringEnergy );
@@ -3794,7 +3797,7 @@ void animal_organs( int animalIndex)
 						int result = spawnAnimal( speciesIndex, game.animals[animalIndex], game.animals[animalIndex].position, mutate );
 						if (result >= 0)
 						{
-							game.animals[animalIndex].body[cellIndex].organ = MATERIAL_NOTHING;
+							game.animals[animalIndex].body[cellIndex].damage = 1.0f;
 							game.animals[animalIndex].numberOfTimesReproduced++;
 							game.animals[animalIndex].energy -= game.animals[animalIndex].offspringEnergy;
 							game.animals[result].energy       =  game.animals[animalIndex].offspringEnergy;
