@@ -1117,10 +1117,10 @@ void mutateAnimal( int animalIndex)
 {
 	// some mutations are chosen more commonly than others. They are classed into groups, and each group is associated with a normalized likelyhood of occurring.
 	// the reason for this is that the development of the brain must always occur faster and in more detail than the development of the body, or else intelligent behavior can never arise.
-	const float group1Probability = 1.0f;
-	const float group2Probability = 0.5f;
-	const float group3Probability = 0.125f;
-	const float group4Probability = 0.0625f;
+	const float group1Probability = 1.0f;//1.0f;
+	const float group2Probability = 0.75f;//0.5f;
+	const float group3Probability = 0.5f;//0.125f;
+	const float group4Probability = 0.25f;//0.0625f;
 	float sum = group1Probability + group2Probability + group3Probability + group4Probability;
 	float groupChoice = RNG() * sum;
 	int group = 0;
@@ -1430,6 +1430,7 @@ void selectCursorAnimal()
 void place( int animalIndex)
 {
 
+	ZoneScoped;
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	game.animals[animalIndex].fAngleCos = cos(game.animals[animalIndex].fAngle);
 	game.animals[animalIndex].fAngleSin = sin(game.animals[animalIndex].fAngle);
@@ -2075,7 +2076,7 @@ void updatePlants(unsigned int worldI)
 		}
 		// pollen degrades if not attached to an animal
 		bool bonded = false;
-		if (game.world[worldI].identity >= 0)
+		if (game.world[worldI].identity >= 0 && game.world[worldI].identity < numberOfAnimals)
 		{
 			int bond = isAnimalInSquare( game.world[worldI].identity , worldI )  ;
 			if (  bond >= 0 )
@@ -2855,6 +2856,8 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 
 void animal_organs( int animalIndex)
 {
+
+	ZoneScoped;
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	float totalLiver = 0;
 	unsigned int totalGonads = 0;
@@ -2919,7 +2922,7 @@ void animal_organs( int animalIndex)
 			{
 				float angleToTarget =  atan2( closestvy  , closestvx );
 				const float destroyerInaccuracy = 0.1f;
-				angleToTarget += (RNG() - 0.5f) * destroyerInaccuracy;
+				angleToTarget += (((extremelyFastNumberFromZeroTo(64) - 32.0f) / 32.0f )) * destroyerInaccuracy;
 				shoot( animalIndex, animalIndex,  game.animals[animalIndex].position, angleToTarget);
 			}
 			break;
@@ -2927,7 +2930,7 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_SENSOR_RANDOM:
 		{
-			game.animals[animalIndex].body[cellIndex].signalIntensity = (RNG() - 0.5f) * 2.0f;
+			game.animals[animalIndex].body[cellIndex].signalIntensity = ((extremelyFastNumberFromZeroTo(64) - 32.0f) / 32.0f );//(RNG() - 0.5f) * 2.0f;
 			break;
 		}
 
@@ -3450,7 +3453,7 @@ void animal_organs( int animalIndex)
 		{
 			if (game.world[cellWorldPositionI].identity != animalIndex && game.world[cellWorldPositionI].identity >= 0 && game.world[cellWorldPositionI].identity < numberOfAnimals) // if the cell was occupied by another creature.
 			{
-				int leechAttackVictim = isAnimalInSquare(cellWorldPositionI, game.world[cellWorldPositionI].identity );
+				int leechAttackVictim = isAnimalInSquare(game.world[cellWorldPositionI].identity , cellWorldPositionI);
 				if (leechAttackVictim >= 0)
 				{
 					if (game.animals[animalIndex].parentAmnesty) // don't allow the animal to harm its parent until the amnesty period is over.
@@ -3473,7 +3476,7 @@ void animal_organs( int animalIndex)
 		{
 			if (game.world[cellWorldPositionI].identity != animalIndex && game.world[cellWorldPositionI].identity >= 0 && game.world[cellWorldPositionI].identity < numberOfAnimals) // if the cell was occupied by another creature.
 			{
-				int targetLocalPositionI = isAnimalInSquare(cellWorldPositionI, game.world[cellWorldPositionI].identity );
+				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity , cellWorldPositionI);
 				if (targetLocalPositionI >= 0)
 				{
 					if (game.animals[animalIndex].parentAmnesty) // don't allow the animal to harm its parent until the amnesty period is over.
@@ -3496,7 +3499,7 @@ void animal_organs( int animalIndex)
 		{
 			if (game.world[cellWorldPositionI].identity != animalIndex && game.world[cellWorldPositionI].identity >= 0 && game.world[cellWorldPositionI].identity < numberOfAnimals) // if the cell was occupied by another creature.
 			{
-				int targetLocalPositionI = isAnimalInSquare(cellWorldPositionI, game.world[cellWorldPositionI].identity );
+				int targetLocalPositionI = isAnimalInSquare(game.world[cellWorldPositionI].identity , cellWorldPositionI);
 				if (targetLocalPositionI >= 0)
 				{
 					hurtAnimal(game.world[cellWorldPositionI].identity , targetLocalPositionI, 1.0f, animalIndex );
@@ -3605,25 +3608,30 @@ void animal_organs( int animalIndex)
 		}
 		case ORGAN_GENITAL_A:
 		{
-			int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
-			if (targetLocalPositionI >= 0)
+			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals)
 			{
-				if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_B )
+				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
+				if (targetLocalPositionI >= 0)
 				{
-					sexBetweenTwoCreatures( animalIndex, game.world[cellWorldPositionI].identity );
+					if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_B )
+					{
+						sexBetweenTwoCreatures( animalIndex, game.world[cellWorldPositionI].identity );
+					}
 				}
 			}
 			break;
 		}
 		case ORGAN_GENITAL_B:
 		{
-
-			int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
-			if (targetLocalPositionI >= 0)
+			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals)
 			{
-				if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_A )
+				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
+				if (targetLocalPositionI >= 0)
 				{
-					sexBetweenTwoCreatures( game.world[cellWorldPositionI].identity , animalIndex);
+					if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_A )
+					{
+						sexBetweenTwoCreatures( game.world[cellWorldPositionI].identity , animalIndex);
+					}
 				}
 			}
 			break;
@@ -3640,8 +3648,8 @@ void animal_organs( int animalIndex)
 		{
 			if (organ != ORGAN_BIASNEURON)
 			{
-				const float neuralNoise = 0.01f;
-				game.animals[animalIndex].body[cellIndex].signalIntensity += (RNG() - 0.5f) * neuralNoise;
+				const float neuralNoise = 0.1f;
+				game.animals[animalIndex].body[cellIndex].signalIntensity += (((extremelyFastNumberFromZeroTo(64) - 32.0f) / 32.0f )) * neuralNoise;
 			}
 		}
 	}
@@ -3665,6 +3673,8 @@ void organs_all()
 
 void animalEnergy(int animalIndex)
 {
+
+	ZoneScoped;
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	game.animals[animalIndex].age++;
 	if (game.animals[animalIndex].energy > game.animals[animalIndex].maxEnergy)
@@ -3857,16 +3867,19 @@ void camera()
 							displayColor = filterColor(displayColor, tint_shadow);
 						}
 					}
-					int animalCell = isAnimalInSquare(game.world[worldI].identity, worldI );
-					if (game.selectedAnimal >= 0)
+					if (game.world[worldI].identity >= 0 && game.world[worldI].identity < numberOfAnimals)
 					{
-						if (game.world[worldI].identity == game.selectedAnimal  && animalCell >= 0)
+						int animalCell = isAnimalInSquare(game.world[worldI].identity, worldI );
+						if (game.selectedAnimal >= 0)
 						{
-							;
-						}
-						else
-						{
-							displayColor = filterColor(displayColor, tint_shadow);
+							if (game.world[worldI].identity == game.selectedAnimal  && animalCell >= 0)
+							{
+								;
+							}
+							else
+							{
+								displayColor = filterColor(displayColor, tint_shadow);
+							}
 						}
 					}
 					drawTile( Vec_f2( fx, fy ), displayColor);
@@ -4795,7 +4808,7 @@ void setupGameItems()
 	spawnAnimalIntoSlot(5, game.animals[i], building2, false);
 
 
-	// BUILDING 3 
+	// BUILDING 3
 	//contains tracker glasses, pistol, and message computer 3
 	int building3 =  getRandomPosition(true);
 	setupBuilding_playerBase(building3);
@@ -4811,7 +4824,7 @@ void setupGameItems()
 	spawnAnimalIntoSlot(8, game.animals[i], building3, false);
 
 
-	// BUILDING 4 
+	// BUILDING 4
 	// contains knife, lighter, and message computer 4
 	int building4 =  getRandomPosition(true);
 	setupBuilding_playerBase(building4);
@@ -5064,6 +5077,7 @@ void tournamentController()
 
 void animalTurn( int i)
 {
+	ZoneScoped;
 	place(i);
 	animal_organs( i);
 	animalEnergy( i);
@@ -5071,6 +5085,7 @@ void animalTurn( int i)
 
 void model_sector( int from,  int to)
 {
+	ZoneScoped;
 	// includes 'from' but ends just before 'to'
 	for ( int i = from; i < to; ++i)
 	{
@@ -5086,17 +5101,17 @@ void model()
 	ZoneScoped;
 	boost::thread t5{ tournamentController };
 	boost::thread t6{ updateMap };
-	boost::thread t1 { model_sector ,   0  ,  1 * (numberOfAnimals / 4)   };
-	boost::thread t2 { model_sector ,   1 * (numberOfAnimals / 4)   ,  2 * (numberOfAnimals / 4)  };
-	boost::thread t3 { model_sector ,   2 * (numberOfAnimals / 4)   ,  3 * (numberOfAnimals / 4)  };
-	boost::thread t4 { model_sector ,   3 * (numberOfAnimals / 4)   ,  numberOfAnimals  };
-
-	t5.join();
-	t6.join();
-	t1.join();
-	t2.join();
-	t3.join();
-	t4.join();
+	const unsigned int numberOfSectors = 128;
+	const unsigned int numberOfAnimalsPerSector = numberOfAnimals / numberOfSectors;
+	boost::thread  sectors[numberOfSectors];
+	for (int i = 1; i < numberOfSectors; ++i)
+	{
+		sectors[i] =	boost::thread { model_sector ,   (i - 1) *numberOfAnimalsPerSector   , i * numberOfAnimalsPerSector   };
+	}
+	for (int i = 0; i < numberOfSectors; ++i)
+	{
+		(sectors[i]).join();
+	}
 }
 
 void modelSupervisor()
@@ -5111,7 +5126,6 @@ void modelSupervisor()
 				modelFrameCount++;
 			}
 		}
-
 		if (flagReturn)
 		{
 			return;
@@ -5467,11 +5481,11 @@ bool test_all()
 	}
 
 	if (!(game.animals[testAnimal_air_in_air].retired     ) &&
-	    (game.animals[testAnimal_air_in_water].retired   ) &&
-	    (game.animals[testAnimal_water_in_air].retired   ) &&
-	    !(game.animals[testAnimal_water_in_water].retired ) &&
-	    !(game.animals[testAnimal_amphi_in_air].retired   ) &&
-	    !(game.animals[testAnimal_amphi_in_water].retired ))
+	        (game.animals[testAnimal_air_in_water].retired   ) &&
+	        (game.animals[testAnimal_water_in_air].retired   ) &&
+	        !(game.animals[testAnimal_water_in_water].retired ) &&
+	        !(game.animals[testAnimal_amphi_in_air].retired   ) &&
+	        !(game.animals[testAnimal_amphi_in_water].retired ))
 	{
 		testResult_6 = true;
 	}
@@ -5485,10 +5499,10 @@ bool test_all()
 // 7 lungs
 
 	if (testResult_2 &&
-	    testResult_3 &&
-	    testResult_4 &&
-	    testResult_5 &&
-	    testResult_6)
+	        testResult_3 &&
+	        testResult_4 &&
+	        testResult_5 &&
+	        testResult_6)
 	{
 		return true;
 	}
