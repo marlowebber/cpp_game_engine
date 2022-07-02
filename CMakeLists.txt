@@ -7,7 +7,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 project(game)
 
 # To make a debug build
-set(CMAKE_CXX_FLAGS "-g")
+
+
+# set(CMAKE_CXX_FLAGS "-g ") 					# this one makes a regular build and it is done quickly
+# set(CMAKE_CXX_FLAGS "-g -Ofast -flto") 					# this one makes a crazy fast build but it takes ages
+# set(CMAKE_CXX_FLAGS "-g -Ofast -flto -fprofile-generate")               # use profiling instrumentation (use this and run the program once)
+ set(CMAKE_CXX_FLAGS "-g -Ofast -flto -fprofile-use -fprofile-correction") # apply what was learned from profiling (use this after profiling instrumentation, for best results)
 
 
 find_package(SDL2 REQUIRED)

@@ -38,7 +38,7 @@ const bool doReproduction        = true;
 // const bool horizontalTransfer    = false;
 const bool taxIsByMass           = true;
 const bool respawnLowSpecies     = true;
-const bool setOrSteerAngle       = true;
+const bool setOrSteerAngle       = false;
 const bool printLogs             = true;
 
 const bool killLoiteringAdversary = false;
@@ -53,12 +53,12 @@ const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const float neuralNoise = 0.2f;
 const float liverStorage = 20.0f;
-const unsigned int baseLifespan = 20000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
-const float signalPropagationConstant = 0.1f;      // how strongly sensor organs compel the animal.
-const float musclePower = 40.0f;
+const unsigned int baseLifespan = 10000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
+const float musclePower = 10.0f;
+const float turnMusclePower = 1.0f;
 const float const_pi = 3.1415f;
 const float aBreath = 0.01f;
-const float neuralMutationStrength = 0.1f;
+const float neuralMutationStrength = 0.5f;
 const int paletteMenuX = 300;
 const int paletteMenuY = 50;
 const int paletteTextSize = 10;
@@ -84,6 +84,11 @@ const int neighbourOffsets[] =
 	+worldSize,
 	+worldSize - 1
 };
+
+// map updating
+const int sectors = 4;
+const int sectorSize = worldSquareSize / sectors;
+const unsigned int updateSize = (worldSquareSize / 250) / sectors;
 
 std::string progressString = std::string("");
 
@@ -146,6 +151,11 @@ bool flagSave = false;
 int mouseX;
 int mouseY;
 int worldCreationStage = 0;
+
+
+
+float foodWeb[numberOfSpecies][numberOfSpecies];
+
 
 void viewAdversary()
 {
@@ -2139,7 +2149,7 @@ void updatePlants(unsigned int worldI)
 	}
 	}
 	if (game.world[worldI].plantState == MATERIAL_BUD || game.world[worldI].plantState == MATERIAL_GRASS ||
-	        game.world[worldI].plantState == MATERIAL_LEAF || game.world[worldI].plantState == MATERIAL_SEED ||
+	        game.world[worldI].plantState == MATERIAL_LEAF ||
 	        game.world[worldI].plantState == MATERIAL_WOOD )
 	{
 		if (game.world[worldI].energyDebt < 0.0f)
@@ -2350,9 +2360,6 @@ void updateMapI(unsigned int randomI)
 #endif
 }
 
-const int sectors = 4;
-const int sectorSize = worldSquareSize / sectors;
-const unsigned int updateSize = (worldSquareSize / 1000) / sectors;
 
 void updateMapSector( unsigned int sector )
 {
@@ -2858,6 +2865,19 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 }
 
 
+
+
+float smallestAngleBetween(float x, float y)
+{
+	float a = fmod ( (x - y), (2* const_pi));
+	float b = fmod ( (y - x), (2* const_pi));
+	if (a < b)
+	{
+		return (a * -1.0f);
+	}
+	return b;
+}
+
 void animal_organs( int animalIndex)
 {
 
@@ -2868,11 +2888,12 @@ void animal_organs( int animalIndex)
 	float highestIntensity = 0.0f;
 	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
+
+		if (game.animals[animalIndex].body[cellIndex].damage > 1.0f) { continue;}
 		unsigned int cellWorldPositionI = game.animals[animalIndex].body[cellIndex].worldPositionI;
+		if (cellWorldPositionI >= worldSquareSize) {continue;}
 		unsigned int cellWorldPositionX = cellWorldPositionI % worldSize;
 		unsigned int cellWorldPositionY = cellWorldPositionI / worldSize;
-		if (cellWorldPositionI >= worldSquareSize) {continue;}
-		if (game.animals[animalIndex].body[cellIndex].damage > 1.0f) { continue;}
 		unsigned int organ = game.animals[animalIndex].body[cellIndex].organ;
 		switch (organ)
 		{
@@ -3033,7 +3054,7 @@ void animal_organs( int animalIndex)
 				float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 				float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 				float targetAngle = atan2( fdiffy, fdiffx );
-				game.animals[animalIndex].body[cellIndex].signalIntensity = targetAngle;
+				game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
 			}
 			break;
 		}
@@ -3049,7 +3070,7 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					game.animals[animalIndex].body[cellIndex].signalIntensity = targetAngle;
+				game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
 				}
 			}
 			break;
@@ -3066,7 +3087,7 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					game.animals[animalIndex].body[cellIndex].signalIntensity = targetAngle;
+				game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
 				}
 			}
 			break;
@@ -3083,7 +3104,7 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					game.animals[animalIndex].body[cellIndex].signalIntensity = targetAngle;
+				game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
 				}
 			}
 			break;
@@ -3280,7 +3301,8 @@ void animal_organs( int animalIndex)
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			if ( game.world [cellWorldPositionI].identity != animalIndex )
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = game.world[cellWorldPositionI].trail;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity = game.world[cellWorldPositionI].trail;
+				game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween(  game.world[cellWorldPositionI].trail, game.animals[animalIndex].fAngle);
 			}
 			break;
 		}
@@ -3303,7 +3325,7 @@ void animal_organs( int animalIndex)
 			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.r - receivedColor.r );
 			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.g - receivedColor.g );
 			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.b - receivedColor.b );
-			perceivedColor = perceivedColor / 3;
+			perceivedColor = perceivedColor / 3.0f;
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f - perceivedColor;
 			break;
 		}
@@ -3536,8 +3558,8 @@ void animal_organs( int animalIndex)
 			{
 				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
 			}
-			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10.0f * sin(game.animals[animalIndex].fAngle);
-			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10.0f * cos(game.animals[animalIndex].fAngle);
+			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower * game.animals[animalIndex].fAngleSin;
+			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower * game.animals[animalIndex].fAngleCos;
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
 		}
@@ -3567,8 +3589,8 @@ void animal_organs( int animalIndex)
 			{
 				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
 			}
-			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * 10.0f * cos(game.animals[animalIndex].fAngle);// on the strafe muscle the sin and cos are reversed, that's all.
-			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * 10.0f * sin(game.animals[animalIndex].fAngle);
+			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower * game.animals[animalIndex].fAngleCos;// on the strafe muscle the sin and cos are reversed, that's all.
+			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower * game.animals[animalIndex].fAngleSin;
 
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
@@ -3597,7 +3619,7 @@ void animal_organs( int animalIndex)
 			}
 			else
 			{
-				game.animals[animalIndex].fAngle += (game.animals[animalIndex].body[cellIndex].signalIntensity ) * 0.01f;
+				game.animals[animalIndex].fAngle += (game.animals[animalIndex].body[cellIndex].signalIntensity ) * turnMusclePower;
 			}
 			if (game.animals[animalIndex].fAngle > const_pi)
 			{
@@ -3661,19 +3683,6 @@ void animal_organs( int animalIndex)
 	game.animals[animalIndex].maxEnergy = game.animals[animalIndex].mass + (totalLiver * liverStorage);
 }
 
-// the animal is a grid of living cells that do different things. this function describes what they do each turn.
-void organs_all()
-{
-	ZoneScoped;
-	for (int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
-	{
-		if (!game.animals[animalIndex].retired)
-		{
-
-			animal_organs( animalIndex);
-		}
-	}
-}
 
 void animalEnergy(int animalIndex)
 {
@@ -5091,6 +5100,7 @@ void model_sector( int from,  int to)
 {
 	ZoneScoped;
 	// includes 'from' but ends just before 'to'
+
 	for ( int i = from; i < to; ++i)
 	{
 		if (! (game.animals[i].retired))
@@ -5098,6 +5108,7 @@ void model_sector( int from,  int to)
 			animalTurn(i);
 		}
 	}
+
 }
 
 void model()
@@ -5105,7 +5116,7 @@ void model()
 	ZoneScoped;
 	boost::thread t5{ tournamentController };
 	boost::thread t6{ updateMap };
-	const unsigned int numberOfSectors = 128;
+	const unsigned int numberOfSectors = 64;
 	const unsigned int numberOfAnimalsPerSector = numberOfAnimals / numberOfSectors;
 	boost::thread  sectors[numberOfSectors];
 	for (int i = 1; i < numberOfSectors; ++i)
