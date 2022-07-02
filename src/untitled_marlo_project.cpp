@@ -53,7 +53,7 @@ const unsigned int viewFieldSize = viewFieldX * viewFieldY;
 const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecies);
 const float neuralNoise = 0.2f;
 const float liverStorage = 20.0f;
-const unsigned int baseLifespan = 10000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
+const unsigned int baseLifespan = 2000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
 const float musclePower = 10.0f;
 const float turnMusclePower = 1.0f;
 const float const_pi = 3.1415f;
@@ -759,6 +759,13 @@ void detailTerrain()
 				if (grade < 5.0f)
 				{
 					game.world[worldPositionI].terrain = MATERIAL_SAND;
+
+#ifdef PLANTS
+
+					game.world[worldPositionI].plantState = MATERIAL_GRASS;
+#else
+					game.world[worldPositionI].wall = MATERIAL_GRASS;
+#endif
 				}
 
 				else
@@ -2304,17 +2311,19 @@ void updateMapI(unsigned int randomI)
 	}
 
 
-	if (game.world[randomI].wall == MATERIAL_FOOD)
-	{
+	// if (game.world[randomI].wall == MATERIAL_FOOD)
+	// {
 
-		game.world[randomI].wall = MATERIAL_NOTHING;
-		if (
-		    game.world[randomI].plantState == MATERIAL_NOTHING)
-		{
+	// 	game.world[randomI].wall = MATERIAL_NOTHING;
+	// 	if (
+	// 	    game.world[randomI].plantState == MATERIAL_NOTHING)
+	// 	{
 
-			game.world[randomI].plantState = MATERIAL_GRASS;
-		}
-	}
+	// 		game.world[randomI].plantState = MATERIAL_GRASS;
+	// 	}
+	// }
+
+
 
 	if (game.world[randomI].wall == MATERIAL_FIRE)
 	{
@@ -2404,10 +2413,28 @@ void updateMapSector( unsigned int sector )
 
 void updateMap()
 {
+
+	boost::thread mapSectors[sectors];
+
 	for (int i = 0; i < sectors; ++i)
 	{
-		boost::thread t1{ updateMapSector, i };
+		mapSectors[i] = boost::thread { updateMapSector, i };
 	}
+	for (int i = 0; i < sectors; ++i)
+	{
+		mapSectors[i].join();
+	}
+
+	// prevent grass from going extinct.
+	// for (int i = 0; i < 100; ++i)
+	// {
+	unsigned int newGrass = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+	if (game.world[newGrass].plantState == MATERIAL_NOTHING && materialSupportsGrowth(game.world[newGrass].terrain))
+	{
+		game.world[newGrass].plantState = MATERIAL_GRASS;
+	}
+	// }
+
 	for (unsigned int i = 0; i < numberOfSpeakerChannels; ++i)
 	{
 		game.speakerChannelsLastTurn [i] = game.speakerChannels[i];
@@ -3577,6 +3604,10 @@ void animal_organs( int animalIndex)
 			}
 			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower * game.animals[animalIndex].fAngleSin;
 			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower * game.animals[animalIndex].fAngleCos;
+
+
+			game.animals[animalIndex].energy -= game.ecoSettings[2] * game.animals[animalIndex].body[cellIndex].signalIntensity * game.animals[animalIndex].mass;
+
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
 		}
@@ -3609,6 +3640,7 @@ void animal_organs( int animalIndex)
 			game.animals[animalIndex].fPosX += game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower * game.animals[animalIndex].fAngleCos;// on the strafe muscle the sin and cos are reversed, that's all.
 			game.animals[animalIndex].fPosY += game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower * game.animals[animalIndex].fAngleSin;
 
+			game.animals[animalIndex].energy -= game.ecoSettings[2] * game.animals[animalIndex].body[cellIndex].signalIntensity  * game.animals[animalIndex].mass;
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
 		}
@@ -3706,6 +3738,9 @@ void animalEnergy(int animalIndex)
 	ZoneScoped;
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	game.animals[animalIndex].age++;
+
+	game.animals[animalIndex].energy -= game.ecoSettings[3] * game.animals[animalIndex].mass;
+
 	if (game.animals[animalIndex].energy > game.animals[animalIndex].maxEnergy)
 	{
 		game.animals[animalIndex].energy = game.animals[animalIndex].maxEnergy;
@@ -4221,9 +4256,9 @@ void drawGameInterfaceText()
 		menuY += spacing;
 	}
 
-	if (game.selectedAnimal >= 0)
+	if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals)
 	{
-		std::string selectString( "[e] to deselect. [k] save animal.");
+		std::string selectString( "energy " + std::to_string(game.animals[game.selectedAnimal].energy ) + ". [e] to deselect. [k] save animal.");
 	}
 
 	if (worldCursorPos < worldSquareSize)
@@ -4696,62 +4731,69 @@ void recomputeTerrainLighting()
 	}
 }
 
-unsigned int getRandomPosition(bool underwater)
+int getRandomPosition(bool underwater)
 {
 	while (true)
 	{
 		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
 
-		if (underwater)
-		{
-			if (game.world[randomI].height > seaLevel)
-			{
-				continue;
-			}
-		}
-		else
-		{
-			if (game.world[randomI].height < seaLevel)
-			{
-				continue;
-			}
-		}
+		unsigned int x = randomI % worldSize;
+		unsigned int y = randomI / worldSize;
 
-		bool hasAir = false;
-		bool hasWater = false;
-		bool unsuitable = false;
-		for (int k = -(baseSize / 2); k < (baseSize / 2); ++k)
+		if (x > baseSize && x < (worldSize - baseSize) && y > baseSize && y < (worldSize - baseSize)  )
 		{
-			for (int j = -(baseSize / 2); j < (baseSize / 2); ++j)
-			{
-				unsigned int scan = randomI + (k * worldSize) + j;
-				if (game.world[scan].wall == MATERIAL_NOTHING) { hasAir = true; }
-				if (game.world[scan].wall == MATERIAL_WATER) { hasWater = true; }
-				if (game.world[scan].wall == MATERIAL_VOIDMETAL) { unsuitable = true;}
 
+			if (underwater)
+			{
+				if (game.world[randomI].height > seaLevel)
+				{
+					continue;
+				}
 			}
-		}
-		if (unsuitable) { continue; }
-
-		if (underwater)
-		{
-			if (!hasAir)
+			else
 			{
-				return randomI;
+				if (game.world[randomI].height < seaLevel)
+				{
+					continue;
+				}
 			}
-		}
 
-		if (!underwater)
-		{
-			if (!hasWater)
+			bool hasAir = false;
+			bool hasWater = false;
+			bool unsuitable = false;
+			for (int k = -(baseSize / 2); k < (baseSize / 2); ++k)
 			{
-				return randomI;
+				for (int j = -(baseSize / 2); j < (baseSize / 2); ++j)
+				{
+					unsigned int scan = randomI + (k * worldSize) + j;
+					if (game.world[scan].wall == MATERIAL_NOTHING) { hasAir = true; }
+					if (game.world[scan].wall == MATERIAL_WATER) { hasWater = true; }
+					if (game.world[scan].wall == MATERIAL_VOIDMETAL) { unsuitable = true;}
+
+				}
+			}
+			if (unsuitable) { continue; }
+
+			if (underwater)
+			{
+				if (!hasAir)
+				{
+					return randomI;
+				}
+			}
+
+			if (!underwater)
+			{
+				if (!hasWater)
+				{
+					return randomI;
+				}
 			}
 		}
 	}
 }
 
-void setupBuilding_playerBase(unsigned int worldPositionI)
+void setupBuilding_playerBase( int worldPositionI)
 {
 	unsigned int worldPositionX = worldPositionI % worldSize;
 	unsigned int worldPositionY = worldPositionI / worldSize;
@@ -4817,9 +4859,6 @@ void setupGameItems()
 	setupMessageComputer( i, 0);
 	spawnAnimalIntoSlot(3, game.animals[i], building1, false);
 
-	game.adversaryRespawnPos = building1;
-	spawnAdversary(building1);
-
 	building1 += 25 * worldSize;
 	game.playerRespawnPos = building1;
 	spawnPlayer();
@@ -4851,6 +4890,12 @@ void setupGameItems()
 	building3 += 25 * worldSize;
 	setupMessageComputer( i, 2);
 	spawnAnimalIntoSlot(8, game.animals[i], building3, false);
+
+
+	// adversary is outside, under water
+	game.adversaryRespawnPos =  getRandomPosition(true);
+	spawnAdversary(game.adversaryRespawnPos);
+
 
 
 	// BUILDING 4
@@ -4950,16 +4995,6 @@ void setupRandomWorld()
 		if (x < wallThickness || x > worldSize - wallThickness || y < wallThickness  || y > worldSize - wallThickness)	// walls around the game.world edge
 		{
 			game.world[worldPositionI].wall = MATERIAL_VOIDMETAL;
-		}
-		else
-		{
-
-#ifdef PLANTS
-
-			game.world[worldPositionI].plantState = MATERIAL_GRASS;
-#else
-			game.world[worldPositionI].wall = MATERIAL_GRASS;
-#endif
 		}
 
 	}
