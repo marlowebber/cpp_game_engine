@@ -47,9 +47,6 @@ void threadMainMenuInterface()
 void threadInterface()
 {
 	ZoneScoped;
-// #ifdef THREAD_TIMING
-// 	auto start = std::chrono::steady_clock::now();
-// #endif
 	SDL_Event event;
 	while ( SDL_PollEvent( &event ) )
 	{
@@ -87,22 +84,17 @@ void threadInterface()
 				break;
 			case SDLK_RIGHT:
 				viewPanSetpointX = viewPanSetpointX + (panSpeed * viewZoomSetpoint);
-				// viewPanSetpointX = clamp(viewPanSetpointX, -1.0f * viewPanLimit, viewPanLimit );
 				break;
 			case SDLK_UP:
 				viewPanSetpointY = viewPanSetpointY + (panSpeed * viewZoomSetpoint);
-				// viewPanSetpointX = clamp(viewPanSetpointY, -1.0f * viewPanLimit, viewPanLimit );
 				break;
 			case SDLK_DOWN:
 				viewPanSetpointY = viewPanSetpointY - (panSpeed * viewZoomSetpoint);
-				// viewPanSetpointX = clamp(viewPanSetpointY, -1.0f * viewPanLimit, viewPanLimit );
 				break;
 			case SDLK_LSHIFT:
 				break;
 			case SDLK_EQUALS:
 				viewZoomSetpoint = viewZoomSetpoint * 0.9f;
-
-
 				if (viewZoomSetpoint < minZoom)
 				{
 					viewZoomSetpoint = minZoom;
@@ -139,59 +131,24 @@ void threadInterface()
 			case SDLK_f:
 				playerDrop();
 				break;
-			// case SDLK_SPACE:
-			// resetMouseCursor();
-			// break;
 			case SDLK_d:
 			{
-				// if (playerCreature >= 0)
-				// {
-
-
 				adjustPlayerPos(Vec_f2(0.0f, playerSpeed));
-				// }
-
 				break;
 			}
 			case SDLK_s:
 			{
-				// if (playerCreature >= 0)
-				// {
-
 				adjustPlayerPos(Vec_f2(-playerSpeed, 0.0f));
-				// }
-				// else
-				// {
-				// 	cameraPositionY -= cameraPanSpeed;
-				// 	cameraPositionY = cameraPositionY % worldSize;
-				// }
 				break;
 			}
 			case SDLK_a:
 			{
-				// if (playerCreature >= 0)
-				// {
 				adjustPlayerPos(Vec_f2(0.0f, -playerSpeed));
-				// }
-				// else
-				// {
-				// 	cameraPositionX -= cameraPanSpeed;
-				// 	cameraPositionX = cameraPositionX % worldSize;
-				// }
 				break;
 			}
 			case SDLK_w:
 			{
-				
 				adjustPlayerPos(Vec_f2(playerSpeed, 0.0f));
-				// if (playerCreature >= 0)
-				// {
-				// }
-				// else
-				// {
-				// 	cameraPositionY += cameraPanSpeed;
-				// 	cameraPositionY = cameraPositionY % worldSize;
-				// }
 				break;
 			}
 			case SDLK_o:
@@ -215,25 +172,11 @@ void threadInterface()
 				toggleInstructions();
 				break;
 			}
-
-
 			case SDLK_m:
 			{
 				viewAdversary();
 				break;
 			}
-
-
-
-
-			// case SDLK_x:
-			// {
-			// 	toggleFastCam();
-			// 	break;
-			// }
-
-
-
 			case SDLK_t:
 			{
 				incrementSelectedGrabber();
@@ -252,18 +195,7 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
-				// if (capturingText)
-				// {
-				// 	editUserDataCallback () ;
-				// }
-				// if ( checkMenus ( mouseX,  mouseY) )
-				// {
-				// 	return;
-				// }
-				// else
-				// {
 				activateGrabbedMachine();
-				// }
 				break;
 			}
 			case SDL_BUTTON_RIGHT:
@@ -280,12 +212,7 @@ void threadInterface()
 			{
 			case SDL_BUTTON_LEFT:
 			{
-
 				notifyLMBUp();
-				// if ( draggedMenu != nullptr )
-				// {
-				// 	clearDraggingMenu();
-				// }
 				break;
 			}
 			}
@@ -296,28 +223,17 @@ void threadInterface()
 			mouseX = event.motion.x;
 			mouseY = event.motion.y;
 			Vec_f2 mouseWorldPos = transformScreenPositionToWorld( Vec_f2( mouseX, mouseY ) );
-			// mousePositionX = mouseWorldPos.x;
-			// mousePositionY = mouseWorldPos.y;
-
 			setMousePosition(Vec_i2 (mouseWorldPos.x, mouseWorldPos.y));
 			break;
 		}
 		}
 	}
-// #ifdef THREAD_TIMING
-// 	auto end = std::chrono::steady_clock::now();
-// 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-// 	std::cout << "threadInterface " << elapsed.count() << " microseconds." << std::endl;
-// #endif
 }
 
 void setFlagReady()
 {
 	flagReady = true;
 }
-
-
-
 void initDeepSea()
 {
 	worldCreationStage = 0;
@@ -325,24 +241,15 @@ void initDeepSea()
 
 int main( int argc, char * argv[] )
 {
-	// printf("a\n");
-	// resetGameState();
-
 	fastReset();
-
-	// printf("b\n");
 	setupGraphics();
 	setupExtremelyFastNumberGenerators();
-
 	if ( ! test_all())
 	{
 		return 1;
 	}
-
 	initText2D();
 	initDeepSea();
-
-	// printf("c\n");
 	for (;;)
 	{
 		flagCreate = false;

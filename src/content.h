@@ -981,20 +981,13 @@ unsigned int organProduces(unsigned int organ)
 	return MATERIAL_SMOKE;
 }
 
-
-
-
 float organGrowthCost(unsigned int organ)
 {
-	// float growthCost = 0.0f;
-	// growthCost = growthEnergyScale;
 	if (variedGrowthCost)
 	{
 		switch (organ)
 		{
 		case ORGAN_MUSCLE:
-			// growthCost *= 1.0f;
-			// break;
 			return 1.0f;
 		case ORGAN_BONE:
 			return 1.0f;
@@ -1136,13 +1129,9 @@ void setupExampleAnimal2(int i, bool underwater)
 	ZoneScoped;
 	// set the example back to the default state or it wont work properly.
 	resetAnimal(i);
-	// if (underwater)
-	// {
+
 
 	animalAppendCell( i, ORGAN_GILL );
-	// }
-	// else
-	// {
 
 	animalAppendCell( i, ORGAN_LUNG );
 
@@ -1151,7 +1140,6 @@ void setupExampleAnimal2(int i, bool underwater)
 	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
 	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
 
-	// }
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_GONAD );
 	animalAppendCell( i, ORGAN_GONAD );
@@ -1278,35 +1266,9 @@ void setupExampleLighter(int i)
 
 void setupExampleHuman(int i)
 {
-	// resetAnimal(i);
-	// std::string gunDescription = std::string("human");
-	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-
 	setupCreatureFromCharArray( i, humanBody, (9 * 33), 9 ,  std::string("human"), -1 );
-
-
-
-
-
-
-
-
-
-
-
 	paintCreatureFromCharArray( i, humanPaint, (9 * 33), 9 );
 }
-
-
-
-
-// void paintExampleHuman(int i)
-// {
-// 	// resetAnimal(i);
-// 	// std::string gunDescription = std::string("human");
-// 	// strcpy( &game.animals[i].displayName[0] , gunDescription.c_str() );
-
-// }
 
 	const 	char destroyer[] =
 	{
@@ -1360,15 +1322,9 @@ void setupExampleHuman(int i)
 
 void setupDestroyer(int i)
 {
-
-
 	setupCreatureFromCharArray( i, destroyer, 20 * 5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
-
-
 	paintCreatureFromCharArray( i, destroyerPaint, (20 * 5), 5);
 }
-
-
 	const  char trackerGlasses[] =
 	{
 		' ', '2', ' ', '2', ' ',
@@ -1387,10 +1343,7 @@ void setupDestroyer(int i)
 
 void setupTrackerGlasses(int i)
 {
-
 	setupCreatureFromCharArray( i, trackerGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_TRACKERGLASSES);
-
-
 	paintCreatureFromCharArray( i, trackerGlassesPaint, 15, 5 );
 }
 
@@ -1410,14 +1363,9 @@ void setupTrackerGlasses(int i)
 
 void setupNeuroGlasses(int i)
 {
-
-
 	setupCreatureFromCharArray( i, neuroGlasses, 15, 5 , std::string("tracker glasses") , MACHINECALLBACK_NEUROGLASSES);
-
-
 	paintCreatureFromCharArray( i, neuroGlassesPaint, 15, 5 );
 }
-
 
 	const 	char pistol[] =
 	{
@@ -1437,10 +1385,7 @@ void setupNeuroGlasses(int i)
 
 void setupExampleGun(int i)
 {
-
 	setupCreatureFromCharArray( i, pistol, 16, 4 , std::string("pistol") , MACHINECALLBACK_PISTOL);
-
-
 	paintCreatureFromCharArray( i, pistolPaint, 16, 4 );
 }
 
@@ -1461,9 +1406,7 @@ void setupExampleGun(int i)
 
 void setupExampleKnife(int i)
 {
-
 	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") , MACHINECALLBACK_KNIFE);
-
 	paintCreatureFromCharArray( i, knifePaint, 12, 4 );
 }
 	const char computer[] =
@@ -1488,10 +1431,7 @@ void setupExampleKnife(int i)
 
 void setupEcologyCompter(int i)
 {
-
-
 	setupCreatureFromCharArray( i, computer, 30, 5 , std::string("ecology terminal") , MACHINECALLBACK_ECOLOGYCOMPUTER);
-
 	paintCreatureFromCharArray( i, computerPaint, 30, 5 );
 }
 
@@ -1518,16 +1458,9 @@ void setupEcologyCompter(int i)
 
 void setupMessageComputer(int i, unsigned int messageComputerNumber)
 {
-
 	setupCreatureFromCharArray( i, ecoComputer, 30, 5 , std::string("message terminal") , MACHINECALLBACK_MESSAGECOMPUTER1 + messageComputerNumber);
-
-
 	paintCreatureFromCharArray( i, ecoComputerPaint, 30, 5 );
 }
-
-
-
-
 
 	const char hospital[] =
 	{
@@ -1538,8 +1471,6 @@ void setupMessageComputer(int i, unsigned int messageComputerNumber)
 		' ', '2', ' ',
 		'2', '2', '2',
 	};
-
-
 
 	const char hospitalPaint[] =
 	{
@@ -1554,22 +1485,9 @@ void setupMessageComputer(int i, unsigned int messageComputerNumber)
 
 void setupHospitalComputer(int i)
 {
-
 	setupCreatureFromCharArray( i, hospital, 18, 3 , std::string("hospital terminal") , MACHINECALLBACK_HOSPITAL);
-
-
-
 	paintCreatureFromCharArray( i, hospitalPaint, 30, 5 );
-
 }
-
-
-
-
-
-
-
-
 
 
 bool materialBlocksMovement(unsigned int material)
@@ -1597,8 +1515,6 @@ bool materialDegrades(unsigned int material)
 	return false;
 }
 
-
-
 bool materialSupportsGrowth(unsigned int material)
 {
 	if (material == MATERIAL_ROCK ||
@@ -1612,23 +1528,8 @@ bool materialSupportsGrowth(unsigned int material)
 	return false;
 }
 
-
-
-
 float materialFertility(unsigned int material)
 {
-	// if (material == MATERIAL_ROCK ||
-	//         material == MATERIAL_SAND   ||
-	//         material == MATERIAL_DIRT   ||
-	//         material == MATERIAL_SOIL   ||
-	//         material == MATERIAL_GRAVEL)
-	// {
-	// 	return true;
-	// }
-	// return false;
-
-
-
 	switch (material)
 	{
 	case MATERIAL_ROCK:
@@ -1641,13 +1542,9 @@ float materialFertility(unsigned int material)
 		return 0.5f;
 	case MATERIAL_GRAVEL:
 		return 0.125f;
-
 	}
 	return 0.0f;
 }
-
-
-
 
 Color materialColors(unsigned int material)
 {

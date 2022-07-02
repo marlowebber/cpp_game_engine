@@ -251,11 +251,7 @@ void resetGameState();
 bool test_all();
 
 void checkLongestMenu(std::string in);
-// void toggleFastCam();
-
 void fastReset();
-// void drawFastCamText();
-
 // the following are used privately to create the game content.
 void animalAppendCell(int animalIndex, unsigned int organType);
 void setupCreatureFromCharArray( int animalIndex, const char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );

@@ -176,10 +176,5 @@ bool exists_test3(std::string filename);
 
 float clamp(float in, float min, float max);
 
-// inline bool exists_test3 (const std::string& name)
-// {
-// 	struct stat buffer;
-// 	return (stat (name.c_str(), &buffer) == 0);
-// }
 
 #endif
