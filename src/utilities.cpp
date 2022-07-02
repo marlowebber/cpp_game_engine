@@ -121,14 +121,13 @@ int distanceBetweenPoints( Vec_i2 a, Vec_i2 b )
 	return magnitude_int( diffX,  diffY);
 }
 
+	static std::default_random_engine eeeee;
 float RNG()
 {
 
 	ZoneScoped;
-	static std::default_random_engine e;
-	e.seed(std::chrono::system_clock::now().time_since_epoch().count());
 	static std::uniform_real_distribution<> dis(0, 1);
-	return dis(e);
+	return dis(eeeee);
 }
 
 inline uint32_t extremelyFastRandomByte()
@@ -157,6 +156,7 @@ uint32_t extremelyFastNumberFromZeroTo( uint32_t to)
 
 void seedExtremelyFastNumberGenerators()
 {
+	eeeee.seed(std::chrono::system_clock::now().time_since_epoch().count());
 	if (RNG() < 0.5)  {x = 1;}
 	if (RNG() < 0.5)  {y = 1;}
 	if (RNG() < 0.5)  {z = 1;}

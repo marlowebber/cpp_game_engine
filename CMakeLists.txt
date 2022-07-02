@@ -10,9 +10,10 @@ project(game)
 
 
 # set(CMAKE_CXX_FLAGS "-g ") 					# this one makes a regular build and it is done quickly
-# set(CMAKE_CXX_FLAGS "-g -Ofast -flto") 					# this one makes a crazy fast build but it takes ages
-# set(CMAKE_CXX_FLAGS "-g -Ofast -flto -fprofile-generate")               # use profiling instrumentation (use this and run the program once)
- set(CMAKE_CXX_FLAGS "-g -Ofast -flto -fprofile-use -fprofile-correction") # apply what was learned from profiling (use this after profiling instrumentation, for best results)
+#set(CMAKE_CXX_FLAGS "-g -O2 -flto") 					# 
+ set(CMAKE_CXX_FLAGS " -Ofast -flto") 					# this one makes a crazy fast build but it takes ages and crashes a lot
+ #set(CMAKE_CXX_FLAGS " -Ofast -flto -fprofile-generate")               # use profiling instrumentation (use this and run the program once)
+ #set(CMAKE_CXX_FLAGS "-Ofast -flto -fprofile-use -fprofile-correction") # apply what was learned from profiling (use this after profiling instrumentation, for best results)
 
 
 find_package(SDL2 REQUIRED)

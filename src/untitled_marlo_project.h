@@ -56,7 +56,6 @@ struct Square
     float trail;            // movement direction of the last animal to cross the tile
     float height;
     Color light;
-    float temperature;
     float pheromoneIntensity;
     int pheromoneChannel;
     #ifdef PLANTS
@@ -135,8 +134,6 @@ struct Animal
     unsigned int lastTouchedStranger;
     unsigned int lastTouchedKin;
     unsigned int cellsUsed;
-    float temp_limit_low;
-    float temp_limit_high;
     char displayName[displayNameSize];
     float lastfposx ;
     float lastfposy;

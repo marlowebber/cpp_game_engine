@@ -42,8 +42,8 @@
 #define ORGAN_SENSOR_PARENT        32
 #define ORGAN_SENSOR_BIRTHPLACE    33
 #define ORGAN_SENSOR_TOUCH         34
-#define ORGAN_COLDADAPT            35
-#define ORGAN_HEATADAPT            36
+// #define ORGAN_COLDADAPT            35
+// #define ORGAN_HEATADAPT            36
 #define ORGAN_GRABBER              37
 #define ORGAN_SENSOR_PAIN          38
 #define ORGAN_HAIR                 39
@@ -324,14 +324,14 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("A part of the brain which feels agony and suffering.");
 	}
-	case ORGAN_HEATADAPT:
-	{
-		return std::string("A gland which secretes liquid crystal to raise the boiling point.");
-	}
-	case ORGAN_COLDADAPT:
-	{
-		return std::string("A gland which produces syrup to lower the boiling point.");
-	}
+	// case ORGAN_HEATADAPT:
+	// {
+	// 	return std::string("A gland which secretes liquid crystal to raise the boiling point.");
+	// }
+	// case ORGAN_COLDADAPT:
+	// {
+	// 	return std::string("A gland which produces syrup to lower the boiling point.");
+	// }
 	case ORGAN_HAIR:
 	{
 		return std::string("Soft, shiny strands of hair.");
@@ -647,15 +647,15 @@ std::string tileShortNames(unsigned int tile)
 		return std::string("Pain sensor");
 	}
 
-	case ORGAN_COLDADAPT:
-	{
-		return std::string("Cold adapt");
-	}
+	// case ORGAN_COLDADAPT:
+	// {
+	// 	return std::string("Cold adapt");
+	// }
 
-	case ORGAN_HEATADAPT:
-	{
-		return std::string("Heat adapt");
-	}
+	// case ORGAN_HEATADAPT:
+	// {
+	// 	return std::string("Heat adapt");
+	// }
 
 	case ORGAN_HAIR:
 	{
@@ -969,14 +969,14 @@ unsigned int organProduces(unsigned int organ)
 	{
 		return MATERIAL_BLOOD;
 	}
-	case ORGAN_COLDADAPT:
-	{
-		return MATERIAL_HONEY;
-	}
-	case ORGAN_HEATADAPT:
-	{
-		return MATERIAL_HONEY;
-	}
+	// case ORGAN_COLDADAPT:
+	// {
+	// 	return MATERIAL_HONEY;
+	// }
+	// case ORGAN_HEATADAPT:
+	// {
+	// 	return MATERIAL_HONEY;
+	// }
 	}
 	return MATERIAL_SMOKE;
 }
@@ -1660,10 +1660,10 @@ Color organColors(unsigned int organ)
 		return color_brains3;
 	case ORGAN_SENSOR_TOUCH         :
 		return color_tan;
-	case ORGAN_COLDADAPT            :
-		return color_violet;
-	case ORGAN_HEATADAPT            :
-		return color_peach;
+	// case ORGAN_COLDADAPT            :
+	// 	return color_violet;
+	// case ORGAN_HEATADAPT            :
+	// 	return color_peach;
 	case ORGAN_GRABBER              :
 		return color_peach_light;
 	case ORGAN_HAIR              :
