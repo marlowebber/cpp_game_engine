@@ -1897,11 +1897,15 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 		}
 
 
+		if (false)
+		{
 		if ( game.world[worldI].seedState == MATERIAL_POLLEN ) // pollen is visible over the top of animals, because it can cling to them.
 		{
 			displayColor = game.world[worldI].seedColor;
 		}
-
+	
+		}
+		
 
 
 	}
@@ -6307,6 +6311,9 @@ bool test_all()
 
 
 // 3. animals reproduce when they have enough energy and their debt is 0
+		const int how_long_it_takes_to_make_sure = (baseLungCapacity / aBreath) * 2;
+
+
 	setupTestAnimal_reproducer(j);
 
 	testAnimal = spawnAnimal( testSpecies , game.animals[j], testPos, false);
@@ -6330,7 +6337,9 @@ bool test_all()
 	census();
 	// printf("test species population before after reproducing once: %u\n", game.speciesPopulationCounts[testSpecies] );
 
-	for (int i = 0; i < 5; ++i)
+	// for (int i = 0; i < 5; ++i)
+	// {
+	for (int i = 0; i < how_long_it_takes_to_make_sure; ++i)
 	{
 		// model();
 		animalTurn(testAnimal);
@@ -6607,8 +6616,6 @@ bool test_all()
 	// an amphibious animal is fine in both situations
 
 
-
-	const int how_long_it_takes_to_make_sure = (baseLungCapacity / aBreath) * 2;
 
 
 
