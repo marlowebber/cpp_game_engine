@@ -1562,14 +1562,18 @@ void place( int animalIndex)
 			}
 
 			// move pollen along with animal
-			if (game.world[game.animals[animalIndex].body[cellIndex].worldPositionI ].seedState == MATERIAL_POLLEN)
+			unsigned int prevWorldPositionI = game.animals[animalIndex].body[cellIndex].worldPositionI;
+			if (prevWorldPositionI < worldSquareSize)
 			{
-
-				if (game.world[cellWorldPositionI].seedState == MATERIAL_NOTHING)
+				if (game.world[  prevWorldPositionI].seedState == MATERIAL_POLLEN)
 				{
-					game.world[cellWorldPositionI].seedState = MATERIAL_POLLEN;
-					memcpy( &(game.world[cellWorldPositionI].seedGenes[0]), &(game.world[game.animals[animalIndex].body[cellIndex].worldPositionI ].seedGenes[0]) , sizeof(char)*plantGenomeSize);
-					game.world[game.animals[animalIndex].body[cellIndex].worldPositionI ].seedState = MATERIAL_NOTHING;
+
+					if (game.world[cellWorldPositionI].seedState == MATERIAL_NOTHING)
+					{
+						game.world[cellWorldPositionI].seedState = MATERIAL_POLLEN;
+						memcpy( &(game.world[cellWorldPositionI].seedGenes[0]), &(game.world[prevWorldPositionI].seedGenes[0]) , sizeof(char)*plantGenomeSize);
+						game.world[prevWorldPositionI].seedState = MATERIAL_NOTHING;
+					}
 				}
 			}
 			game.animals[animalIndex].body[cellIndex].worldPositionI = cellWorldPositionI;
