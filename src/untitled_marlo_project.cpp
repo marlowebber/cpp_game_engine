@@ -54,7 +54,7 @@ const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecie
 const float neuralNoise = 0.2f;
 const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 2000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
-const float musclePower = 20.0f;
+const float musclePower = 850.0f;
 const float turnMusclePower = 1.0f;
 const float aBreath = 0.01f;
 const float neuralMutationStrength = 0.5f;
@@ -1470,6 +1470,16 @@ void place( int animalIndex)
 	game.animals[animalIndex].fAngleCos = cos(game.animals[animalIndex].fAngle);
 	game.animals[animalIndex].fAngleSin = sin(game.animals[animalIndex].fAngle);
 
+
+
+
+
+
+
+
+
+
+
 	bool trailUpdate = false;
 	float dAngle = 0.0f;
 	if (game.animals[animalIndex].fPosX != game.animals[animalIndex].lastfposx || game.animals[animalIndex].fPosY != game.animals[animalIndex].lastfposy  )
@@ -1490,6 +1500,10 @@ void place( int animalIndex)
 	unsigned int newPosX  = game.animals[animalIndex].fPosX;
 	unsigned int newPosY  = game.animals[animalIndex].fPosY;
 	unsigned int newPosition  =  (newPosY * worldSize) + newPosX;
+
+
+
+
 	if (newPosition < worldSquareSize)
 	{
 		if (  materialBlocksMovement( game.world[game.animals[animalIndex].position].wall ) ) // vibrate out of wall if stuck.
@@ -1498,7 +1512,21 @@ void place( int animalIndex)
 			game.animals[animalIndex].fPosY += ( (RNG() - 0.5f) * 10.0f  );
 		}
 
-		if (  materialBlocksMovement( game.world[newPosition].wall ) ) // don't move into walls.
+
+
+		bool animalInTheWay = false;
+		if (game.world[newPosition].identity != animalIndex)
+		{
+			int targetLocalPositionI = isAnimalInSquare( game.world[newPosition].identity, newPosition);
+			if (targetLocalPositionI >= 0)
+			{
+				animalInTheWay = true;
+			}
+		}
+
+
+
+		if (  materialBlocksMovement( game.world[newPosition].wall ) || animalInTheWay ) // don't move into walls.
 		{
 			game.animals[animalIndex].fPosX  = game.animals[animalIndex].uPosX;
 			game.animals[animalIndex].fPosY  = game.animals[animalIndex].uPosY;
@@ -3845,6 +3873,37 @@ void animal_organs( int animalIndex)
 			game.animals[animalIndex].body[cellIndex].signalIntensity *= 0.99f;
 			break;
 		}
+
+
+
+
+		case ORGAN_LOCATIONREMEMBERER:
+		{
+			sumInputs(  animalIndex,   cellIndex);
+			if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
+			{
+				game.animals[animalIndex].body[cellIndex].speakerChannel = cellWorldPositionI; // remember current location
+			}
+			else
+			{
+				if (game.animals[animalIndex].body[cellIndex]. speakerChannel > 0 && game.animals[animalIndex].body[cellIndex]. speakerChannel < worldSquareSize)
+				{
+					float targetWorldPositionX =   game.animals[animalIndex].body[cellIndex]. speakerChannel % worldSize;  ;
+					float targetWorldPositionY =   game.animals[animalIndex].body[cellIndex]. speakerChannel / worldSize;  ;
+					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
+					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
+					float targetAngle = atan2( fdiffy, fdiffx );
+					game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle); // direction to remembered location
+				}
+			}
+			break;
+		}
+
+
+
+
+
+
 		}
 
 		// add noise to all neural pathways, except for bias neurons which would mess them up.
@@ -4044,8 +4103,8 @@ void camera()
 			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
 			{
 				Color displayColor = color_black;
-				 int x = (vx + game.cameraPositionX) % worldSize;
-				 int y = (vy + game.cameraPositionY) % worldSize;
+				int x = (vx + game.cameraPositionX) % worldSize;
+				int y = (vy + game.cameraPositionY) % worldSize;
 				unsigned int worldI = (y * worldSize) + x;
 				if (worldI < worldSquareSize)
 				{
@@ -4095,15 +4154,15 @@ void camera()
 												// end.y -= (game.animals[game.selectedAnimal].body[connected_to_cell].localPosY - game.animals[game.selectedAnimal].body[animalCell].localPosX );
 
 												unsigned int connectedPos = game.animals[game.selectedAnimal].body[connected_to_cell].worldPositionI;
-												int connectedX = connectedPos% worldSize;
-												int connectedY = connectedPos/ worldSize;
+												int connectedX = connectedPos % worldSize;
+												int connectedY = connectedPos / worldSize;
 
 												end.x -= (x - connectedX);
 												end.y -= (y - connectedY);
 
 
 												Color signalColor = color_white;
-												float brightness =game.animals[game.selectedAnimal].body[connected_to_cell].signalIntensity * game.animals[game.selectedAnimal].body[animalCell].connections[i].weight ;
+												float brightness = game.animals[game.selectedAnimal].body[connected_to_cell].signalIntensity * game.animals[game.selectedAnimal].body[animalCell].connections[i].weight ;
 												signalColor = multiplyColorByScalar(signalColor, brightness);
 												drawLine(  start, end, 0.01f, signalColor );
 											}
@@ -4128,7 +4187,7 @@ void camera()
 	Color displayColor = color_white; // draw the mouse cursor.
 	Vec_f2 worldMousePos = Vec_f2( game.mousePositionX, game.mousePositionY);
 	drawTile( worldMousePos, displayColor);
-	drawLine(  worldMousePos, Vec_f2(0,0), 0.01f, color_green );
+	drawLine(  worldMousePos, Vec_f2(0, 0), 0.01f, color_green );
 }
 
 void displayComputerText()

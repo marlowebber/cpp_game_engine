@@ -53,8 +53,9 @@
 #define ORGAN_SENSOR_PLEASURE      42
 
 #define ORGAN_SENSOR_RANDOM       43
+#define ORGAN_LOCATIONREMEMBERER     44
 
-#define numberOfOrganTypes        43 // the number limit of growable genes
+#define numberOfOrganTypes        44 // the number limit of growable genes
 
 #define MARKER                    50  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        51
@@ -341,6 +342,11 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("Part of the brain which burbles with madness.");
 	}
+case ORGAN_LOCATIONREMEMBERER:
+	{
+		return std::string("A grid arrangement of cells used for navigation.");
+	}
+
 
 
 
