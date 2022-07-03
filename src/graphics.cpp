@@ -258,43 +258,53 @@ void drawRectangle( Vec_f2 position , Color finalColor, float panelWidth, float 
 void drawLine(  Vec_f2 a, Vec_f2 b, float thickness, Color finalColor )
 {
 
+	Vec_f2 pos= Vec_f2(  (a.x + b.x)*0.5f ,  (a.y + b.y)*0.5f  );
 
+	Vec_f2 diff = Vec_f2(b.x - a.x, b.y - a.y);
 
+	float len = (sqrt( (diff.x * diff.x) + ( diff.y *diff.y)  ) * 0.5f);
 
+	float angle = atan2(diff.y, diff.x) +  (0.5f * const_pi);
+
+	Vec_f2 pointA =  Vec_f2 (  pos.x -    thickness          , pos.y -     len           );
+	Vec_f2 pointB =  Vec_f2 (  pos.x +    thickness          , pos.y +     len           );
+	Vec_f2 pointC =  Vec_f2 (  pos.x -    thickness          , pos.y +     len           );
+	Vec_f2 pointD =  Vec_f2 (  pos.x -    thickness          , pos.y -     len           );
+	Vec_f2 pointE =  Vec_f2 (  pos.x +    thickness          , pos.y +     len           );
+	Vec_f2 pointF =  Vec_f2 (  pos.x +    thickness          , pos.y -     len           );
+
+	float sa = sin(angle);
+	float ca = cos(angle);
+
+	pointA = rotatePointPrecomputed( pos, sa, ca, pointA);
+	pointB = rotatePointPrecomputed( pos, sa, ca, pointB);
+	pointC = rotatePointPrecomputed( pos, sa, ca, pointC);
+	pointD = rotatePointPrecomputed( pos, sa, ca, pointD);
+	pointE = rotatePointPrecomputed( pos, sa, ca, pointE);
+	pointF = rotatePointPrecomputed( pos, sa, ca, pointF);
+
+	vertToBuffer ( finalColor, pointA ); // A
+	vertToBuffer ( finalColor, pointB ); // B
+	vertToBuffer ( finalColor, pointC ); // C
+	vertToBuffer ( finalColor, pointD ); // A
+	vertToBuffer ( finalColor, pointE ); // B
+	vertToBuffer ( finalColor, pointF ); // C
 
 }
 
 
 void drawPointerTriangle( Vec_f2 position , Color finalColor, float angle)
 {
-
-
-
-
 	// one triangle
-
-
 	Vec_f2 pointA = Vec_f2 (  position.x -    (tileWidth / 2)          , position.y -     tileWidth            );
 	Vec_f2 pointB = Vec_f2 (  position.x +    (tileWidth / 2)          , position.y -     tileWidth            );
 	Vec_f2 pointC = Vec_f2 (  position.x                              , position.y +     tileWidth            ) ;
-
-
-// Vec_f2
 	pointA = rotatePointPrecomputed( position, sin(angle), cos(angle), pointA);
 	pointB = rotatePointPrecomputed( position, sin(angle), cos(angle), pointB);
 	pointC = rotatePointPrecomputed( position, sin(angle), cos(angle), pointC);
-
-
 	vertToBuffer ( finalColor, pointA ); // A
 	vertToBuffer ( finalColor, pointB ); // B
 	vertToBuffer ( finalColor, pointC ); // C
-
-
-	// vertToBuffer ( finalColor, Vec_f2 (  position.x -    (tileWidth/10)          , position.y -     tileWidth            ) ); // A
-	// vertToBuffer ( finalColor, Vec_f2 (  position.x +    (tileWidth/10)          , position.y +     tileWidth            ) ); // B
-	// vertToBuffer ( finalColor, Vec_f2 (  position.x +    (tileWidth/10)          , position.y -     tileWidth            ) ); // D
-
-
 }
 
 
@@ -659,32 +669,32 @@ void threadGraphics()
 
 	// if (!fastCam)
 	// {
-		prepareForWorldDraw ();
+	prepareForWorldDraw ();
 
 
-		camera();
+	camera();
 
-		if (getFPSLimit())
-		{
-			model();
-		}
+	if (getFPSLimit())
+	{
+		model();
+	}
 
-		glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
-		glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
+	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
 
-		// unsigned int endOfWorldVertexRegion = colorGridCursor;
+	// unsigned int endOfWorldVertexRegion = colorGridCursor;
 
-		prepareForMenuDraw();
-		// addExamplePanelToBuffer();
-		// drawPanels();
-		// drawInterfacePanel();
+	prepareForMenuDraw();
+	// addExamplePanelToBuffer();
+	// drawPanels();
+	// drawInterfacePanel();
 
-	 drawPalette2();
+	drawPalette2();
 
-		// glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
-		// glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
+	// glBufferSubData(GL_ARRAY_BUFFER, endOfWorldVertexRegion, (colorGridCursor - endOfWorldVertexRegion), energyColorGrid);
+	// glDrawArrays   (GL_TRIANGLES,    endOfWorldVertexRegion,  (colorGridCursor - endOfWorldVertexRegion));
 
-		drawGameInterfaceText();
+	drawGameInterfaceText();
 	// }
 	// else
 	// {

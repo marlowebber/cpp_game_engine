@@ -110,7 +110,7 @@
 #define MACHINECALLBACK_MESSAGECOMPUTER4  113
 #define MACHINECALLBACK_MESSAGECOMPUTER5  114
 
-#define MUTATION_CONNECTIONWEIGHT 10001
+#define MUTATION_ADDWEIGHT        10001
 #define MUTATION_ALTERBIAS        10002
 #define MUTATION_SKINCOLOR        10003
 #define MUTATION_MAKECONNECTION   10004
@@ -121,7 +121,7 @@
 #define MUTATION_ADDORGAN         10009
 #define MUTATION_SPEAKERCHANNEL   10010
 #define MUTATION_BREAKCONNECTION  10011
-
+#define MUTATION_MULTIPLYWEIGHT   10012
 
 #define VISUALIZER_TRUECOLOR           1001
 #define VISUALIZER_TRACKS              1003
@@ -1158,6 +1158,19 @@ void setupExampleAnimal2(int i, bool underwater)
 	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+
 
 	animalAppendCell( i, ORGAN_MUSCLE );
 	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
@@ -1510,7 +1523,11 @@ bool materialDegrades(unsigned int material)
 	if (material == MATERIAL_FOOD ||
 	        material == MATERIAL_BONE ||
 	        material == MATERIAL_BLOOD ||
-	        material == MATERIAL_SMOKE)
+	        material == MATERIAL_SMOKE || 
+	        material == MATERIAL_VOMIT || 
+	        material == MATERIAL_SEMEN
+
+	        )
 	{return true;}
 
 	return false;

@@ -37,6 +37,9 @@ struct Color
 };
 
 
+const float const_pi = 3.1415f;
+
+
 const Color color_darkblue         = Color( 0.0f, 0.05f, 0.35f, 1.0f );
 
 const Color color_lightblue          = Color( 0.1f, 0.3f, 0.65f, 1.0f );

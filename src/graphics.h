@@ -90,6 +90,9 @@ void drawPointerTriangle( Vec_f2 position , Color finalColor, float angle);
 
 
 void drawRectangle( Vec_f2 position , Color finalColor, float panelWidth, float panelHeight);
+
+void drawLine(  Vec_f2 a, Vec_f2 b, float thickness, Color finalColor );
+
 Vec_f2 GetOGLPos(int x, int y);
 
 Color multiplyColor (Color a, Color b);
