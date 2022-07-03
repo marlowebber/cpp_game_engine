@@ -42,8 +42,8 @@
 #define ORGAN_SENSOR_PARENT        32
 #define ORGAN_SENSOR_BIRTHPLACE    33
 #define ORGAN_SENSOR_TOUCH         34
-// #define ORGAN_COLDADAPT            35
-// #define ORGAN_HEATADAPT            36
+#define ORGAN_EMITTER_WAX          35
+#define ORGAN_EMITTER_HONEY        36
 #define ORGAN_GRABBER              37
 #define ORGAN_SENSOR_PAIN          38
 #define ORGAN_HAIR                 39
@@ -839,7 +839,7 @@ unsigned int organProduces(unsigned int organ)
 	}
 	case ORGAN_MUSCLE:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_BONE:
 	{
@@ -851,11 +851,11 @@ unsigned int organProduces(unsigned int organ)
 	}
 	case ORGAN_LIVER:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_MUSCLE_TURN:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_SENSOR_EYE:
 	{
@@ -879,11 +879,11 @@ unsigned int organProduces(unsigned int organ)
 	}
 	case ORGAN_NEURON:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_BIASNEURON:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_SENSOR_BODYANGLE:
 	{
@@ -907,7 +907,7 @@ unsigned int organProduces(unsigned int organ)
 	}
 	case ORGAN_MUSCLE_STRAFE:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_SENSOR_PHEROMONE:
 	{
@@ -927,11 +927,11 @@ unsigned int organProduces(unsigned int organ)
 	}
 	case ORGAN_GILL:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_LUNG:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_SENSOR_HUNGER:
 	{
@@ -963,20 +963,20 @@ unsigned int organProduces(unsigned int organ)
 	}
 	case ORGAN_GRABBER:
 	{
-		return MATERIAL_BLOOD;
+		return MATERIAL_FOOD;
 	}
 	case ORGAN_SENSOR_PAIN:
 	{
 		return MATERIAL_BLOOD;
 	}
-	// case ORGAN_COLDADAPT:
-	// {
-	// 	return MATERIAL_HONEY;
-	// }
-	// case ORGAN_HEATADAPT:
-	// {
-	// 	return MATERIAL_HONEY;
-	// }
+		// case ORGAN_COLDADAPT:
+		// {
+		// 	return MATERIAL_HONEY;
+		// }
+		// case ORGAN_HEATADAPT:
+		// {
+		// 	return MATERIAL_HONEY;
+		// }
 	}
 	return MATERIAL_SMOKE;
 }
@@ -1174,13 +1174,13 @@ void setupExampleAnimal2(int i, bool underwater)
 }
 
 
-	const  char lighter[] =
-	{
-		'1', ' ',
-		'1', '1',
-		'1', '1',
-		'1', '1',
-	};
+const  char lighter[] =
+{
+	'1', ' ',
+	'1', '1',
+	'1', '1',
+	'1', '1',
+};
 
 void setupExampleLighter(int i)
 {
@@ -1189,80 +1189,80 @@ void setupExampleLighter(int i)
 
 	setupCreatureFromCharArray( i, lighter, 8, 2 , std::string("lighter"), MACHINECALLBACK_LIGHTER);
 }
-	const 	char humanBody[] =
-	{
-		' ', ' ', ' ', '/', 'B', '/', ' ', ' ', ' ',
-		' ', ' ', '/', 'B', 'B', 'B', '/', ' ', ' ',
-		' ', ' ', 'B', 'B', 'B', 'B', 'B', '/', ' ',
-		' ', '/', 'B', 'B', 'B', 'B', 'B', '/', ' ',
-		' ', 'R', 'B', 'E', 'B', 'E', 'B', 'R', ' ',
-		' ', '/', '/', 'B', 'N', 'B', '/', '/', ' ',
-		' ', ' ', '/', '/', 'S', '/', '/', ' ', ' ',
-		' ', ' ', ' ', 'B', 'M', 'B', ' ', ' ', ' ',
-		' ', 'B', 'B', 'B', 'B', 'B', 'B', 'B', ' ',
-		'B', 'M', 'M', 'U', 'B', 'U', 'M', 'M', 'B',
-		'B', 'M', 'B', 'B', 'B', 'B', 'B', 'M', 'B',
-		'B', '/', 'M', 'X', 'B', 'H', 'M', '/', 'B',
-		'B', ' ', 'B', 'B', 'B', 'B', 'B', ' ', 'B',
-		'M', ' ', 'T', 'M', 'B', 'M', 'T', ' ', 'M',
-		'B', ' ', ' ', 'B', 'B', 'B', ' ', ' ', 'B',
-		'B', ' ', ' ', 'L', 'B', 'L', ' ', ' ', 'B',
-		'B', ' ', 'M', 'B', 'B', 'B', 'M', ' ', 'B',
-		'G', ' ', 'B', 'O', 'B', 'O', 'B', ' ', 'G',
-		' ', 'M', 'A', 'B', 'D', 'B', 'A', 'M', ' ',
-		' ', 'M', 'B', 'M', '/', 'M', 'B', 'M', ' ',
-		' ', 'M', 'B', 'M', ' ', 'M', 'B', 'M', ' ',
-		' ', 'M', 'B', 'M', ' ', 'M', 'B', 'M', ' ',
-		' ', 'M', 'B', 'M', ' ', 'M', 'B', 'M', ' ',
-		' ', 'M', 'M', 'M', ' ', 'M', 'M', 'M', ' ',
-		' ', ' ', 'B', 'M', ' ', 'M', 'B', ' ', ' ',
-		' ', 'M', 'B', 'M', ' ', 'M', 'B', 'M', ' ',
-		' ', 'M', 'B', ' ', ' ', ' ', 'B', 'M', ' ',
-		' ', 'M', 'B', ' ', ' ', ' ', 'B', 'M', ' ',
-		' ', 'M', 'B', ' ', ' ', ' ', 'B', 'M', ' ',
-		' ', ' ', 'B', ' ', ' ', ' ', 'B', ' ', ' ',
-		' ', ' ', 'B', ' ', ' ', ' ', 'B', ' ', ' ',
-		' ', ' ', 'A', ' ', ' ', ' ', 'A', ' ', ' ',
+const 	char humanBody[] =
+{
+	' ', ' ', ' ', '/', 'B', '/', ' ', ' ', ' ',
+	' ', ' ', '/', 'B', 'B', 'B', '/', ' ', ' ',
+	' ', ' ', 'B', 'B', 'B', 'B', 'B', '/', ' ',
+	' ', '/', 'B', 'B', 'B', 'B', 'B', '/', ' ',
+	' ', 'R', 'B', 'E', 'B', 'E', 'B', 'R', ' ',
+	' ', '/', '/', 'B', 'N', 'B', '/', '/', ' ',
+	' ', ' ', '/', '/', 'S', '/', '/', ' ', ' ',
+	' ', ' ', ' ', 'B', 'M', 'B', ' ', ' ', ' ',
+	' ', 'B', 'B', 'B', 'B', 'B', 'B', 'B', ' ',
+	'B', 'M', 'M', 'U', 'B', 'U', 'M', 'M', 'B',
+	'B', 'M', 'B', 'B', 'B', 'B', 'B', 'M', 'B',
+	'B', '/', 'M', 'X', 'B', 'H', 'M', '/', 'B',
+	'B', ' ', 'B', 'B', 'B', 'B', 'B', ' ', 'B',
+	'M', ' ', 'T', 'M', 'B', 'M', 'T', ' ', 'M',
+	'B', ' ', ' ', 'B', 'B', 'B', ' ', ' ', 'B',
+	'B', ' ', ' ', 'L', 'B', 'L', ' ', ' ', 'B',
+	'B', ' ', 'M', 'B', 'B', 'B', 'M', ' ', 'B',
+	'G', ' ', 'B', 'O', 'B', 'O', 'B', ' ', 'G',
+	' ', 'M', 'A', 'B', 'D', 'B', 'A', 'M', ' ',
+	' ', 'M', 'B', 'M', '/', 'M', 'B', 'M', ' ',
+	' ', 'M', 'B', 'M', ' ', 'M', 'B', 'M', ' ',
+	' ', 'M', 'B', 'M', ' ', 'M', 'B', 'M', ' ',
+	' ', 'M', 'B', 'M', ' ', 'M', 'B', 'M', ' ',
+	' ', 'M', 'M', 'M', ' ', 'M', 'M', 'M', ' ',
+	' ', ' ', 'B', 'M', ' ', 'M', 'B', ' ', ' ',
+	' ', 'M', 'B', 'M', ' ', 'M', 'B', 'M', ' ',
+	' ', 'M', 'B', ' ', ' ', ' ', 'B', 'M', ' ',
+	' ', 'M', 'B', ' ', ' ', ' ', 'B', 'M', ' ',
+	' ', 'M', 'B', ' ', ' ', ' ', 'B', 'M', ' ',
+	' ', ' ', 'B', ' ', ' ', ' ', 'B', ' ', ' ',
+	' ', ' ', 'B', ' ', ' ', ' ', 'B', ' ', ' ',
+	' ', ' ', 'A', ' ', ' ', ' ', 'A', ' ', ' ',
 
-	};
+};
 
 
-		const 	char humanPaint[] =
-	{
-		' ', ' ', ' ', 'R', 'R', 'R', ' ', ' ', ' ',
-		' ', ' ', 'R', 'R', 'R', 'R', 'R', ' ', ' ',
-		' ', 'R', 'R', 'R', 'T', 'T', 'R', 'R', ' ',
-		' ', 'R', 'R', 'T', 'T', 'T', 'T', 'R', ' ',
-		' ', 'P', 'R', 'B', 'T', 'B', 'T', 'P', ' ',
-		' ', 'R', 'R', 'T', 'P', 'T', 'R', 'R', ' ',
-		' ', ' ', 'R', 'R', 'T', 'R', 'R', ' ', ' ',
-		' ', ' ', ' ', 'T', 'T', 'T', ' ', ' ', ' ',
-		' ', 'T', 'T', 'T', 'T', 'T', 'T', 'T', ' ',
-		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
-		'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
-		'T', 'R', 'P', 'T', 'T', 'T', 'P', 'R', 'T',
-		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
-		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
-		'T', ' ', ' ', 'T', 'T', 'T', ' ', ' ', 'T',
-		'T', ' ', ' ', 'T', 'P', 'T', ' ', ' ', 'T',
-		'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
-		'P', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'P',
-		' ', 'T', 'T', 'R', 'R', 'R', 'T', 'T', ' ',
-		' ', 'T', 'T', 'T', 'R', 'T', 'T', 'T', ' ',
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
-		' ', ' ', 'T', 'T', ' ', 'T', 'T', ' ', ' ',
-		' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
-		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
-		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
-		' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
-		' ', ' ', 'T', ' ', ' ', ' ', 'T', ' ', ' ',
-		' ', ' ', 'T', ' ', ' ', ' ', 'T', ' ', ' ',
-		' ', ' ', 'P', ' ', ' ', ' ', 'P', ' ', ' ',
+const 	char humanPaint[] =
+{
+	' ', ' ', ' ', 'R', 'R', 'R', ' ', ' ', ' ',
+	' ', ' ', 'R', 'R', 'R', 'R', 'R', ' ', ' ',
+	' ', 'R', 'R', 'R', 'T', 'T', 'R', 'R', ' ',
+	' ', 'R', 'R', 'T', 'T', 'T', 'T', 'R', ' ',
+	' ', 'P', 'R', 'B', 'T', 'B', 'T', 'P', ' ',
+	' ', 'R', 'R', 'T', 'P', 'T', 'R', 'R', ' ',
+	' ', ' ', 'R', 'R', 'T', 'R', 'R', ' ', ' ',
+	' ', ' ', ' ', 'T', 'T', 'T', ' ', ' ', ' ',
+	' ', 'T', 'T', 'T', 'T', 'T', 'T', 'T', ' ',
+	'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
+	'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',
+	'T', 'R', 'P', 'T', 'T', 'T', 'P', 'R', 'T',
+	'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
+	'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
+	'T', ' ', ' ', 'T', 'T', 'T', ' ', ' ', 'T',
+	'T', ' ', ' ', 'T', 'P', 'T', ' ', ' ', 'T',
+	'T', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'T',
+	'P', ' ', 'T', 'T', 'T', 'T', 'T', ' ', 'P',
+	' ', 'T', 'T', 'R', 'R', 'R', 'T', 'T', ' ',
+	' ', 'T', 'T', 'T', 'R', 'T', 'T', 'T', ' ',
+	' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+	' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+	' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+	' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+	' ', ' ', 'T', 'T', ' ', 'T', 'T', ' ', ' ',
+	' ', 'T', 'T', 'T', ' ', 'T', 'T', 'T', ' ',
+	' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
+	' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
+	' ', 'T', 'T', ' ', ' ', ' ', 'T', 'T', ' ',
+	' ', ' ', 'T', ' ', ' ', ' ', 'T', ' ', ' ',
+	' ', ' ', 'T', ' ', ' ', ' ', 'T', ' ', ' ',
+	' ', ' ', 'P', ' ', ' ', ' ', 'P', ' ', ' ',
 
-	};
+};
 
 void setupExampleHuman(int i)
 {
@@ -1270,53 +1270,53 @@ void setupExampleHuman(int i)
 	paintCreatureFromCharArray( i, humanPaint, (9 * 33), 9 );
 }
 
-	const 	char destroyer[] =
-	{
-		' ', ' ', '1', ' ', ' ',
-		' ', '1', '1', '1', ' ',
-		' ', '1', '1', '1', ' ',
-		'1', '1', '1', '1', '1',
-		'1', '1', '3', '1', '1',
-		'1', '1', '1', '1', '1',
-		'1', '1', '1', '1', '1',
-		'1', '1', '1', '1', '1',
-		' ', '1', '1', '1', ' ',
-		' ', '1', '1', '1', ' ',
-		' ', '1', '1', '1', ' ',
-		' ', '1', '1', '1', ' ',
-		' ', '1', '1', '1', ' ',
-		' ', ' ', '1', ' ', ' ',
-		' ', ' ', '1', ' ', ' ',
-		' ', ' ', '1', ' ', ' ',
-		' ', ' ', '1', ' ', ' ',
-		' ', ' ', '1', ' ', ' ',
-		' ', ' ', '1', ' ', ' ',
-		' ', ' ', '1', ' ', ' ',
-	};
+const 	char destroyer[] =
+{
+	' ', ' ', '1', ' ', ' ',
+	' ', '1', '1', '1', ' ',
+	' ', '1', '1', '1', ' ',
+	'1', '1', '1', '1', '1',
+	'1', '1', '3', '1', '1',
+	'1', '1', '1', '1', '1',
+	'1', '1', '1', '1', '1',
+	'1', '1', '1', '1', '1',
+	' ', '1', '1', '1', ' ',
+	' ', '1', '1', '1', ' ',
+	' ', '1', '1', '1', ' ',
+	' ', '1', '1', '1', ' ',
+	' ', '1', '1', '1', ' ',
+	' ', ' ', '1', ' ', ' ',
+	' ', ' ', '1', ' ', ' ',
+	' ', ' ', '1', ' ', ' ',
+	' ', ' ', '1', ' ', ' ',
+	' ', ' ', '1', ' ', ' ',
+	' ', ' ', '1', ' ', ' ',
+	' ', ' ', '1', ' ', ' ',
+};
 
-	const 	char destroyerPaint[] =
-	{
-		' ', ' ', 'V', ' ', ' ',
-		' ', 'V', 'V', 'V', ' ',
-		' ', 'V', 'V', 'V', ' ',
-		'V', 'B', 'B', 'B', 'V',
-		'V', 'B', 'Q', 'B', 'V',
-		'V', 'B', 'B', 'B', 'V',
-		'V', 'V', 'V', 'V', 'V',
-		'V', 'V', 'V', 'V', 'V',
-		' ', 'V', 'V', 'V', ' ',
-		' ', 'V', 'V', 'V', ' ',
-		' ', 'V', 'V', 'V', ' ',
-		' ', 'V', 'V', 'V', ' ',
-		' ', 'V', 'V', 'V', ' ',
-		' ', ' ', 'V', ' ', ' ',
-		' ', ' ', 'V', ' ', ' ',
-		' ', ' ', 'V', ' ', ' ',
-		' ', ' ', 'V', ' ', ' ',
-		' ', ' ', 'V', ' ', ' ',
-		' ', ' ', 'V', ' ', ' ',
-		' ', ' ', 'V', ' ', ' ',
-	};
+const 	char destroyerPaint[] =
+{
+	' ', ' ', 'V', ' ', ' ',
+	' ', 'V', 'V', 'V', ' ',
+	' ', 'V', 'V', 'V', ' ',
+	'V', 'B', 'B', 'B', 'V',
+	'V', 'B', 'Q', 'B', 'V',
+	'V', 'B', 'B', 'B', 'V',
+	'V', 'V', 'V', 'V', 'V',
+	'V', 'V', 'V', 'V', 'V',
+	' ', 'V', 'V', 'V', ' ',
+	' ', 'V', 'V', 'V', ' ',
+	' ', 'V', 'V', 'V', ' ',
+	' ', 'V', 'V', 'V', ' ',
+	' ', 'V', 'V', 'V', ' ',
+	' ', ' ', 'V', ' ', ' ',
+	' ', ' ', 'V', ' ', ' ',
+	' ', ' ', 'V', ' ', ' ',
+	' ', ' ', 'V', ' ', ' ',
+	' ', ' ', 'V', ' ', ' ',
+	' ', ' ', 'V', ' ', ' ',
+	' ', ' ', 'V', ' ', ' ',
+};
 
 
 
@@ -1325,20 +1325,20 @@ void setupDestroyer(int i)
 	setupCreatureFromCharArray( i, destroyer, 20 * 5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
 	paintCreatureFromCharArray( i, destroyerPaint, (20 * 5), 5);
 }
-	const  char trackerGlasses[] =
-	{
-		' ', '2', ' ', '2', ' ',
-		'2', '2', '1', '2', '2',
-		' ', '2', ' ', '2', ' ',
-	};
+const  char trackerGlasses[] =
+{
+	' ', '2', ' ', '2', ' ',
+	'2', '2', '1', '2', '2',
+	' ', '2', ' ', '2', ' ',
+};
 
 
-	const char trackerGlassesPaint[] =
-	{
-		' ', 'W', ' ', 'W', ' ',
-		'W', 'L', 'M', 'L', 'W',
-		' ', 'W', ' ', 'W', ' ',
-	};
+const char trackerGlassesPaint[] =
+{
+	' ', 'W', ' ', 'W', ' ',
+	'W', 'L', 'M', 'L', 'W',
+	' ', 'W', ' ', 'W', ' ',
+};
 
 
 void setupTrackerGlasses(int i)
@@ -1347,19 +1347,19 @@ void setupTrackerGlasses(int i)
 	paintCreatureFromCharArray( i, trackerGlassesPaint, 15, 5 );
 }
 
-	const  char neuroGlasses[] =
-	{
-		'1', '1', ' ', '1', '1',
-		'1', '2', '1', '2', '1',
-		'1', '1', ' ', '1', '1',
-	};
+const  char neuroGlasses[] =
+{
+	'1', '1', ' ', '1', '1',
+	'1', '2', '1', '2', '1',
+	'1', '1', ' ', '1', '1',
+};
 
-	const  char neuroGlassesPaint[] =
-	{
-		'W', 'W', ' ', 'W', 'W',
-		'W', 'K', 'M', 'K', 'W',
-		'W', 'W', ' ', 'W', 'W',
-	};
+const  char neuroGlassesPaint[] =
+{
+	'W', 'W', ' ', 'W', 'W',
+	'W', 'K', 'M', 'K', 'W',
+	'W', 'W', ' ', 'W', 'W',
+};
 
 void setupNeuroGlasses(int i)
 {
@@ -1367,21 +1367,21 @@ void setupNeuroGlasses(int i)
 	paintCreatureFromCharArray( i, neuroGlassesPaint, 15, 5 );
 }
 
-	const 	char pistol[] =
-	{
-		'1', '1', '1', '1',
-		'1', '1', '1', '1',
-		' ', '1', '1', ' ',
-		'1', '1', ' ', ' ',
-	};
+const 	char pistol[] =
+{
+	'1', '1', '1', '1',
+	'1', '1', '1', '1',
+	' ', '1', '1', ' ',
+	'1', '1', ' ', ' ',
+};
 
-	const 	char pistolPaint[] =
-	{
-		'M', 'M', 'M', 'M',
-		'V', 'V', 'V', 'V',
-		' ', 'V', 'D', ' ',
-		'V', 'V', ' ', ' ',
-	};
+const 	char pistolPaint[] =
+{
+	'M', 'M', 'M', 'M',
+	'V', 'V', 'V', 'V',
+	' ', 'V', 'D', ' ',
+	'V', 'V', ' ', ' ',
+};
 
 void setupExampleGun(int i)
 {
@@ -1390,44 +1390,44 @@ void setupExampleGun(int i)
 }
 
 
-	const char knife[] =
-	{
-		' ', '1', ' ', ' ',
-		'1', '1', '1', '1',
-		' ', '1', ' ', ' ',
-	};
+const char knife[] =
+{
+	' ', '1', ' ', ' ',
+	'1', '1', '1', '1',
+	' ', '1', ' ', ' ',
+};
 
-	const char knifePaint[] =
-	{
-		' ', 'D', ' ', ' ',
-		'V', 'D', 'M', 'M',
-		' ', 'D', ' ', ' ',
-	};
+const char knifePaint[] =
+{
+	' ', 'D', ' ', ' ',
+	'V', 'D', 'M', 'M',
+	' ', 'D', ' ', ' ',
+};
 
 void setupExampleKnife(int i)
 {
 	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") , MACHINECALLBACK_KNIFE);
 	paintCreatureFromCharArray( i, knifePaint, 12, 4 );
 }
-	const char computer[] =
-	{
-		'1', '1', '1', '1', '1',
-		'1', '2', '2', '2', '1',
-		'1', '2', '2', '2', '1',
-		'1', '1', '1', '1', '1',
-		' ', ' ', '1', ' ', ' ',
-		'1', '1', '1', '1', '1',
-	};
+const char computer[] =
+{
+	'1', '1', '1', '1', '1',
+	'1', '2', '2', '2', '1',
+	'1', '2', '2', '2', '1',
+	'1', '1', '1', '1', '1',
+	' ', ' ', '1', ' ', ' ',
+	'1', '1', '1', '1', '1',
+};
 
-	const char computerPaint[] =
-	{
-		'B', 'B', 'B', 'B', 'B',
-		'B', 'L', 'L', 'L', 'B',
-		'B', 'L', 'L', 'L', 'B',
-		'B', 'B', 'B', 'B', 'B',
-		' ', ' ', 'B', ' ', ' ',
-		'B', 'B', 'B', 'B', 'B',
-	};
+const char computerPaint[] =
+{
+	'B', 'B', 'B', 'B', 'B',
+	'B', 'L', 'L', 'L', 'B',
+	'B', 'L', 'L', 'L', 'B',
+	'B', 'B', 'B', 'B', 'B',
+	' ', ' ', 'B', ' ', ' ',
+	'B', 'B', 'B', 'B', 'B',
+};
 
 void setupEcologyCompter(int i)
 {
@@ -1436,25 +1436,25 @@ void setupEcologyCompter(int i)
 }
 
 
-	const char ecoComputer[] =
-	{
-		'2', '2', '2', '2', '2',
-		'2', '2', '2', '2', '2',
-		'2', '2', '2', '2', '2',
-		'2', '2', '2', '2', '2',
-		' ', ' ', '1', ' ', ' ',
-		'1', '1', '1', '1', '1',
-	};
+const char ecoComputer[] =
+{
+	'2', '2', '2', '2', '2',
+	'2', '2', '2', '2', '2',
+	'2', '2', '2', '2', '2',
+	'2', '2', '2', '2', '2',
+	' ', ' ', '1', ' ', ' ',
+	'1', '1', '1', '1', '1',
+};
 
-	const char ecoComputerPaint[] =
-	{
-		'L', 'L', 'L', 'L', 'L',
-		'L', 'L', 'L', 'L', 'L',
-		'L', 'L', 'L', 'L', 'L',
-		'L', 'L', 'L', 'L', 'L',
-		' ', ' ', 'G', ' ', ' ',
-		'G', 'G', 'G', 'G', 'G',
-	};
+const char ecoComputerPaint[] =
+{
+	'L', 'L', 'L', 'L', 'L',
+	'L', 'L', 'L', 'L', 'L',
+	'L', 'L', 'L', 'L', 'L',
+	'L', 'L', 'L', 'L', 'L',
+	' ', ' ', 'G', ' ', ' ',
+	'G', 'G', 'G', 'G', 'G',
+};
 
 void setupMessageComputer(int i, unsigned int messageComputerNumber)
 {
@@ -1462,25 +1462,25 @@ void setupMessageComputer(int i, unsigned int messageComputerNumber)
 	paintCreatureFromCharArray( i, ecoComputerPaint, 30, 5 );
 }
 
-	const char hospital[] =
-	{
-		' ', '2', ' ',
-		'2', '2', '2',
-		'2', '2', '2',
-		'2', '2', '2',
-		' ', '2', ' ',
-		'2', '2', '2',
-	};
+const char hospital[] =
+{
+	' ', '2', ' ',
+	'2', '2', '2',
+	'2', '2', '2',
+	'2', '2', '2',
+	' ', '2', ' ',
+	'2', '2', '2',
+};
 
-	const char hospitalPaint[] =
-	{
-		' ', 'M', ' ',
-		'M', 'M', 'M',
-		'D', 'M', 'D',
-		'D', 'D', 'D',
-		' ', 'V', ' ',
-		'M', 'M', 'M',
-	};
+const char hospitalPaint[] =
+{
+	' ', 'M', ' ',
+	'M', 'M', 'M',
+	'D', 'M', 'D',
+	'D', 'D', 'D',
+	' ', 'V', ' ',
+	'M', 'M', 'M',
+};
 
 
 void setupHospitalComputer(int i)
@@ -1495,7 +1495,8 @@ bool materialBlocksMovement(unsigned int material)
 	if (material == MATERIAL_ROCK ||
 	        material == MATERIAL_VOIDMETAL ||
 	        material == MATERIAL_METAL ||
-	        material == MATERIAL_BASALT
+	        material == MATERIAL_BASALT || 
+	        material == MATERIAL_WAX  
 	   )
 	{
 		return true;
@@ -1586,6 +1587,14 @@ Color materialColors(unsigned int material)
 		return color_lightgrey;
 	case MATERIAL_GRAVEL:
 		return color_grey;
+
+
+	case MATERIAL_SEMEN:
+		return color_offwhite;
+	case MATERIAL_WAX:
+		return color_offwhite;
+	case MATERIAL_HONEY:
+		return color_yellow;
 	}
 	return color_yellow;
 }
