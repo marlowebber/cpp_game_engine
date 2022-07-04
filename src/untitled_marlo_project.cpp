@@ -988,30 +988,30 @@ int getNewIdentity(unsigned int speciesIndex)
 }
 
 // this is the bare minimum requirements for any animal to be allowed to exist.
-bool validateAnimal(Animal animal)
+bool validateAnimal(unsigned int animalIndex)
 {
 	// unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	// nominee must be reproductively viable (1 gonad is not enough!) and have a breathing apparatus and a mouth
 	unsigned int totalGonads = 0;
 	unsigned int totalMouths = 0;
 	unsigned int totalBreathing  = 0;
-	for (int i = 0; i < animal.cellsUsed; ++i)
+	for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
 	{
-		if ( animal.body[i].organ == ORGAN_GONAD)
+		if ( game.animals[animalIndex].body[i].organ == ORGAN_GONAD)
 		{
 			totalGonads++;
 		}
 
-		if (       animal.body[i].organ == ORGAN_LUNG
-		           || animal.body[i].organ == ORGAN_GILL )
+		if (       game.animals[animalIndex].body[i].organ == ORGAN_LUNG
+		           || game.animals[animalIndex].body[i].organ == ORGAN_GILL )
 		{
 			totalBreathing++;
 		}
 
-		if (       animal.body[i].organ == ORGAN_MOUTH_CARNIVORE
-		           || animal.body[i].organ == ORGAN_MOUTH_SCAVENGE
-		           || animal.body[i].organ == ORGAN_MOUTH_PARASITE
-		           || animal.body[i].organ == ORGAN_MOUTH_VEG
+		if (          game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_CARNIVORE
+		           || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_SCAVENGE
+		           || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_PARASITE
+		           || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_VEG
 		   )
 		{
 			totalMouths++;
@@ -1025,7 +1025,7 @@ bool validateAnimal(Animal animal)
 	    totalGonads >= 2 && totalMouths >= 1 && totalBreathing >= 1
 	    // && animal.maxEnergy > 1.0f
 	    // && animal.offspringEnergy > 1.0f
-	    && animal.cellsUsed > 0
+	    && game.animals[animalIndex].cellsUsed > 0
 	)
 	{
 		printf("VALIDATE TRUE!\n");
@@ -1610,7 +1610,7 @@ void spawnAnimalIntoSlot(  int animalIndex,
 
 	// printf("SPAWN INTO SLOT\n");
 
-	if ( validateAnimal( game.animals[animalIndex] ) )
+	if ( validateAnimal( animalIndex) )
 	{
 		game.animals[animalIndex].retired = false;
 	}
@@ -6146,13 +6146,15 @@ bool test_all()
 	setupTestAnimal_airbreathing(j);
 	testPos += 10;
 	int testAnimal_air_in_air =	spawnAnimal( testSpecies , game.animals[j], testPos, false);
+	float amount =  (game.animals[testAnimal].maxEnergy / 2.0f);
+
 	game.animals[testAnimal].position = testPos;
 	game.animals[testAnimal].uPosX = testPos % worldSize;
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy = amount;//game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energyDebt = 0;
 
 	setupTestAnimal_airbreathing(j);
 	testPos += 10;
@@ -6162,8 +6164,8 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy = amount;//game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energyDebt = 0;
 	game.world[testPos].wall = MATERIAL_WATER;
 
 	setupTestAnimal_waterbreathing(j);
@@ -6174,8 +6176,8 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy =amount;// game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energyDebt = 0;
 
 	setupTestAnimal_waterbreathing(j);
 	testPos += 10;
@@ -6185,8 +6187,8 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy =amount;// game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energyDebt = 0;
 	game.world[testPos].wall = MATERIAL_WATER;
 
 	setupTestAnimal_amphibious(j);
@@ -6196,8 +6198,8 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy =amount;// game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energyDebt = 0;
 
 	setupTestAnimal_amphibious(j);
 	testPos += 10;
@@ -6207,8 +6209,8 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy =amount;// game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energyDebt = 0;
 
 	game.world[testPos].wall = MATERIAL_WATER;
 	testPos += worldSize;
@@ -6220,8 +6222,6 @@ bool test_all()
 	// a water breathing animal in air dies
 	// an air breathing animal in water dies
 	// an amphibious animal is fine in both situations
-
-	float amount =  (game.animals[testAnimal].maxEnergy / 2.0f) - 1.0f;
 
 
 
