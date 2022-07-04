@@ -54,7 +54,7 @@ const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecie
 const float neuralNoise = 0.2f;
 const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 2000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
-const float musclePower = 850.0f;
+const float musclePower = 350.0f;
 const float turnMusclePower = 1.0f;
 const float aBreath = 0.01f;
 const float neuralMutationStrength = 0.5f;
@@ -88,7 +88,7 @@ const int neighbourOffsets[] =
 // map updating
 const int sectors = 4;
 const int sectorSize = worldSquareSize / sectors;
-const unsigned int updateSize = (worldSquareSize / 250) / sectors;
+// unsigned int updateSize = (worldSquareSize / 250) / sectors;
 
 std::string progressString = std::string("");
 
@@ -531,6 +531,7 @@ void resetGameState()
 	game.ecoSettings[2]     = 0.0001f;      // movement energy scale
 	game.ecoSettings[0]           = 0.95f; // food (meat) energy
 	game.ecoSettings[1]          = 0.25f; // grass energy
+	game.ecoSettings[4] = (worldSquareSize / 250) / sectors; ;//updateSize;
 	game.activeEcoSetting = 0;
 	resetAnimals();
 	resetGrid();
@@ -2435,6 +2436,7 @@ void updateMapSector( unsigned int sector )
 	unsigned int to   = ((sector + 1 ) * sectorSize ) - 1;
 
 	// generate a huge ass list of the map squares you're going to update. Then update them all at once. more than 2x faster than generating and visiting each one in turn.
+	unsigned int updateSize = game.ecoSettings[4];
 	unsigned int squaresToUpdate[updateSize];
 
 	for (int i = 0; i < updateSize; ++i)
@@ -2919,6 +2921,10 @@ void activateGrabbedMachine()// occurs whenever a left click is received.
 	}
 	if (game.ecologyComputerDisplay)
 	{
+		if (game.activeEcoSetting == 4)
+		{
+
+		}
 		game.ecoSettings[game.activeEcoSetting] *= 1.5f;
 	}
 }
@@ -2991,6 +2997,7 @@ inline void sumInputs( int animalIndex,  int cellIndex)
 		}
 	}
 }
+
 
 void animal_organs( int animalIndex)
 {
@@ -3465,6 +3472,8 @@ void animal_organs( int animalIndex)
 			unsigned int eyeLookWorldPositionX = cellWorldPositionX + rotatedEyeLook.x;
 			unsigned int eyeLookWorldPositionY = cellWorldPositionY + rotatedEyeLook.y;
 			unsigned int eyeLookWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+
+			// unsigned int eyeLookWorldPositionI =  getEyelookPosition(  animalIndex,   cellIndex);
 			Color receivedColor = whatColorIsThisSquare(eyeLookWorldPositionI);
 			float perceivedColor = 0.0f;
 			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.r - receivedColor.r );
@@ -4061,6 +4070,66 @@ void census()
 	}
 }
 
+
+void drawNeuroConnections( int animalIndex,  int animalCell, int vx, int vy)
+{
+
+	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+	{
+		if (game.animals[game.selectedAnimal].body[animalCell].connections[i].used)
+		{
+
+			Vec_f2 start = Vec_f2(vx, vy);
+			Vec_f2 end    = Vec_f2(vx, vy);
+
+			int connected_to_cell = game.animals[game.selectedAnimal].body[animalCell].connections[i].connectedTo;
+			if (connected_to_cell >= 0 && connected_to_cell < game.animals[game.selectedAnimal].cellsUsed)
+			{
+				// end.x -= (game.animals[game.selectedAnimal].body[connected_to_cell].localPosX - game.animals[game.selectedAnimal].body[animalCell].localPosX );
+				// end.y -= (game.animals[game.selectedAnimal].body[connected_to_cell].localPosY - game.animals[game.selectedAnimal].body[animalCell].localPosX );
+
+				unsigned int connectedPos = game.animals[game.selectedAnimal].body[connected_to_cell].worldPositionI;
+				int connectedX = connectedPos % worldSize;
+				int connectedY = connectedPos / worldSize;
+
+				unsigned int x = game.animals[game.selectedAnimal].body[connected_to_cell].worldPositionI % worldSize;
+				unsigned int y = game.animals[game.selectedAnimal].body[connected_to_cell].worldPositionI / worldSize;
+
+				end.x -= (x - connectedX);
+				end.y -= (y - connectedY);
+
+
+				Color signalColor = color_white;
+				float brightness = game.animals[game.selectedAnimal].body[connected_to_cell].signalIntensity * game.animals[game.selectedAnimal].body[animalCell].connections[i].weight ;
+				signalColor = multiplyColorByScalar(signalColor, brightness);
+				drawLine(  start, end, 0.1f, signalColor );
+			}
+		}
+	}
+
+
+
+
+	//draw eyelooks
+	if (game.animals[animalIndex].body[animalCell].organ == ORGAN_SENSOR_EYE)
+	{
+		Vec_f2 eyeLook = Vec_f2(game.animals[animalIndex].body[animalCell].eyeLookX , game.animals[animalIndex].body[animalCell].eyeLookY);
+		Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[animalIndex].fAngleSin, game.animals[animalIndex].fAngleCos, eyeLook);
+
+
+		Vec_f2 eyelookCameraPosition = Vec_f2( vx + rotatedEyeLook.x, vy + rotatedEyeLook.y );
+		drawLine(  Vec_f2(vx, vy), eyelookCameraPosition, 0.1f, color_white );
+
+		drawTile(eyelookCameraPosition , color_white);
+
+
+	}
+
+
+
+	// }
+}
+
 void camera()
 {
 	ZoneScoped;
@@ -4119,87 +4188,101 @@ void camera()
 							displayColor = filterColor(displayColor, tint_shadow);
 						}
 					}
-					if (game.world[worldI].identity >= 0 && game.world[worldI].identity < numberOfAnimals)
+
+
+
+
+					if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals )
 					{
-						int animalCell = isAnimalInSquare(game.world[worldI].identity, worldI );
-						if (animalCell >= 0 && animalCell < game.animals[game.selectedAnimal].cellsUsed)
+
+
+
+						bool squareIsSelectedAnimal = false;
+
+
+						if (game.world[worldI].identity >= 0 && game.world[worldI].identity < numberOfAnimals)
 						{
-							if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals)
+							if (game.world[worldI].identity == game.selectedAnimal)
 							{
-
-
-								if (game.world[worldI].identity == game.selectedAnimal )
+								int animalCell = isAnimalInSquare(game.world[worldI].identity, worldI );
+								if (animalCell >= 0 && animalCell < game.animals[game.selectedAnimal].cellsUsed)
 								{
-
-									;
-
-
-
-// void drawLine(  Vec_f2 a, Vec_f2 b, float thickness, Color finalColor )
-
-
-
-									for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-									{
-										if (game.animals[game.selectedAnimal].body[animalCell].connections[i].used)
-										{
-
-											Vec_f2 start = Vec_f2(vx, vy);
-											Vec_f2 end    = Vec_f2(vx, vy);
-
-											int connected_to_cell = game.animals[game.selectedAnimal].body[animalCell].connections[i].connectedTo;
-											if (connected_to_cell >= 0 && connected_to_cell < game.animals[game.selectedAnimal].cellsUsed)
-											{
-												// end.x -= (game.animals[game.selectedAnimal].body[connected_to_cell].localPosX - game.animals[game.selectedAnimal].body[animalCell].localPosX );
-												// end.y -= (game.animals[game.selectedAnimal].body[connected_to_cell].localPosY - game.animals[game.selectedAnimal].body[animalCell].localPosX );
-
-												unsigned int connectedPos = game.animals[game.selectedAnimal].body[connected_to_cell].worldPositionI;
-												int connectedX = connectedPos % worldSize;
-												int connectedY = connectedPos / worldSize;
-
-												end.x -= (x - connectedX);
-												end.y -= (y - connectedY);
-
-
-												Color signalColor = color_white;
-												float brightness = game.animals[game.selectedAnimal].body[connected_to_cell].signalIntensity * game.animals[game.selectedAnimal].body[animalCell].connections[i].weight ;
-												signalColor = multiplyColorByScalar(signalColor, brightness);
-												drawLine(  start, end, 0.01f, signalColor );
-											}
-										}
-									}
-
-
+									drawNeuroConnections(game.selectedAnimal, animalCell, vx, vy);
 								}
-								else
-								{
-									displayColor = filterColor(displayColor, tint_shadow);
-								}
+								squareIsSelectedAnimal = true;
 							}
 						}
+
+
+						if (!squareIsSelectedAnimal)
+						{
+							displayColor = filterColor(displayColor, tint_shadow);
+						}
+
+
+
 					}
+
+
+
+
+
+
+
+
+
+
+
 					drawTile( Vec_f2( fx, fy ), displayColor);
 				}
 			}
 		}
 	}
-
+// if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals )
+// {
+// 	drawNeuroConnections(game.selectedAnimal);
+// }
 	Color displayColor = color_white; // draw the mouse cursor.
+
+
 	Vec_f2 worldMousePos = Vec_f2( game.mousePositionX, game.mousePositionY);
-	drawTile( worldMousePos, displayColor);
-	drawLine(  worldMousePos, Vec_f2(0, 0), 0.01f, color_green );
+
+
+	Vec_f2 worldMousePosA = Vec_f2( game.mousePositionX + 1, game.mousePositionY);
+	Vec_f2 worldMousePosB = Vec_f2( game.mousePositionX - 1, game.mousePositionY);
+	Vec_f2 worldMousePosC = Vec_f2( game.mousePositionX, game.mousePositionY + 1);
+	Vec_f2 worldMousePosD = Vec_f2( game.mousePositionX, game.mousePositionY - 1);
+
+	drawTile( worldMousePosA, displayColor);
+	drawTile( worldMousePosB, displayColor);
+	drawTile( worldMousePosC, displayColor);
+	drawTile( worldMousePosD, displayColor);
+
+
+// drawLine(  worldMousePos, Vec_f2(0, 0), 0.01f, color_green );
 }
 
-void displayComputerText()
+bool displayComputerText()
 {
 	int menuX = 50;
 	int menuY = 500;
 	int textSize = 10;
 	int spacing = 20;
+
+	bool displayedAComputer = false;
+
+
+	if (game.palette)
+	{
+		menuY += spacing;
+		drawPalette(menuX, menuY);
+		displayedAComputer = true;
+	}
+
+
 	if (game.ecologyComputerDisplay)
 	{
-
-
+		displayedAComputer = true;
 
 		// draw the food web.
 		int originalMenuX = menuX;
@@ -4242,7 +4325,8 @@ void displayComputerText()
 			{
 			case 0:
 			{
-
+				printText2D( selectString +  std::string("Meat energy ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				break;
 			}
 			case 1:
 			{
@@ -4259,6 +4343,11 @@ void displayComputerText()
 				printText2D( selectString +  std::string("Resting tax ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
 				break;
 			}
+			case 4:
+			{
+				printText2D( selectString +  std::string("Map regrowth ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				break;
+			}
 			}
 			menuY -= spacing;
 		}
@@ -4266,6 +4355,8 @@ void displayComputerText()
 
 	if (game.computerdisplays[0])
 	{
+
+		displayedAComputer = true;
 		menuY -= spacing;
 		printText2D(   std::string("Animals are groups of tiles. Each tile is an organ that performs a dedicated bodily function. ") , menuX, menuY, textSize);
 		menuY -= spacing;
@@ -4280,6 +4371,8 @@ void displayComputerText()
 	}
 	else if (game.computerdisplays[1])
 	{
+
+		displayedAComputer = true;
 		printText2D(   std::string("The hospital will heal you if you pick it up.") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("It can also be used to alter your body and mind.") , menuX, menuY, textSize);
@@ -4293,6 +4386,8 @@ void displayComputerText()
 	}
 	else if (game.computerdisplays[2])
 	{
+
+		displayedAComputer = true;
 		printText2D(   std::string("Activate the tracker glasses to see the trails that creatures leave.") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("You will recognize the adversary by its white trail.") , menuX, menuY, textSize);
@@ -4306,6 +4401,8 @@ void displayComputerText()
 	}
 	else if (game.computerdisplays[3])
 	{
+
+		displayedAComputer = true;
 		if (game.adversaryDefeated)
 		{
 			printText2D(   std::string("The adversary has been destroyed. Life will no longer be created in the world, but will persist from its current state,") , menuX, menuY, textSize);
@@ -4319,8 +4416,11 @@ void displayComputerText()
 			menuY -= spacing;
 		}
 	}
-	printText2D(  "    \n" , menuX, menuY, textSize);
 	menuY -= spacing;
+
+
+
+	return displayedAComputer;
 }
 
 void incrementSelectedGrabber()
@@ -4649,8 +4749,8 @@ void drawGameInterfaceText()
 			}
 		}
 	}
-	displayComputerText();
-	if (printLogs)
+	bool pute = displayComputerText();
+	if (!pute &&  printLogs)
 	{
 		menuY += spacing;
 		for (int i = 0; i < 8; ++i)
@@ -4660,11 +4760,7 @@ void drawGameInterfaceText()
 		}
 		menuY += spacing;
 	}
-	if (game.palette)
-	{
-		menuY += spacing;
-		drawPalette(menuX, menuY);
-	}
+
 }
 
 void paintCreatureFromCharArray( int animalIndex, const char * start, unsigned int len, unsigned int width )
