@@ -817,17 +817,19 @@ void animalAppendCell(int animalIndex, unsigned int organType)
 void setupTestAnimal_eye(int i)
 {
 	resetAnimal(i);
-	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(0, 1) );
-	appendCell( i, ORGAN_NEURON, Vec_i2(0, 2) );
-	appendCell( i, ORGAN_MUSCLE_TURN, Vec_i2(0, 3) );
+	appendCell( i, ORGAN_SENSOR_EYE, Vec_i2(0, 0) );
+	appendCell( i, ORGAN_NEURON, Vec_i2(0, 1) );
+	appendCell( i, ORGAN_MUSCLE_TURN, Vec_i2(0, 2) );
 	game.animals[i].body[1].connections[0].used = true;
 	game.animals[i].body[1].connections[0].connectedTo = 0;
 	game.animals[i].body[1].connections[0].weight = 1.0f;
 	game.animals[i].body[2].connections[0].used = true;
 	game.animals[i].body[2].connections[0].connectedTo = 1;
 	game.animals[i].body[2].connections[0].weight = 1.0f;
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 4) );
 	appendCell( i, ORGAN_LUNG, Vec_i2(0, 5) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 6) );
 }
 
 void setupTestAnimal_reproducer(int i)
@@ -1028,7 +1030,7 @@ bool validateAnimal(unsigned int animalIndex)
 	    && game.animals[animalIndex].cellsUsed > 0
 	)
 	{
-		printf("VALIDATE TRUE!\n");
+		// printf("VALIDATE TRUE!\n");
 		return true;
 	}
 	return false;
@@ -6058,7 +6060,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = 2.5f ;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
 	game.animals[testAnimal].energyDebt = 0.0f;
 	census();
 	for (int i = 0; i < how_long_it_takes_to_make_sure; ++i)
@@ -6126,6 +6128,9 @@ bool test_all()
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
 	game.animals[testAnimal].energyDebt = 0;
 	game.animals[testAnimal].energy = (game.animals[testAnimal].maxEnergy / 2) - 1.0f; // give it enough energy for the test
+
+	place(testAnimal);
+
 	int testEye = getRandomCellOfType(testAnimal, ORGAN_SENSOR_EYE);
 	float originalAngle = game.animals[testAnimal].fAngle;
 	unsigned int testEyePosition ;
@@ -6225,14 +6230,14 @@ bool test_all()
 
 
 
-	printf("AMOUNT %f, max %f \n ", amount , game.animals[testAnimal].maxEnergy   );
+	// printf("AMOUNT %f, max %f \n ", amount , game.animals[testAnimal].maxEnergy   );
 
-	printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
-	printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
-	printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
-	printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
-	printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
-	printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
+	// printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
+	// printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
+	// printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
+	// printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
+	// printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
+	// printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
 
 	for (int i = 0; i < how_long_it_takes_to_make_sure; ++i)
 	{
@@ -6255,12 +6260,12 @@ bool test_all()
 
 
 
-		printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
-		printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
-		printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
-		printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
-		printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
-		printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
+		// printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
+		// printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
+		// printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
+		// printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
+		// printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
+		// printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
 
 
 
@@ -6279,12 +6284,12 @@ bool test_all()
 	else
 	{
 
-		printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
-		printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
-		printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
-		printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
-		printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
-		printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
+		// printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
+		// printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
+		// printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
+		// printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
+		// printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
+		// printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
 
 	}
 // 1. grass grows
