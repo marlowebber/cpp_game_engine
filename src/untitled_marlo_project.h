@@ -175,7 +175,7 @@ struct GameState
 
     Animal champions[numberOfSpecies];
     int championScores[numberOfSpecies] ;
-    float championEnergies[numberOfSpecies];
+    // float championEnergies[numberOfSpecies];
 
     bool adversaryDefeated;
     bool adversaryCreated;
@@ -197,6 +197,7 @@ struct GameState
     unsigned int speciesPopulationCounts [numberOfSpecies];
     unsigned int populationCountUpdates  [numberOfSpecies];
     unsigned int speciesAttacksPerTurn   [numberOfSpecies];
+    unsigned int trainingStages[numberOfSpecies];
 
     float speakerChannels[numberOfSpeakerChannels];
     float speakerChannelsLastTurn[numberOfSpeakerChannels];
@@ -206,6 +207,7 @@ struct GameState
     struct Square world[worldSquareSize];
 
     float ecoSettings[numberOfEcologySettings];
+
 
     unsigned int activeEcoSetting;
 } ;

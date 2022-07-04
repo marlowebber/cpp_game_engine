@@ -442,10 +442,12 @@ void resetAnimals()
 		paintAnimal(j);
 		game.champions[i] = game.animals[j];
 		game.championScores[i] = 0;
+		// game.championEnergies[i] = 0.0f;
 		game.speciesVacancies[i] = true;
 		game.speciesPopulationCounts[i] = 0;
 		game.populationCountUpdates[i] = 0;
 		game.speciesAttacksPerTurn[i] = 0;
+		game.trainingStages[i] = 0;
 	}
 }
 
@@ -496,6 +498,8 @@ void fastReset()
 
 void resetGameState()
 {
+
+
 	// these variables are how the player drives their character, and what they get back from it.
 	game.playerGrabState = false;
 	game.playerCanSee = true;
@@ -4049,46 +4053,62 @@ void animalEnergy(int animalIndex)
 	{
 		killAnimal( animalIndex);
 	}
+
 	bool nominate = false;
-	int animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + game.animals[animalIndex].numberOfTimesReproduced ;
-	if ( animalScore >= game.championScores[speciesIndex])
+
+	if (game.trainingStages[speciesIndex] == 0)
 	{
 
-		bool nominate = false;
+		unsigned int birthPositionX = game.animals[animalIndex].birthLocation % worldSize;
+		unsigned int birthPositionY = game.animals[animalIndex].birthLocation / worldSize;
 
-		if (validateAnimal(animalIndex) &&
+		float fdiffx = game.animals[animalIndex].fPosX - birthPositionX;
+		float fdiffy = game.animals[animalIndex].fPosY - birthPositionY;
 
-		        // player & player species cannot be nominated, and machines cannot be nominated
-		        animalIndex != game.playerCreature
-		        && animalIndex != game.adversary
-		        && speciesIndex > 0
-		        && game.animals[animalIndex].machineCallback == MATERIAL_NOTHING
+		float animalScore = sqrt( (fdiffx * fdiffx) + (fdiffy * fdiffy) );
 
-
-		        && game.animals[animalIndex].age > 1
-
-		   )
+		if ( animalScore >= game.championScores[speciesIndex])
 		{
 
-			if ( animalScore > game.championScores[speciesIndex])
+			nominate = true;
+		}
+
+		if (animalScore > 100.0f)
+		{
+			game.trainingStages[speciesIndex] = 1;
+		}
+
+
+	}
+	else if (game.trainingStages[speciesIndex] == 1)
+	{
+		float animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + (game.animals[animalIndex].numberOfTimesReproduced ) ;
+		if ( animalScore >= game.championScores[speciesIndex])
+		{
+			bool nominate = false;
+			if (
+			    validateAnimal(animalIndex)
+			    && animalIndex != game.playerCreature
+			    && animalIndex != game.adversary
+			    && speciesIndex > 0
+			    && game.animals[animalIndex].machineCallback == MATERIAL_NOTHING
+			    && game.animals[animalIndex].age > 1
+			)
 			{
-				nominate = true;
-			}
-			else if ( animalScore == game.championScores[speciesIndex])
-			{
-				if (game.animals[animalIndex].energy > game.championEnergies[speciesIndex])
+				if ( animalScore > game.championScores[speciesIndex])
 				{
 					nominate = true;
 				}
-			}
 
-			if (nominate)
-			{
-				game.championScores[speciesIndex] = animalScore;
-				game.champions[speciesIndex] = game.animals[animalIndex];
-				game.championEnergies[speciesIndex] = game.animals[animalIndex].energy;
 			}
 		}
+	}
+
+
+	if (nominate)
+	{
+		game.championScores[speciesIndex] = animalScore;
+		game.champions[speciesIndex] = game.animals[animalIndex];
 	}
 }
 
@@ -4360,7 +4380,7 @@ bool displayComputerText()
 			               " pop. " + std::to_string(game.speciesPopulationCounts[i]) +
 			               " hits " + std::to_string(game.speciesAttacksPerTurn[i])
 			               + " champion score " + std::to_string(game.championScores[i])
-			               + " champion energy " + std::to_string(game.championEnergies[i])
+			               // + " champion energy " + std::to_string(game.championEnergies[i])
 
 			               , menuX, menuY, textSize);
 			menuY -= spacing;
