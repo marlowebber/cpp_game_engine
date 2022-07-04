@@ -342,7 +342,7 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("Part of the brain which burbles with madness.");
 	}
-case ORGAN_LOCATIONREMEMBERER:
+	case ORGAN_LOCATIONREMEMBERER:
 	{
 		return std::string("A grid arrangement of cells used for navigation.");
 	}
@@ -1129,68 +1129,7 @@ bool isCellConnectable(unsigned int organ)
 	return false;
 }
 
-void setupExampleAnimal2(int i, bool underwater)
-{
 
-	ZoneScoped;
-	// set the example back to the default state or it wont work properly.
-	resetAnimal(i);
-
-
-	animalAppendCell( i, ORGAN_GILL );
-
-	animalAppendCell( i, ORGAN_LUNG );
-
-
-	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
-
-	animalAppendCell( i, ORGAN_LIVER );
-	animalAppendCell( i, ORGAN_GONAD );
-	animalAppendCell( i, ORGAN_GONAD );
-	animalAppendCell( i, ORGAN_GONAD );
-	animalAppendCell( i, ORGAN_GONAD );
-
-	animalAppendCell( i, ORGAN_SENSOR_EYE );
-	animalAppendCell( i, ORGAN_SENSOR_EYE );
-	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
-	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
-
-
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-
-
-	animalAppendCell( i, ORGAN_MUSCLE );
-	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
-	animalAppendCell( i, ORGAN_MUSCLE_TURN );
-
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_VEG );
-
-
-}
 
 
 const  char lighter[] =
@@ -1514,8 +1453,8 @@ bool materialBlocksMovement(unsigned int material)
 	if (material == MATERIAL_ROCK ||
 	        material == MATERIAL_VOIDMETAL ||
 	        material == MATERIAL_METAL ||
-	        material == MATERIAL_BASALT || 
-	        material == MATERIAL_WAX  
+	        material == MATERIAL_BASALT ||
+	        material == MATERIAL_WAX
 	   )
 	{
 		return true;
@@ -1529,11 +1468,11 @@ bool materialDegrades(unsigned int material)
 	if (material == MATERIAL_FOOD ||
 	        material == MATERIAL_BONE ||
 	        material == MATERIAL_BLOOD ||
-	        material == MATERIAL_SMOKE || 
-	        material == MATERIAL_VOMIT || 
+	        material == MATERIAL_SMOKE ||
+	        material == MATERIAL_VOMIT ||
 	        material == MATERIAL_SEMEN
 
-	        )
+	   )
 	{return true;}
 
 	return false;

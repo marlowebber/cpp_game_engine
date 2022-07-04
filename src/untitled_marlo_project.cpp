@@ -355,7 +355,7 @@ void resetAnimal(int animalIndex)
 	{
 		std::string gunDescription = std::string("An animal");
 		strcpy( &game.animals[animalIndex].displayName[0] , gunDescription.c_str() );
-		game.animals[animalIndex].mass = 0;
+		game.animals[animalIndex].cellsUsed = 0;
 		game.animals[animalIndex].numberOfTimesReproduced = 0;
 		game.animals[animalIndex].damageDone = 0;
 		game.animals[animalIndex].damageReceived = 0;
@@ -374,7 +374,7 @@ void resetAnimal(int animalIndex)
 		game.animals[animalIndex].uPosY = 0;
 		game.animals[animalIndex].parentAmnesty = true;
 		game.animals[animalIndex].retired = true;
-		game.animals[animalIndex].cellsUsed = 0;
+		// game.animals[animalIndex].cellsUsed = 0;
 		game.animals[animalIndex].isMachine = false;
 		game.animals[animalIndex].machineCallback = MATERIAL_NOTHING;
 		// game.animals[animalIndex].temp_limit_low = 273.0f;
@@ -429,6 +429,129 @@ void scrambleAnimal(int animalIndex)
 	}
 }
 
+void setupExampleAnimal3(int i)
+{
+
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
+	animalAppendCell( i, ORGAN_MUSCLE );
+	animalAppendCell( i, ORGAN_MUSCLE_TURN );
+
+
+	game.animals[i].body[2].connections[0].used = true;
+	game.animals[i].body[2].connections[0].connectedTo = 0;
+	game.animals[i].body[2].connections[0].weight = 0.1f;
+	game.animals[i].body[3].connections[0].used = true;
+	game.animals[i].body[3].connections[0].connectedTo = 1;
+	game.animals[i].body[3].connections[0].weight = 0.1f;
+
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+
+
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+
+
+
+	animalAppendCell( i, ORGAN_LIVER );
+	animalAppendCell( i, ORGAN_GILL );
+	animalAppendCell( i, ORGAN_LUNG );
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_GONAD );
+	animalAppendCell( i, ORGAN_GONAD );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+
+}
+
+void setupExampleAnimal2(int i, bool underwater)
+{
+
+	ZoneScoped;
+	// set the example back to the default state or it wont work properly.
+	resetAnimal(i);
+
+
+	animalAppendCell( i, ORGAN_GILL );
+	animalAppendCell( i, ORGAN_LUNG );
+
+
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+
+	animalAppendCell( i, ORGAN_LIVER );
+	animalAppendCell( i, ORGAN_GONAD );
+	animalAppendCell( i, ORGAN_GONAD );
+	animalAppendCell( i, ORGAN_GONAD );
+	animalAppendCell( i, ORGAN_GONAD );
+
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_EYE );
+	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
+	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
+
+
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_BIASNEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+	animalAppendCell( i, ORGAN_NEURON );
+
+
+	animalAppendCell( i, ORGAN_MUSCLE );
+	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
+	animalAppendCell( i, ORGAN_MUSCLE_TURN );
+
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+
+
+}
+
+
 void resetAnimals()
 {
 	for ( int animalIndex = 0; animalIndex < numberOfAnimals; ++animalIndex)
@@ -438,7 +561,7 @@ void resetAnimals()
 	int j = 1;
 	for (int i = 0; i < numberOfSpecies; ++i)
 	{
-		setupExampleAnimal2(j, true);
+		setupExampleAnimal3(j);
 		paintAnimal(j);
 		game.champions[i] = game.animals[j];
 		game.championScores[i] = 0;
@@ -447,7 +570,7 @@ void resetAnimals()
 		game.speciesPopulationCounts[i] = 0;
 		game.populationCountUpdates[i] = 0;
 		game.speciesAttacksPerTurn[i] = 0;
-		game.trainingStages[i] = 0;
+		// game.trainingStages[i] = 0;
 	}
 }
 
@@ -713,6 +836,7 @@ void setupTestAnimal_reproducer(int i)
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 0) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 1) );
 	appendCell( i, ORGAN_LUNG, Vec_i2(0, 2) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 3) );
 }
 
 void setupTestAnimal_straightline(int i)
@@ -723,7 +847,8 @@ void setupTestAnimal_straightline(int i)
 	appendCell( i, ORGAN_BIASNEURON, Vec_i2(0, 1) );
 	appendCell( i, ORGAN_MUSCLE, Vec_i2(0, 2) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
-	appendCell( i, ORGAN_LUNG, Vec_i2(0, 4) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 4) );
+	appendCell( i, ORGAN_LUNG, Vec_i2(0, 5) );
 	game.animals[i].body[2].connections[0].used = true;
 	game.animals[i].body[2].connections[0].connectedTo = 1;
 	game.animals[i].body[2].connections[0].weight = 1.0f;
@@ -738,6 +863,7 @@ void setupTestAnimal_amphibious(int i)
 	appendCell( i, ORGAN_LIVER, Vec_i2(0, 2) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 4) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 5) );
 }
 
 void setupTestAnimal_airbreathing(int i)
@@ -747,6 +873,7 @@ void setupTestAnimal_airbreathing(int i)
 	appendCell( i, ORGAN_LIVER, Vec_i2(0, 1) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 2) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 4) );
 }
 
 void setupTestAnimal_waterbreathing(int i)
@@ -756,6 +883,8 @@ void setupTestAnimal_waterbreathing(int i)
 	appendCell( i, ORGAN_LIVER, Vec_i2(0, 1) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 2) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
+
+	appendCell( i, ORGAN_MOUTH_VEG, Vec_i2(0, 4) );
 }
 
 Vec_f2 getTerrainSlope(unsigned int worldPositionI)
@@ -859,44 +988,47 @@ int getNewIdentity(unsigned int speciesIndex)
 }
 
 // this is the bare minimum requirements for any animal to be allowed to exist.
-bool validateAnimal(unsigned int animalIndex)
+bool validateAnimal(Animal animal)
 {
-	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+	// unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	// nominee must be reproductively viable (1 gonad is not enough!) and have a breathing apparatus and a mouth
 	unsigned int totalGonads = 0;
 	unsigned int totalMouths = 0;
 	unsigned int totalBreathing  = 0;
-	for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+	for (int i = 0; i < animal.cellsUsed; ++i)
 	{
-		if ( game.animals[animalIndex].body[i].organ == ORGAN_GONAD)
+		if ( animal.body[i].organ == ORGAN_GONAD)
 		{
 			totalGonads++;
 		}
 
-		if ( game.animals[animalIndex].body[i].organ == ORGAN_LUNG
-		        || game.animals[animalIndex].body[i].organ == ORGAN_GILL )
+		if (       animal.body[i].organ == ORGAN_LUNG
+		           || animal.body[i].organ == ORGAN_GILL )
 		{
 			totalBreathing++;
 		}
 
-		if ( game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_CARNIVORE
-		        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_SCAVENGE
-		        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_PARASITE
-		        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_VEG
+		if (       animal.body[i].organ == ORGAN_MOUTH_CARNIVORE
+		           || animal.body[i].organ == ORGAN_MOUTH_SCAVENGE
+		           || animal.body[i].organ == ORGAN_MOUTH_PARASITE
+		           || animal.body[i].organ == ORGAN_MOUTH_VEG
 		   )
 		{
 			totalMouths++;
 		}
 	}
 
+
+	// printf("HAS %u gonads % u mouth %u breathing")
+
 	if (
 	    totalGonads >= 2 && totalMouths >= 1 && totalBreathing >= 1
-	    && game.animals[animalIndex].mass > 1.0f
-	    && game.animals[animalIndex].maxEnergy > 1.0f
-	    && game.animals[animalIndex].offspringEnergy > 1.0f
-	    && game.animals[animalIndex].cellsUsed > 0
+	    // && animal.maxEnergy > 1.0f
+	    // && animal.offspringEnergy > 1.0f
+	    && animal.cellsUsed > 0
 	)
 	{
+		printf("VALIDATE TRUE!\n");
 		return true;
 	}
 	return false;
@@ -906,33 +1038,41 @@ bool validateAnimal(unsigned int animalIndex)
 // // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
 // this function studies the phenotype, not the genotype.
 // returns whether the animal is fit to live.
-bool measureAnimalQualities( int animalIndex)
+void measureAnimalQualities( int animalIndex)
 {
-	game.animals[animalIndex].mass = 0;
-	game.animals[animalIndex].energyDebt = 0.0f;
-	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
-	{
-		game.animals[animalIndex].mass++;
-		game.animals[animalIndex].energyDebt += 1.0f;
-	}
+	// game.animals[animalIndex].mass = 0;
+	game.animals[animalIndex].energyDebt = game.animals[animalIndex].cellsUsed;//0.0f;
+	// for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	// {
+	// 	game.animals[animalIndex].energyDebt += 1.0f;
+	// }
 	game.animals[animalIndex].totalMuscle = 0;
+	// game.animals[animalIndex].waterMuscle = 0;
+
 	game.animals[animalIndex].offspringEnergy = 1.0f;
 	game.animals[animalIndex].lifespan = baseLifespan;
 	unsigned int totalLiver = 0;
+
 	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE ||
 		        game.animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE_TURN ||
 		        game.animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE_STRAFE)
 		{
+
+
+
 			game.animals[animalIndex].totalMuscle ++;
+
+
+
 		}
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_ADDOFFSPRINGENERGY)
 		{
 			game.animals[animalIndex].offspringEnergy += game.animals[animalIndex].offspringEnergy ;
-			if (game.animals[animalIndex].offspringEnergy > game.animals[animalIndex].mass / 2)
+			if (game.animals[animalIndex].offspringEnergy > game.animals[animalIndex].cellsUsed / 2)
 			{
-				game.animals[animalIndex].offspringEnergy = game.animals[animalIndex].mass / 2; // if its bigger than this, the animal will never be able to reproduce.
+				game.animals[animalIndex].offspringEnergy = game.animals[animalIndex].cellsUsed / 2; // if its bigger than this, the animal will never be able to reproduce.
 			}
 		}
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_ADDLIFESPAN)
@@ -947,11 +1087,10 @@ bool measureAnimalQualities( int animalIndex)
 
 	}
 
-	game.animals[animalIndex].maxEnergy = game.animals[animalIndex].mass + (totalLiver * liverStorage);
+	game.animals[animalIndex].maxEnergy = game.animals[animalIndex].cellsUsed + (totalLiver * liverStorage);
 
-	// game.animals[animalIndex].lifespan *= 0.75 + (RNG() * 0.5);
+	game.animals[animalIndex].lifespan *= 0.85 + (RNG() * 0.3);
 
-	return validateAnimal(animalIndex);
 }
 
 // choose a random cell of any type that can put forth a connection, which includes all neurons and actuators.
@@ -1429,19 +1568,18 @@ void mutateAnimal( int animalIndex)
 	}
 }
 
-void rebuildBodyFromGenes( int animalIndex)
-{
-	if (animalIndex < numberOfAnimals)
-	{
-		game.animals[animalIndex].damageReceived = 0;
-		for (int i = 0; i < animalSquareSize; ++i)
-		{
-			game.animals[animalIndex].body[i].damage = 0.0f;
-		}
+// void rebuildBodyFromGenes( int animalIndex)
+// {
+// 	if (animalIndex < numberOfAnimals)
+// 	{
+// 		game.animals[animalIndex].damageReceived = 0;
+// 		for (int i = 0; i < animalSquareSize; ++i)
+// 		{
+// 			game.animals[animalIndex].body[i].damage = 0.0f;
+// 		}
 
-		measureAnimalQualities(animalIndex);
-	}
-}
+// 	}
+// }
 
 void spawnAnimalIntoSlot(  int animalIndex,
                            Animal parent,
@@ -1460,13 +1598,26 @@ void spawnAnimalIntoSlot(  int animalIndex,
 	game.animals[animalIndex].fPosY = position / worldSize;
 	game.animals[animalIndex].birthLocation = position;
 	game.animals[animalIndex].fAngle = ( (RNG() - 0.5f) * 2 * const_pi );
-	rebuildBodyFromGenes( animalIndex);
+	// rebuildBodyFromGenes( animalIndex);
+
 	if (mutation)
 	{
 		mutateAnimal( animalIndex);
 	}
+
 	memcpy( &( game.animals[animalIndex].displayName[0]), &(parent.displayName[0]), sizeof(char) * displayNameSize  );
-	game.animals[animalIndex].retired = false;
+	measureAnimalQualities(animalIndex) ;
+
+	// printf("SPAWN INTO SLOT\n");
+
+	if ( validateAnimal( game.animals[animalIndex] ) )
+	{
+		game.animals[animalIndex].retired = false;
+	}
+	else
+	{
+		game.animals[animalIndex].retired = true;
+	}
 }
 
 // check if an animal is currently occupying a square. return the local index of the occupying cell, otherwise, return -1 if not occupied.
@@ -1705,6 +1856,8 @@ int spawnAnimal( unsigned int speciesIndex,
 	int animalIndex = getNewIdentity(speciesIndex);
 	if (animalIndex >= 0) // an animalIndex was available
 	{
+
+		// printf("SPAWN ANIMMAL\n");
 		spawnAnimalIntoSlot(animalIndex,
 		                    parent,
 		                    position, mutation);
@@ -1728,15 +1881,15 @@ void killAnimal(int animalIndex)
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	game.speciesVacancies[speciesIndex] = true;
 	game.animals[animalIndex].retired = true;
-	unsigned int animalWorldPositionX    = game.animals[animalIndex].position % worldSize;
-	unsigned int animalWorldPositionY    = game.animals[animalIndex].position / worldSize;
+	// unsigned int animalWorldPositionX    = game.animals[animalIndex].position % worldSize;
+	// unsigned int animalWorldPositionY    = game.animals[animalIndex].position / worldSize;
 	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex) // process organs and signals and clear animalIndex on grid
 	{
-		unsigned int cellLocalPositionX  = game.animals[animalIndex].body[cellIndex].localPosX;
-		unsigned int cellLocalPositionY  = game.animals[animalIndex].body[cellIndex].localPosY;
-		unsigned int cellWorldPositionX  = cellLocalPositionX + animalWorldPositionX;
-		unsigned int cellWorldPositionY  = cellLocalPositionY + animalWorldPositionY;
-		unsigned int cellWorldPositionI  = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+		// unsigned int cellLocalPositionX  = game.animals[animalIndex].body[cellIndex].localPosX;
+		// unsigned int cellLocalPositionY  = game.animals[animalIndex].body[cellIndex].localPosY;
+		// unsigned int cellWorldPositionX  = cellLocalPositionX + animalWorldPositionX;
+		// unsigned int cellWorldPositionY  = cellLocalPositionY + animalWorldPositionY;
+		unsigned int cellWorldPositionI  = game.animals[animalIndex].body[cellIndex].worldPositionI; //(cellWorldPositionY * worldSize) + cellWorldPositionX;
 		if (cellWorldPositionI < worldSquareSize)
 		{
 			if (game.animals[animalIndex].body[cellIndex].organ != MATERIAL_NOTHING && game.animals[animalIndex].body[cellIndex].damage < 1.0f)
@@ -2752,7 +2905,7 @@ void hurtAnimal( int animalIndex, unsigned int cellIndex, float amount, int shoo
 
 		if (animalIndex == game.adversary && shooterIndex == game.playerCreature)
 		{
-			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].mass / 2)
+			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].cellsUsed / 2)
 			{
 				defeatAdversary();
 			}
@@ -2971,10 +3124,7 @@ void activateGrabbedMachine()// occurs whenever a left click is received.
 	}
 	if (game.ecologyComputerDisplay)
 	{
-		if (game.activeEcoSetting == 4)
-		{
 
-		}
 		game.ecoSettings[game.activeEcoSetting] *= 1.5f;
 	}
 }
@@ -2999,7 +3149,7 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 						game.animals[newAnimal].body[i] = game.animals[a].body[i];
 					}
 				}
-				rebuildBodyFromGenes( newAnimal);
+				// rebuildBodyFromGenes( newAnimal);
 				game.animals[newAnimal].energy += energyDonation;
 			}
 
@@ -3055,7 +3205,7 @@ void animal_organs( int animalIndex)
 	ZoneScoped;
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	float totalLiver = 0;
-	unsigned int totalGonads = 0;
+	// unsigned int totalGonads = 0;
 	float highestIntensity = 0.0f;
 	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
@@ -3599,13 +3749,13 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_GONAD:
 		{
-			if (game.animals[animalIndex].body[cellIndex].damage < 1.0f)
-			{
-				totalGonads++;
-			}
+			// if (game.animals[animalIndex].body[cellIndex].damage < 1.0f)
+			// {
+			// 	totalGonads++;
+			// }
 			if (doReproduction && game.animals[animalIndex].energyDebt <= 0.0f )
 			{
-				float reproducesAt = ((game.animals[animalIndex].mass / 2 ) + game.animals[animalIndex].offspringEnergy );
+				float reproducesAt = ((game.animals[animalIndex].cellsUsed / 2 ) + game.animals[animalIndex].offspringEnergy );
 				if (game.animals[animalIndex].energy > reproducesAt)
 				{
 					if (cellWorldPositionI < worldSquareSize)
@@ -3621,6 +3771,7 @@ void animal_organs( int animalIndex)
 						int result = spawnAnimal( speciesIndex, game.animals[animalIndex], game.animals[animalIndex].position, mutate );
 						if (result >= 0)
 						{
+							// printf("GONADSEX\n");
 							game.animals[animalIndex].body[cellIndex].damage = 1.0f;
 							game.animals[animalIndex].numberOfTimesReproduced++;
 							game.animals[animalIndex].energy -= game.animals[animalIndex].offspringEnergy;
@@ -3813,8 +3964,8 @@ void animal_organs( int animalIndex)
 			}
 
 			float impulse = game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower;
-			game.animals[animalIndex].fPosX += (impulse / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleSin;
-			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleCos;
+			game.animals[animalIndex].fPosX += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleSin;
+			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleCos;
 			game.animals[animalIndex].energy -= game.ecoSettings[2] * abs(impulse) ;
 
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
@@ -3847,8 +3998,8 @@ void animal_organs( int animalIndex)
 				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
 			}
 			float impulse = game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower;
-			game.animals[animalIndex].fPosX += (impulse / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleCos;
-			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleSin;
+			game.animals[animalIndex].fPosX += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleCos;
+			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleSin;
 			game.animals[animalIndex].energy -= game.ecoSettings[2] * abs(impulse) ;
 
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
@@ -3968,8 +4119,8 @@ void animal_organs( int animalIndex)
 			}
 		}
 	}
-	game.animals[animalIndex].totalGonads = totalGonads;
-	game.animals[animalIndex].maxEnergy = game.animals[animalIndex].mass + (totalLiver * liverStorage);
+	// game.animals[animalIndex].totalGonads = totalGonads;
+	game.animals[animalIndex].maxEnergy = game.animals[animalIndex].cellsUsed + (totalLiver * liverStorage);
 }
 
 
@@ -3984,7 +4135,7 @@ void animalEnergy(int animalIndex)
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	game.animals[animalIndex].age++;
 
-	game.animals[animalIndex].energy -= game.ecoSettings[3] * game.animals[animalIndex].mass;
+	game.animals[animalIndex].energy -= game.ecoSettings[3] * game.animals[animalIndex].cellsUsed;
 
 	if (game.animals[animalIndex].energy > game.animals[animalIndex].maxEnergy)
 	{
@@ -4026,23 +4177,23 @@ void animalEnergy(int animalIndex)
 				printf("died old\n");
 				execute = true;
 			}
-			if (game.animals[animalIndex].totalGonads == 0)
-			{
+			// if (game.animals[animalIndex].totalGonads == 0)
+			// {
 
-				printf("died no balls\n");
-				execute = true;
-			}
+			// 	printf("died no balls\n");
+			// 	execute = true;
+			// }
 		}
 
 
 
-		if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].mass / 2)
+		if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].cellsUsed / 2)
 		{
 
 			printf("died damaged\n");
 			execute = true;
 		}
-		if (game.animals[animalIndex].mass <= 0)
+		if (game.animals[animalIndex].cellsUsed <= 0)
 		{
 
 			printf("died no mass\n");
@@ -4054,64 +4205,79 @@ void animalEnergy(int animalIndex)
 		killAnimal( animalIndex);
 	}
 
-	bool nominate = false;
 
-	if (game.trainingStages[speciesIndex] == 0)
+	if (game.adversary >= 0 && game.adversary < numberOfAnimals)
 	{
+		bool nominate = false;
+		float animalScore = 0.0f;
+		// if (game.trainingStages[speciesIndex] == 0)
+		// {
 
-		unsigned int birthPositionX = game.animals[animalIndex].birthLocation % worldSize;
-		unsigned int birthPositionY = game.animals[animalIndex].birthLocation / worldSize;
+		// 	unsigned int birthPositionX = game.animals[animalIndex].birthLocation % worldSize;
+		// 	unsigned int birthPositionY = game.animals[animalIndex].birthLocation / worldSize;
 
-		float fdiffx = game.animals[animalIndex].fPosX - birthPositionX;
-		float fdiffy = game.animals[animalIndex].fPosY - birthPositionY;
+		// 	float fdiffx = game.animals[animalIndex].fPosX - birthPositionX;
+		// 	float fdiffy = game.animals[animalIndex].fPosY - birthPositionY;
 
-		float animalScore = sqrt( (fdiffx * fdiffx) + (fdiffy * fdiffy) );
+		// 	animalScore = sqrt( (fdiffx * fdiffx) + (fdiffy * fdiffy) ) * 0.10f;
+		// 	if (
+		// 	    validateChampion(animalIndex)
+
+		// 	)
+		// 	{
+		// 		if ( animalScore >= game.championScores[speciesIndex])
+		// 		{
+
+		// 			nominate = true;
+		// 			// game.animals[animalIndex].energy = game.animals[animalIndex].maxEnergy;
+		// 		}
+		// 	}
+		// 	if (animalScore > 100.0f)
+		// 	{
+		// 		game.trainingStages[speciesIndex] = 1;
+		// 	}
+
+
+		// }
+		// else if (game.trainingStages[speciesIndex] == 1)
+		// {
+
+
+		animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + (game.animals[animalIndex].numberOfTimesReproduced ) ;
+
+
+
+		float distance = abs(game.animals[animalIndex].fPosX - game.animals[game.adversary].fPosX) + abs(game.animals[animalIndex].fPosY - game.animals[game.adversary].fPosY) ;
+
+		if (distance > 100.0f) { distance = 100.0f;}
+		distance  *= 0.5f;
+
+		animalScore += distance ;
+
 
 		if ( animalScore >= game.championScores[speciesIndex])
 		{
-
-			nominate = true;
-		}
-
-		if (animalScore > 100.0f)
-		{
-			game.trainingStages[speciesIndex] = 1;
-		}
-
-
-	}
-	else if (game.trainingStages[speciesIndex] == 1)
-	{
-		float animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + (game.animals[animalIndex].numberOfTimesReproduced ) ;
-		if ( animalScore >= game.championScores[speciesIndex])
-		{
-			bool nominate = false;
-			if (
-			    validateAnimal(animalIndex)
-			    && animalIndex != game.playerCreature
-			    && animalIndex != game.adversary
-			    && speciesIndex > 0
-			    && game.animals[animalIndex].machineCallback == MATERIAL_NOTHING
-			    && game.animals[animalIndex].age > 1
-			)
+			// if (
+			//     validateChampion( game.animals[animalIndex] )
+			// )
+			// {
+			if ( animalScore > game.championScores[speciesIndex])
 			{
-				if ( animalScore > game.championScores[speciesIndex])
-				{
-					nominate = true;
-				}
-
+				nominate = true;
 			}
+
+			// }
 		}
-	}
+		// }
 
 
-	if (nominate)
-	{
-		game.championScores[speciesIndex] = animalScore;
-		game.champions[speciesIndex] = game.animals[animalIndex];
+		if (nominate)
+		{
+			game.championScores[speciesIndex] = animalScore;
+			game.champions[speciesIndex] = game.animals[animalIndex];
+		}
 	}
 }
-
 
 
 
@@ -4812,14 +4978,14 @@ void drawGameInterfaceText()
 		if (playerGill >= 0)
 		{
 
-			if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.25 &&
-			        game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].mass) * 0.375
+			if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].cellsUsed) * 0.25 &&
+			        game.animals[game.playerCreature].damageReceived < (game.animals[game.playerCreature].cellsUsed) * 0.375
 			   )
 			{
 				printText2D(   std::string("You're badly hurt.") , menuX, menuY, textSize);
 				menuY += spacing;
 			}
-			else if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].mass) * 0.375)
+			else if (game.animals[game.playerCreature].damageReceived > (game.animals[game.playerCreature].cellsUsed) * 0.375)
 			{
 				printText2D(   std::string("You are mortally wounded.") , menuX, menuY, textSize);
 				menuY += spacing;
@@ -5468,7 +5634,7 @@ void tournamentController()
 							if (materialSupportsGrowth(game.world[game.animals[game.adversary].position].terrain ))
 							{
 #ifdef PLANTS
-								if (extremelyFastNumberFromZeroTo(1000) == 0)
+								if (extremelyFastNumberFromZeroTo(100) == 0)
 								{
 									// spawn some plants
 									if (game.world[game.animals[game.adversary].position].seedState == MATERIAL_NOTHING)
@@ -5480,14 +5646,14 @@ void tournamentController()
 										}
 									}
 								}
-								else
-								{
-									// spawn some grass
-									if (game.world[game.animals[game.adversary].position].plantState == MATERIAL_NOTHING)
-									{
-										game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
-									}
-								}
+								// else
+								// {
+								// 	// spawn some grass
+								// 	if (game.world[game.animals[game.adversary].position].plantState == MATERIAL_NOTHING)
+								// 	{
+								// 		game.world[game.animals[game.adversary].position].plantState = MATERIAL_GRASS;
+								// 	}
+								// }
 #else
 								if (game.world[game.animals[game.adversary].position].wall == MATERIAL_NOTHING)
 								{
@@ -5497,6 +5663,8 @@ void tournamentController()
 							}
 						}
 					}
+
+
 					game.adversaryRespawnPos = game.animals[game.adversary].position;
 					unsigned int adversaryRespawnPosX = game.adversaryRespawnPos % worldSize;
 					unsigned int adversaryRespawnPosY = game.adversaryRespawnPos / worldSize;
@@ -5535,33 +5703,70 @@ void tournamentController()
 						game.animals[game.adversary].retired = true;
 					}
 				}
-			}
-			if (respawnLowSpecies)
-			{
-				census();
-				for (int k = 0; k < numberOfSpecies; ++k)// spawn lots of the example animal
-				{
-					if (game.speciesPopulationCounts[k] == 0 && k != 0)
-					{
-						int j = 1;
-						int domingo = -1;
-						unsigned int randomPos = game.animals[game.adversary].position;
-						for (int ee = 0; ee < 120; ++ee)
-						{
-							// spawn a bunch of random champions
-							int randomCell = getRandomPopulatedCell(game.adversary);
-							if (randomCell >= 0)
-							{
-								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
-							}
 
-							int randomChampion = ee % numberOfSpecies;
-							if (randomChampion > 0)
+				if (respawnLowSpecies)
+				{
+					census();
+					for (int k = 0; k < numberOfSpecies; ++k)// spawn lots of the example animal
+					{
+						printf("ameriKKKa %i \n", k);
+
+						// if (! validateAnimal(game.champions[k]))
+						// {
+						// 	int  j = 1;
+						// 	setupExampleAnimal3(j);
+						// 	game.champions[k] = game.animals[j];
+						// }
+
+						if (game.speciesPopulationCounts[k] == 0 && k != 0)
+						{
+
+							// if (game.championScores[k] > 1.0f)
+							// {
+							// 	game.championScores[k] -= 1.0f; // lower the bar a little for each unsuccessful attempt.
+							// }
+							int j = 1;
+							int domingo = -1;
+							unsigned int randomPos = game.animals[game.adversary].position + (-5 + extremelyFastNumberFromZeroTo(10)  + ( (-5 * worldSize) + (extremelyFastNumberFromZeroTo(10) * worldSize)  )   );
+							for (int ee = 0; ee < 60; ++ee)
 							{
-								domingo = spawnAnimal( k,  game.champions[randomChampion], randomPos, true);
+								// spawn a bunch of random champions
+								// int randomCell = getRandomPopulatedCell(game.adversary);
+								// if (randomCell >= 0)
+								// {
+								// 	randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+								// }
+
+								// int randomChampion = ee % numberOfSpecies;
+								// if (randomChampion > 0)
+								// {
+								// 	// if (game.trainingStages[k] == 0)
+								// {
+								// 	setupExampleAnimal2(j, false);
+								// 	domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
+								// }
+								// else
+								// {
+								// if (extremelyFastNumberFromZeroTo(1) == 0)
+								// {
+								// 	setupExampleAnimal3(j);
+								// 	domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
+								// }
+								// else
+								// {
+
+								domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
+
+								// }
+								// }
 								if (domingo >= 0)
 								{
-
+									printf("RESPAWNLOW\n");
+									game.animals[domingo].fPosX += ((RNG() - 0.5) * 10.0f);
+									game.animals[domingo].fPosY += ((RNG() - 0.5) * 10.0f);
+									game.animals[domingo].fAngle += ((RNG() - 0.5) );
+									game.animals[domingo].fAngleCos = cos(game.animals[domingo].fAngle);
+									game.animals[domingo].fAngleSin = sin(game.animals[domingo].fAngle);
 									game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
 									game.animals[domingo].parentIdentity = game.adversary;
 
@@ -5602,7 +5807,12 @@ void tournamentController()
 
 
 								}
+								// }
 							}
+
+
+							game.championScores[k] = 0.0f;
+
 						}
 					}
 				}
@@ -5614,9 +5824,12 @@ void tournamentController()
 void animalTurn( int i)
 {
 	ZoneScoped;
-	place(i);
-	animal_organs( i);
-	animalEnergy( i);
+	if (! (game.animals[i].retired))
+	{
+		place(i);
+		animal_organs( i);
+		animalEnergy( i);
+	}
 }
 
 void model_sector( int from,  int to)
@@ -5626,10 +5839,9 @@ void model_sector( int from,  int to)
 
 	for ( int i = from; i < to; ++i)
 	{
-		if (! (game.animals[i].retired))
-		{
-			animalTurn(i);
-		}
+
+		animalTurn(i);
+
 	}
 
 }
@@ -5838,7 +6050,7 @@ bool test_all()
 	killAnimal(testAnimal);
 
 	// 3. animals reproduce when they have enough energy and their debt is 0
-	const int how_long_it_takes_to_make_sure = (baseLungCapacity / aBreath) * 2;
+	const int how_long_it_takes_to_make_sure = (baseLungCapacity / aBreath) * 1;
 	setupTestAnimal_reproducer(j);
 	testAnimal = spawnAnimal( testSpecies , game.animals[j], testPos, false);
 	game.animals[testAnimal].position = testPos;
@@ -5876,7 +6088,7 @@ bool test_all()
 	for (int i = 0; i < numberOfAnimalsPerSpecies; ++i)
 	{
 		int child = (testSpecies * numberOfAnimalsPerSpecies) + i;
-		if (game.animals[child].retired == false  )
+		if ( !game.animals[child].retired  )
 		{
 			if (game.animals[child].parentIdentity == testAnimal  )
 			{
@@ -6009,7 +6221,7 @@ bool test_all()
 	// an air breathing animal in water dies
 	// an amphibious animal is fine in both situations
 
-	float amount =  (game.animals[testAnimal].maxEnergy / 2.0f) - 0.1f;
+	float amount =  (game.animals[testAnimal].maxEnergy / 2.0f) - 1.0f;
 
 
 

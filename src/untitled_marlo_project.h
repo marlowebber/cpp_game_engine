@@ -108,7 +108,7 @@ struct Cell
 struct Animal
 {
     Cell body[animalSquareSize];
-    unsigned int mass;
+    // unsigned int mass;
     unsigned int numberOfTimesReproduced;
     unsigned int damageDone;
     unsigned int damageReceived;
@@ -130,8 +130,8 @@ struct Animal
     float fAngleSin;
     float fAngleCos;
     bool parentAmnesty;
+    // unsigned int landMuscle;
     unsigned int totalMuscle;
-    unsigned int totalGonads;
     unsigned int lastTouchedStranger;
     unsigned int lastTouchedKin;
     unsigned int cellsUsed;
@@ -197,7 +197,6 @@ struct GameState
     unsigned int speciesPopulationCounts [numberOfSpecies];
     unsigned int populationCountUpdates  [numberOfSpecies];
     unsigned int speciesAttacksPerTurn   [numberOfSpecies];
-    unsigned int trainingStages[numberOfSpecies];
 
     float speakerChannels[numberOfSpeakerChannels];
     float speakerChannelsLastTurn[numberOfSpeakerChannels];
