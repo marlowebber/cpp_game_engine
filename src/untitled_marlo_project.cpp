@@ -42,7 +42,7 @@ const bool setOrSteerAngle       = false;
 const bool printLogs             = true;
 
 const bool killLoiteringAdversary = false;
-const bool erode = false;
+const bool erode = true;
 const int prelimSize = worldSize / 10;
 const int cameraPanSpeed = 10;
 const float baseLungCapacity = 1.0f;
@@ -54,7 +54,8 @@ const unsigned int numberOfAnimalsPerSpecies = (numberOfAnimals / numberOfSpecie
 const float neuralNoise = 0.2f;
 const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 2000;			// if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
-const float musclePower = 350.0f;
+const float musclePower = 180.0f;
+const float playerSpeed = 60.0f;
 const float turnMusclePower = 1.0f;
 const float aBreath = 0.01f;
 const float neuralMutationStrength = 0.5f;
@@ -213,6 +214,11 @@ void resetMouseCursor(  )
 void togglePause ()
 {
 	game.paused = !game.paused;
+}
+
+bool getPause()
+{
+	return game.paused;
 }
 
 void incrementSelectedOrgan()
@@ -663,6 +669,12 @@ void appendCell( int animalIndex, unsigned int organType, Vec_i2 newPosition)
 				}
 			}
 		}
+
+
+		if (organType == ORGAN_BIASNEURON)
+		{
+			game.animals[animalIndex].body[cellIndex].signalIntensity = ((RNG() - 0.5f) * 2.0f);
+		}
 	}
 }
 
@@ -721,6 +733,7 @@ void setupTestAnimal_amphibious(int i)
 	appendCell( i, ORGAN_GILL, Vec_i2(0, 1) );
 	appendCell( i, ORGAN_LIVER, Vec_i2(0, 2) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 4) );
 }
 
 void setupTestAnimal_airbreathing(int i)
@@ -729,6 +742,7 @@ void setupTestAnimal_airbreathing(int i)
 	appendCell( i, ORGAN_LUNG, Vec_i2(0, 0) );
 	appendCell( i, ORGAN_LIVER, Vec_i2(0, 1) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 2) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
 }
 
 void setupTestAnimal_waterbreathing(int i)
@@ -737,6 +751,7 @@ void setupTestAnimal_waterbreathing(int i)
 	appendCell( i, ORGAN_GILL, Vec_i2(0, 0) );
 	appendCell( i, ORGAN_LIVER, Vec_i2(0, 1) );
 	appendCell( i, ORGAN_GONAD, Vec_i2(0, 2) );
+	appendCell( i, ORGAN_GONAD, Vec_i2(0, 3) );
 }
 
 Vec_f2 getTerrainSlope(unsigned int worldPositionI)
@@ -839,6 +854,51 @@ int getNewIdentity(unsigned int speciesIndex)
 	return -1;
 }
 
+// this is the bare minimum requirements for any animal to be allowed to exist.
+bool validateAnimal(unsigned int animalIndex)
+{
+	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+	// nominee must be reproductively viable (1 gonad is not enough!) and have a breathing apparatus and a mouth
+	unsigned int totalGonads = 0;
+	unsigned int totalMouths = 0;
+	unsigned int totalBreathing  = 0;
+	for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+	{
+		if ( game.animals[animalIndex].body[i].organ == ORGAN_GONAD)
+		{
+			totalGonads++;
+		}
+
+		if ( game.animals[animalIndex].body[i].organ == ORGAN_LUNG
+		        || game.animals[animalIndex].body[i].organ == ORGAN_GILL )
+		{
+			totalBreathing++;
+		}
+
+		if ( game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_CARNIVORE
+		        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_SCAVENGE
+		        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_PARASITE
+		        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_VEG
+		   )
+		{
+			totalMouths++;
+		}
+	}
+
+	if (
+	    totalGonads >= 2 && totalMouths >= 1 && totalBreathing >= 1
+	    && game.animals[animalIndex].mass > 1.0f
+	    && game.animals[animalIndex].maxEnergy > 1.0f
+	    && game.animals[animalIndex].offspringEnergy > 1.0f
+	    && game.animals[animalIndex].cellsUsed > 0
+	)
+	{
+		return true;
+	}
+	return false;
+}
+
+
 // // some genes have permanent effects, or effects that need to be known immediately at birth. Compute them here.
 // this function studies the phenotype, not the genotype.
 // returns whether the animal is fit to live.
@@ -854,7 +914,7 @@ bool measureAnimalQualities( int animalIndex)
 	game.animals[animalIndex].totalMuscle = 0;
 	game.animals[animalIndex].offspringEnergy = 1.0f;
 	game.animals[animalIndex].lifespan = baseLifespan;
-	unsigned int totalGonads = 0;
+	unsigned int totalLiver = 0;
 	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_MUSCLE ||
@@ -875,31 +935,19 @@ bool measureAnimalQualities( int animalIndex)
 		{
 			game.animals[animalIndex].lifespan += baseLifespan;
 		}
-		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_GONAD)
+		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_LIVER)
 		{
-			totalGonads ++;
+			totalLiver++;
 		}
-		// if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_COLDADAPT)
-		// {
-		// 	game.animals[animalIndex].temp_limit_low -= 35.0f;
-		// 	game.animals[animalIndex].temp_limit_high -= 35.0f;
-		// }
-		// if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_HEATADAPT)
-		// {
-		// 	game.animals[animalIndex].temp_limit_high += 35.0f;
-		// 	game.animals[animalIndex].temp_limit_low  += 35.0f;
-		// }
-	}
-	game.animals[animalIndex].lifespan *= 0.75 + (RNG() * 0.5);
 
-	if (game.animals[animalIndex].mass > 0 && totalGonads > 1 ) // the animal needs at least two gonads to be viable.
-	{
-		return true;
+
 	}
-	else
-	{
-		return false;
-	}
+
+	game.animals[animalIndex].maxEnergy = game.animals[animalIndex].mass + (totalLiver * liverStorage);
+
+	// game.animals[animalIndex].lifespan *= 0.75 + (RNG() * 0.5);
+
+	return validateAnimal(animalIndex);
 }
 
 // choose a random cell of any type that can put forth a connection, which includes all neurons and actuators.
@@ -1402,7 +1450,8 @@ void spawnAnimalIntoSlot(  int animalIndex,
 	}
 	game.animals[animalIndex].isMachine = parent.isMachine;
 	game.animals[animalIndex].machineCallback = parent.machineCallback;
-	game.animals[animalIndex].cellsUsed = parent.cellsUsed;	game.animals[animalIndex].position = position;
+	game.animals[animalIndex].cellsUsed = parent.cellsUsed;
+	game.animals[animalIndex].position = position;
 	game.animals[animalIndex].fPosX = position % worldSize; // set the new creature to the desired position
 	game.animals[animalIndex].fPosY = position / worldSize;
 	game.animals[animalIndex].birthLocation = position;
@@ -2487,7 +2536,7 @@ void updateMap()
 
 int defenseAtWorldPoint( int animalIndex, unsigned int cellWorldPositionI)
 {
-	int nBones = 0;
+	int defense = 1;
 	for (unsigned int n = 0; n < nNeighbours; ++n)
 	{
 		unsigned int worldNeighbour = cellWorldPositionI + neighbourOffsets[n];
@@ -2496,11 +2545,11 @@ int defenseAtWorldPoint( int animalIndex, unsigned int cellWorldPositionI)
 		{
 			if (game.animals[animalIndex].body[occupyingCell].organ == ORGAN_BONE)
 			{
-				nBones++;
+				defense++;
 			}
 		}
 	}
-	return nBones;
+	return defense;
 }
 
 Vec_i2 getMousePositionRelativeToAnimal( int animalIndex)
@@ -2682,13 +2731,10 @@ void hurtAnimal( int animalIndex, unsigned int cellIndex, float amount, int shoo
 
 	unsigned int cellWorldPositionI = game.animals[animalIndex].body[cellIndex].worldPositionI;
 	float defense = defenseAtWorldPoint(game.world[cellWorldPositionI].identity, cellWorldPositionI);
-	if (defense > 0)
-	{
-		amount = amount / defense;
-	}
-	game.animals[animalIndex].body[cellIndex].damage += amount;
-	// spillBlood(cellWorldPositionI);
 
+	float finalAmount = amount / defense;
+
+	game.animals[animalIndex].body[cellIndex].damage += amount;
 
 
 	int painCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PAIN);
@@ -3610,12 +3656,6 @@ void animal_organs( int animalIndex)
 
 				ate_plant = true;
 			}
-			else if (game.world[cellWorldPositionI].plantState == MATERIAL_WOOD)
-			{
-
-				ate_plant = true;
-			}
-
 
 			if (ate_plant)
 			{
@@ -3771,7 +3811,7 @@ void animal_organs( int animalIndex)
 			float impulse = game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower;
 			game.animals[animalIndex].fPosX += (impulse / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleSin;
 			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleCos;
-			game.animals[animalIndex].energy -= game.ecoSettings[2] * impulse ;
+			game.animals[animalIndex].energy -= game.ecoSettings[2] * abs(impulse) ;
 
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
@@ -3805,7 +3845,7 @@ void animal_organs( int animalIndex)
 			float impulse = game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower;
 			game.animals[animalIndex].fPosX += (impulse / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleCos;
 			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleSin;
-			game.animals[animalIndex].energy -= game.ecoSettings[2] * impulse ;
+			game.animals[animalIndex].energy -= game.ecoSettings[2] * abs(impulse) ;
 
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
@@ -3929,6 +3969,10 @@ void animal_organs( int animalIndex)
 }
 
 
+
+
+
+
 void animalEnergy(int animalIndex)
 {
 
@@ -3961,25 +4005,43 @@ void animalEnergy(int animalIndex)
 	bool execute = false;
 	if ( !game.animals[animalIndex].isMachine && game.animals[animalIndex].age > 0) // reasons an npc can die
 	{
-		if (game.speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) && animalIndex != game.playerCreature) // only kill off weak game.animals if there is some population.
+		// if (game.speciesPopulationCounts[speciesIndex] > (( numberOfAnimals / numberOfSpecies) / 4) && animalIndex != game.playerCreature) // only kill off weak game.animals if there is some population.
+
+
+		if (speciesIndex != 0)
+		{
 			if (game.animals[animalIndex].energy < 0.0f)
 			{
+				printf("died low energy\n");
 				execute = true;
 			}
-		if (game.animals[animalIndex].age > game.animals[animalIndex].lifespan && animalIndex != game.playerCreature)
-		{
-			execute = true;
+
+			if (game.animals[animalIndex].age > game.animals[animalIndex].lifespan)
+			{
+
+				printf("died old\n");
+				execute = true;
+			}
+			if (game.animals[animalIndex].totalGonads == 0)
+			{
+
+				printf("died no balls\n");
+				execute = true;
+			}
 		}
-		if (game.animals[animalIndex].totalGonads == 0)
-		{
-			execute = true;
-		}
+
+
+
 		if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].mass / 2)
 		{
+
+			printf("died damaged\n");
 			execute = true;
 		}
 		if (game.animals[animalIndex].mass <= 0)
 		{
+
+			printf("died no mass\n");
 			execute = true;
 		}
 	}
@@ -3991,42 +4053,23 @@ void animalEnergy(int animalIndex)
 	int animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + game.animals[animalIndex].numberOfTimesReproduced ;
 	if ( animalScore >= game.championScores[speciesIndex])
 	{
-		// nominee must be reproductively viable (1 gonad is not enough!) and have a breathing apparatus and a mouth
-		unsigned int totalGonads = 0;
-		unsigned int totalMouths = 0;
-		unsigned int totalBreathing  = 0;
-		for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
-		{
-			if ( game.animals[animalIndex].body[i].organ == ORGAN_GONAD)
-			{
-				totalGonads++;
-			}
-
-			if ( game.animals[animalIndex].body[i].organ == ORGAN_LUNG
-			        || game.animals[animalIndex].body[i].organ == ORGAN_GILL )
-			{
-				totalBreathing++;
-			}
-
-			if ( game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_CARNIVORE
-			        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_SCAVENGE
-			        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_PARASITE
-			        || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_VEG
-			   )
-			{
-				totalMouths++;
-			}
-		}
 
 		bool nominate = false;
-		// player & player species cannot be nominated, and machines cannot be nominated
-		if (animalIndex != game.playerCreature
+
+		if (validateAnimal(animalIndex) &&
+
+		        // player & player species cannot be nominated, and machines cannot be nominated
+		        animalIndex != game.playerCreature
 		        && animalIndex != game.adversary
 		        && speciesIndex > 0
 		        && game.animals[animalIndex].machineCallback == MATERIAL_NOTHING
-		        && game.animals[animalIndex].mass > 0
-		        && totalGonads > 1 && totalMouths > 0 && totalBreathing > 0)
+
+
+		        && game.animals[animalIndex].age > 1
+
+		   )
 		{
+
 			if ( animalScore > game.championScores[speciesIndex])
 			{
 				nominate = true;
@@ -4038,15 +4081,20 @@ void animalEnergy(int animalIndex)
 					nominate = true;
 				}
 			}
-		}
-		if (nominate)
-		{
-			game.championScores[speciesIndex] = animalScore;
-			game.champions[speciesIndex] = game.animals[animalIndex];
-			game.championEnergies[speciesIndex] = game.animals[animalIndex].energy;
+
+			if (nominate)
+			{
+				game.championScores[speciesIndex] = animalScore;
+				game.champions[speciesIndex] = game.animals[animalIndex];
+				game.championEnergies[speciesIndex] = game.animals[animalIndex].energy;
+			}
 		}
 	}
 }
+
+
+
+
 
 void census()
 {
@@ -4613,10 +4661,7 @@ void drawGameInterfaceText()
 		menuY += spacing;
 	}
 
-	if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals)
-	{
-		std::string selectString( "energy " + std::to_string(game.animals[game.selectedAnimal].energy ) + ". [e] to deselect. [k] save animal.");
-	}
+
 
 	if (worldCursorPos < worldSquareSize)
 	{
@@ -4629,7 +4674,7 @@ void drawGameInterfaceText()
 		{
 			unsigned int cursorAnimalSpecies = game.cursorAnimal / numberOfAnimalsPerSpecies;
 			int occupyingCell = isAnimalInSquare(game.cursorAnimal, worldCursorPos);
-			std::string selectString( " [e] to select.");
+			// std::string selectString( " [e] to select.");
 
 			if ( occupyingCell >= 0)
 			{
@@ -4637,19 +4682,31 @@ void drawGameInterfaceText()
 				{
 					if (game.cursorAnimal == game.playerCreature)
 					{
-						printText2D(   std::string("This is you.") + selectString, menuX, menuY, textSize);
+						printText2D(   std::string("This is you."), menuX, menuY, textSize);
 						menuY += spacing;
 					}
 					else
 					{
-						printText2D(  std::string("A ") +  std::string(game.animals[game.cursorAnimal].displayName) + std::string(".") + selectString , menuX, menuY, textSize);
+						printText2D(  std::string("A ") +  std::string(game.animals[game.cursorAnimal].displayName) + std::string(".") , menuX, menuY, textSize);
 						menuY += spacing;
 					}
 				}
 				else
 				{
-					printText2D(   std::string("An animal of species ") + std::to_string(cursorAnimalSpecies ) + std::string(".") + selectString, menuX, menuY, textSize);
+					printText2D(   std::string("An animal of species ") + std::to_string(cursorAnimalSpecies ) +
+					               std::string(", energy ") + std::to_string(game.animals[game.cursorAnimal].energy ) +
+					               std::string(", maxEnergy ") + std::to_string(game.animals[game.cursorAnimal].maxEnergy ) +
+					               std::string(", debt ") + std::to_string(game.animals[game.cursorAnimal].energyDebt ) +
+					               std::string(", age ") + std::to_string(game.animals[game.cursorAnimal].age )
+
+
+
+					               , menuX, menuY, textSize);
 					menuY += spacing;
+
+
+
+
 				}
 				printText2D(  tileDescriptions(  game.animals[  game.cursorAnimal].body[occupyingCell].organ ), menuX, menuY, textSize);
 				menuY += spacing;
@@ -5469,20 +5526,62 @@ void tournamentController()
 						int j = 1;
 						int domingo = -1;
 						unsigned int randomPos = game.animals[game.adversary].position;
-						for (int ee = 0; ee < 60; ++ee)
+						for (int ee = 0; ee < 120; ++ee)
 						{
-							// spawn 6 of the champion
+							// spawn a bunch of random champions
 							int randomCell = getRandomPopulatedCell(game.adversary);
 							if (randomCell >= 0)
 							{
 								randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
 							}
 
-							domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
-							if (domingo >= 0)
+							int randomChampion = ee % numberOfSpecies;
+							if (randomChampion > 0)
 							{
+								domingo = spawnAnimal( k,  game.champions[randomChampion], randomPos, true);
+								if (domingo >= 0)
+								{
 
-								game.animals[domingo].energy = game.animals[domingo].maxEnergy;
+									game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
+									game.animals[domingo].parentIdentity = game.adversary;
+
+									if (game.world[game.animals[game.adversary].position].wall == MATERIAL_WATER)
+									{
+										bool hasGill = false;
+										for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
+										{
+											if (game.animals[domingo].body[i].organ == ORGAN_GILL)
+											{
+												hasGill = true;
+												break;
+											}
+										}
+										if (!hasGill)
+										{
+											animalAppendCell(domingo, ORGAN_GILL);
+										}
+									}
+									else
+									{
+										bool hasLung = false;
+										for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
+										{
+											if (game.animals[domingo].body[i].organ == ORGAN_LUNG)
+											{
+												hasLung = true;
+												break;
+											}
+										}
+										if (!hasLung)
+										{
+											animalAppendCell(domingo, ORGAN_LUNG);
+										}
+
+									}
+
+
+
+								}
 							}
 						}
 					}
@@ -5820,7 +5919,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 
 	setupTestAnimal_airbreathing(j);
@@ -5831,7 +5930,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 	game.world[testPos].wall = MATERIAL_WATER;
 
@@ -5843,7 +5942,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 
 	setupTestAnimal_waterbreathing(j);
@@ -5854,7 +5953,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 	game.world[testPos].wall = MATERIAL_WATER;
 
@@ -5865,7 +5964,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 
 	setupTestAnimal_amphibious(j);
@@ -5876,7 +5975,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
+	// game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2 - 0.1f;
 	game.animals[testAnimal].energyDebt = 0;
 
 	game.world[testPos].wall = MATERIAL_WATER;
@@ -5890,15 +5989,49 @@ bool test_all()
 	// an air breathing animal in water dies
 	// an amphibious animal is fine in both situations
 
+	float amount =  (game.animals[testAnimal].maxEnergy / 2.0f) - 0.1f;
+
+
+
+	printf("AMOUNT %f, max %f \n ", amount , game.animals[testAnimal].maxEnergy   );
+
+	printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
+	printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
+	printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
+	printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
+	printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
+	printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
 
 	for (int i = 0; i < how_long_it_takes_to_make_sure; ++i)
 	{
+
+
+
+		game.animals[testAnimal_air_in_air].energy     = amount;
+		game.animals[testAnimal_air_in_water].energy   = amount;
+		game.animals[testAnimal_water_in_air].energy   = amount;
+		game.animals[testAnimal_water_in_water].energy = amount;
+		game.animals[testAnimal_amphi_in_air].energy   = amount;
+		game.animals[testAnimal_amphi_in_water].energy = amount;
+
 		animalTurn(testAnimal_air_in_air);
 		animalTurn(testAnimal_air_in_water);
 		animalTurn(testAnimal_water_in_air);
 		animalTurn(testAnimal_water_in_water);
 		animalTurn(testAnimal_amphi_in_air);
 		animalTurn(testAnimal_amphi_in_water);
+
+
+
+		printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
+		printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
+		printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
+		printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
+		printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
+		printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
+
+
+
 	}
 
 	if (!(game.animals[testAnimal_air_in_air].retired     ) &&
@@ -5911,6 +6044,17 @@ bool test_all()
 		testResult_6 = true;
 	}
 
+	else
+	{
+
+		printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
+		printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
+		printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
+		printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
+		printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
+		printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
+
+	}
 // 1. grass grows
 // 2. animals eat grass and gain energy
 // 3. animals reproduce when they have enough energy

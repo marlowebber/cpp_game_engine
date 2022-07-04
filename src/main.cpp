@@ -182,6 +182,16 @@ void threadInterface()
 				incrementSelectedGrabber();
 				break;
 			}
+
+			case SDLK_PERIOD:
+			{
+				if (getPause())
+				{
+					model();
+				}
+				break;
+			}
+
 			case SDLK_ESCAPE:
 				flagReturn = true;
 				return;
