@@ -183,6 +183,14 @@ void threadInterface()
 				break;
 			}
 
+			case SDLK_n:
+			{
+
+
+				lookAtNextNonretiredAnimal();
+				break;
+			}
+
 			case SDLK_PERIOD:
 			{
 				if (getPause())

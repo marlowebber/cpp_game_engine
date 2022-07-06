@@ -115,6 +115,7 @@ struct Animal
     unsigned int birthLocation;
     unsigned int age;
     unsigned int lifespan;
+    unsigned int generation;
     int parentIdentity;
     bool retired;
     float offspringEnergy;
@@ -243,6 +244,8 @@ void incrementSelectedGrabber();
 void notifyLMBUp();
 void drawInterfacePanel();
 
+
+void lookAtNextNonretiredAnimal();
 void drawPalette2();
 
 void resetGameState();

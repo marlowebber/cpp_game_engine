@@ -183,131 +183,131 @@ std::string tileDescriptions(unsigned int tile)
 	{
 	case ORGAN_MOUTH_VEG:
 	{
-		return std::string("A chomping mouth with flat teeth that chews side-to-side.");
+		return std::string("a chomping mouth with flat teeth that chews side-to-side.");
 	}
 	case ORGAN_MOUTH_SCAVENGE:
 	{
-		return std::string("A sucker-like mouth that slurps up detritus.");
+		return std::string("a sucker-like mouth that slurps up detritus.");
 	}
 	case ORGAN_GONAD:
 	{
-		return std::string("A sensitive gland filled with potential offspring.");
+		return std::string("a sensitive gland filled with potential offspring.");
 	}
 	case ORGAN_MUSCLE:
 	{
-		return std::string("A muscular limb that can pull the animal along.");
+		return std::string("a muscular limb that can pull the animal along.");
 	}
 	case ORGAN_BONE:
 	{
-		return std::string("A strong slab of bone.");
+		return std::string("a strong slab of bone.");
 	}
 	case ORGAN_CLAW:
 	{
-		return std::string("A wicked curved claw with a deadly point.");
+		return std::string("a wicked curved claw with a deadly point.");
 	}
 	case ORGAN_LIVER:
 	{
-		return std::string("A brownish slab of flesh that stores energy.");
+		return std::string("a brownish slab of flesh that stores energy.");
 	}
 	case ORGAN_MUSCLE_TURN:
 	{
-		return std::string("A muscular limb good for turning and spinning.");
+		return std::string("a muscular limb good for turning and spinning.");
 	}
 	case ORGAN_SENSOR_EYE:
 	{
-		return std::string("A monochrome, single pixel eye.");
+		return std::string("a monochrome, single pixel eye.");
 	}
 	case ORGAN_MOUTH_CARNIVORE:
 	{
-		return std::string("A grinning mouth with serrated, backward curving teeth.");
+		return std::string("a grinning mouth with serrated, backward curving teeth.");
 	}
 	case ORGAN_MOUTH_PARASITE:
 	{
-		return std::string("A leech-like sucker lined with tiny razors.");
+		return std::string("a leech-like sucker lined with drilling teeth.");
 	}
 	case ORGAN_ADDOFFSPRINGENERGY:
 	{
-		return std::string("A womb-like organ that imbues the offspring with energy before they are born.");
+		return std::string("a manifold of ropey veins that nourishes the fetus.");
 	}
 	case ORGAN_ADDLIFESPAN:
 	{
-		return std::string("A gland full of powerful antioxidants that promotes long life.");
+		return std::string("a gland full of powerful antioxidants that promotes long life.");
 	}
 	case ORGAN_NEURON:
 	{
-		return std::string("A basic brain cell that connects to form networks.");
+		return std::string("a basic brain cell that connects to form networks.");
 	}
 	case ORGAN_BIASNEURON:
 	{
-		return std::string("A part of the brain that provides a constant output.");
+		return std::string("a part of the brain that provides a constant output.");
 	}
 	case ORGAN_SENSOR_BODYANGLE:
 	{
-		return std::string("Part of the brain that senses the body's orientation.");
+		return std::string("part of the brain that senses the body's orientation.");
 	}
 	case ORGAN_SENSOR_TRACKER:
 	{
-		return std::string("Part of the brain that seeks prey.");
+		return std::string("part of the brain that seeks prey.");
 	}
 	case ORGAN_SPEAKER:
 	{
-		return std::string("A resonant chamber that is blown with air to produce sound.");
+		return std::string("a resonant chamber that is blown with air to produce sound.");
 	}
 	case ORGAN_SENSOR_EAR:
 	{
-		return std::string("A chamber full of tiny hairs that detect vibrations.");
+		return std::string("a chamber full of tiny hairs that detect vibrations.");
 	}
 	case ORGAN_MUSCLE_STRAFE:
 	{
-		return std::string("A muscular limb good for moving sideways.");
+		return std::string("ranks of hard muscle that pull the animal sideways.");
 	}
 	case ORGAN_SENSOR_PHEROMONE:
 	{
-		return std::string("A pocket that detects chemical signals.");
+		return std::string("a pocket that detects chemical signals.");
 	}
 	case ORGAN_EMITTER_PHEROMONE:
 	{
-		return std::string("A scent-producing gland that is plump with waxy secretions.");
+		return std::string("a scent-producing gland that is plump with waxy secretions.");
 	}
 	case ORGAN_MEMORY_TX:
 	{
-		return std::string("A part of the brain responsible for storing knowledge in memory.");
+		return std::string("a part of the brain responsible for storing knowledge in memory.");
 	}
 	case ORGAN_MEMORY_RX:
 	{
-		return std::string("A part of the brain that retrieves knowledge from memory.");
+		return std::string("a part of the brain that retrieves knowledge from memory.");
 	}
 	case ORGAN_GILL:
 	{
-		return std::string("A red, frilly gill for breathing water.");
+		return std::string("red frills that exchange oxygen with the water.");
 	}
 	case ORGAN_LUNG:
 	{
-		return std::string("A pink, spongy, air breathing lung.");
+		return std::string("pink, spongy, air-breathing lungs.");
 	}
 	case ORGAN_SENSOR_HUNGER:
 	{
-		return std::string("This part of the brain feels the pain of hunger.");
+		return std::string("a twisted ganglion that feels the pain of hunger.");
 	}
 	case ORGAN_SENSOR_AGE:
 	{
-		return std::string("This part of the brain feels the weight of age.");
+		return std::string("part of the brain that feels the weight of age.");
 	}
 	case ORGAN_SENSOR_LAST_STRANGER:
 	{
-		return std::string("A part of the brain which remembers the last stranger the animal met.");
+		return std::string("part of the brain which remembers the last stranger the animal met.");
 	}
 	case ORGAN_SENSOR_LAST_KIN:
 	{
-		return std::string("A part of the brain which remembers the animal's most recent friend.");
+		return std::string("part of the brain which remembers the animal's recent friend.");
 	}
 	case ORGAN_SENSOR_PARENT:
 	{
-		return std::string("This part contains a memory of the animal's mother.");
+		return std::string("part of the brain that remembers the animal's mother.");
 	}
 	case ORGAN_SENSOR_BIRTHPLACE:
 	{
-		return std::string("This part contains a memory of a childhood home.");
+		return std::string("part of the brain that remembers a childhood home.");
 	}
 	case ORGAN_SENSOR_TOUCH:
 	{
@@ -323,7 +323,7 @@ std::string tileDescriptions(unsigned int tile)
 
 	case ORGAN_SENSOR_PAIN:
 	{
-		return std::string("A part of the brain which feels agony and suffering.");
+		return std::string("a part of the brain which feels agony and suffering.");
 	}
 	// case ORGAN_HEATADAPT:
 	// {
@@ -335,16 +335,16 @@ std::string tileDescriptions(unsigned int tile)
 	// }
 	case ORGAN_HAIR:
 	{
-		return std::string("Soft, shiny strands of hair.");
+		return std::string("soft, shiny strands of hair.");
 	}
 
 	case ORGAN_SENSOR_RANDOM:
 	{
-		return std::string("Part of the brain which burbles with madness.");
+		return std::string("part of the brain which cannot bear to sit still.");
 	}
 	case ORGAN_LOCATIONREMEMBERER:
 	{
-		return std::string("A grid arrangement of cells used for navigation.");
+		return std::string("a grid arrangement of cells used for navigation.");
 	}
 
 
@@ -352,11 +352,11 @@ std::string tileDescriptions(unsigned int tile)
 
 	case MATERIAL_FOOD:
 	{
-		return std::string("There's a piece of dried-out old meat.");
+		return std::string("a piece of dried-out old meat.");
 	}
 	case MATERIAL_ROCK:
 	{
-		return std::string("There's a solid grey rock.");
+		return std::string("a solid grey rock.");
 	}
 
 	// case MATERIAL_MEAT:
@@ -365,108 +365,108 @@ std::string tileDescriptions(unsigned int tile)
 	// }
 	case MATERIAL_BONE:
 	{
-		return std::string("A fragment of bone.");
+		return std::string("a fragment of bone.");
 	}
 	case MATERIAL_BLOOD:
 	{
-		return std::string("Splatters of coagulating blood.");
+		return std::string("splatters of coagulating blood.");
 	}
 	case MATERIAL_METAL:
 	{
-		return std::string("This is made of smooth, polished metal.");
+		return std::string("cool, shiny metal.");
 	}
 	case MATERIAL_VOIDMETAL:
 	{
-		return std::string("It's made of impenetrable void metal.");
+		return std::string("unbreakable void metal.");
 	}
 	case MATERIAL_SMOKE:
 	{
-		return std::string("A wisp of smoke.");
+		return std::string("a wisp of smoke.");
 	}
 	case MATERIAL_GLASS:
 	{
-		return std::string("A pane of glass.");
+		return std::string("a pane of glass.");
 	}
 	case MATERIAL_NOTHING:
 	{
-		return std::string("There's nothing there.");
+		return std::string("nothing.");
 	}
 	case MATERIAL_GRASS:
 	{
-		return std::string("Grass and weeds.");
+		return std::string("some grass.");
 	}
 	case MATERIAL_WATER:
 	{
-		return std::string("Cold clear water.");
+		return std::string("cold clear water.");
 	}
 
 
 	case MATERIAL_SAND:
 	{
-		return std::string("Fine-grained sand.");
+		return std::string("fine-grained sand.");
 	}
 	case MATERIAL_DIRT:
 	{
-		return std::string("Dry sandy dirt.");
+		return std::string("dry sandy dirt.");
 	}
 	case MATERIAL_SOIL:
 	{
-		return std::string("Rich living soil.");
+		return std::string("rich living soil.");
 	}
 	case MATERIAL_BASALT:
 	{
-		return std::string("Hard volcanic rock.");
+		return std::string("hard volcanic rock.");
 	}
 	case MATERIAL_DUST:
 	{
-		return std::string("Dry alkaline dust.");
+		return std::string("dry alkaline dust.");
 	}
 	case MATERIAL_GRAVEL:
 	{
-		return std::string("Scattered rubble.");
+		return std::string("scattered rubble.");
 	}
 
 	case MATERIAL_FABRIC:
 	{
-		return std::string("Soft fibre woven into a mesh.");
+		return std::string("soft fibre woven into a mesh.");
 	}
 
 
 
 	case MATERIAL_SEED:
 	{
-		return std::string("A seed of a plant.");
+		return std::string("a seed.");
 	}
 
 
 	case MATERIAL_BUD:
 	{
-		return std::string("A plant's flowers.");
+		return std::string("flowers.");
 	}
 
 
 	case MATERIAL_WOOD:
 	{
-		return std::string("A branch with bark.");
+		return std::string("a branch with bark.");
 	}
 
 
 	case MATERIAL_LEAF:
 	{
-		return std::string("Leaves and twigs.");
+		return std::string("leaves and twigs.");
 	}
 
 
 
 	case MATERIAL_POLLEN:
 	{
-		return std::string("Fragrant, dusty pollen.");
+		return std::string("fragrant, dusty pollen.");
 	}
 
 
 	case TILE_DESTROYER_EYE:
 	{
-		return std::string("A menacing red lens that flickers with energy.");
+		return std::string("a menacing red lens that flickers with energy.");
 	}
 
 
@@ -476,23 +476,23 @@ std::string tileDescriptions(unsigned int tile)
 
 	case MATERIAL_SEMEN:
 	{
-		return std::string("Globs of sticky, bleachy reproductive jelly.");
+		return std::string("globs of sticky, bleachy reproductive jelly.");
 	}
 
 	case MATERIAL_VOMIT:
 	{
-		return std::string("An acrid puddle of partially digested food.");
+		return std::string("an acrid puddle of partially digested food.");
 	}
 
 
 	case MATERIAL_HONEY:
 	{
-		return std::string("A sweet, sticky sugar syrup.");
+		return std::string("a sweet, sticky sugar syrup.");
 	}
 
 	case MATERIAL_WAX:
 	{
-		return std::string("A clump of malleable, waterproof solid.");
+		return std::string("a malleable, waterproof solid.");
 	}
 
 
@@ -500,7 +500,7 @@ std::string tileDescriptions(unsigned int tile)
 
 
 	}
-	return std::string("You don't know what this is.");
+	return std::string("something you can't describe.");
 }
 
 
