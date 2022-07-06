@@ -191,6 +191,12 @@ void threadInterface()
 				break;
 			}
 
+			case SDLK_b:
+			{
+
+			 setupPlantAtCursor();
+			}
+
 			case SDLK_PERIOD:
 			{
 				if (getPause())

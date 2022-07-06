@@ -213,7 +213,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_CLAW:
 	{
-		return std::string("a wicked curved claw with a deadly point.");
+		return std::string("a wicked curved claw that retracts into a sheath.");
 	}
 	case ORGAN_LIVER:
 	{
@@ -237,7 +237,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_ADDOFFSPRINGENERGY:
 	{
-		return std::string("a manifold of tissue that nourishes the fetus.");
+		return std::string("a manifold of tissue that nourishes the growing child.");
 	}
 	case ORGAN_ADDLIFESPAN:
 	{
@@ -392,11 +392,17 @@ std::string tileDescriptions(unsigned int tile)
 	}
 
 
+	case ORGAN_ADDER:
+	{
+		return std::string("part of the brain that adds things together.");
+	}
+
+
 // #define ORGAN_GENITAL_A            40
 // #define ORGAN_GENITAL_B            41
 	case ORGAN_GENITAL_A:
 	{
-		return std::string("a penetrating harpoon that squirts fertilizing jelly.");
+		return std::string("a helmeted harpoon that squirts sperm.");
 	}
 
 	case ORGAN_GENITAL_B:
@@ -428,7 +434,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case MATERIAL_METAL:
 	{
-		return std::string("cool, shiny metal.");
+		return std::string("smooth, shiny metal.");
 	}
 	case MATERIAL_VOIDMETAL:
 	{
@@ -1170,7 +1176,8 @@ bool organIsAnActuator(unsigned int organ)
 	if (    organ == ORGAN_MUSCLE ||
 	        organ == ORGAN_MUSCLE_TURN ||
 	        organ == ORGAN_MUSCLE_STRAFE ||
-	        organ == ORGAN_SPEAKER  ||
+	        organ == ORGAN_SPEAKER  || 
+	        organ == ORGAN_EMITTER_PHEROMONE ||
 	        organ == ORGAN_EMITTER_PHEROMONE
 	        // organ == ORGAN_MEMORY_TX
 	   )

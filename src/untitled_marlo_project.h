@@ -253,6 +253,7 @@ void notifyLMBUp();
 void drawInterfacePanel();
 
 
+void setupPlantAtCursor();
 void lookAtNextNonretiredAnimal();
 void drawPalette2();
 
