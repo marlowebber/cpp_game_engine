@@ -1970,7 +1970,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 			viewedAnimal = animalIndex;
 		}
 	}
-	if (viewedAnimal != -1)
+	if (viewedAnimal >= 0)
 	{
 		if (organVisible(game.animals[viewedAnimal].body[occupyingCell].organ ))
 		{
@@ -1987,7 +1987,8 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 			displayColor = game.animals[viewedAnimal].body[occupyingCell].color;
 			displayColor = mixColor( color_brightred, displayColor, (game.animals[viewedAnimal].body[occupyingCell].damage) * 2.0f );
 		}
-		if (false)
+
+		if (true)
 		{
 			if ( game.world[worldI].seedState == MATERIAL_POLLEN ) // pollen is visible over the top of animals, because it can cling to them.
 			{
@@ -2404,12 +2405,15 @@ void updatePlants(unsigned int worldI)
 	{
 	case MATERIAL_POLLEN:
 	{
+
+		// printf("ollen\n");
 		// move seeds randomly
 		unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
 		if (neighbour < worldSquareSize)
 		{
 			if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
 			{
+				// printf("smeed\n");
 				game.world[neighbour].seedState = MATERIAL_POLLEN;
 				game.world[neighbour].identity = game.world[worldI].identity;
 				memcpy( & (game.world[neighbour].seedGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
@@ -2430,6 +2434,7 @@ void updatePlants(unsigned int worldI)
 		{
 			if (extremelyFastNumberFromZeroTo(100) == 0)
 			{
+				// printf("dondered\n");
 				game.world[neighbour].seedState = MATERIAL_NOTHING;
 			}
 		}
@@ -2644,7 +2649,7 @@ void updateMapI(unsigned int randomI)
 
 // #ifdef PLANTS
 
-	if ( game.world[randomI].plantState != MATERIAL_NOTHING)
+	if ( game.world[randomI].plantState != MATERIAL_NOTHING || game.world[randomI].seedState != MATERIAL_NOTHING)
 	{
 		updatePlants(randomI);
 	}
@@ -4456,6 +4461,11 @@ void animal_organs( int animalIndex)
 		}
 
 
+		if ( organIsANeuron(game.animals[animalIndex].body[cellIndex].organ) || organIsASensor(game.animals[animalIndex].body[cellIndex].organ) )
+		{
+
+			sensorium[cellIndex] += (RNG() - 0.5f) * neuralNoise;
+		}
 
 
 	}
@@ -4463,10 +4473,8 @@ void animal_organs( int animalIndex)
 
 	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
-
 		game.animals[animalIndex]. body[cellIndex].signalIntensity = sensorium[cellIndex];
 
-		game.animals[animalIndex].body[cellIndex].signalIntensity += (RNG() - 0.5f) * neuralNoise;
 
 	}
 
@@ -5280,7 +5288,19 @@ void drawGameInterfaceText()
 
 // #ifdef PLANTS
 
-			if (game.world[worldCursorPos].plantState != MATERIAL_NOTHING)
+
+			if (game.world[worldCursorPos].seedState != MATERIAL_NOTHING)
+			{
+				// std::string plantInfo =  std::string(" energy ") + std::to_string( game.world[worldCursorPos].energy) + std::string(", debt ") + std::to_string( game.world[worldCursorPos].energyDebt  );
+				// printText2D(
+
+				cursorDescription += 	std::string(" This is ") + tileDescriptions(game.world[worldCursorPos].seedState );
+
+				// ) + plantInfo , menuX, menuY, textSize);
+				// menuY += spacing;
+			}
+
+			else if (game.world[worldCursorPos].plantState != MATERIAL_NOTHING)
 			{
 				// std::string plantInfo =  std::string(" energy ") + std::to_string( game.world[worldCursorPos].energy) + std::string(", debt ") + std::to_string( game.world[worldCursorPos].energyDebt  );
 				// printText2D(
@@ -5301,7 +5321,7 @@ void drawGameInterfaceText()
 			// printText2D(  tileDescriptions (game.world[worldCursorPos].terrain ), menuX, menuY, textSize);
 			// menuY += spacing;
 
-			cursorDescription += std::string(" This is ") +  tileDescriptions(game.world[worldCursorPos].terrain);
+			cursorDescription += std::string(" Below is ") +  tileDescriptions(game.world[worldCursorPos].terrain);
 
 			// }
 // #else
@@ -6497,13 +6517,13 @@ void setupTestPlant(unsigned int worldPositionI)
 	if (extremelyFastNumberFromZeroTo(1) == 0)
 	{
 
-		game.world[worldPositionI].plantState = MATERIAL_SEED;
+		game.world[worldPositionI].seedState = MATERIAL_SEED;
 
 
 	}
 	else
 	{
-		game.world[worldPositionI].plantState = MATERIAL_POLLEN;
+		game.world[worldPositionI].seedState = MATERIAL_POLLEN;
 
 
 	}
