@@ -326,6 +326,7 @@ void resetCell(int animalIndex, unsigned int cellLocalPositionI)
 	game.animals[animalIndex].body[cellLocalPositionI].localPosX = 0;
 	game.animals[animalIndex].body[cellLocalPositionI].localPosY = 0;
 	game.animals[animalIndex].body[cellLocalPositionI].grabbedCreature = -1;
+	game.animals[animalIndex].body[cellLocalPositionI].workingValue = 0.0f;
 
 	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 	{
@@ -794,7 +795,7 @@ void appendCell( int animalIndex, unsigned int organType, Vec_i2 newPosition)
 
 		if (organType == ORGAN_BIASNEURON)
 		{
-			game.animals[animalIndex].body[cellIndex].signalIntensity = ((RNG() - 0.5f) * 2.0f);
+			game.animals[animalIndex].body[cellIndex].workingValue =  ((RNG() - 0.5f) * 2.0f);
 		}
 	}
 }
@@ -848,7 +849,7 @@ void setupTestAnimal_straightline(int i)
 	game.animals[i].body[2].connections[0].used = true;
 	game.animals[i].body[2].connections[0].connectedTo = 1;
 	game.animals[i].body[2].connections[0].weight = 1.0f;
-	game.animals[i].body[1].signalIntensity = 0.1f;
+	game.animals[i].body[1].workingValue = 0.1f;
 }
 
 void setupTestAnimal_amphibious(int i)
@@ -1508,8 +1509,8 @@ void mutateAnimal( int animalIndex)
 		int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
 		if (mutantCell >= 0)
 		{
-			game.animals[animalIndex].body[mutantCell].signalIntensity *= ((RNG() - 0.5f ) * neuralMutationStrength);
-			game.animals[animalIndex].body[mutantCell].signalIntensity += ((RNG() - 0.5f ) * neuralMutationStrength);
+			game.animals[animalIndex].body[mutantCell].workingValue *= ((RNG() - 0.5f ) * neuralMutationStrength);
+			game.animals[animalIndex].body[mutantCell].workingValue += ((RNG() - 0.5f ) * neuralMutationStrength);
 
 		}
 		break;
@@ -3198,17 +3199,17 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 				game.animals[newAnimal].energy += energyDonation;
 			}
 
-			int pleasureCellA = getRandomCellOfType(a, ORGAN_SENSOR_PLEASURE);
-			if (pleasureCellA >= 0)
-			{
-				game.animals[a].body[pleasureCellA].signalIntensity += 1.0f;
-			}
+			// int pleasureCellA = getRandomCellOfType(a, ORGAN_SENSOR_PLEASURE);
+			// if (pleasureCellA >= 0)
+			// {
+			// 	game.animals[a].body[pleasureCellA].signalIntensity += 1.0f;
+			// }
 
-			int pleasureCellB = getRandomCellOfType(b, ORGAN_SENSOR_PLEASURE);
-			if (pleasureCellB >= 0)
-			{
-				game.animals[b].body[pleasureCellB].signalIntensity += 1.0f;
-			}
+			// int pleasureCellB = getRandomCellOfType(b, ORGAN_SENSOR_PLEASURE);
+			// if (pleasureCellB >= 0)
+			// {
+			// 	game.animals[b].body[pleasureCellB].signalIntensity += 1.0f;
+			// }
 		}
 	}
 }
@@ -3278,9 +3279,12 @@ void animal_organs( int animalIndex)
 	float totalLiver = 0;
 	// unsigned int totalGonads = 0;
 	float highestIntensity = 0.0f;
+
+	float sensorium[game.animals[animalIndex].cellsUsed];
+
 	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
-
+		sensorium[cellIndex] = 0.0f;
 		if (game.animals[animalIndex].body[cellIndex].damage >= 1.0f) { continue;}
 		unsigned int cellWorldPositionI = game.animals[animalIndex].body[cellIndex].worldPositionI;
 		if (cellWorldPositionI >= worldSquareSize) {continue;}
@@ -3309,13 +3313,26 @@ void animal_organs( int animalIndex)
 					}
 				}
 			}
-			unsigned int ebe = 0;
+			unsigned int switchedChannel = 0;
 			if (sum > 0.0f)
 			{
-				ebe = 1;
+				switchedChannel = 1;
 			}
-			unsigned int switchCell = game.animals[animalIndex].body[cellIndex].connections[ebe] .connectedTo;
-			game.animals[animalIndex].body[cellIndex].signalIntensity = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[ebe] .weight;
+			unsigned int switchCell = game.animals[animalIndex].body[cellIndex].connections[switchedChannel] .connectedTo;
+			sensorium[cellIndex] = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[switchedChannel] .weight;
+			break;
+		}
+
+
+		case ORGAN_TIMER:
+		{
+
+
+			game.animals[animalIndex].body[cellIndex].workingValue += (1.0f /
+			        ((game.animals[animalIndex].body[cellIndex].speakerChannel * game.animals[animalIndex].body[cellIndex].speakerChannel )
+			         + 1) );
+			sensorium[cellIndex] = sin(game.animals[animalIndex].body[cellIndex].workingValue );
+
 			break;
 		}
 
@@ -3326,11 +3343,13 @@ void animal_organs( int animalIndex)
 			float sum = sumInputs(  animalIndex,   cellIndex);
 			if (sum > 1.0f)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex]  = 1.0f;
 			}
 			else 	if (sum < -1.0f)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex] = -1.0f;
 			}
 			break;
 		}
@@ -3354,7 +3373,8 @@ void animal_organs( int animalIndex)
 			if (sum > 0.0f)
 			{
 				unsigned int switchCell = game.animals[animalIndex].body[cellIndex].connections[0] .connectedTo;
-				game.animals[animalIndex].body[cellIndex].signalIntensity = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[0] .weight;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex] = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[0] .weight;
 			}
 			break;
 		}
@@ -3374,11 +3394,13 @@ void animal_organs( int animalIndex)
 
 			if (inA > inB)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = 1;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex] = 1;
 			}
 			else
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = -1;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex] = -1;
 			}
 
 			break;
@@ -3386,10 +3408,16 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_DERIVATOR:
 		{
-			//The output is the derivative of the input sum.
+
+			// this part is like iirlow. it allows speakerchannel to set the window over which the slope is calculated.
 			float sum = sumInputs(  animalIndex,   cellIndex);
-			game.animals[animalIndex].body[cellIndex].signalIntensity = sum - game.animals[animalIndex].body[cellIndex].workingValue;
-			game.animals[animalIndex].body[cellIndex].workingValue = sum;
+			game.animals[animalIndex].body[cellIndex].workingValue += sum;
+			float feedback = game.animals[animalIndex].body[cellIndex].workingValue / game.animals[animalIndex].body[cellIndex].speakerChannel; // in this case, speakerchannel refers to the number of 'taps'.
+			game.animals[animalIndex].body[cellIndex].workingValue -= feedback;
+
+			//The output is the derivative of the input sum.
+			// game.animals[animalIndex].body[cellIndex].signalIntensity
+			sensorium[cellIndex] = sum - feedback;
 			break;
 		}
 
@@ -3399,7 +3427,8 @@ void animal_organs( int animalIndex)
 			// the output is the absolute value of the input sum.
 
 			float sum = sumInputs(  animalIndex,   cellIndex);
-			game.animals[animalIndex].body[cellIndex].signalIntensity  = abs(sum);
+			// game.animals[animalIndex].body[cellIndex].signalIntensity
+			sensorium[cellIndex]  = abs(sum);
 
 			break;
 		}
@@ -3411,7 +3440,8 @@ void animal_organs( int animalIndex)
 			game.animals[animalIndex].body[cellIndex].workingValue += sum;
 			float feedback = game.animals[animalIndex].body[cellIndex].workingValue / game.animals[animalIndex].body[cellIndex].speakerChannel; // in this case, speakerchannel refers to the number of 'taps'.
 			game.animals[animalIndex].body[cellIndex].workingValue -= feedback;
-			game.animals[animalIndex].body[cellIndex].signalIntensity = feedback;
+			// game.animals[animalIndex].body[cellIndex].signalIntensity
+			sensorium[cellIndex] = feedback;
 			break;
 		}
 		case ORGAN_IIRHIGH:
@@ -3423,7 +3453,8 @@ void animal_organs( int animalIndex)
 			game.animals[animalIndex].body[cellIndex].workingValue -= feedback;
 
 
-			game.animals[animalIndex].body[cellIndex].signalIntensity = feedback - (sum / game.animals[animalIndex].body[cellIndex].speakerChannel);
+			// game.animals[animalIndex].body[cellIndex].signalIntensity
+			sensorium[cellIndex] = feedback - (sum / game.animals[animalIndex].body[cellIndex].speakerChannel);
 			break;
 		}
 
@@ -3438,6 +3469,7 @@ void animal_organs( int animalIndex)
 				spill(MATERIAL_WAX, cellWorldPositionI);
 				game.animals[animalIndex].energy -= 1.0f;
 			}
+			break;
 		}
 		case ORGAN_EMITTER_HONEY:
 		{
@@ -3447,6 +3479,7 @@ void animal_organs( int animalIndex)
 				spill(MATERIAL_HONEY, cellWorldPositionI);
 				game.animals[animalIndex].energy -= 1.0f;
 			}
+			break;
 		}
 
 
@@ -3455,7 +3488,8 @@ void animal_organs( int animalIndex)
 		{
 			if (game.animals[animalIndex].lifespan > 0.0f)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = game.animals[animalIndex].age / game.animals[animalIndex].lifespan;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex] = game.animals[animalIndex].age / game.animals[animalIndex].lifespan;
 			}
 			break;
 		}
@@ -3509,13 +3543,14 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_SENSOR_RANDOM:
 		{
-			game.animals[animalIndex].body[cellIndex].signalIntensity = ((extremelyFastNumberFromZeroTo(64) - 32.0f) / 32.0f );//(RNG() - 0.5f) * 2.0f;
+			// game.animals[animalIndex].body[cellIndex].signalIntensity
+			sensorium[cellIndex] = ((extremelyFastNumberFromZeroTo(64) - 32.0f) / 32.0f ); //(RNG() - 0.5f) * 2.0f;
 			break;
 		}
 
 		case ORGAN_GRABBER:
 		{
-			float sum=0.0f;
+			float sum = 0.0f;
 			if (animalIndex == game.playerCreature)
 			{
 				int potentialGrab = getGrabbableItem(game.playerCreature, cellIndex);// check if there is anything grabbable.
@@ -3535,7 +3570,7 @@ void animal_organs( int animalIndex)
 
 				// sumInputs(  animalIndex,   cellIndex);
 
-				 sum = sumInputs(  animalIndex,   cellIndex);
+				sum = sumInputs(  animalIndex,   cellIndex);
 				// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 				// for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 				// {
@@ -3557,7 +3592,6 @@ void animal_organs( int animalIndex)
 				if (potentialGrab >= 0)
 				{
 					game.animals[animalIndex].body[cellIndex].grabbedCreature = potentialGrab;
-					// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 				}
 			}
 
@@ -3584,22 +3618,38 @@ void animal_organs( int animalIndex)
 				if ( sum <= -1.0f)
 				{
 					game.animals[animalIndex].body[cellIndex].grabbedCreature = -1;
-					// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+					// game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
 				}
 			}
+
+			if (
+					 game.animals[animalIndex].body[cellIndex].grabbedCreature >=0)
+			{
+
+					// game.animals[animalIndex].body[cellIndex].signalIntensity
+					sensorium[cellIndex]  = 1.0f;
+			}
+			else
+			{
+
+					// game.animals[animalIndex].body[cellIndex].signalIntensity
+					sensorium[cellIndex]  = -1.0f;
+			}
+
 			break;
 		}
 
 		case ORGAN_SENSOR_PAIN:
 		{
-			game.animals[animalIndex].body[cellIndex].signalIntensity *= 0.99f;
+			sensorium[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity * 0.99f;
 		}
 
 		case ORGAN_SENSOR_HUNGER:
 		{
 			if (game.animals[animalIndex].maxEnergy > 0.0f)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = game.animals[animalIndex].energy / game.animals[animalIndex].maxEnergy;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex] = game.animals[animalIndex].energy / game.animals[animalIndex].maxEnergy;
 			}
 			break;
 		}
@@ -3613,7 +3663,8 @@ void animal_organs( int animalIndex)
 				float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 				float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 				float targetAngle = atan2( fdiffy, fdiffx );
-				game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
 			}
 			break;
 		}
@@ -3629,7 +3680,8 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
+					// game.animals[animalIndex].body[cellIndex].signalIntensity
+					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
 				}
 			}
 			break;
@@ -3646,7 +3698,8 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
+					// game.animals[animalIndex].body[cellIndex].signalIntensity
+					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
 				}
 			}
 			break;
@@ -3663,7 +3716,8 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
+					// game.animals[animalIndex].body[cellIndex].signalIntensity
+					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
 				}
 			}
 			break;
@@ -3673,7 +3727,8 @@ void animal_organs( int animalIndex)
 		{
 			if (game.world[cellWorldPositionI].wall != MATERIAL_WATER)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = baseLungCapacity;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex] = baseLungCapacity;
 			}
 			else
 			{
@@ -3688,7 +3743,8 @@ void animal_organs( int animalIndex)
 				}
 				if (!hasGill)
 				{
-					game.animals[animalIndex].body[cellIndex].signalIntensity -= aBreath;
+
+					sensorium[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity -  aBreath;
 					if (game.animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
 					{
 						game.animals[animalIndex].damageReceived++;
@@ -3701,7 +3757,7 @@ void animal_organs( int animalIndex)
 		{
 			if (game.world[cellWorldPositionI].wall == MATERIAL_WATER)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = baseLungCapacity;
+				sensorium[cellIndex] = baseLungCapacity;
 			}
 			else
 			{
@@ -3716,7 +3772,7 @@ void animal_organs( int animalIndex)
 				}
 				if (!hasLung)
 				{
-					game.animals[animalIndex].body[cellIndex].signalIntensity -= aBreath;
+					sensorium[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity -  aBreath;
 					if (game.animals[animalIndex].body[cellIndex].signalIntensity < 0.0f)
 					{
 						game.animals[animalIndex].damageReceived++;
@@ -3735,7 +3791,8 @@ void animal_organs( int animalIndex)
 			{
 				if (game.animals[animalIndex].body[cellIndex]. speakerChannel ==   game.world[cellWorldPositionI].pheromoneChannel)
 				{
-					game.animals[animalIndex].body[cellIndex].signalIntensity  = game.world[cellWorldPositionI].pheromoneIntensity;
+					// game.animals[animalIndex].body[cellIndex].signalIntensity
+					sensorium[cellIndex]  = game.world[cellWorldPositionI].pheromoneIntensity;
 				}
 			}
 			break;
@@ -3818,7 +3875,8 @@ void animal_organs( int animalIndex)
 		{
 			if (game.animals[animalIndex].body[cellIndex].speakerChannel < numberOfSpeakerChannels)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = game.speakerChannelsLastTurn[ game.animals[animalIndex].body[cellIndex].speakerChannel ];
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex]  = game.speakerChannelsLastTurn[ game.animals[animalIndex].body[cellIndex].speakerChannel ];
 			}
 			// else
 			// {
@@ -3833,14 +3891,16 @@ void animal_organs( int animalIndex)
 			if ( game.world [cellWorldPositionI].identity != animalIndex )
 			{
 				// game.animals[animalIndex].body[cellIndex].signalIntensity = game.world[cellWorldPositionI].trail;
-				game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween(  game.world[cellWorldPositionI].trail, game.animals[animalIndex].fAngle);
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sensorium[cellIndex]  =  smallestAngleBetween(  game.world[cellWorldPositionI].trail, game.animals[animalIndex].fAngle);
 			}
 			break;
 		}
 
 		case ORGAN_SENSOR_BODYANGLE:
 		{
-			game.animals[animalIndex].body[cellIndex].signalIntensity = game.animals[animalIndex].fAngle;
+			// game.animals[animalIndex].body[cellIndex].signalIntensity
+			sensorium[cellIndex]  = game.animals[animalIndex].fAngle;
 			break;
 		}
 
@@ -3859,13 +3919,17 @@ void animal_organs( int animalIndex)
 			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.g - receivedColor.g );
 			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.b - receivedColor.b );
 			perceivedColor = perceivedColor / 3.0f;
-			game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f - perceivedColor;
+			// game.animals[animalIndex].body[cellIndex].signalIntensity
+			sensorium[cellIndex] = 1.0f - perceivedColor;
 			break;
 		}
 
 		case ORGAN_SENSOR_TOUCH:
 		{
-			game.animals[animalIndex].body[cellIndex].signalIntensity = 0;
+			// game.animals[animalIndex].body[cellIndex].signalIntensity = 0;
+			sensorium[cellIndex] = 0.0f;
+
+
 			for (int i = 0; i < nNeighbours; ++i)
 			{
 				unsigned int neighbour = cellWorldPositionI + neighbourOffsets[i];
@@ -3875,11 +3939,13 @@ void animal_organs( int animalIndex)
 					{
 						if (isAnimalInSquare( game.world[neighbour].identity , neighbour ) >= 0)
 						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
+							// game.animals[animalIndex].body[cellIndex].signalIntensity
+							sensorium[cellIndex]  += 0.5f;
 						}
 						else if (game.world[neighbour].wall != MATERIAL_NOTHING)
 						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
+							// game.animals[animalIndex].body[cellIndex].signalIntensity
+							sensorium[cellIndex]  += 0.5f;
 						}
 					}
 				}
@@ -3893,15 +3959,24 @@ void animal_organs( int animalIndex)
 					{
 						if (isAnimalInSquare( touchedAnimal , cellWorldPositionI ) >= 0)
 						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
+							// game.animals[animalIndex].body[cellIndex].signalIntensity
+							sensorium[cellIndex] += 0.5f;
 						}
 						else if (game.world[cellWorldPositionI].wall != MATERIAL_NOTHING)
 						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity += 0.5f;
+							// game.animals[animalIndex].body[cellIndex].signalIntensity
+							sensorium[cellIndex] += 0.5f;
 						}
 					}
 				}
 			}
+			break;
+		}
+
+
+		case ORGAN_BIASNEURON:
+		{
+			sensorium[cellIndex]  = game.animals[animalIndex].body[cellIndex].workingValue;
 			break;
 		}
 
@@ -3925,7 +4000,15 @@ void animal_organs( int animalIndex)
 
 			float sum = sumInputs(  animalIndex,   cellIndex);
 
-			game.animals[animalIndex].body[cellIndex].signalIntensity = fast_sigmoid(sum);
+			// game.animals[animalIndex].body[cellIndex].signalIntensity
+			sensorium[cellIndex]  = fast_sigmoid(sum);
+			break;
+		}
+
+
+		case ORGAN_ADDER:
+		{
+			sensorium[cellIndex] = sumInputs(  animalIndex,   cellIndex);
 			break;
 		}
 
@@ -3935,6 +4018,9 @@ void animal_organs( int animalIndex)
 			// {
 			// 	totalGonads++;
 			// }
+
+			bool bonked = false;
+
 			if (doReproduction && game.animals[animalIndex].energyDebt <= 0.0f )
 			{
 				float reproducesAt = ((game.animals[animalIndex].cellsUsed / 2 ) + game.animals[animalIndex].offspringEnergy );
@@ -3959,10 +4045,25 @@ void animal_organs( int animalIndex)
 							game.animals[animalIndex].energy -= game.animals[animalIndex].offspringEnergy;
 							game.animals[result].energy       =  game.animals[animalIndex].offspringEnergy;
 							game.animals[result].parentIdentity       = animalIndex;
+
+							bonked = true;
 						}
 					}
 				}
 			}
+
+
+			if (bonked)
+			{
+
+				sensorium[cellIndex] = 1.0f; // game.animals[animalIndex].body[cellIndex].signalIntensity * 0.95f;
+			}
+			else
+			{
+
+				sensorium[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity * 0.95f;
+			}
+
 			break;
 		}
 		case ORGAN_LIVER :
@@ -3994,9 +4095,11 @@ void animal_organs( int animalIndex)
 				ate_plant = true;
 			}
 
+
+			bool ate = false;
 			if (ate_plant)
 			{
-
+				ate = true;
 				game.animals[animalIndex].energy += game.ecoSettings[1] ;
 				game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
 			}
@@ -4010,28 +4113,49 @@ void animal_organs( int animalIndex)
 // #endif
 			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
 			{
+				ate = true;
 				game.animals[animalIndex].energy += 1.0f;
 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
 			}
+
+			sensorium[cellIndex] = 0.0f;
+			if (ate)
+			{
+				sensorium[cellIndex] += 1.0f;
+			}
+
 			break;
 		}
 		case ORGAN_MOUTH_SCAVENGE :
 		{
+			bool ate = false;
 			if (game.world[cellWorldPositionI].wall == MATERIAL_FOOD)
 			{
 				game.animals[animalIndex].energy += game.ecoSettings[0] ;
 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
+				ate  = true;
 			}
 
 			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
 			{
 				game.animals[animalIndex].energy += 1.0f;
 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
+				ate = true;
 			}
+
+
+			sensorium[cellIndex] = 0.0f;
+			if (ate)
+			{
+				sensorium[cellIndex] += 1.0f;
+			}
+
+
 			break;
 		}
 		case ORGAN_MOUTH_PARASITE:
 		{
+			bool ate = false;
 			if (game.world[cellWorldPositionI].identity != animalIndex && game.world[cellWorldPositionI].identity >= 0 && game.world[cellWorldPositionI].identity < numberOfAnimals) // if the cell was occupied by another creature.
 			{
 				int leechAttackVictim = isAnimalInSquare(game.world[cellWorldPositionI].identity , cellWorldPositionI);
@@ -4054,19 +4178,30 @@ void animal_organs( int animalIndex)
 					if (victimSpecies < numberOfSpecies)
 					{
 						foodWeb[speciesIndex][  victimSpecies] += amount ;
+						ate = true;
 					}
 				}
 			}
 
 			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
 			{
+				ate = true;
 				game.animals[animalIndex].energy += 1.0f;
 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
 			}
+
+
+			sensorium[cellIndex] = 0.0f;
+			if (ate)
+			{
+				sensorium[cellIndex] += 1.0f;
+			}
+
 			break;
 		}
 		case ORGAN_MOUTH_CARNIVORE:
 		{
+			bool ate = false;
 			if (game.world[cellWorldPositionI].identity != animalIndex && game.world[cellWorldPositionI].identity >= 0 && game.world[cellWorldPositionI].identity < numberOfAnimals) // if the cell was occupied by another creature.
 			{
 				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity , cellWorldPositionI);
@@ -4086,6 +4221,7 @@ void animal_organs( int animalIndex)
 						unsigned int victimSpecies =  (game.world[cellWorldPositionI].identity / numberOfAnimalsPerSpecies) ;
 						if (victimSpecies < numberOfSpecies)
 						{
+							ate = true;
 							foodWeb[speciesIndex][  victimSpecies] += game.ecoSettings[0] ;
 						}
 					}
@@ -4094,26 +4230,46 @@ void animal_organs( int animalIndex)
 
 			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
 			{
+				ate = true;
 				game.animals[animalIndex].energy += 1.0f;
 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
 			}
+
+			sensorium[cellIndex] = 0.0f;
+			if (ate)
+			{
+				sensorium[cellIndex] += 1.0f;
+			}
+
+
 			break;
+
 		}
 		case ORGAN_CLAW:
 		{
+			bool ate = false;
 			if (game.world[cellWorldPositionI].identity != animalIndex && game.world[cellWorldPositionI].identity >= 0 && game.world[cellWorldPositionI].identity < numberOfAnimals) // if the cell was occupied by another creature.
 			{
 				int targetLocalPositionI = isAnimalInSquare(game.world[cellWorldPositionI].identity , cellWorldPositionI);
 				if (targetLocalPositionI >= 0)
 				{
+					ate = true;
 					hurtAnimal(game.world[cellWorldPositionI].identity , targetLocalPositionI, 1.0f, animalIndex );
 				}
 			}
 
 			if (game.world[cellWorldPositionI].wall == MATERIAL_WAX)
 			{
+				ate = true;
 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
 			}
+
+			sensorium[cellIndex] = 0.0f;
+			if (ate)
+			{
+				sensorium[cellIndex] += 1.0f;
+			}
+
 			break;
 		}
 		case ORGAN_MUSCLE :
@@ -4148,7 +4304,9 @@ void animal_organs( int animalIndex)
 			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleSin;
 			game.animals[animalIndex].energy -= game.ecoSettings[2] * abs(impulse) ;
 
-			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+			sensorium[cellIndex] = sum;
+
+			// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
 		}
 		case ORGAN_MUSCLE_TURN:
@@ -4176,11 +4334,17 @@ void animal_organs( int animalIndex)
 			{
 				game.animals[animalIndex].fAngle += 2 * const_pi;
 			}
+
+			sensorium[cellIndex] = sum;
 			// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
 		}
 		case ORGAN_GENITAL_A:
 		{
+
+			// sensorium[cellIndex] = 0.0f;
+			bool bonked = false;
+
 			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals)
 			{
 				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
@@ -4189,13 +4353,28 @@ void animal_organs( int animalIndex)
 					if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_B )
 					{
 						sexBetweenTwoCreatures( animalIndex, game.world[cellWorldPositionI].identity );
+						bonked = true;
 					}
 				}
 			}
+
+			if (bonked)
+			{
+
+				sensorium[cellIndex] = 1.0f; // game.animals[animalIndex].body[cellIndex].signalIntensity * 0.95f;
+			}
+			else
+			{
+
+				sensorium[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity * 0.95f;
+			}
+
 			break;
 		}
 		case ORGAN_GENITAL_B:
-		{
+		{	// sensorium[cellIndex] = 0.0f;
+			bool bonked = false;
+
 			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals)
 			{
 				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
@@ -4204,16 +4383,30 @@ void animal_organs( int animalIndex)
 					if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_A )
 					{
 						sexBetweenTwoCreatures( game.world[cellWorldPositionI].identity , animalIndex);
+						bonked = true;
 					}
 				}
 			}
+
+			if (bonked)
+			{
+
+				sensorium[cellIndex] = 1.0f; // game.animals[animalIndex].body[cellIndex].signalIntensity * 0.95f;
+			}
+			else
+			{
+
+				sensorium[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity * 0.95f;
+			}
+
 			break;
 		}
-		case ORGAN_SENSOR_PLEASURE:
-		{
-			game.animals[animalIndex].body[cellIndex].signalIntensity *= 0.99f;
-			break;
-		}
+
+		// case ORGAN_SENSOR_PLEASURE:
+		// {
+		// 	game.animals[animalIndex].body[cellIndex].signalIntensity *= 0.99f;
+		// 	break;
+		// }
 
 
 
@@ -4247,15 +4440,21 @@ void animal_organs( int animalIndex)
 
 		}
 
-		// add noise to all neural pathways, except for bias neurons which would mess them up.
-		if (organIsASensor(organ) || organIsANeuron(organ))
-		{
-			if (organ != ORGAN_BIASNEURON)
-			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity += (((extremelyFastNumberFromZeroTo(64) - 32.0f) / 32.0f )) * neuralNoise;
-			}
-		}
+
+
+
 	}
+
+
+	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	{
+
+		game.animals[animalIndex]. body[cellIndex].signalIntensity = sensorium[cellIndex];
+
+		game.animals[animalIndex].body[cellIndex].signalIntensity += (((extremelyFastNumberFromZeroTo(64) - 32.0f) / 32.0f )) * neuralNoise;
+
+	}
+
 	// game.animals[animalIndex].totalGonads = totalGonads;
 	game.animals[animalIndex].maxEnergy = game.animals[animalIndex].cellsUsed + (totalLiver * liverStorage);
 }
@@ -4844,6 +5043,8 @@ void drawGameInterfaceText()
 	if (game.showInstructions)
 	{
 		menuY += spacing;
+		printText2D(   std::string("Start by finding items in the world and picking them up.") , menuX, menuY, textSize);
+		menuY += spacing;
 		printText2D(   std::string("[esc] quit"), menuX, menuY, textSize);
 		menuY += spacing;
 		printText2D(   std::string("[arrows] pan, [-,=] zoom"), menuX, menuY, textSize);
@@ -4875,8 +5076,7 @@ void drawGameInterfaceText()
 			menuY += spacing;
 			printText2D(   std::string("[r] despawn") , menuX, menuY, textSize);
 			menuY += spacing;
-			printText2D(   std::string("Start by finding items in the world and picking them up.") , menuX, menuY, textSize);
-			menuY += spacing;
+
 		}
 		else
 		{
@@ -6330,14 +6530,20 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy;
+	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy/2;
 	game.animals[testAnimal].energyDebt = 0;
 
 
-	game.animals[testAnimal].body[0].damage = 0.35f;
+	game.animals[testAnimal].body[0].damage = 0.05f;
 
-
+	// it takes a few turns for the neural signal to propagate through the network.
 	animalTurn(testAnimal);
+	animalTurn(testAnimal);
+	animalTurn(testAnimal);
+	animalTurn(testAnimal);
+	animalTurn(testAnimal);
+
+
 	int diffs = 0;
 	int child = testAnimal;
 	for (int i = 0; i < numberOfAnimalsPerSpecies; ++i)
@@ -6371,6 +6577,9 @@ bool test_all()
 	if (diffs == 0 &&
 	        game.animals[child].body[0].damage == 0.0f)
 	{
+
+		printf("diffs: %u\n", diffs);
+		printf("daimgale: %f\n",    game.animals[child].body[0].damage );
 		testResult_4 = true;
 	}
 	killAnimal(testAnimal);
@@ -6403,6 +6612,11 @@ bool test_all()
 	if (game.animals[testAnimal].fAngle != originalAngle)
 	{
 		testResult_5 = true;
+	}
+	else
+	{
+		printf("famgle: %f, original angle %f\n",    game.animals[testAnimal].fAngle, originalAngle );
+
 	}
 	killAnimal(testAnimal);
 

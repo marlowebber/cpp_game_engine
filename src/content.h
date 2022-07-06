@@ -50,60 +50,61 @@
 
 #define ORGAN_GENITAL_A            40
 #define ORGAN_GENITAL_B            41
-#define ORGAN_SENSOR_PLEASURE      42
 
 #define ORGAN_SENSOR_RANDOM       43
 #define ORGAN_LOCATIONREMEMBERER     44
 
 #define ORGAN_SWITCH     45
-#define ORGAN_COMPARATOR 46 
+#define ORGAN_COMPARATOR 46
 #define ORGAN_ABSOLUTE   47
 #define ORGAN_IIRLOW     48
 #define ORGAN_IIRHIGH    49
 #define ORGAN_DERIVATOR    50
+#define ORGAN_ADDER      51
+
+
+#define ORGAN_TIMER      52
 
 
 
+#define numberOfOrganTypes        52 // the number limit of growable genes
+
+#define MARKER                    65  // there are some tiles which are used by the program, but can't be grown.
+#define TILE_DESTROYER_EYE        66
 
 
-#define numberOfOrganTypes        49 // the number limit of growable genes
-
-#define MARKER                    50  // there are some tiles which are used by the program, but can't be grown.
-#define TILE_DESTROYER_EYE        51
-
-
-#define MATERIAL_FOOD             60
-#define MATERIAL_ROCK             61
+#define MATERIAL_FOOD             160
+#define MATERIAL_ROCK             161
 // #define MATERIAL_MEAT             62
-#define MATERIAL_BONE             63
-#define MATERIAL_BLOOD            64
-#define MATERIAL_GRASS            65
-#define MATERIAL_METAL            66
-#define MATERIAL_VOIDMETAL        67
-#define MATERIAL_SMOKE           68
-#define MATERIAL_GLASS            69
-#define MATERIAL_WATER            70
-#define MATERIAL_FIRE              71
-#define MATERIAL_SAND    72
-#define MATERIAL_DIRT    73
-#define MATERIAL_SOIL    74
-#define MATERIAL_BASALT  75
-#define MATERIAL_DUST    76
-#define MATERIAL_GRAVEL  78
-#define MATERIAL_FABRIC  79
+#define MATERIAL_BONE             163
+#define MATERIAL_BLOOD            164
+#define MATERIAL_GRASS            165
+#define MATERIAL_METAL            166
+#define MATERIAL_VOIDMETAL        167
+#define MATERIAL_SMOKE           168
+#define MATERIAL_GLASS            169
+#define MATERIAL_WATER            170
+#define MATERIAL_FIRE              171
+#define MATERIAL_SAND    172
+#define MATERIAL_DIRT    173
+#define MATERIAL_SOIL    174
+#define MATERIAL_BASALT  175
+#define MATERIAL_DUST    176
+#define MATERIAL_GRAVEL  178
+#define MATERIAL_FABRIC  179
 
 
-#define MATERIAL_LEAF      80       // for energy capture and transmission.
-#define MATERIAL_SEED      81       // to produce copies of plant.
-#define MATERIAL_BUD       82       // a seed whose debt has not paid off.
-#define MATERIAL_WOOD      83
-#define MATERIAL_POLLEN    84
+#define MATERIAL_LEAF      180       // for energy capture and transmission.
+#define MATERIAL_SEED      181       // to produce copies of plant.
+#define MATERIAL_BUD       182       // a seed whose debt has not paid off.
+#define MATERIAL_WOOD      183
+#define MATERIAL_POLLEN    184
 
 
-#define MATERIAL_SEMEN     85
-#define MATERIAL_VOMIT     86
-#define MATERIAL_HONEY     89
-#define MATERIAL_WAX       90
+#define MATERIAL_SEMEN     185
+#define MATERIAL_VOMIT     186
+#define MATERIAL_HONEY     189
+#define MATERIAL_WAX       190
 
 
 #define MACHINECALLBACK_PISTOL           100
@@ -114,8 +115,6 @@
 #define MACHINECALLBACK_ECOLOGYCOMPUTER  106
 #define MACHINECALLBACK_LIGHTER          107
 #define MACHINECALLBACK_DESTROYER        108
-
-
 #define MACHINECALLBACK_MESSAGECOMPUTER1  110
 #define MACHINECALLBACK_MESSAGECOMPUTER2  111
 #define MACHINECALLBACK_MESSAGECOMPUTER3  112
@@ -238,7 +237,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_ADDOFFSPRINGENERGY:
 	{
-		return std::string("a manifold of ropey veins that nourishes the fetus.");
+		return std::string("a manifold of tissue that nourishes the fetus.");
 	}
 	case ORGAN_ADDLIFESPAN:
 	{
@@ -359,6 +358,51 @@ std::string tileDescriptions(unsigned int tile)
 	}
 
 
+
+
+
+	case ORGAN_SWITCH:
+	{
+		return std::string("a neural switch, where one pathway turns another on and off.");
+	}
+	case ORGAN_COMPARATOR:
+	{
+		return std::string("a part of the brain that compares two things.");
+	}
+	case ORGAN_ABSOLUTE:
+	{
+		return std::string("part of the brain that gives the absolute value of an input.");
+	}
+	case ORGAN_DERIVATOR:
+	{
+		return std::string("part of the brain that determines the rate of change of the input.");
+	}
+	case ORGAN_IIRLOW:
+	{
+		return std::string("part of the brain that filters rapid changes out of a signal.");
+	}
+	case ORGAN_IIRHIGH:
+	{
+		return std::string("part of the brain that filters slow changes out of a signal.");
+	}
+
+	case ORGAN_TIMER:
+	{
+		return std::string("a pacemaking ganglion that provides a pulsing beat.");
+	}
+
+
+// #define ORGAN_GENITAL_A            40
+// #define ORGAN_GENITAL_B            41
+	case ORGAN_GENITAL_A:
+	{
+		return std::string("a penetrating harpoon that squirts fertilizing jelly.");
+	}
+
+	case ORGAN_GENITAL_B:
+	{
+		return std::string("a self-lubricating orifice that accepts genetic material.");
+	}
 
 
 	case MATERIAL_FOOD:
@@ -659,6 +703,18 @@ std::string tileShortNames(unsigned int tile)
 	}
 
 
+case ORGAN_GENITAL_A:
+	{
+		return std::string("Penis.");
+	}
+
+	case ORGAN_GENITAL_B:
+	{
+		return std::string("Vagina.");
+	}
+
+
+
 	case ORGAN_SENSOR_PAIN:
 	{
 		return std::string("Pain sensor");
@@ -683,6 +739,47 @@ std::string tileShortNames(unsigned int tile)
 	case ORGAN_SENSOR_RANDOM:
 	{
 		return std::string("Random sensor");
+	}
+
+
+
+
+
+// #define ORGAN_SWITCH     45
+// #define ORGAN_COMPARATOR 46
+// #define ORGAN_ABSOLUTE   47
+// #define ORGAN_IIRLOW     48
+// #define ORGAN_IIRHIGH    49
+// #define ORGAN_DERIVATOR    5049
+// #define ORGAN_TIMER    50
+
+	case ORGAN_SWITCH:
+	{
+		return std::string("Switch");
+	}
+	case ORGAN_COMPARATOR:
+	{
+		return std::string("Comparator");
+	}
+	case ORGAN_ABSOLUTE:
+	{
+		return std::string("Absolute value");
+	}
+	case ORGAN_IIRLOW:
+	{
+		return std::string("IIR lowpass");
+	}
+	case ORGAN_IIRHIGH:
+	{
+		return std::string("IIR highpass");
+	}
+	case ORGAN_DERIVATOR:
+	{
+		return std::string("Derivator");
+	}
+	case ORGAN_TIMER:
+	{
+		return std::string("Timer");
 	}
 
 
@@ -1050,10 +1147,17 @@ bool organUsesSpeakerChannel(unsigned int organ)
 {
 	if (    organ == ORGAN_SENSOR_PHEROMONE ||
 	        organ == ORGAN_EMITTER_PHEROMONE ||
-	        organ == ORGAN_MEMORY_TX ||
-	        organ == ORGAN_MEMORY_RX  ||
+	        // organ == ORGAN_MEMORY_TX ||
+	        // organ == ORGAN_MEMORY_RX  ||
 	        organ == ORGAN_SPEAKER ||
-	        organ == ORGAN_SENSOR_EAR)
+	        organ == ORGAN_SENSOR_EAR ||
+	        organ == ORGAN_DERIVATOR ||
+	        organ == ORGAN_IIRLOW ||
+	        organ == ORGAN_IIRHIGH
+
+
+
+	   )
 	{
 		return true;
 	}
@@ -1067,8 +1171,9 @@ bool organIsAnActuator(unsigned int organ)
 	        organ == ORGAN_MUSCLE_TURN ||
 	        organ == ORGAN_MUSCLE_STRAFE ||
 	        organ == ORGAN_SPEAKER  ||
-	        organ == ORGAN_EMITTER_PHEROMONE ||
-	        organ == ORGAN_MEMORY_TX)
+	        organ == ORGAN_EMITTER_PHEROMONE
+	        // organ == ORGAN_MEMORY_TX
+	   )
 	{
 		return true;
 	}
@@ -1081,22 +1186,26 @@ bool organIsANeuron(unsigned int organ)
 	if (    organ == ORGAN_NEURON ||
 	        organ == ORGAN_BIASNEURON ||
 
-   organ == ORGAN_SWITCH ||
+	        organ == ORGAN_SWITCH ||
 
-   organ == ORGAN_COMPARATOR ||
-   organ == ORGAN_DERIVATOR ||
+	        organ == ORGAN_COMPARATOR ||
+	        organ == ORGAN_DERIVATOR ||
 
-   organ == ORGAN_ABSOLUTE ||
+	        organ == ORGAN_ABSOLUTE ||
 
-   organ == ORGAN_IIRLOW ||
+	        organ == ORGAN_MEMORY_RX ||
 
-   organ == ORGAN_IIRHIGH 
+	        organ == ORGAN_MEMORY_TX ||
+
+	        organ == ORGAN_IIRLOW ||
+
+	        organ == ORGAN_IIRHIGH
 
 
 
 
 // 	        #define ORGAN_SWITCH     45
-// #define ORGAN_COMPARATOR 46 
+// #define ORGAN_COMPARATOR 46
 // #define ORGAN_ABSOLUTE   47
 // #define ORGAN_IIRLOW     48
 // #define ORGAN_IIRHIGH    49
@@ -1104,7 +1213,7 @@ bool organIsANeuron(unsigned int organ)
 
 
 
-	         )
+	   )
 	{
 		return true;
 	}
@@ -1114,12 +1223,11 @@ bool organIsANeuron(unsigned int organ)
 // organIsASensor signifies an arriving terminus where signals originate. other cells should connect to them freely, but they themselves do not depend on an upstream c
 bool organIsASensor(unsigned int organ)
 {
-	if (organ == ORGAN_SENSOR_EYE ||
-	        organ == ORGAN_SENSOR_BODYANGLE ||
-	        organ == ORGAN_SENSOR_TRACKER      ||
-	        organ == ORGAN_SENSOR_EAR        ||
-	        organ == ORGAN_SENSOR_PHEROMONE ||
-	        organ == ORGAN_MEMORY_RX ||
+	if (organ == ORGAN_SENSOR_EYE               ||
+	        organ == ORGAN_SENSOR_BODYANGLE     ||
+	        organ == ORGAN_SENSOR_TRACKER       ||
+	        organ == ORGAN_SENSOR_EAR           ||
+	        organ == ORGAN_SENSOR_PHEROMONE     ||
 	        organ == ORGAN_SENSOR_LAST_STRANGER ||
 	        organ == ORGAN_SENSOR_LAST_KIN ||
 	        organ == ORGAN_SENSOR_HUNGER ||
@@ -1127,8 +1235,20 @@ bool organIsASensor(unsigned int organ)
 	        organ == ORGAN_SENSOR_BIRTHPLACE ||
 	        organ == ORGAN_SENSOR_PARENT ||
 	        organ == ORGAN_SENSOR_PAIN ||
-	        organ == ORGAN_SENSOR_PLEASURE ||
-	        organ == ORGAN_SENSOR_RANDOM
+	        // organ == ORGAN_SENSOR_PLEASURE ||
+	        organ == ORGAN_SENSOR_RANDOM ||
+	        organ == ORGAN_MOUTH_PARASITE ||
+	        organ == ORGAN_MOUTH_SCAVENGE ||
+	        organ == ORGAN_MOUTH_CARNIVORE ||
+	        organ == ORGAN_MOUTH_VEG ||
+	        organ == ORGAN_CLAW ||
+
+
+	        organ == ORGAN_GONAD ||
+	        organ == ORGAN_GENITAL_A ||
+	        organ == ORGAN_GENITAL_B ||
+	        organ == ORGAN_GRABBER
+
 	   )
 	{
 		return true;
@@ -1682,6 +1802,52 @@ Color organColors(unsigned int organ)
 		return color_brightred;
 	case ORGAN_SENSOR_RANDOM    :
 		return color_brains3;
+
+	// case ORGAN_SENSOR_PLEASURE    :
+	// 	return color_pink;
+	case ORGAN_GENITAL_A    :
+		return color_pink;
+	case ORGAN_GENITAL_B    :
+		return color_pink;
+
+
+
+
+
+
+// #define ORGAN_SWITCH     45
+// #define ORGAN_COMPARATOR 46
+// #define ORGAN_ABSOLUTE   47
+// #define ORGAN_IIRLOW     48
+// #define ORGAN_IIRHIGH    49
+// #define ORGAN_DERIVATOR    5049
+// #define ORGAN_TIMER    50
+
+
+	case ORGAN_SWITCH    :
+		return color_brains1;
+
+	case ORGAN_COMPARATOR    :
+		return color_brains2;
+
+	case ORGAN_ABSOLUTE    :
+		return color_brains3;
+
+	case ORGAN_IIRHIGH    :
+		return color_brains1;
+
+	case ORGAN_IIRLOW    :
+		return color_brains2;
+
+	case ORGAN_DERIVATOR    :
+		return color_brains3;
+
+	case ORGAN_TIMER    :
+		return color_brains1;
+
+
+
+
 	}
 	return color_yellow;
 }
