@@ -55,7 +55,18 @@
 #define ORGAN_SENSOR_RANDOM       43
 #define ORGAN_LOCATIONREMEMBERER     44
 
-#define numberOfOrganTypes        44 // the number limit of growable genes
+#define ORGAN_SWITCH     45
+#define ORGAN_COMPARATOR 46 
+#define ORGAN_ABSOLUTE   47
+#define ORGAN_IIRLOW     48
+#define ORGAN_IIRHIGH    49
+#define ORGAN_DERIVATOR    50
+
+
+
+
+
+#define numberOfOrganTypes        49 // the number limit of growable genes
 
 #define MARKER                    50  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        51
@@ -1049,6 +1060,7 @@ bool organUsesSpeakerChannel(unsigned int organ)
 	return false;
 }
 
+// organIsAnActuator is for a departing terminus of the network that takes some input, but should not be connected to by anthing else.
 bool organIsAnActuator(unsigned int organ)
 {
 	if (    organ == ORGAN_MUSCLE ||
@@ -1063,16 +1075,43 @@ bool organIsAnActuator(unsigned int organ)
 	return false;
 }
 
+//organIsANeuron is for interconnecting cells that have both inputs and outputs.
 bool organIsANeuron(unsigned int organ)
 {
 	if (    organ == ORGAN_NEURON ||
-	        organ == ORGAN_BIASNEURON )
+	        organ == ORGAN_BIASNEURON ||
+
+   organ == ORGAN_SWITCH ||
+
+   organ == ORGAN_COMPARATOR ||
+   organ == ORGAN_DERIVATOR ||
+
+   organ == ORGAN_ABSOLUTE ||
+
+   organ == ORGAN_IIRLOW ||
+
+   organ == ORGAN_IIRHIGH 
+
+
+
+
+// 	        #define ORGAN_SWITCH     45
+// #define ORGAN_COMPARATOR 46 
+// #define ORGAN_ABSOLUTE   47
+// #define ORGAN_IIRLOW     48
+// #define ORGAN_IIRHIGH    49
+
+
+
+
+	         )
 	{
 		return true;
 	}
 	return false;
 }
 
+// organIsASensor signifies an arriving terminus where signals originate. other cells should connect to them freely, but they themselves do not depend on an upstream c
 bool organIsASensor(unsigned int organ)
 {
 	if (organ == ORGAN_SENSOR_EYE ||

@@ -93,12 +93,20 @@ struct Cell
 {
     unsigned int organ;
     float signalIntensity;
+    float workingValue;
+
     Color color;
     unsigned int speakerChannel;
+
+
     int eyeLookX;
     int eyeLookY;
+
+
     int localPosX;
     int localPosY;
+
+
     unsigned int worldPositionI;
     float damage;
     int grabbedCreature;

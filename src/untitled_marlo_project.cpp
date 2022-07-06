@@ -3247,9 +3247,12 @@ float smallestAngleBetween(float x, float y)
 	return b;
 }
 
-inline void sumInputs( int animalIndex,  int cellIndex)
+float sumInputs( int animalIndex,  int cellIndex)
 {
-	game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+
+
+	// game.animals[animalIndex].body[cellIndex].signalIntensity
+	float sum = 0.0f;
 	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 	{
 		if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
@@ -3257,10 +3260,13 @@ inline void sumInputs( int animalIndex,  int cellIndex)
 			unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
 			if (connected_to_cell < animalSquareSize)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
+				// game.animals[animalIndex].body[cellIndex].signalIntensity
+				sum  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
 			}
 		}
 	}
+	return sum;
+
 }
 
 
@@ -3285,10 +3291,149 @@ void animal_organs( int animalIndex)
 		{
 
 
+
+
+
+		case ORGAN_SWITCH:
+		{
+			// in a switch, the sum of inputs except 0 and 1 are taken. If the sum is greater than 0, the input 0 is copied to the output. else, the input 1 is copied to the output.
+			float sum = 0.0f;
+			for (int i = 2; i < NUMBER_OF_CONNECTIONS; ++i)
+			{
+				if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
+				{
+					unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
+					if (connected_to_cell < animalSquareSize)
+					{
+						sum += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
+					}
+				}
+			}
+			unsigned int ebe = 0;
+			if (sum > 0.0f)
+			{
+				ebe = 1;
+			}
+			unsigned int switchCell = game.animals[animalIndex].body[cellIndex].connections[ebe] .connectedTo;
+			game.animals[animalIndex].body[cellIndex].signalIntensity = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[ebe] .weight;
+			break;
+		}
+
+		case ORGAN_MEMORY_TX:
+		{
+			// in this memory, the output is latched to -1 if the sum of inputs goes below -1, and latched to +1 if the sum of inputs goes above 1.
+			// it can be thought of as a 'digital' memory encoding a state with two values.
+			float sum = sumInputs(  animalIndex,   cellIndex);
+			if (sum > 1.0f)
+			{
+				game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
+			}
+			else 	if (sum < -1.0f)
+			{
+				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
+			}
+			break;
+		}
+
+		case ORGAN_MEMORY_RX:
+		{
+			// in this memory, the sum of inputs except 0 are taken.  input 0 is latched to the output if the sum is less than 0, and the output is preserved at its last value if the sum is greater than 0.
+			// it can be thought of as an 'analog' memory that stores a continuous number.
+			float sum = 0.0f;
+			for (int i = 1; i < NUMBER_OF_CONNECTIONS; ++i)
+			{
+				if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
+				{
+					unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
+					if (connected_to_cell < animalSquareSize)
+					{
+						sum += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
+					}
+				}
+			}
+			if (sum > 0.0f)
+			{
+				unsigned int switchCell = game.animals[animalIndex].body[cellIndex].connections[0] .connectedTo;
+				game.animals[animalIndex].body[cellIndex].signalIntensity = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[0] .weight;
+			}
+			break;
+		}
+
+
+		case ORGAN_COMPARATOR:
+		{
+			//The output is 1 if input 0 is greater than input 1. else the output is -1.
+
+			unsigned int switchCell = game.animals[animalIndex].body[cellIndex].connections[0] .connectedTo;
+			float inA = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[0] .weight;
+
+			// unsigned
+			switchCell = game.animals[animalIndex].body[cellIndex].connections[1] .connectedTo;
+			float inB = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[1] .weight;
+
+
+			if (inA > inB)
+			{
+				game.animals[animalIndex].body[cellIndex].signalIntensity = 1;
+			}
+			else
+			{
+				game.animals[animalIndex].body[cellIndex].signalIntensity = -1;
+			}
+
+			break;
+		}
+
+		case ORGAN_DERIVATOR:
+		{
+			//The output is the derivative of the input sum.
+			float sum = sumInputs(  animalIndex,   cellIndex);
+			game.animals[animalIndex].body[cellIndex].signalIntensity = sum - game.animals[animalIndex].body[cellIndex].workingValue;
+			game.animals[animalIndex].body[cellIndex].workingValue = sum;
+			break;
+		}
+
+
+		case ORGAN_ABSOLUTE:
+		{
+			// the output is the absolute value of the input sum.
+
+			float sum = sumInputs(  animalIndex,   cellIndex);
+			game.animals[animalIndex].body[cellIndex].signalIntensity  = abs(sum);
+
+			break;
+		}
+		case ORGAN_IIRLOW:
+		{
+			//The output is an accumulation of the previous n input sums.
+
+			float sum = sumInputs(  animalIndex,   cellIndex);
+			game.animals[animalIndex].body[cellIndex].workingValue += sum;
+			float feedback = game.animals[animalIndex].body[cellIndex].workingValue / game.animals[animalIndex].body[cellIndex].speakerChannel; // in this case, speakerchannel refers to the number of 'taps'.
+			game.animals[animalIndex].body[cellIndex].workingValue -= feedback;
+			game.animals[animalIndex].body[cellIndex].signalIntensity = feedback;
+			break;
+		}
+		case ORGAN_IIRHIGH:
+		{
+			//. The output is the input sum, from which is subtracted an accumulation of the previous n input sums.
+			float sum = sumInputs(  animalIndex,   cellIndex);
+			game.animals[animalIndex].body[cellIndex].workingValue += sum;
+			float feedback = game.animals[animalIndex].body[cellIndex].workingValue / game.animals[animalIndex].body[cellIndex].speakerChannel; // in this case, speakerchannel refers to the number of 'taps'.
+			game.animals[animalIndex].body[cellIndex].workingValue -= feedback;
+
+
+			game.animals[animalIndex].body[cellIndex].signalIntensity = feedback - (sum / game.animals[animalIndex].body[cellIndex].speakerChannel);
+			break;
+		}
+
+
+
+
 		case ORGAN_EMITTER_WAX:
 		{
-			sumInputs(  animalIndex,   cellIndex);
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
+			float sum = sumInputs(  animalIndex,   cellIndex);
+			if (sum > 0.0f)
 			{
 				spill(MATERIAL_WAX, cellWorldPositionI);
 				game.animals[animalIndex].energy -= 1.0f;
@@ -3296,8 +3441,8 @@ void animal_organs( int animalIndex)
 		}
 		case ORGAN_EMITTER_HONEY:
 		{
-			sumInputs(  animalIndex,   cellIndex);
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
+			float sum = sumInputs(  animalIndex,   cellIndex);
+			if (sum > 0.0f)
 			{
 				spill(MATERIAL_HONEY, cellWorldPositionI);
 				game.animals[animalIndex].energy -= 1.0f;
@@ -3370,6 +3515,7 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_GRABBER:
 		{
+			float sum=0.0f;
 			if (animalIndex == game.playerCreature)
 			{
 				int potentialGrab = getGrabbableItem(game.playerCreature, cellIndex);// check if there is anything grabbable.
@@ -3387,7 +3533,9 @@ void animal_organs( int animalIndex)
 			else
 			{
 
-				sumInputs(  animalIndex,   cellIndex);
+				// sumInputs(  animalIndex,   cellIndex);
+
+				 sum = sumInputs(  animalIndex,   cellIndex);
 				// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 				// for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 				// {
@@ -3403,13 +3551,13 @@ void animal_organs( int animalIndex)
 			}
 
 			// Grab stuff.
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity  >= 1.0f && game.animals[animalIndex].body[cellIndex].grabbedCreature  == -1)
+			if (sum >= 1.0f && game.animals[animalIndex].body[cellIndex].grabbedCreature  == -1)
 			{
 				int potentialGrab = getGrabbableItem (animalIndex, cellIndex);
 				if (potentialGrab >= 0)
 				{
 					game.animals[animalIndex].body[cellIndex].grabbedCreature = potentialGrab;
-					game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+					// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 				}
 			}
 
@@ -3433,10 +3581,10 @@ void animal_organs( int animalIndex)
 
 
 				// Dropping items.
-				if (  game.animals[animalIndex].body[cellIndex].signalIntensity  <= -1.0f)
+				if ( sum <= -1.0f)
 				{
 					game.animals[animalIndex].body[cellIndex].grabbedCreature = -1;
-					game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+					// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 				}
 			}
 			break;
@@ -3577,60 +3725,8 @@ void animal_organs( int animalIndex)
 			}
 			break;
 		}
-		case ORGAN_MEMORY_RX:
-		{
-			break;	// don't need to do anything, the tx part does all the work.
-		}
-		case ORGAN_MEMORY_TX:
-		{
-			// sum inputs. if exceeding a threshold, find a corresponding memory RX cell and copy it the input sum.
-			// because nothing else is altering its signal intensity, it will keep that value until changed again.
-			// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
-			// for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-			// {
-			// 	if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
-			// 	{
-			// 		unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-			// 		if (connected_to_cell < animalSquareSize)
-			// 		{
-			// 			game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-			// 		}
-			// 	}
-			// }
 
-			sumInputs(  animalIndex,   cellIndex);
 
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f || game.animals[animalIndex].body[cellIndex].signalIntensity  < -1.0f)
-			{
-				std::list<unsigned int> cellsOfType;
-				unsigned int found = 0;
-				for (int i = 0; i < animalSquareSize; ++i)
-				{
-					if (game.animals[animalIndex].body[i].organ == ORGAN_MEMORY_RX)
-					{
-						cellsOfType.push_back(i);
-						found++;
-					}
-				}
-				int correspondingCellRX = -1;
-				if (found > 0)
-				{
-					std::list<unsigned int>::iterator iterator = cellsOfType.begin();
-					for (iterator = cellsOfType.begin(); iterator != cellsOfType.end(); ++iterator)
-					{
-						if ( game.animals[animalIndex].body[(*iterator)].speakerChannel == game.animals[animalIndex].body[cellIndex].speakerChannel  )
-						{
-							correspondingCellRX = (*iterator);
-						}
-					}
-				}
-				if (correspondingCellRX >= 0 && correspondingCellRX < animalSquareSize)
-				{
-					game.animals[animalIndex].body[correspondingCellRX].signalIntensity = game.animals[animalIndex].body[cellIndex].signalIntensity ;
-				}
-			}
-			break;
-		}
 
 		case ORGAN_SENSOR_PHEROMONE:
 		{
@@ -3660,10 +3756,17 @@ void animal_organs( int animalIndex)
 			// 	}
 			// }
 
-			sumInputs(  animalIndex,   cellIndex);
+			// sumInputs(  animalIndex,   cellIndex);
 
-			game.world[cellWorldPositionI].pheromoneChannel = game.animals[animalIndex].body[cellIndex]. speakerChannel ;
-			game.world[cellWorldPositionI].pheromoneIntensity = game.animals[animalIndex].body[cellIndex].signalIntensity;
+			float sum = sumInputs(  animalIndex,   cellIndex);
+
+			if (sum > 0.0f)
+			{
+
+				game.world[cellWorldPositionI].pheromoneChannel = game.animals[animalIndex].body[cellIndex]. speakerChannel ;
+				game.world[cellWorldPositionI].pheromoneIntensity = sum;// game.animals[animalIndex].body[cellIndex].signalIntensity;
+			}
+
 			break;
 		}
 
@@ -3671,32 +3774,43 @@ void animal_organs( int animalIndex)
 		{
 			if ( game.animals[animalIndex].body[cellIndex].speakerChannel < numberOfSpeakerChannels)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
-				for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-				{
-					if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
-					{
-						unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-						if (connected_to_cell < animalSquareSize)
-						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-						}
-					}
-				}
-				if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
-				{
-					game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
-				}
-				else if (game.animals[animalIndex].body[cellIndex].signalIntensity < -1.0f)
-				{
-					game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
-				}
-				game.speakerChannels[  game.animals[animalIndex].body[cellIndex].speakerChannel ] += game.animals[animalIndex].body[cellIndex].signalIntensity ;
+
+
+				// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+				// for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+				// {
+				// 	if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
+				// 	{
+				// 		unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
+				// 		if (connected_to_cell < animalSquareSize)
+				// 		{
+				// 			game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
+				// 		}
+				// 	}
+				// }
+
+
+
+				float sum = sumInputs(  animalIndex,   cellIndex);
+
+
+				// if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
+				// {
+				// 	game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
+				// }
+				// else if (game.animals[animalIndex].body[cellIndex].signalIntensity < -1.0f)
+				// {
+				// 	game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
+				// }
+
+				sum = clamp(sum, -1.0f, 1.0f);
+
+				game.speakerChannels[  game.animals[animalIndex].body[cellIndex].speakerChannel ] += sum;//game.animals[animalIndex].body[cellIndex].signalIntensity ;
 			}
-			else
-			{
-				game.animals[animalIndex].body[cellIndex].speakerChannel = 0;
-			}
+			// else
+			// {
+			// 	game.animals[animalIndex].body[cellIndex].speakerChannel = 0;
+			// }
 			break;
 		}
 
@@ -3706,10 +3820,10 @@ void animal_organs( int animalIndex)
 			{
 				game.animals[animalIndex].body[cellIndex].signalIntensity = game.speakerChannelsLastTurn[ game.animals[animalIndex].body[cellIndex].speakerChannel ];
 			}
-			else
-			{
-				game.animals[animalIndex].body[cellIndex].speakerChannel = 0;
-			}
+			// else
+			// {
+			// 	game.animals[animalIndex].body[cellIndex].speakerChannel = 0;
+			// }
 			break;
 		}
 
@@ -3807,8 +3921,11 @@ void animal_organs( int animalIndex)
 			// 	}
 			// }
 
-			sumInputs(  animalIndex,   cellIndex);
-			game.animals[animalIndex].body[cellIndex].signalIntensity = fast_sigmoid(game.animals[animalIndex].body[cellIndex].signalIntensity);
+			// sumInputs(  animalIndex,   cellIndex);
+
+			float sum = sumInputs(  animalIndex,   cellIndex);
+
+			game.animals[animalIndex].body[cellIndex].signalIntensity = fast_sigmoid(sum);
 			break;
 		}
 
@@ -4001,68 +4118,32 @@ void animal_organs( int animalIndex)
 		}
 		case ORGAN_MUSCLE :
 		{
+			float sum = 0.0f;
 			if (animalIndex != game.playerCreature)
 			{
-				// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
-
-				// for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-				// {
-				// 	if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
-				// 	{
-				// 		unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-				// 		if (connected_to_cell < animalSquareSize)
-				// 		{
-				// 			game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-				// 		}
-				// 	}
-				// }
-
-				sumInputs(  animalIndex,   cellIndex);
+				sum = sumInputs(  animalIndex,   cellIndex);
 			}
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
-			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
-			}
-			else if (game.animals[animalIndex].body[cellIndex].signalIntensity < -1.0f)
-			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
-			}
+			sum = clamp(sum, -1.0f, 1.0f);
+			float impulse = sum * musclePower;
 
-			float impulse = game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower;
 			game.animals[animalIndex].fPosX += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleSin;
 			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleCos;
 			game.animals[animalIndex].energy -= game.ecoSettings[2] * abs(impulse) ;
 
-			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+			// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
 		}
 
 		case ORGAN_MUSCLE_STRAFE :
 		{
+			float sum = 0.0f;
 			if (animalIndex != game.playerCreature)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;	// go through the list of connections and sum their values.
-				for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-				{
-					if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
-					{
-						unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-						if (connected_to_cell < animalSquareSize)
-						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-						}
-					}
-				}
+				sum = sumInputs(  animalIndex,   cellIndex);
 			}
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
-			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = 1.0f;
-			}
-			else if (game.animals[animalIndex].body[cellIndex].signalIntensity < -1.0f)
-			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = -1.0f;
-			}
-			float impulse = game.animals[animalIndex].body[cellIndex].signalIntensity * musclePower;
+			sum = clamp(sum, -1.0f, 1.0f);
+			float impulse = sum * musclePower;
+
 			game.animals[animalIndex].fPosX += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleCos;
 			game.animals[animalIndex].fPosY += (impulse / game.animals[animalIndex].cellsUsed) * game.animals[animalIndex].fAngleSin;
 			game.animals[animalIndex].energy -= game.ecoSettings[2] * abs(impulse) ;
@@ -4072,29 +4153,20 @@ void animal_organs( int animalIndex)
 		}
 		case ORGAN_MUSCLE_TURN:
 		{
+
+			float sum = 0.0f;
 			if (animalIndex != game.playerCreature)
 			{
-				game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;// go through the list of connections and sum their values.
-				for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
-				{
-					if (game.animals[animalIndex].body[cellIndex].connections[i] .used)
-					{
-						unsigned int connected_to_cell = game.animals[animalIndex].body[cellIndex].connections[i] .connectedTo;
-						if (connected_to_cell < animalSquareSize)
-						{
-							game.animals[animalIndex].body[cellIndex].signalIntensity  += game.animals[animalIndex].body[connected_to_cell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[i] .weight;
-						}
-					}
-				}
+				sum = sumInputs(  animalIndex,   cellIndex);
 			}
 
 			if (setOrSteerAngle)
 			{
-				game.animals[animalIndex].fAngle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) ;
+				game.animals[animalIndex].fAngle = sum;//(game.animals[animalIndex].body[cellIndex].signalIntensity ) ;
 			}
 			else
 			{
-				game.animals[animalIndex].fAngle += (game.animals[animalIndex].body[cellIndex].signalIntensity ) * turnMusclePower;
+				game.animals[animalIndex].fAngle += sum * turnMusclePower;
 			}
 			if (game.animals[animalIndex].fAngle > const_pi)
 			{
@@ -4104,7 +4176,7 @@ void animal_organs( int animalIndex)
 			{
 				game.animals[animalIndex].fAngle += 2 * const_pi;
 			}
-			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+			// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			break;
 		}
 		case ORGAN_GENITAL_A:
@@ -4148,8 +4220,8 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_LOCATIONREMEMBERER:
 		{
-			sumInputs(  animalIndex,   cellIndex);
-			if (game.animals[animalIndex].body[cellIndex].signalIntensity > 1.0f)
+			float sum = sumInputs(  animalIndex,   cellIndex);
+			if (sum <  0.0f)
 			{
 				game.animals[animalIndex].body[cellIndex].speakerChannel = cellWorldPositionI; // remember current location
 			}
@@ -5011,10 +5083,10 @@ void drawGameInterfaceText()
 			}
 			// else
 			// {
-				// printText2D(  tileDescriptions (game.world[worldCursorPos].terrain ), menuX, menuY, textSize);
-				// menuY += spacing;
+			// printText2D(  tileDescriptions (game.world[worldCursorPos].terrain ), menuX, menuY, textSize);
+			// menuY += spacing;
 
-				cursorDescription +=std::string(" This is ") +  tileDescriptions(game.world[worldCursorPos].terrain);
+			cursorDescription += std::string(" This is ") +  tileDescriptions(game.world[worldCursorPos].terrain);
 
 			// }
 // #else
@@ -5033,7 +5105,7 @@ void drawGameInterfaceText()
 		}
 
 		printText2D(  cursorDescription, menuX, menuY, textSize);
-			menuY += spacing;
+		menuY += spacing;
 
 
 	}
