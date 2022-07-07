@@ -2295,6 +2295,16 @@ void growPlants(unsigned int worldI)
 
 			case PLANTGENE_BRANCH:
 			{
+				// combines a goto with allowing this cell to continue growing after branching
+				// the branch starts at a gene position forward of this one
+				unsigned int nextGene = game.world[worldI].geneCursor + 1;
+				skipTo = game.world[worldI].plantGenes[nextGene];
+
+				if (skipTo < nextGene) { skipTo = nextGene; }  // otherwise individual plants can will get into loops and grow enormously large. it's a good but boring strategy.
+
+				skip = true;
+
+
 				branch = true;
 				break;
 			}
@@ -2336,7 +2346,7 @@ void growPlants(unsigned int worldI)
 						if (neighbour < worldSquareSize)
 						{
 							growInto(worldI, neighbour, MATERIAL_BUD);
-							if (skip) { game.world[neighbour].geneCursor = skipTo;  }
+							if (skip) { game.world[neighbour].geneCursor = skipTo;skip = false;   }
 						}
 					}
 				}
@@ -2353,7 +2363,7 @@ void growPlants(unsigned int worldI)
 						if (neighbour < worldSquareSize)
 						{
 							growInto(worldI, neighbour, MATERIAL_LEAF);
-							if (skip) { game.world[neighbour].geneCursor = skipTo;  }
+							if (skip) { game.world[neighbour].geneCursor = skipTo; skip = false; }
 						}
 					}
 				}
@@ -2370,7 +2380,7 @@ void growPlants(unsigned int worldI)
 						if (neighbour < worldSquareSize)
 						{
 							growInto(worldI, neighbour, MATERIAL_WOOD);
-							if (skip) { game.world[neighbour].geneCursor = skipTo;  }
+							if (skip) { game.world[neighbour].geneCursor = skipTo; skip = false; }
 						}
 					}
 				}
@@ -2432,8 +2442,8 @@ void growPlants(unsigned int worldI)
 				if (!branch)
 				{
 					game.world[worldI].grown = true;
-					return;
 				}
+				return;
 			}
 		}
 	}
@@ -6556,31 +6566,32 @@ void setupTestPlant(unsigned int worldPositionI)
 	game.world[worldPositionI].seedGenes[3] = PLANTGENE_RED;
 	game.world[worldPositionI].seedGenes[4] = PLANTGENE_RED;
 	game.world[worldPositionI].seedGenes[5] = 4;
-	game.world[worldPositionI].seedGenes[6] = 5;
+	// game.world[worldPositionI].seedGenes[6] = 5;
 	game.world[worldPositionI].seedGenes[7] = PLANTGENE_WOOD;
 	game.world[worldPositionI].seedGenes[8] = PLANTGENE_WOOD;
+	game.world[worldPositionI].seedGenes[8] = PLANTGENE_WOOD;
+
+	game.world[worldPositionI].seedGenes[8] = 2;
+	game.world[worldPositionI].seedGenes[8] = 6;
+	game.world[worldPositionI].seedGenes[14] = PLANTGENE_BRANCH;
 	game.world[worldPositionI].seedGenes[9] = PLANTGENE_LEAF;
-	game.world[worldPositionI].seedGenes[10] = 4;
-	game.world[worldPositionI].seedGenes[11] = 5;
+	game.world[worldPositionI].seedGenes[8] = 2;
+	game.world[worldPositionI].seedGenes[8] = 6;
+
+
 	game.world[worldPositionI].seedGenes[12] = 2;
 	game.world[worldPositionI].seedGenes[13] = 3;
 	game.world[worldPositionI].seedGenes[14] = PLANTGENE_LEAF;
 	game.world[worldPositionI].seedGenes[15] = PLANTGENE_BUD;
+	game.world[worldPositionI].seedGenes[16] = PLANTGENE_BUD;
 
 
-	if (extremelyFastNumberFromZeroTo(1) == 0)
-	{
-
-		game.world[worldPositionI].seedState = MATERIAL_SEED;
 
 
-	}
-	else
-	{
-		game.world[worldPositionI].seedState = MATERIAL_POLLEN;
+	game.world[worldPositionI].seedState = MATERIAL_SEED;
 
 
-	}
+
 }
 
 

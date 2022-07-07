@@ -160,7 +160,7 @@
 #define PLANTGENE_DARK    21
 
 
-#define PLANTGENE_BRANCH    17
+#define PLANTGENE_BRANCH    22
 
 // #define PLANTGENE_SEED_RED     22
 // #define PLANTGENE_SEED_GREEN   23
@@ -168,7 +168,7 @@
 // #define PLANTGENE_SEED_LIGHT   25
 // #define PLANTGENE_SEED_DARK    26
 
-#define numberOfPlantGenes 26
+#define numberOfPlantGenes 23
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {
