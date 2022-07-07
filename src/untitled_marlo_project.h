@@ -59,12 +59,11 @@ struct Square
     Color light;
     float pheromoneIntensity;
     int pheromoneChannel;
-    #ifdef PLANTS
 
     Color grassColor;
 
     char seedGenes[plantGenomeSize];
-    // int seedIdentity;
+    unsigned int seedIdentity;
     int seedState;
     Color seedColor;
 
@@ -79,7 +78,7 @@ struct Square
     bool grown;
     bool growthMatrix[nNeighbours];
 
-    #endif
+    // #endif
 };
 
 struct Connection
