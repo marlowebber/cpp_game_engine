@@ -233,8 +233,13 @@ void resetMouseCursor(  );
 void togglePause ();
 void incrementSelectedOrgan();
 void decrementSelectedOrgan();
-void playerGrab();
-void playerDrop();
+// void playerGrab();
+// void playerDrop();
+
+    
+extern bool playerGrab ;
+extern bool playerDrop ;
+
 void adjustPlayerPos(Vec_f2 pos);
 void load();
 void save();

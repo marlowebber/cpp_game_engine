@@ -126,10 +126,10 @@ void threadInterface()
 				decrementSelectedOrgan();
 				break;
 			case SDLK_g:
-				playerGrab();
+				playerGrab = true;
 				break;
 			case SDLK_f:
-				playerDrop();
+				playerDrop = true;
 				break;
 			case SDLK_d:
 			{

@@ -250,39 +250,42 @@ void decrementSelectedOrgan()
 	}
 }
 
-void playerGrab()
-{
-	if (game.playerCreature >= 0)
-	{
-		for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
-		{
-			if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
-			{
-				if (game.animals[game.playerCreature].body[i].grabbedCreature == -1)
-				{
-					game.animals[game.playerCreature].body[i].signalIntensity = 1;
-				}
-			}
-		}
-	}
-}
+bool playerGrab = false;
+bool playerDrop = false;
 
-void playerDrop()
-{
-	if (game.playerCreature >= 0)
-	{
-		for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
-		{
-			if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
-			{
-				if (game.animals[game.playerCreature].body[i].grabbedCreature >= 0)
-				{
-					game.animals[game.playerCreature].body[i].signalIntensity = -1;
-				}
-			}
-		}
-	}
-}
+// void playerGrab()
+// {
+// 	if (game.playerCreature >= 0)
+// 	{
+// 		for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
+// 		{
+// 			if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
+// 			{
+// 				if (game.animals[game.playerCreature].body[i].grabbedCreature == -1)
+// 				{
+// 					// game.animals[game.playerCreature].body[i].signalIntensity = 1;
+// 				}
+// 			}
+// 		}
+// 	}
+// }
+
+// void playerDrop()
+// {
+// 	if (game.playerCreature >= 0)
+// 	{
+// 		for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
+// 		{
+// 			if (game.animals[game.playerCreature].body[i].organ == ORGAN_GRABBER)
+// 			{
+// 				if (game.animals[game.playerCreature].body[i].grabbedCreature >= 0)
+// 				{
+// 					// game.animals[game.playerCreature].body[i].signalIntensity = -1;
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
 void setMousePosition(Vec_i2 in)
 {
@@ -1731,12 +1734,34 @@ void place( int animalIndex)
 
 
 		bool animalInTheWay = false;
-		if (game.world[newPosition].identity != animalIndex)
+
+		int donkedCreature = game.world[newPosition].identity;
+		if (donkedCreature != animalIndex)
 		{
-			int targetLocalPositionI = isAnimalInSquare( game.world[newPosition].identity, newPosition);
+			int targetLocalPositionI = isAnimalInSquare( donkedCreature, newPosition);
 			if (targetLocalPositionI >= 0)
 			{
-				animalInTheWay = true;
+
+
+				// don't run into creatures you're carrying.
+				bool carrying = false;
+				for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+				{
+					if (game.animals[animalIndex].body[i].organ == ORGAN_GRABBER)
+					{
+						if (game.animals[animalIndex].body[i].grabbedCreature == donkedCreature)
+						{
+							carrying = true;
+							break;
+						}
+
+					}
+				}
+
+				if (!carrying)
+				{
+					animalInTheWay = true;
+				}
 			}
 		}
 
@@ -2210,6 +2235,9 @@ void growPlants(unsigned int worldI)
 
 	unsigned int skipTo = game.world[worldI].geneCursor;
 	bool skip = false;
+
+	bool branch = false; // if branch, the current growing cell keeps growing after this.
+
 	unsigned int turns = 0;
 	while (true)
 	{
@@ -2262,6 +2290,12 @@ void growPlants(unsigned int worldI)
 					game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1];
 					game.world[worldI].sequenceReturn = game.world[worldI].geneCursor + 2;
 				}
+				break;
+			}
+
+			case PLANTGENE_BRANCH:
+			{
+				branch = true;
 				break;
 			}
 
@@ -2390,10 +2424,16 @@ void growPlants(unsigned int worldI)
 				break;
 			}
 			}
+
+
+
 			if (done)
 			{
-				game.world[worldI].grown = true;
-				return;
+				if (!branch)
+				{
+					game.world[worldI].grown = true;
+					return;
+				}
 			}
 		}
 	}
@@ -3561,6 +3601,17 @@ void animal_organs( int animalIndex)
 					game.playerCanPickup = false;
 					game.playerCanPickupItem = -1;
 				}
+
+				if (playerGrab)
+				{
+					sum = 1.0f;
+					playerGrab = false;
+				}
+				if (playerDrop && cellIndex == game.playerActiveGrabber)
+				{
+					sum = -1.0f;
+					playerDrop = false;
+				}
 			}
 			else
 			{
@@ -3568,6 +3619,9 @@ void animal_organs( int animalIndex)
 				// sumInputs(  animalIndex,   cellIndex);
 
 				sum = sumInputs(  animalIndex,   cellIndex);
+
+
+
 				// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 				// for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 				// {
@@ -6540,7 +6594,7 @@ void setupPlantAtCursor()
 	setupTestPlant(worldCursorPos);
 }
 
-bool test_all()
+bool test_animals()
 {
 	resetGameState();
 	bool testResult_2 = false;
@@ -6572,19 +6626,13 @@ bool test_all()
 	float initialEnergy = game.animals[testAnimal].energy;
 	for (int i = 0; i < howManyPlantsToEat; ++i)
 	{
-		// 	game.world[].plantState = MATERIAL_GRASS;
-
-
 		setupTestPlant(testPos + (i * worldSize));
 	}
-
-
-
 	for (int i = 0; i < howManyPlantsToEat; ++i)
 	{
 		animalTurn(testAnimal);
 	}
-	// printf("mamainal %f \n", );
+
 	if (game.animals[testAnimal].energy != initialEnergy)
 	{
 		testResult_2 = true;
@@ -6627,8 +6675,6 @@ bool test_all()
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
 	game.animals[testAnimal].energy = game.animals[testAnimal].maxEnergy / 2;
 	game.animals[testAnimal].energyDebt = 0;
-
-
 	game.animals[testAnimal].body[0].damage = 0.05f;
 
 	animalTurn(testAnimal);
@@ -6637,7 +6683,6 @@ bool test_all()
 	{
 		printf("%f \n", game.animals[testAnimal].body[i].signalIntensity);
 	}
-
 
 	int diffs = 0;
 	int child = testAnimal;
@@ -6665,16 +6710,8 @@ bool test_all()
 		}
 	}
 
-
-
-
-
-	if (diffs == 0 &&
-	        game.animals[child].body[0].damage == 0.0f)
+	if (diffs == 0 && game.animals[child].body[0].damage == 0.0f)
 	{
-
-		// printf("diffs: %u\n", diffs);
-		// printf("daimgale: %f\n",    game.animals[child].body[0].damage );
 		testResult_4 = true;
 	}
 	killAnimal(testAnimal);
@@ -6711,16 +6748,9 @@ bool test_all()
 	animalTurn(testAnimal);
 	animalTurn(testAnimal);
 
-
-
 	if (game.animals[testAnimal].fAngle != originalAngle)
 	{
 		testResult_5 = true;
-	}
-	else
-	{
-		// printf("famgle: %f, original angle %f\n",    game.animals[testAnimal].fAngle, originalAngle );
-
 	}
 	killAnimal(testAnimal);
 
@@ -6735,8 +6765,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = amount;//game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	// game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy = amount;
 
 	setupTestAnimal_airbreathing(j);
 	testPos += 10;
@@ -6746,8 +6775,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = amount;//game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	// game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy = amount;
 	game.world[testPos].wall = MATERIAL_WATER;
 
 	setupTestAnimal_waterbreathing(j);
@@ -6758,8 +6786,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = amount; // game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	// game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy = amount;
 
 	setupTestAnimal_waterbreathing(j);
 	testPos += 10;
@@ -6769,8 +6796,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = amount; // game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	// game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy = amount;
 	game.world[testPos].wall = MATERIAL_WATER;
 
 	setupTestAnimal_amphibious(j);
@@ -6780,8 +6806,7 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = amount; // game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	// game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy = amount;
 
 	setupTestAnimal_amphibious(j);
 	testPos += 10;
@@ -6791,36 +6816,14 @@ bool test_all()
 	game.animals[testAnimal].uPosY = testPos / worldSize;
 	game.animals[testAnimal].fPosX = game.animals[testAnimal].uPosX;
 	game.animals[testAnimal].fPosY = game.animals[testAnimal].uPosY;
-	game.animals[testAnimal].energy = amount; // game.animals[testAnimal].maxEnergy / 2 - 0.1f;
-	// game.animals[testAnimal].energyDebt = 0;
+	game.animals[testAnimal].energy = amount;
 
 	game.world[testPos].wall = MATERIAL_WATER;
 	testPos += worldSize;
 	game.world[testPos].wall = MATERIAL_WATER;
 
-
-	// an air breathing animal in air is fine
-	// a water breathing animal in water is fine
-	// a water breathing animal in air dies
-	// an air breathing animal in water dies
-	// an amphibious animal is fine in both situations
-
-
-
-	// printf("AMOUNT %f, max %f \n ", amount , game.animals[testAnimal].maxEnergy   );
-
-	// printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
-	// printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
-	// printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
-	// printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
-	// printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
-	// printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
-
 	for (int i = 0; i < how_long_it_takes_to_make_sure; ++i)
 	{
-
-
-
 		game.animals[testAnimal_air_in_air].energy     = amount;
 		game.animals[testAnimal_air_in_water].energy   = amount;
 		game.animals[testAnimal_water_in_air].energy   = amount;
@@ -6834,106 +6837,94 @@ bool test_all()
 		animalTurn(testAnimal_water_in_water);
 		animalTurn(testAnimal_amphi_in_air);
 		animalTurn(testAnimal_amphi_in_water);
-
-
-
-		// printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
-		// printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
-		// printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
-		// printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
-		// printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
-		// printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
-
-
-
 	}
 
-	if (!(game.animals[testAnimal_air_in_air].retired     ) &&
-	        (game.animals[testAnimal_air_in_water].retired   ) &&
-	        (game.animals[testAnimal_water_in_air].retired   ) &&
-	        !(game.animals[testAnimal_water_in_water].retired ) &&
-	        !(game.animals[testAnimal_amphi_in_air].retired   ) &&
-	        !(game.animals[testAnimal_amphi_in_water].retired ))
+	if (
+	    !(game.animals[testAnimal_air_in_air].retired     ) &&
+	    (game.animals[testAnimal_air_in_water].retired   ) &&
+	    (game.animals[testAnimal_water_in_air].retired   ) &&
+	    !(game.animals[testAnimal_water_in_water].retired ) &&
+	    !(game.animals[testAnimal_amphi_in_air].retired   ) &&
+	    !(game.animals[testAnimal_amphi_in_water].retired )
+	)
 	{
 		testResult_6 = true;
 	}
 
-	else
-	{
-
-		// printf("testAnimal_air_in_air %d \n ", game.animals[testAnimal_air_in_air].retired    );
-		// printf("testAnimal_air_in_water %d \n ", game.animals[testAnimal_air_in_water].retired    );
-		// printf("testAnimal_water_in_air %d \n ", game.animals[testAnimal_water_in_air].retired    );
-		// printf("testAnimal_water_in_water %d \n ", game.animals[testAnimal_water_in_water].retired    );
-		// printf("testAnimal_amphi_in_air %d \n ", game.animals[testAnimal_amphi_in_air].retired    );
-		// printf("testAnimal_amphi_in_water %d \n ", game.animals[testAnimal_amphi_in_water].retired    );
-
-	}
-// 1. grass grows
-// 2. animals eat grass and gain energy
-// 3. animals reproduce when they have enough energy
-// 4. reproduction copies the animal wholly and exactly, except that lifetime stats are reset to 0 in the new generation, and some mutation may be carried along
-// 5. sensors take measurements of the game world to produce a signal
-// 6. actuators use signals to move the animal.
-// 7 lungs
-
-	if (testResult_2 &&
-	        testResult_3 &&
-	        testResult_4 &&
-	        testResult_5 &&
-	        testResult_6)
+	if (
+	    testResult_2 &&
+	    testResult_3 &&
+	    testResult_4 &&
+	    testResult_5 &&
+	    testResult_6
+	)
 	{
 		return true;
 	}
 	else
 	{
-		// print the test report
-		printf("DEEP SEA self test report\n");
 
-		if (testResult_2)
-		{
-			printf("test 2: eat grass: PASS\n");
-		}
-		else
+		if (!testResult_2)
 		{
 			printf("test 2: eat grass: FAIL\n");
 		}
 
-		if (testResult_3)
-		{
-			printf("test 3: have baby: PASS\n");
-		}
-		else
+		if (!testResult_3)
 		{
 			printf("test 3: have baby: FAIL\n");
 		}
 
-		if (testResult_4)
-		{
-			printf("test 4: baby check: PASS\n");
-		}
-		else
+		if (!testResult_4)
 		{
 			printf("test 4: baby check: FAIL\n");
 		}
 
-		if (testResult_5)
-		{
-			printf("test 5: neural pathway: PASS\n");
-		}
-		else
+		if (!testResult_5)
 		{
 			printf("test 5: neural pathway: FAIL\n");
 		}
 
-		if (testResult_6)
-		{
-			printf("test 6: breathing: PASS\n");
-		}
-		else
+		if (!testResult_6)
 		{
 			printf("test 6: breathing: FAIL\n");
 		}
 	}
 	return false;
+}
+
+
+
+bool test_plants()
+{
+
+
+
+
+
+
+}
+
+
+
+bool test_all()
+{
+
+	bool testResult_all = true;
+
+	bool testResult_animals = test_animals();
+	bool testResult_plants  = test_plants();
+
+
+	if ( !testResult_animals )
+	{
+		printf("animals: FAIL\n");
+		testResult_all = false;
+	}
+
+	if ( !testResult_plants )
+	{
+		printf("plants: FAIL\n");
+		testResult_all = false;
+	}
+
 }

@@ -159,6 +159,9 @@
 #define PLANTGENE_LIGHT   20
 #define PLANTGENE_DARK    21
 
+
+#define PLANTGENE_BRANCH    17
+
 // #define PLANTGENE_SEED_RED     22
 // #define PLANTGENE_SEED_GREEN   23
 // #define PLANTGENE_SEED_BLUE    24
