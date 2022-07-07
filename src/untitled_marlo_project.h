@@ -63,7 +63,7 @@ struct Square
     Color grassColor;
 
     char seedGenes[plantGenomeSize];
-    unsigned int seedIdentity;
+    int seedIdentity;
     int seedState;
     Color seedColor;
 
