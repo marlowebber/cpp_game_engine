@@ -160,7 +160,14 @@
 #define PLANTGENE_DARK    21
 
 
-#define PLANTGENE_BRANCH    22
+#define PLANTGENE_SEEDCOLOR_RED     22
+#define PLANTGENE_SEEDCOLOR_GREEN   23
+#define PLANTGENE_SEEDCOLOR_BLUE    24
+#define PLANTGENE_SEEDCOLOR_LIGHT   25
+#define PLANTGENE_SEEDCOLOR_DARK    26
+
+
+#define PLANTGENE_BRANCH    27
 
 // #define PLANTGENE_SEED_RED     22
 // #define PLANTGENE_SEED_GREEN   23
@@ -168,7 +175,7 @@
 // #define PLANTGENE_SEED_LIGHT   25
 // #define PLANTGENE_SEED_DARK    26
 
-#define numberOfPlantGenes 23
+#define numberOfPlantGenes 28
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {
@@ -182,7 +189,7 @@ std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 	std::string( "It smells like fresh dried laundry. Delightful." ),
 	std::string( "It smells like the rain after a hot summer day." ),
 	std::string( "It smells like the salt air at the beach." ),
-	std::string( "It smells like the perfume of a frangipani's flower." ),
+	std::string( "It smells like the perfume of a jasmine flower." ),
 	std::string( "It smells like pool chlorine." ),
 	std::string( "It smells like electricity." ),
 	std::string( "It smells like rotting meat. Yuck!" ),
@@ -336,7 +343,7 @@ std::string tileDescriptions(unsigned int tile)
 
 	case ORGAN_SENSOR_PAIN:
 	{
-		return std::string("a part of the brain which feels agony and suffering.");
+		return std::string("a part of the brain which experiences pain and suffering.");
 	}
 	// case ORGAN_HEATADAPT:
 	// {
@@ -391,7 +398,7 @@ std::string tileDescriptions(unsigned int tile)
 
 	case ORGAN_TIMER:
 	{
-		return std::string("a pacemaking ganglion that provides a pulsing beat.");
+		return std::string("a pacemaking ganglion with a pulsing beat.");
 	}
 
 
@@ -405,7 +412,7 @@ std::string tileDescriptions(unsigned int tile)
 // #define ORGAN_GENITAL_B            41
 	case ORGAN_GENITAL_A:
 	{
-		return std::string("a helmeted harpoon that squirts sperm.");
+		return std::string("a shiny, helmeted harpoon that dispenses genetic material.");
 	}
 
 	case ORGAN_GENITAL_B:
@@ -545,7 +552,7 @@ std::string tileDescriptions(unsigned int tile)
 
 	case MATERIAL_VOMIT:
 	{
-		return std::string("an acrid puddle of partially digested food.");
+		return std::string("an acrid puddle of digested food.");
 	}
 
 
