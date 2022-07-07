@@ -2184,21 +2184,22 @@ void mutatePlants(unsigned int worldI)
 void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 {
 
-						printf("1\n");
+	printf("1\n");
 	if (to < 0 || from < 0)
 	{
-		printf("growInto error: to or from index was less than 0\n");
+		// printf("growInto error: to or from index was less than 0\n");
+		return;
 	}
 
 	if (!( materialBlocksMovement (game.world[to].wall)))
 	{
 
 
-						printf("2\n");
+		// printf("2\n");
 		if (organ == MATERIAL_SEED || organ == MATERIAL_POLLEN) // production of plant gametes
 		{
 
-						printf("3\n");
+			// printf("3\n");
 
 			if (organ == MATERIAL_SEED)
 			{
@@ -2233,7 +2234,7 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			if (fromSeed)										// when spawning from a seed
 			{
 
-						printf("3\n");
+				// printf("3\n");
 				game.world[to].plantIdentity =  game.world[from].seedIdentity;
 				game.world[to].grassColor = color_green;
 				game.world[to].seedColor = color_yellow;
@@ -2246,7 +2247,7 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			else                                                 // when propagating from existing tissues
 			{
 
-						printf("4\n");
+				// printf("4\n");
 				game.world[to].plantIdentity = game.world[from].plantIdentity ;
 				game.world[to].grassColor = game.world[from].grassColor;
 				game.world[to].seedColor = game.world[from].seedColor;
@@ -2660,14 +2661,14 @@ void updatePlants(unsigned int worldI)
 			{
 
 
-				printf("a\n");
+				// printf("a\n");
 				// spawn plants from seeds if applicable
 				if (extremelyFastNumberFromZeroTo(10) == 0)
 				{
-					printf("b\n");
+					// printf("b\n");
 					if (materialSupportsGrowth(game.world[neighbour].terrain))
 					{
-						printf("c\n");
+						// printf("c\n");
 						growInto(  neighbour, worldI, MATERIAL_LEAF, true );
 						game.world[worldI].seedState = MATERIAL_NOTHING;
 						break;
@@ -2736,7 +2737,7 @@ void updatePlants(unsigned int worldI)
 									// game.world[neighbour].seedColor  = game.world[worldI].grassColor;
 									// game.world[neighbour].seedIdentity = game.world[worldI].identity;
 									// game.world[neighbour].seedState = MATERIAL_POLLEN;
-									growInto( neighbour, worldI,MATERIAL_POLLEN, false);
+									growInto( neighbour, worldI, MATERIAL_POLLEN, false);
 									break;
 								}
 							}
@@ -2821,7 +2822,7 @@ void updatePlants(unsigned int worldI)
 									}
 
 									// then grow a seed from that mix.
-									growInto( neighbour,worldI, MATERIAL_SEED, false);
+									growInto( neighbour, worldI, MATERIAL_SEED, false);
 									break;
 								}
 							}
@@ -6757,7 +6758,7 @@ void load()
 
 void setupTestPlant2(unsigned int worldPositionI)
 {
-memset(game.world[worldPositionI].seedGenes, 0x00, sizeof(char) * plantGenomeSize);
+	memset(game.world[worldPositionI].seedGenes, 0x00, sizeof(char) * plantGenomeSize);
 
 	game.world[worldPositionI].seedGenes[0] = PLANTGENE_BLUE;
 	game.world[worldPositionI].seedGenes[1] = 2;
@@ -6772,7 +6773,7 @@ memset(game.world[worldPositionI].seedGenes, 0x00, sizeof(char) * plantGenomeSiz
 	game.world[worldPositionI].seedGenes[10] = PLANTGENE_BUD;
 	game.world[worldPositionI].seedGenes[11] = PLANTGENE_BREAK;
 	game.world[worldPositionI].seedGenes[12] = PLANTGENE_WOOD;
-	game.world[worldPositionI].seedGenes[13]= 5;
+	game.world[worldPositionI].seedGenes[13] = 5;
 	game.world[worldPositionI].seedGenes[14] = PLANTGENE_BUD;
 
 	game.world[worldPositionI].seedIdentity = extremelyFastNumberFromZeroTo(256);
@@ -6919,10 +6920,10 @@ bool test_animals()
 
 	animalTurn(testAnimal);
 
-	for (int i = 0; i < game.animals[testAnimal].cellsUsed; ++i)
-	{
-		printf("%f \n", game.animals[testAnimal].body[i].signalIntensity);
-	}
+	// for (int i = 0; i < game.animals[testAnimal].cellsUsed; ++i)
+	// {
+	// 	printf("%f \n", game.animals[testAnimal].body[i].signalIntensity);
+	// }
 
 	int diffs = 0;
 	int child = testAnimal;
@@ -7150,11 +7151,44 @@ bool test_plants()
 {
 
 
+	resetGameState();
+	bool testResult_1 = false;
+
+	unsigned int testPos = (worldSize * 10) +  extremelyFastNumberFromZeroTo(worldSquareSize -  ((worldSize * 10) + 1) );
 
 
+	for (int i = -(worldSize * 5); i < (worldSize * 5); ++i)
+	{
+		game.world[testPos + i].terrain = MATERIAL_SOIL;
+	}
+
+	setupTestPlant2(testPos);
+	growInto(  testPos, testPos, MATERIAL_LEAF, true );
+	game.world[testPos].seedState = MATERIAL_NOTHING;
+
+	game.world[testPos].light = color_white;
+
+	// unsigned int testSector = (testPos / sectorSize) ;
+	for (int i = 0; i < 100; ++i)
+	{
+		// updateMapSector(  testSector );
+		updateMapI(testPos);
+	}
 
 
-	return true;
+	unsigned int woodProbe = testPos + 1;
+
+	if (game.world[woodProbe].plantState == MATERIAL_WOOD)
+	{
+		testResult_1 = true;
+	}
+
+
+	if (testResult_1)
+	{
+		return true;
+	}
+	return false;
 }
 
 
