@@ -2149,6 +2149,7 @@ int getNewPlantIdentity()
 	return plantIdentityCursor;
 }
 
+// operates on seed genes, not plant genes.
 void mutatePlants(unsigned int worldI)
 {
 	unsigned int mutationChoice = extremelyFastNumberFromZeroTo(2);
@@ -2434,6 +2435,30 @@ void growPlants(unsigned int worldI)
 				break;
 			}
 
+			case PLANTGENE_RUNNER: // start the plant over from zero at this location
+			{
+// printf("b\n");
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					if (game.world[worldI].growthMatrix[i])
+					{
+						unsigned int neighbour = worldI + neighbourOffsets[i];
+						if (neighbour < worldSquareSize)
+						{
+
+							if (materialSupportsGrowth(game.world[neighbour].terrain))
+							{
+								// printf("c\n");
+								growInto(  neighbour, worldI, MATERIAL_LEAF, true );
+								mutatePlants(neighbour);
+							}
+						}
+					}
+				}
+				done = true;
+				break;
+			}
+
 			case PLANTGENE_BUD:
 			{
 				for (int i = 0; i < nNeighbours; ++i)
@@ -2456,6 +2481,27 @@ void growPlants(unsigned int worldI)
 				done = true;
 				break;
 			}
+			case PLANTGENE_POLLENTRAP:
+			{
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					if (game.world[worldI].growthMatrix[i])
+					{
+						unsigned int neighbour = worldI + neighbourOffsets[i];
+						if (neighbour < worldSquareSize)
+						{
+							growInto( neighbour, worldI, MATERIAL_POLLENTRAP, false);
+							if (branch) {
+								clearGrowthMask(neighbour) ;
+								game.world[neighbour].growthMatrix[i] = true;
+							}
+						}
+					}
+				}
+				done = true;
+				break;
+			}
+
 			case PLANTGENE_LEAF:
 			{
 				for (int i = 0; i < nNeighbours; ++i)
@@ -2599,6 +2645,12 @@ void growPlants(unsigned int worldI)
 	}
 }
 
+
+// void plantPlant()
+// {
+
+// }
+
 void updatePlants(unsigned int worldI)
 {
 
@@ -2665,6 +2717,8 @@ void updatePlants(unsigned int worldI)
 						// printf("c\n");
 						growInto(  neighbour, worldI, MATERIAL_LEAF, true );
 						game.world[worldI].seedState = MATERIAL_NOTHING;
+
+						mutatePlants(neighbour);
 						break;
 
 					}
@@ -2704,7 +2758,8 @@ void updatePlants(unsigned int worldI)
 	}
 	if (game.world[worldI].plantState == MATERIAL_BUD  ||
 	        game.world[worldI].plantState == MATERIAL_LEAF ||
-	        game.world[worldI].plantState == MATERIAL_WOOD
+	        game.world[worldI].plantState == MATERIAL_WOOD || 
+	        game.world[worldI].plantState == MATERIAL_POLLENTRAP
 	   )
 	{
 		if (game.world[worldI].energyDebt <= 0.0f)
@@ -2715,29 +2770,29 @@ void updatePlants(unsigned int worldI)
 		{
 			if (game.world[worldI].energy > 0.0f)
 			{
-		// 		if (game.world[worldI].plantState == MATERIAL_BUD)
-		// 		{
-		// 			if (game.world[worldI].energy > game.world[worldI].energyDebt) // the debt will finally be paid off.
-		// 			{
-		// 				for (int n = 0; n < nNeighbours; ++n)
-		// 				{
-		// 					unsigned int neighbour = worldI + neighbourOffsets[n];
-		// 					if (neighbour < worldSquareSize)
-		// 					{
-		// 						// create a pollen in the neighbouring square, it's not the same as normal growing.
-		// 						if (game.world[neighbour].seedState == MATERIAL_NOTHING)
-		// 						{
-		// 							// memcpy( &(game.world[neighbour].seedGenes[0]), &(game.world[worldI].plantGenes[0]), sizeof(char) * plantGenomeSize   );
-		// 							// game.world[neighbour].seedColor  = game.world[worldI].grassColor;
-		// 							// game.world[neighbour].seedIdentity = game.world[worldI].identity;
-		// 							// game.world[neighbour].seedState = MATERIAL_POLLEN;
-		// 							// growInto( neighbour, worldI, MATERIAL_POLLEN, false);
-		// 							break;
-		// 						}
-		// 					}
-		// 				}
-		// 			}
-		// 		}
+				// 		if (game.world[worldI].plantState == MATERIAL_BUD)
+				// 		{
+				// 			if (game.world[worldI].energy > game.world[worldI].energyDebt) // the debt will finally be paid off.
+				// 			{
+				// 				for (int n = 0; n < nNeighbours; ++n)
+				// 				{
+				// 					unsigned int neighbour = worldI + neighbourOffsets[n];
+				// 					if (neighbour < worldSquareSize)
+				// 					{
+				// 						// create a pollen in the neighbouring square, it's not the same as normal growing.
+				// 						if (game.world[neighbour].seedState == MATERIAL_NOTHING)
+				// 						{
+				// 							// memcpy( &(game.world[neighbour].seedGenes[0]), &(game.world[worldI].plantGenes[0]), sizeof(char) * plantGenomeSize   );
+				// 							// game.world[neighbour].seedColor  = game.world[worldI].grassColor;
+				// 							// game.world[neighbour].seedIdentity = game.world[worldI].identity;
+				// 							// game.world[neighbour].seedState = MATERIAL_POLLEN;
+				// 							// growInto( neighbour, worldI, MATERIAL_POLLEN, false);
+				// 							break;
+				// 						}
+				// 					}
+				// 				}
+				// 			}
+				// 		}
 				game.world[worldI].energyDebt -= game.world[worldI].energy;
 				game.world[worldI].energy = 0.0f;
 			}
@@ -2821,6 +2876,7 @@ void updatePlants(unsigned int worldI)
 									// then grow a seed from that mix.
 									growInto( worldI, worldI, MATERIAL_SEED, false);
 									game.world[worldI].plantState = MATERIAL_NOTHING;
+
 									break;
 								}
 							}
@@ -2830,6 +2886,71 @@ void updatePlants(unsigned int worldI)
 			}
 			break;
 		}
+
+
+
+
+
+
+
+
+		case MATERIAL_POLLENTRAP:
+		{
+			// if (game.world[worldI].energyDebt <= 0.0f)
+			// {
+				for (int n = 0; n < nNeighbours; ++n)
+				{
+					unsigned int neighbour = worldI + neighbourOffsets[n];
+					if (neighbour < worldSquareSize)
+					{
+						if (game.world[neighbour].seedState == MATERIAL_POLLEN)
+						{
+							if (game.world[neighbour].seedIdentity != game.world[worldI].plantIdentity)
+							{
+
+								// plant species is basically organized by the color of their seeds.
+								const float plantSpeciesThreshold = 0.25f;
+
+								float totalDifference = (
+								                            abs(game.world[neighbour].seedColor.r - game.world[worldI].seedColor.r)  +
+								                            abs(game.world[neighbour].seedColor.g - game.world[worldI].seedColor.g)  +
+								                            abs(game.world[neighbour].seedColor.b - game.world[worldI].seedColor.b))
+								                        * 0.33f
+								                        ;
+
+
+								if ( totalDifference > plantSpeciesThreshold)
+								{
+									// // sex between two plants
+									// // take half the pollen genes, put them in that bud's plantgenes.
+									// for (int i = 0; i < plantGenomeSize; ++i)
+									// {
+									// 	if (extremelyFastNumberFromZeroTo(1) == 0)
+									// 	{
+									// 		game.world[worldI].plantGenes[i] =  game.world[neighbour].seedGenes[i] ;
+									// 	}
+									// }
+									// game.world[neighbour].seedState = MATERIAL_NOTHING;
+
+									// // then grow a seed from that mix.
+									// growInto( worldI, worldI, MATERIAL_SEED, false);
+									// game.world[worldI].plantState = MATERIAL_NOTHING;
+
+									// destroy the alien pollen.
+									game.world[neighbour].seedState = MATERIAL_NOTHING;
+
+									break;
+								}
+							}
+						}
+					}
+				}
+			// }
+			break;
+		}
+
+
+
 
 			// case MATERIAL_GRASS:
 			// {
@@ -3185,19 +3306,19 @@ void hurtAnimal( int animalIndex, unsigned int cellIndex, float amount, int shoo
 		limbLost = true;
 	}
 
-	if (animalIndex == game.playerCreature)
-	{
-		std::string num_text = std::to_string(amount);
-		std::string rounded = num_text.substr(0, num_text.find(".") + 2);
-		damageLog += std::string("Hit for ") + std::string( rounded );
+	// if (animalIndex == game.playerCreature)
+	// {
+	// 	std::string num_text = std::to_string(amount);
+	// 	std::string rounded = num_text.substr(0, num_text.find(".") + 2);
+	// 	damageLog += std::string("Hit for ") + std::string( rounded );
 
-		if (limbLost)
-		{
-			damageLog += std::string(", lost a ") + tileShortNames(game.animals[animalIndex].body[cellIndex].organ ) + std::string("!");
-		}
+	// 	if (limbLost)
+	// 	{
+	// 		damageLog += std::string(", lost a ") + tileShortNames(game.animals[animalIndex].body[cellIndex].organ ) + std::string("!");
+	// 	}
 
-		appendLog(damageLog);
-	}
+	// 	appendLog(damageLog);
+	// }
 
 	bool dropped = false;
 	if (limbLost)

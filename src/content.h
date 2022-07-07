@@ -105,6 +105,7 @@
 #define MATERIAL_VOMIT     186
 #define MATERIAL_HONEY     189
 #define MATERIAL_WAX       190
+#define MATERIAL_POLLENTRAP       191
 
 
 #define MACHINECALLBACK_PISTOL           100
@@ -169,13 +170,16 @@
 
 #define PLANTGENE_BRANCH    27
 
+#define PLANTGENE_RUNNER     28
+#define PLANTGENE_POLLENTRAP 29
+
 // #define PLANTGENE_SEED_RED     22
 // #define PLANTGENE_SEED_GREEN   23
 // #define PLANTGENE_SEED_BLUE    24
 // #define PLANTGENE_SEED_LIGHT   25
 // #define PLANTGENE_SEED_DARK    26
 
-#define numberOfPlantGenes 28
+#define numberOfPlantGenes 29
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {
