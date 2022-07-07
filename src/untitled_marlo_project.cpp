@@ -639,6 +639,7 @@ void resetGameState()
 	game.adversary = -1;
 	game.adversaryRespawnPos;
 	game.selectedAnimal = -1;
+	game.selectedPlant = -1;
 	game.cursorAnimal = -1;
 	game.playerRespawnPos;
 	game.adversaryDefeated = false;
@@ -1658,12 +1659,16 @@ int isAnimalInSquare(int animalIndex, unsigned int cellWorldPositionI)
 
 void selectCursorAnimal()
 {
-	if (game.selectedAnimal >= 0)
+	if (game.selectedAnimal >= 0 || game.selectedPlant >= 0)
 	{
 		game.selectedAnimal = -1;
+		game.selectedPlant = -1;
+
 	}
 	else
 	{
+		bool anAnimalWasSelected = false;
+
 		int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
 		int cursorPosY = game.cameraPositionY + game.mousePositionY;
 		unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
@@ -1673,8 +1678,22 @@ void selectCursorAnimal()
 			if ( occupyingCell >= 0)
 			{
 				game.selectedAnimal = game.cursorAnimal;
+				anAnimalWasSelected = true;
 			}
 		}
+
+
+		if (!anAnimalWasSelected)
+		{
+
+
+			if (game.world [worldCursorPos].plantState != MATERIAL_NOTHING)
+			{
+				game.selectedPlant = game.world [worldCursorPos].plantIdentity;
+			}
+
+		}
+
 	}
 }
 
@@ -2206,6 +2225,19 @@ void propagateFlame(unsigned int worldI, unsigned int depth)
 	}
 }
 
+
+void clearGrowthMask(unsigned int worldI)
+{
+	game.world[worldI].growthMatrix[0] = false;
+	game.world[worldI].growthMatrix[1] = false;
+	game.world[worldI].growthMatrix[2] = false;
+	game.world[worldI].growthMatrix[3] = false;
+	game.world[worldI].growthMatrix[4] = false;
+	game.world[worldI].growthMatrix[5] = false;
+	game.world[worldI].growthMatrix[6] = false;
+	game.world[worldI].growthMatrix[7] = false;
+}
+
 void growPlants(unsigned int worldI)
 {
 	// if (game.world[worldI].plantState == MATERIAL_GRASS)
@@ -2233,7 +2265,7 @@ void growPlants(unsigned int worldI)
 	// 	return;
 	// }
 
-	unsigned int skipTo = game.world[worldI].geneCursor;
+	unsigned int skipAhead = 0;
 	bool skip = false;
 
 	bool branch = false; // if branch, the current growing cell keeps growing after this.
@@ -2298,13 +2330,8 @@ void growPlants(unsigned int worldI)
 				// combines a goto with allowing this cell to continue growing after branching
 				// the branch starts at a gene position forward of this one
 				unsigned int nextGene = game.world[worldI].geneCursor + 1;
-				skipTo = game.world[worldI].plantGenes[nextGene];
-
-				if (skipTo < nextGene) { skipTo = nextGene; }  // otherwise individual plants can will get into loops and grow enormously large. it's a good but boring strategy.
-
+				skipAhead = game.world[worldI].plantGenes[nextGene];
 				skip = true;
-
-
 				branch = true;
 				break;
 			}
@@ -2346,7 +2373,8 @@ void growPlants(unsigned int worldI)
 						if (neighbour < worldSquareSize)
 						{
 							growInto(worldI, neighbour, MATERIAL_BUD);
-							if (skip) { game.world[neighbour].geneCursor = skipTo;skip = false;   }
+							if (skip) { game.world[neighbour].geneCursor += skipAhead; skip = false;   }
+							if (branch) {  clearGrowthMask(neighbour) ;}
 						}
 					}
 				}
@@ -2363,7 +2391,8 @@ void growPlants(unsigned int worldI)
 						if (neighbour < worldSquareSize)
 						{
 							growInto(worldI, neighbour, MATERIAL_LEAF);
-							if (skip) { game.world[neighbour].geneCursor = skipTo; skip = false; }
+							if (skip) { game.world[neighbour].geneCursor += skipAhead; skip = false; }
+							if (branch) {  clearGrowthMask(neighbour) ;}
 						}
 					}
 				}
@@ -2380,7 +2409,8 @@ void growPlants(unsigned int worldI)
 						if (neighbour < worldSquareSize)
 						{
 							growInto(worldI, neighbour, MATERIAL_WOOD);
-							if (skip) { game.world[neighbour].geneCursor = skipTo; skip = false; }
+							if (skip) { game.world[neighbour].geneCursor += skipAhead; skip = false; }
+							if (branch) {  clearGrowthMask(neighbour) ;}
 						}
 					}
 				}
@@ -2390,9 +2420,9 @@ void growPlants(unsigned int worldI)
 			case PLANTGENE_GOTO:
 			{
 				unsigned int nextGene = game.world[worldI].geneCursor + 1;
-				skipTo = game.world[worldI].plantGenes[nextGene];
+				skipAhead = game.world[worldI].plantGenes[nextGene];
 
-				if (skipTo < nextGene) { skipTo = nextGene; }  // otherwise individual plants can will get into loops and grow enormously large. it's a good but boring strategy.
+				if (skipAhead < nextGene) { skipAhead = nextGene; }  // otherwise individual plants can will get into loops and grow enormously large. it's a good but boring strategy.
 
 				skip = true;
 				break;
@@ -4874,8 +4904,6 @@ void camera()
 								squareIsSelectedAnimal = true;
 							}
 						}
-
-
 						if (!squareIsSelectedAnimal)
 						{
 							displayColor = filterColor(displayColor, tint_shadow);
@@ -4885,7 +4913,31 @@ void camera()
 
 					}
 
+					else if (game.selectedPlant >= 0  )
+					{
 
+
+						bool squareIsSelectedPlant = false;
+
+
+						if (game.world[worldI].plantIdentity >= 0 )
+						{
+							if (game.world[worldI].plantIdentity == game.selectedPlant)
+							{
+								// int animalCell = isAnimalInSquare(game.world[worldI].identity, worldI );
+								// if (animalCell >= 0 && animalCell < game.animals[game.selectedAnimal].cellsUsed)
+								// {
+								// 	drawNeuroConnections(game.selectedAnimal, animalCell, vx, vy);
+								// }
+								squareIsSelectedPlant = true;
+							}
+						}
+						if (!squareIsSelectedPlant)
+						{
+							displayColor = filterColor(displayColor, tint_shadow);
+						}
+
+					}
 
 
 
@@ -6560,37 +6612,40 @@ void setupTestPlant(unsigned int worldPositionI)
 {
 
 	memset(game.world[worldPositionI].seedGenes, 0x00, sizeof(char) * plantGenomeSize);
+
+
+	// the test plant should demonstrate the basic structural features and reproductive capability of the plant.
+
+	// a short preamble makes the plant a red color.
 	game.world[worldPositionI].seedGenes[0] = PLANTGENE_RED;
 	game.world[worldPositionI].seedGenes[1] = PLANTGENE_RED;
 	game.world[worldPositionI].seedGenes[2] = PLANTGENE_RED;
-	game.world[worldPositionI].seedGenes[3] = PLANTGENE_RED;
-	game.world[worldPositionI].seedGenes[4] = PLANTGENE_RED;
-	game.world[worldPositionI].seedGenes[5] = 4;
-	// game.world[worldPositionI].seedGenes[6] = 5;
-	game.world[worldPositionI].seedGenes[7] = PLANTGENE_WOOD;
-	game.world[worldPositionI].seedGenes[8] = PLANTGENE_WOOD;
-	game.world[worldPositionI].seedGenes[8] = PLANTGENE_WOOD;
 
+
+	game.world[worldPositionI].seedGenes[3] = PLANTGENE_SEQUENCE;
+	game.world[worldPositionI].seedGenes[4] = 2;
+	game.world[worldPositionI].seedGenes[4] = 4;
+	game.world[worldPositionI].seedGenes[5] = PLANTGENE_WOOD;
+	game.world[worldPositionI].seedGenes[6] = 4;
+	game.world[worldPositionI].seedGenes[7] = PLANTGENE_BRANCH;
+	game.world[worldPositionI].seedGenes[8] = 3;
 	game.world[worldPositionI].seedGenes[8] = 2;
-	game.world[worldPositionI].seedGenes[8] = 6;
-	game.world[worldPositionI].seedGenes[14] = PLANTGENE_BRANCH;
 	game.world[worldPositionI].seedGenes[9] = PLANTGENE_LEAF;
-	game.world[worldPositionI].seedGenes[8] = 2;
-	game.world[worldPositionI].seedGenes[8] = 6;
 
-
-	game.world[worldPositionI].seedGenes[12] = 2;
-	game.world[worldPositionI].seedGenes[13] = 3;
-	game.world[worldPositionI].seedGenes[14] = PLANTGENE_LEAF;
-	game.world[worldPositionI].seedGenes[15] = PLANTGENE_BUD;
+	game.world[worldPositionI].seedGenes[11] = 4;
+	game.world[worldPositionI].seedGenes[12] = PLANTGENE_WOOD;
+	game.world[worldPositionI].seedGenes[13] = 4;
+	game.world[worldPositionI].seedGenes[14] = PLANTGENE_BRANCH;
+	game.world[worldPositionI].seedGenes[15] = 2;
 	game.world[worldPositionI].seedGenes[16] = PLANTGENE_BUD;
+	game.world[worldPositionI].seedGenes[17] = PLANTGENE_BREAK;
+	game.world[worldPositionI].seedGenes[18] = PLANTGENE_BREAK;
+
 
 
 
 
 	game.world[worldPositionI].seedState = MATERIAL_SEED;
-
-
 
 }
 
@@ -6848,6 +6903,15 @@ bool test_animals()
 		animalTurn(testAnimal_water_in_water);
 		animalTurn(testAnimal_amphi_in_air);
 		animalTurn(testAnimal_amphi_in_water);
+		// printf("%i of %i \n", i , how_long_it_takes_to_make_sure);
+		// printf("testAnimal_air_in_air %i \n",game.animals[testAnimal_air_in_air].retired    );
+		// printf("testAnimal_air_in_water %i \n",game.animals[testAnimal_air_in_water].retired    );
+		// printf("testAnimal_water_in_air %i \n",game.animals[testAnimal_water_in_air].retired    );
+		// printf("testAnimal_water_in_water %i \n",game.animals[testAnimal_water_in_water].retired    );
+		// printf("testAnimal_amphi_in_air %i \n",game.animals[testAnimal_air_in_air].retired    );
+		// printf("testAnimal_amphi_in_water %i \n",game.animals[testAnimal_amphi_in_water].retired    );
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
 	if (
@@ -6861,6 +6925,9 @@ bool test_animals()
 	{
 		testResult_6 = true;
 	}
+
+
+
 
 	if (
 	    testResult_2 &&
@@ -6913,6 +6980,7 @@ bool test_plants()
 
 
 
+	return true;
 }
 
 
@@ -6938,4 +7006,5 @@ bool test_all()
 		testResult_all = false;
 	}
 
+	return testResult_all;
 }

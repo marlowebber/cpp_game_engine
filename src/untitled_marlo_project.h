@@ -179,6 +179,7 @@ struct GameState
     int adversary = -1;
     unsigned int adversaryRespawnPos;
     int selectedAnimal ;
+    int selectedPlant ;
     int cursorAnimal ;
     unsigned int playerRespawnPos;
 
