@@ -2607,6 +2607,7 @@ void growPlants(unsigned int worldI)
 
 void updatePlants(unsigned int worldI)
 {
+	if ( !(worldI < worldSquareSize)) {return;}
 	switch (game.world[worldI].seedState)
 	{
 	case MATERIAL_POLLEN:
@@ -6517,7 +6518,7 @@ void tournamentController()
 						// 	game.champions[k] = game.animals[j];
 						// }
 
-						if (game.speciesPopulationCounts[k] == 0 && k != 0)
+						if (game.speciesPopulationCounts[k] < 32 && k != 0)
 						{
 
 							// if (game.championScores[k] > 1.0f)
@@ -6527,8 +6528,8 @@ void tournamentController()
 							int j = 1;
 							int domingo = -1;
 							unsigned int randomPos = game.animals[game.adversary].position + (-5 + extremelyFastNumberFromZeroTo(10)  + ( (-5 * worldSize) + (extremelyFastNumberFromZeroTo(10) * worldSize)  )   );
-							for (int ee = 0; ee < 32; ++ee)
-							{
+							// for (int ee = 0; ee < 32; ++ee)
+							// {
 								// spawn a bunch of random champions
 								// int randomCell = getRandomPopulatedCell(game.adversary);
 								// if (randomCell >= 0)
@@ -6556,6 +6557,7 @@ void tournamentController()
 								{
 									setupExampleAnimal3(j);
 									domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
+									game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
 								}
 								else if (whatToSpawn == 1)  // spawn a species champion
 								{
@@ -6645,7 +6647,7 @@ void tournamentController()
 
 								}
 								// }
-							}
+							// }
 
 
 							game.championScores[k] = 0.0f;
