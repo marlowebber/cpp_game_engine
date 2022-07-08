@@ -2352,16 +2352,15 @@ void growIntoNeighbours(unsigned int worldI, unsigned int material)
 
 void growPlants(unsigned int worldI)
 {
+	if (worldI >= worldSquareSize) {return;}
 	if (game.world[worldI].grown) {return;}
 	if (game.world[worldI].geneCursor >= plantGenomeSize) {return;}
 	bool done = false;
-	// bool branch = false;
 	int	skipAhead = game.world[worldI].geneCursor + 1;
 	char c = game.world[worldI].plantGenes[game.world[worldI].geneCursor];
 	if (c < nNeighbours)
 	{
 		game.world[worldI].growthMatrix[c] = !(game.world[worldI].growthMatrix[c]);
-		// continue;
 	}
 	else
 	{
@@ -2398,7 +2397,7 @@ void growPlants(unsigned int worldI)
 
 		case PLANTGENE_SEQUENCE:
 		{
-			if (game.world[worldI].geneCursor + 2 < plantGenomeSize)
+			if ((game.world[worldI].geneCursor + 2) < plantGenomeSize)
 			{
 				game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1];
 				game.world[worldI].sequenceReturn = game.world[worldI].geneCursor + 2;
@@ -2411,15 +2410,11 @@ void growPlants(unsigned int worldI)
 			// combines a goto with allowing this cell to continue growing after branching
 			// the branch starts growing from the cursor immediately
 			// the origin continues at a gene position forward of this one
-			for (int i =  0; i < plantGenomeSize; ++i)
-			{
-				if ( game.world[worldI].plantGenes[  ( game.world[worldI].geneCursor + i) ] == PLANTGENE_BREAK)
-				{
-					skipAhead = game.world[worldI].geneCursor + i + 1;
-					// branch = true;
-
-
-
+			// for (int i =  0; i < plantGenomeSize; ++i)
+			// {
+			// 	if ( game.world[worldI].plantGenes[  ( game.world[worldI].geneCursor + i) ] == PLANTGENE_BBREAK)
+			// 	{
+					skipAhead =   game.world[worldI].plantGenes[  game.world[worldI].geneCursor+ 1];
 					for (int i = 0; i < nNeighbours; ++i)
 					{
 						if (game.world[worldI].growthMatrix[i])
@@ -2427,7 +2422,7 @@ void growPlants(unsigned int worldI)
 							unsigned int neighbour = worldI + neighbourOffsets[i];
 							if (neighbour < worldSquareSize)
 							{
-								growInto( neighbour, worldI, MATERIAL_WOOD, false);
+								growInto( neighbour, worldI, game.world[worldI].plantState, false);
 								// if (branch) {
 								clearGrowthMask(neighbour) ;
 								game.world[neighbour].growthMatrix[i] = true;
@@ -2435,13 +2430,13 @@ void growPlants(unsigned int worldI)
 							}
 						}
 					}
-					break;
-				}
-			}
+					// break;
+			// 	}
+			// }
 			break;
 		}
 
-		case PLANTGENE_BREAK:
+		case PLANTGENE_SBREAK:
 		{
 			// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number and depth.
 			if (game.world[worldI].sequenceNumber > 0)
@@ -2718,29 +2713,6 @@ void updatePlants(unsigned int worldI)
 		{
 			if (game.world[worldI].energy > 0.0f)
 			{
-				// 		if (game.world[worldI].plantState == MATERIAL_BUD)
-				// 		{
-				// 			if (game.world[worldI].energy > game.world[worldI].energyDebt) // the debt will finally be paid off.
-				// 			{
-				// 				for (int n = 0; n < nNeighbours; ++n)
-				// 				{
-				// 					unsigned int neighbour = worldI + neighbourOffsets[n];
-				// 					if (neighbour < worldSquareSize)
-				// 					{
-				// 						// create a pollen in the neighbouring square, it's not the same as normal growing.
-				// 						if (game.world[neighbour].seedState == MATERIAL_NOTHING)
-				// 						{
-				// 							// memcpy( &(game.world[neighbour].seedGenes[0]), &(game.world[worldI].plantGenes[0]), sizeof(char) * plantGenomeSize   );
-				// 							// game.world[neighbour].seedColor  = game.world[worldI].grassColor;
-				// 							// game.world[neighbour].seedIdentity = game.world[worldI].identity;
-				// 							// game.world[neighbour].seedState = MATERIAL_POLLEN;
-				// 							// growInto( neighbour, worldI, MATERIAL_POLLEN, false);
-				// 							break;
-				// 						}
-				// 					}
-				// 				}
-				// 			}
-				// 		}
 				game.world[worldI].energyDebt -= game.world[worldI].energy;
 				game.world[worldI].energy = 0.0f;
 			}
@@ -2750,12 +2722,10 @@ void updatePlants(unsigned int worldI)
 		switch (game.world[worldI].plantState)
 		{
 
-
 		case MATERIAL_FIRE:
 		{
 			propagateFlame(worldI, 0);
 		}
-
 
 
 		case MATERIAL_LEAF:
@@ -6862,14 +6832,13 @@ void setupTestPlant2(unsigned int worldPositionI)
 	game.world[worldPositionI].seedGenes[5] = PLANTGENE_WOOD;
 	game.world[worldPositionI].seedGenes[6] = PLANTGENE_WOOD;
 	game.world[worldPositionI].seedGenes[7] = PLANTGENE_BRANCH;
-	game.world[worldPositionI].seedGenes[8] = 9;
+	game.world[worldPositionI].seedGenes[8] = 8;
 	game.world[worldPositionI].seedGenes[9] = 4;
 	game.world[worldPositionI].seedGenes[10] = 0;
 	game.world[worldPositionI].seedGenes[11] = PLANTGENE_WOOD;
 	game.world[worldPositionI].seedGenes[12] = 3;
 	game.world[worldPositionI].seedGenes[13] = PLANTGENE_GOTO;
 	game.world[worldPositionI].seedGenes[14] = 0;
-	game.world[worldPositionI].seedGenes[15] = PLANTGENE_BREAK;
 	game.world[worldPositionI].seedGenes[16] = PLANTGENE_WOOD;
 	game.world[worldPositionI].seedGenes[17] = 5;
 	game.world[worldPositionI].seedGenes[18] = PLANTGENE_RUNNER;
@@ -6918,11 +6887,11 @@ void setupTestPlant(unsigned int worldPositionI)
 	game.world[worldPositionI].seedGenes[12] = PLANTGENE_WOOD;
 	game.world[worldPositionI].seedGenes[13] = 4;
 	game.world[worldPositionI].seedGenes[14] = PLANTGENE_BRANCH;
-	game.world[worldPositionI].seedGenes[15] = 2;
+	game.world[worldPositionI].seedGenes[15] = 3;
 	game.world[worldPositionI].seedGenes[16] = 3;
 	game.world[worldPositionI].seedGenes[17] = PLANTGENE_BUD;
-	game.world[worldPositionI].seedGenes[18] = PLANTGENE_BREAK;
-	game.world[worldPositionI].seedGenes[19] = PLANTGENE_BREAK;
+	// game.world[worldPositionI].seedGenes[18] = PLANTGENE_BREAK;
+	game.world[worldPositionI].seedGenes[18] = PLANTGENE_SBREAK;
 
 
 

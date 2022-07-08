@@ -153,7 +153,7 @@
 #define PLANTGENE_WOOD        13
 #define PLANTGENE_GOTO        14
 #define PLANTGENE_SEQUENCE    15
-#define PLANTGENE_BREAK		  16
+#define PLANTGENE_SBREAK		  16
 
 #define PLANTGENE_RED     17
 #define PLANTGENE_GREEN   18
@@ -173,6 +173,7 @@
 
 #define PLANTGENE_RUNNER     28
 #define PLANTGENE_POLLENTRAP 29
+// #define PLANTGENE_BBREAK 30
 
 // #define PLANTGENE_SEED_RED     22
 // #define PLANTGENE_SEED_GREEN   23
@@ -180,7 +181,7 @@
 // #define PLANTGENE_SEED_LIGHT   25
 // #define PLANTGENE_SEED_DARK    26
 
-#define numberOfPlantGenes 29
+#define numberOfPlantGenes 30
 
 std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 {
