@@ -1021,24 +1021,25 @@ void detailTerrain()
 			Vec_f2 slope = getTerrainSlope(worldPositionI);
 			float grade = sqrt( (slope.x * slope.x) +  (slope.y * slope.y)  );
 			float colorNoise = 1 + (((RNG() - 0.5f) * 0.35)) ; // map -1,1 to 0,0.8
-			if ( game.world[worldPositionI]. height < biome_marine)
+
+
+			if (game.world[worldPositionI]. height < seaLevel)
 			{
 				if (grade < 5.0f)
 				{
-					game.world[worldPositionI].terrain = MATERIAL_SAND;
-
-// #ifdef PLANTS
-
-					// game.world[worldPositionI].plantState = MATERIAL_GRASS;
-// #else
-// 					game.world[worldPositionI].wall = MATERIAL_GRASS;
-
 
 					if (extremelyFastNumberFromZeroTo(100) == 0)
 					{
 						spawnRandomPlant( worldPositionI );
 					}
-// #endif
+				}
+			}
+
+			if ( game.world[worldPositionI]. height < biome_marine)
+			{
+				if (grade < 5.0f)
+				{
+					game.world[worldPositionI].terrain = MATERIAL_SAND;
 				}
 
 				else
@@ -2620,110 +2621,106 @@ void growPlants(unsigned int worldI)
 }
 
 
+
+void moveSeed(unsigned int from, unsigned int to)
+{
+	game.world[to].seedState = game.world[from].seedState;
+	game.world[to].seedIdentity = game.world[from].seedIdentity;
+	memcpy( game.world[to].seedGenes , game.world[from].seedGenes,  plantGenomeSize * sizeof(char)  );
+	game.world[from].seedState = MATERIAL_NOTHING;
+	game.world[from].seedIdentity = -1;
+}
+
 void updatePlants(unsigned int worldI)
 {
-	if ( !(worldI < worldSquareSize)) {return;}
-	switch (game.world[worldI].seedState)
+	if ( (worldI >= worldSquareSize)) {return;}
+
+	if (game.world[worldI].seedState != MATERIAL_NOTHING)
 	{
-	case MATERIAL_POLLEN:
-	{
-		// move seeds randomly
-		unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
-		if (neighbour < worldSquareSize)
+		switch (game.world[worldI].seedState)
 		{
-			if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
-			{
-				game.world[neighbour].seedState = MATERIAL_POLLEN;
-				game.world[neighbour].seedIdentity = game.world[worldI].seedIdentity;
-				game.world[worldI].seedIdentity = -1;
-				memcpy( & (game.world[neighbour].seedGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
-				game.world[worldI].seedState = MATERIAL_NOTHING;
-			}
-		}
-
-		// pollen degrades if not attached to an animal, to prevent it building up too much in the world.
-		bool bonded = false;
-		if (game.world[worldI].identity >= 0 && game.world[worldI].identity < numberOfAnimals)
+		case MATERIAL_POLLEN:
 		{
-			int bond = isAnimalInSquare( game.world[worldI].identity , worldI )  ;
-			if (  bond >= 0 )
+			// move seeds randomly
+			unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
+			if (neighbour < worldSquareSize)
 			{
-				bonded = true;
-			}
-		}
-		if (!bonded)
-		{
-			if (extremelyFastNumberFromZeroTo(100) == 0)
-			{
-				game.world[neighbour].seedState = MATERIAL_NOTHING;
-			}
-		}
-
-
-		break;
-	}
-	case MATERIAL_SEED:
-	{
-
-
-
-		// move seeds randomly
-		unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
-		if (neighbour < worldSquareSize)
-		{
-			if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
-			{
-				// spawn plants from seeds if applicable
-				if (extremelyFastNumberFromZeroTo(10) == 0)
+				if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
 				{
-					if (materialSupportsGrowth(game.world[neighbour].terrain))
-					{
-						growInto(  neighbour, worldI, MATERIAL_LEAF, true );
-						game.world[worldI].seedState = MATERIAL_NOTHING;
-						mutatePlants(neighbour);
-						break;
+					moveSeed(worldI, neighbour);
+				}
 
+
+				// pollen degrades if not attached to an animal, to prevent it building up too much in the world.
+				bool bonded = false;
+				if (game.world[worldI].identity >= 0 && game.world[worldI].identity < numberOfAnimals)
+				{
+					int bond = isAnimalInSquare( game.world[worldI].identity , worldI )  ;
+					if (  bond >= 0 )
+					{
+						bonded = true;
 					}
 				}
-				else
+				if (!bonded)
 				{
+					if (extremelyFastNumberFromZeroTo(100) == 0)
+					{
+						game.world[neighbour].seedState = MATERIAL_NOTHING;
+					}
+				}
+			}
+			break;
+		}
+		case MATERIAL_SEED:
+		{
+			// move seeds randomly
+			unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
+			if (neighbour < worldSquareSize)
+			{
+				if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
+				{
+					// spawn plants from seeds if applicable
+					if (extremelyFastNumberFromZeroTo(10) == 0)
+					{
+						if (materialSupportsGrowth(game.world[neighbour].terrain))
+						{
+							growInto(  neighbour, worldI, MATERIAL_LEAF, true );
+							game.world[worldI].seedState = MATERIAL_NOTHING;
+							mutatePlants(neighbour);
+							break;
+						}
+					}
+					else
+					{
+						moveSeed(worldI, neighbour);
+					}
 
-
-					game.world[neighbour].seedState = MATERIAL_SEED;
-					game.world[neighbour].seedIdentity = game.world[worldI].seedIdentity;
-					game.world[worldI].seedIdentity = -1;
-					memcpy( & (game.world[neighbour].seedGenes[0]) , &(game.world[worldI].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
-					game.world[worldI].seedState = MATERIAL_NOTHING;
 				}
 
-			}
-		}
 
-		bool bonded = false;
-		if (game.world[worldI].identity >= 0 && game.world[worldI].identity < numberOfAnimals)
-		{
-			int bond = isAnimalInSquare( game.world[worldI].identity , worldI )  ;
-			if (  bond >= 0 )
-			{
-				bonded = true;
+				bool bonded = false;
+				if (game.world[worldI].identity >= 0 && game.world[worldI].identity < numberOfAnimals)
+				{
+					int bond = isAnimalInSquare( game.world[worldI].identity , worldI )  ;
+					if (  bond >= 0 )
+					{
+						bonded = true;
+					}
+				}
+				if (!bonded)
+				{
+					if (extremelyFastNumberFromZeroTo(100) == 0)
+					{
+						game.world[neighbour].seedState = MATERIAL_NOTHING;
+					}
+				}
 			}
+			break;
 		}
-		if (!bonded)
-		{
-			if (extremelyFastNumberFromZeroTo(100) == 0)
-			{
-				game.world[neighbour].seedState = MATERIAL_NOTHING;
-			}
 		}
+	}
 
-		break;
-	}
-	}
-	if (game.world[worldI].plantState == MATERIAL_BUD  ||
-	        game.world[worldI].plantState == MATERIAL_LEAF ||
-	        game.world[worldI].plantState == MATERIAL_WOOD ||
-	        game.world[worldI].plantState == MATERIAL_POLLENTRAP
-	   )
+	if (    game.world[worldI].plantState != MATERIAL_NOTHING)
 	{
 		if (game.world[worldI].energyDebt <= 0.0f)
 		{
@@ -2826,17 +2823,8 @@ void updatePlants(unsigned int worldI)
 			break;
 		}
 
-
-
-
-
-
-
-
 		case MATERIAL_POLLENTRAP:
 		{
-			// if (game.world[worldI].energyDebt <= 0.0f)
-			// {
 			for (int n = 0; n < nNeighbours; ++n)
 			{
 				unsigned int neighbour = worldI + neighbourOffsets[n];
@@ -2846,56 +2834,25 @@ void updatePlants(unsigned int worldI)
 					{
 						if (game.world[neighbour].seedIdentity != game.world[worldI].plantIdentity)
 						{
-
 							// plant species is basically organized by the color of their seeds.
 							const float plantSpeciesThreshold = 0.25f;
-
 							float totalDifference = (
 							                            abs(game.world[neighbour].seedColor.r - game.world[worldI].seedColor.r)  +
 							                            abs(game.world[neighbour].seedColor.g - game.world[worldI].seedColor.g)  +
 							                            abs(game.world[neighbour].seedColor.b - game.world[worldI].seedColor.b))
-							                        * 0.33f
-							                        ;
-
-
+							                        * 0.33f;
 							if ( totalDifference > plantSpeciesThreshold)
 							{
-								// // sex between two plants
-								// // take half the pollen genes, put them in that bud's plantgenes.
-								// for (int i = 0; i < plantGenomeSize; ++i)
-								// {
-								// 	if (extremelyFastNumberFromZeroTo(1) == 0)
-								// 	{
-								// 		game.world[worldI].plantGenes[i] =  game.world[neighbour].seedGenes[i] ;
-								// 	}
-								// }
-								// game.world[neighbour].seedState = MATERIAL_NOTHING;
-
-								// // then grow a seed from that mix.
-								// growInto( worldI, worldI, MATERIAL_SEED, false);
-								// game.world[worldI].plantState = MATERIAL_NOTHING;
-
 								// destroy the alien pollen.
 								game.world[neighbour].seedState = MATERIAL_NOTHING;
-
 								break;
 							}
 						}
 					}
 				}
 			}
-			// }
 			break;
 		}
-
-
-
-
-			// case MATERIAL_GRASS:
-			// {
-			// 	game.world[worldI].energy += colorAmplitude(    multiplyColor(  game.world[worldI].light , game.world[worldI].grassColor)) ;
-			// 	break;
-			// }
 		}
 	}
 }
@@ -2939,10 +2896,10 @@ void updateMapI(unsigned int randomI)
 
 // #ifdef PLANTS
 
-	if ( game.world[randomI].plantState != MATERIAL_NOTHING || game.world[randomI].seedState != MATERIAL_NOTHING)
-	{
-		updatePlants(randomI);
-	}
+	// if ( game.world[randomI].plantState != MATERIAL_NOTHING || game.world[randomI].seedState != MATERIAL_NOTHING)
+	// {
+	updatePlants(randomI);
+	// }
 
 // #else
 
