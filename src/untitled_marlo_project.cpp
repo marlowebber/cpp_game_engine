@@ -985,7 +985,7 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 				memcpy( &(game.world[to].growthMatrix[0]), &(game.world[from].growthMatrix[0]), sizeof(bool) * nNeighbours   );
 				game.world[to].energyDebt += 1.0f;
 				game.world[to].energy = 0.0f;
-				game.world[to].geneCursor = game.world[from].geneCursor+1 ;
+				game.world[to].geneCursor = game.world[from].geneCursor + 1 ;
 			}
 			game.world[to].plantState = organ;
 			game.world[to].grown = false;
@@ -2355,7 +2355,7 @@ void growPlants(unsigned int worldI)
 	if (worldI >= worldSquareSize) {return;}
 	if (game.world[worldI].grown) {return;}
 	if (game.world[worldI].geneCursor >= plantGenomeSize) {return;}
-	bool done = false;
+	// bool done = false;
 	int	skipAhead = game.world[worldI].geneCursor + 1;
 	char c = game.world[worldI].plantGenes[game.world[worldI].geneCursor];
 	if (c < nNeighbours)
@@ -2370,8 +2370,13 @@ void growPlants(unsigned int worldI)
 		{
 			// mirror the left and right halves of the growth matrix.
 			bool originalGrowthMatrix[nNeighbours];
-			memcpy(&(originalGrowthMatrix[0]), &(game.world[worldI].growthMatrix[0]), sizeof(bool)*nNeighbours  );
-			memset(&(game.world[worldI].growthMatrix), false, sizeof(bool)*nNeighbours);
+			for (int i = 0; i < nNeighbours; ++i)
+			{
+				originalGrowthMatrix[i] = game.world[worldI].growthMatrix[i];
+				game.world[worldI].growthMatrix[i] = false;
+			}
+			// memcpy(&(originalGrowthMatrix[0]), &(game.world[worldI].growthMatrix[0]), sizeof(bool)*nNeighbours  );
+			// memset(&(game.world[worldI].growthMatrix), false, sizeof(bool)*nNeighbours);
 			if (originalGrowthMatrix[7]) { game.world[worldI].growthMatrix[5] = true;}
 			if (originalGrowthMatrix[5]) { game.world[worldI].growthMatrix[7] = true;}
 			if (originalGrowthMatrix[0]) { game.world[worldI].growthMatrix[4] = true;}
@@ -2384,8 +2389,13 @@ void growPlants(unsigned int worldI)
 		{
 			// mirror the top and bottom halves of the growth matrix.
 			bool originalGrowthMatrix[nNeighbours];
-			memcpy(&(originalGrowthMatrix[0]), &(game.world[worldI].growthMatrix[0]), sizeof(bool)*nNeighbours  );
-			memset(&(game.world[worldI].growthMatrix), false, sizeof(bool)*nNeighbours);
+			// memcpy(&(originalGrowthMatrix[0]), &(game.world[worldI].growthMatrix[0]), sizeof(bool)*nNeighbours  );
+			for (int i = 0; i < nNeighbours; ++i)
+			{
+				originalGrowthMatrix[i] = game.world[worldI].growthMatrix[i];
+				game.world[worldI].growthMatrix[i] = false;
+			}
+			// memset(&(game.world[worldI].growthMatrix), false, sizeof(bool)*nNeighbours);
 			if (originalGrowthMatrix[1]) { game.world[worldI].growthMatrix[5] = true;}
 			if (originalGrowthMatrix[2]) { game.world[worldI].growthMatrix[6] = true;}
 			if (originalGrowthMatrix[3]) { game.world[worldI].growthMatrix[7] = true;}
@@ -2414,23 +2424,27 @@ void growPlants(unsigned int worldI)
 			// {
 			// 	if ( game.world[worldI].plantGenes[  ( game.world[worldI].geneCursor + i) ] == PLANTGENE_BBREAK)
 			// 	{
-					skipAhead =   game.world[worldI].plantGenes[  game.world[worldI].geneCursor+ 1];
-					for (int i = 0; i < nNeighbours; ++i)
+
+			if ((game.world[worldI].geneCursor + 1) < plantGenomeSize)
+			{
+				skipAhead =   game.world[worldI].plantGenes[  game.world[worldI].geneCursor + 1];
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					if (game.world[worldI].growthMatrix[i])
 					{
-						if (game.world[worldI].growthMatrix[i])
+						unsigned int neighbour = worldI + neighbourOffsets[i];
+						if (neighbour < worldSquareSize)
 						{
-							unsigned int neighbour = worldI + neighbourOffsets[i];
-							if (neighbour < worldSquareSize)
-							{
-								growInto( neighbour, worldI, game.world[worldI].plantState, false);
-								// if (branch) {
-								clearGrowthMask(neighbour) ;
-								game.world[neighbour].growthMatrix[i] = true;
-								// }
-							}
+							growInto( neighbour, worldI, game.world[worldI].plantState, false);
+							// if (branch) {
+							clearGrowthMask(neighbour) ;
+							game.world[neighbour].growthMatrix[i] = true;
+							// }
 						}
 					}
-					// break;
+				}
+				// break;
+			}
 			// 	}
 			// }
 			break;
@@ -2456,8 +2470,11 @@ void growPlants(unsigned int worldI)
 					// The header goes <last cell of outer sequence> <sequence gene> <length> <first cell> .. . you always return to the first cell inside the sequence
 					// when breaking an inner sequence,  return to the last cell of outer sequence, which is 3 cells behind where the inner sequence returns to.
 					unsigned int lastCellOfOuterSequence = innerSequenceReturn - 3;
-					game.world[worldI].sequenceReturn = game.world[lastCellOfOuterSequence].sequenceReturn;
-					game.world[worldI].sequenceNumber = game.world[lastCellOfOuterSequence].sequenceNumber;
+					if (lastCellOfOuterSequence < worldSquareSize)
+					{
+						game.world[worldI].sequenceReturn = game.world[lastCellOfOuterSequence].sequenceReturn;
+						game.world[worldI].sequenceNumber = game.world[lastCellOfOuterSequence].sequenceNumber;
+					}
 				}
 			}
 			break;
@@ -2465,14 +2482,17 @@ void growPlants(unsigned int worldI)
 
 		case PLANTGENE_GOTO:
 		{
-			int nextgene = game.world[worldI].geneCursor + 1 ;
-			if (nextgene < plantGenomeSize)
+			if ((game.world[worldI].geneCursor + 1) < plantGenomeSize)
 			{
-				int destination = game.world[worldI].plantGenes[  game.world[worldI].geneCursor + 1  ];
-				if (destination < plantGenomeSize)
+				int nextgene = game.world[worldI].geneCursor + 1 ;
+				if (nextgene < plantGenomeSize)
 				{
-					int newGeneCursor = nextgene % plantGenomeSize;
-					skipAhead = nextgene;
+					int destination = game.world[worldI].plantGenes[  game.world[worldI].geneCursor + 1  ];
+					if (destination < plantGenomeSize)
+					{
+						int newGeneCursor = nextgene % plantGenomeSize;
+						skipAhead = nextgene;
+					}
 				}
 			}
 			break;
@@ -6500,123 +6520,123 @@ void tournamentController()
 							unsigned int randomPos = game.animals[game.adversary].position + (-5 + extremelyFastNumberFromZeroTo(10)  + ( (-5 * worldSize) + (extremelyFastNumberFromZeroTo(10) * worldSize)  )   );
 							// for (int ee = 0; ee < 32; ++ee)
 							// {
-								// spawn a bunch of random champions
-								// int randomCell = getRandomPopulatedCell(game.adversary);
-								// if (randomCell >= 0)
-								// {
-								// 	randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
-								// }
+							// spawn a bunch of random champions
+							// int randomCell = getRandomPopulatedCell(game.adversary);
+							// if (randomCell >= 0)
+							// {
+							// 	randomPos = game.animals[game.adversary].body[randomCell].worldPositionI;
+							// }
 
-								// int randomChampion = ee % numberOfSpecies;
-								// if (randomChampion > 0)
-								// {
-								// if (game.trainingStages[k] == 0)
-								// {
-								// 	setupExampleAnimal2(j, false);
-								// 	domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
-								// }
-								// else
-								// {
-
-
-
-								int whatToSpawn = 0;//extremelyFastNumberFromZeroTo(2);
+							// int randomChampion = ee % numberOfSpecies;
+							// if (randomChampion > 0)
+							// {
+							// if (game.trainingStages[k] == 0)
+							// {
+							// 	setupExampleAnimal2(j, false);
+							// 	domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
+							// }
+							// else
+							// {
 
 
-								if (whatToSpawn == 0)  // spawn example animals
+
+							int whatToSpawn = 0;//extremelyFastNumberFromZeroTo(2);
+
+
+							if (whatToSpawn == 0)  // spawn example animals
+							{
+								setupExampleAnimal3(j);
+								domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
+								game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
+							}
+							else if (whatToSpawn == 1)  // spawn a species champion
+							{
+
+								domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
+
+							}
+							else if (whatToSpawn == 2)  // spawn an individual from another successful species (horizontal gene transfer)
+							{
+
+
+								// get the most populous species.
+
+								unsigned int mostPopulousSpecies = 1;
+								for (int i = 1; i < numberOfSpecies; ++i)
 								{
-									setupExampleAnimal3(j);
-									domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
-									game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
-								}
-								else if (whatToSpawn == 1)  // spawn a species champion
-								{
-
-									domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
-
-								}
-								else if (whatToSpawn == 2)  // spawn an individual from another successful species (horizontal gene transfer)
-								{
-
-
-									// get the most populous species.
-
-									unsigned int mostPopulousSpecies = 1;
-									for (int i = 1; i < numberOfSpecies; ++i)
+									if (game.speciesPopulationCounts[i] > mostPopulousSpecies)
 									{
-										if (game.speciesPopulationCounts[i] > mostPopulousSpecies)
-										{
-											mostPopulousSpecies = i;
-										}
+										mostPopulousSpecies = i;
 									}
-
-
-									int  bromelich = getRandomCreature(mostPopulousSpecies);
-
-									if (bromelich >= 0 )
-									{
-
-										domingo = spawnAnimal( k,  game.animals[bromelich], randomPos, true);
-									}
-
 								}
 
 
+								int  bromelich = getRandomCreature(mostPopulousSpecies);
 
-
-
-
-
-								// }
-								if (domingo >= 0)
+								if (bromelich >= 0 )
 								{
-									// printf("RESPAWNLOW\n");
-									game.animals[domingo].fPosX += ((RNG() - 0.5) * 10.0f);
-									game.animals[domingo].fPosY += ((RNG() - 0.5) * 10.0f);
-									game.animals[domingo].fAngle += ((RNG() - 0.5) );
-									game.animals[domingo].fAngleCos = cos(game.animals[domingo].fAngle);
-									game.animals[domingo].fAngleSin = sin(game.animals[domingo].fAngle);
-									game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
-									game.animals[domingo].parentIdentity = game.adversary;
 
-									if (game.world[game.animals[game.adversary].position].wall == MATERIAL_WATER)
+									domingo = spawnAnimal( k,  game.animals[bromelich], randomPos, true);
+								}
+
+							}
+
+
+
+
+
+
+
+							// }
+							if (domingo >= 0)
+							{
+								// printf("RESPAWNLOW\n");
+								game.animals[domingo].fPosX += ((RNG() - 0.5) * 10.0f);
+								game.animals[domingo].fPosY += ((RNG() - 0.5) * 10.0f);
+								game.animals[domingo].fAngle += ((RNG() - 0.5) );
+								game.animals[domingo].fAngleCos = cos(game.animals[domingo].fAngle);
+								game.animals[domingo].fAngleSin = sin(game.animals[domingo].fAngle);
+								game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
+								game.animals[domingo].parentIdentity = game.adversary;
+
+								if (game.world[game.animals[game.adversary].position].wall == MATERIAL_WATER)
+								{
+									bool hasGill = false;
+									for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
 									{
-										bool hasGill = false;
-										for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
+										if (game.animals[domingo].body[i].organ == ORGAN_GILL)
 										{
-											if (game.animals[domingo].body[i].organ == ORGAN_GILL)
-											{
-												hasGill = true;
-												break;
-											}
-										}
-										if (!hasGill)
-										{
-											animalAppendCell(domingo, ORGAN_GILL);
+											hasGill = true;
+											break;
 										}
 									}
-									else
+									if (!hasGill)
 									{
-										bool hasLung = false;
-										for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
-										{
-											if (game.animals[domingo].body[i].organ == ORGAN_LUNG)
-											{
-												hasLung = true;
-												break;
-											}
-										}
-										if (!hasLung)
-										{
-											animalAppendCell(domingo, ORGAN_LUNG);
-										}
-
+										animalAppendCell(domingo, ORGAN_GILL);
 									}
-
-
+								}
+								else
+								{
+									bool hasLung = false;
+									for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
+									{
+										if (game.animals[domingo].body[i].organ == ORGAN_LUNG)
+										{
+											hasLung = true;
+											break;
+										}
+									}
+									if (!hasLung)
+									{
+										animalAppendCell(domingo, ORGAN_LUNG);
+									}
 
 								}
-								// }
+
+
+
+							}
+							// }
 							// }
 
 
