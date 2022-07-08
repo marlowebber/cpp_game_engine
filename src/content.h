@@ -105,8 +105,9 @@
 #define MATERIAL_VOMIT     186
 #define MATERIAL_HONEY     189
 #define MATERIAL_WAX       190
-#define MATERIAL_POLLENTRAP       191
 
+
+#define MATERIAL_POLLENTRAP    191
 
 #define MACHINECALLBACK_PISTOL           100
 #define MACHINECALLBACK_KNIFE            101
@@ -571,7 +572,10 @@ std::string tileDescriptions(unsigned int tile)
 	}
 
 
-
+	case MATERIAL_POLLENTRAP:
+	{
+		return std::string("sticky droplets that neutralize enemy pollen.");
+	}
 
 
 	}
