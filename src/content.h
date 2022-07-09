@@ -73,6 +73,22 @@
 #define TILE_DESTROYER_EYE        66
 
 
+
+
+#define MACHINECALLBACK_PISTOL           100
+#define MACHINECALLBACK_KNIFE            101
+#define MACHINECALLBACK_HOSPITAL         102
+#define MACHINECALLBACK_TRACKERGLASSES   104
+#define MACHINECALLBACK_NEUROGLASSES     105
+#define MACHINECALLBACK_ECOLOGYCOMPUTER  106
+#define MACHINECALLBACK_LIGHTER          107
+#define MACHINECALLBACK_DESTROYER        108
+#define MACHINECALLBACK_MESSAGECOMPUTER1  110
+#define MACHINECALLBACK_MESSAGECOMPUTER2  111
+#define MACHINECALLBACK_MESSAGECOMPUTER3  112
+#define MACHINECALLBACK_MESSAGECOMPUTER4  113
+#define MACHINECALLBACK_MESSAGECOMPUTER5  114
+
 #define MATERIAL_FOOD             160
 #define MATERIAL_ROCK             161
 // #define MATERIAL_MEAT             62
@@ -108,20 +124,8 @@
 
 
 #define MATERIAL_POLLENTRAP    191
-
-#define MACHINECALLBACK_PISTOL           100
-#define MACHINECALLBACK_KNIFE            101
-#define MACHINECALLBACK_HOSPITAL         102
-#define MACHINECALLBACK_TRACKERGLASSES   104
-#define MACHINECALLBACK_NEUROGLASSES     105
-#define MACHINECALLBACK_ECOLOGYCOMPUTER  106
-#define MACHINECALLBACK_LIGHTER          107
-#define MACHINECALLBACK_DESTROYER        108
-#define MACHINECALLBACK_MESSAGECOMPUTER1  110
-#define MACHINECALLBACK_MESSAGECOMPUTER2  111
-#define MACHINECALLBACK_MESSAGECOMPUTER3  112
-#define MACHINECALLBACK_MESSAGECOMPUTER4  113
-#define MACHINECALLBACK_MESSAGECOMPUTER5  114
+#define MATERIAL_TUBER         192
+#define MATERIAL_ROOT          193
 
 #define MUTATION_ADDWEIGHT        10001
 #define MUTATION_ALTERBIAS        10002
@@ -172,6 +176,8 @@
 
 #define PLANTGENE_RUNNER     28
 #define PLANTGENE_POLLENTRAP 29
+#define PLANTGENE_TUBER      30
+#define PLANTGENE_ROOT       31
 // #define PLANTGENE_BBREAK 30
 
 // #define PLANTGENE_SEED_RED     22
@@ -180,7 +186,7 @@
 // #define PLANTGENE_SEED_LIGHT   25
 // #define PLANTGENE_SEED_DARK    26
 
-#define numberOfPlantGenes 30
+#define numberOfPlantGenes 32
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {
@@ -293,6 +299,19 @@ std::string pheromoneDescriptions(unsigned int pheromone)
 	return std::string("You can't smell anything.");
 
 }
+
+
+bool plantGrowsBack(unsigned int material)
+{
+	if (material == MATERIAL_WOOD ||
+		material == MATERIAL_TUBER
+		)
+	{
+		return true;
+	}
+	return false;
+}
+
 
 bool isALiquid(unsigned int material)
 {
@@ -651,6 +670,12 @@ std::string tileDescriptions(unsigned int tile)
 	case MATERIAL_POLLEN:
 	{
 		return std::string("fragrant, dusty pollen.");
+	}
+
+
+	case MATERIAL_TUBER:
+	{
+		return std::string("a plump root full of starch.");
 	}
 
 

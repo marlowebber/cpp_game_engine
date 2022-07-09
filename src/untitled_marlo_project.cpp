@@ -438,6 +438,9 @@ void scrambleAnimal(int animalIndex)
 
 void setupExampleAnimal3(int i)
 {
+	resetAnimal(i);
+
+
 	animalAppendCell( i, ORGAN_BIASNEURON );
 	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
 	animalAppendCell( i, ORGAN_MUSCLE );
@@ -666,7 +669,7 @@ void resetGameState()
 	game.ecoSettings[2]     = 0.0001f;      // movement energy scale
 	game.ecoSettings[0]           = 0.95f; // food (meat) energy
 	game.ecoSettings[1]          = 0.25f; // grass energy
-	game.ecoSettings[4] = (worldSquareSize / 32) / sectors; ;//updateSize;
+	game.ecoSettings[4] = (worldSquareSize / 64) / sectors; ;//updateSize;
 	game.activeEcoSetting = 0;
 	resetAnimals();
 	resetGrid();
@@ -911,14 +914,30 @@ Vec_f2 getTerrainSlope(unsigned int worldPositionI)
 
 // this function governs how plants propagate from square to square.
 // The reason for the separation of plant and seed identities is that it allows seeds to move in front of plants in the game world.
-void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
+// returns if any growth was made, or not.
+bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 {
+
+
+
+	// don't do it if the destination cell already has the same organ type and identity. stops wood from endlessly overgrowing itself.
+	int originID  = game.world[from].plantIdentity;
+	if (!fromSeed)
+	{
+		originID = game.world[from].seedIdentity;
+		if (game.world[to].plantState == organ && game.world[to].plantIdentity == originID)
+		{
+			return false;
+		}
+	}
+
+
 
 	// printf("1\n");
 	if (to < 0 || from < 0)
 	{
 		// printf("growInto error: to or from index was less than 0\n");
-		return;
+		return false;
 	}
 
 	if (!( materialBlocksMovement (game.world[to].wall)))
@@ -983,14 +1002,19 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 				game.world[to].seedColor = game.world[from].seedColor;
 				memcpy( & (game.world[to].plantGenes[0]) , &(game.world[from].plantGenes[0]),  plantGenomeSize * sizeof(char)  );
 				memcpy( &(game.world[to].growthMatrix[0]), &(game.world[from].growthMatrix[0]), sizeof(bool) * nNeighbours   );
-				game.world[to].energyDebt += 1.0f;
+				game.world[to].energyDebt = 1.0f;
 				game.world[to].energy = 0.0f;
 				game.world[to].geneCursor = game.world[from].geneCursor + 1 ;
 			}
 			game.world[to].plantState = organ;
+
+
 			game.world[to].grown = false;
+
 		}
+		return true;
 	}
+	return false;
 }
 
 
@@ -2358,9 +2382,10 @@ void clearGrowthMask(unsigned int worldI)
 }
 
 
-
-void growIntoNeighbours(unsigned int worldI, unsigned int material)
+bool growIntoNeighbours(unsigned int worldI, unsigned int material)
 {
+
+	bool result = false;
 	for (int i = 0; i < nNeighbours; ++i)
 	{
 		if (game.world[worldI].growthMatrix[i])
@@ -2368,10 +2393,18 @@ void growIntoNeighbours(unsigned int worldI, unsigned int material)
 			unsigned int neighbour = worldI + neighbourOffsets[i];
 			if (neighbour < worldSquareSize)
 			{
-				growInto( neighbour, worldI, material, false);
+
+
+				bool j = growInto( neighbour, worldI, material, false);
+				if (j)
+				{
+					result = true;
+				}
+
 			}
 		}
 	}
+	return result;
 }
 
 void growPlants(unsigned int worldI)
@@ -2379,7 +2412,7 @@ void growPlants(unsigned int worldI)
 	if (worldI >= worldSquareSize) {return;}
 	if (game.world[worldI].grown) {return;}
 	if (game.world[worldI].geneCursor >= plantGenomeSize) {return;}
-	// bool done = false;
+	bool done = false;
 	int	skipAhead = game.world[worldI].geneCursor + 1;
 	char c = game.world[worldI].plantGenes[game.world[worldI].geneCursor];
 	if (c < nNeighbours)
@@ -2433,7 +2466,7 @@ void growPlants(unsigned int worldI)
 		{
 			if ((game.world[worldI].geneCursor + 2) < plantGenomeSize)
 			{
-				game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1];
+				game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1]; // take the value of the next gene- that is the number of times to repeat the sequence.
 				game.world[worldI].sequenceReturn = game.world[worldI].geneCursor + 2;
 			}
 			break;
@@ -2444,14 +2477,24 @@ void growPlants(unsigned int worldI)
 			// combines a goto with allowing this cell to continue growing after branching
 			// the branch starts growing from the cursor immediately
 			// the origin continues at a gene position forward of this one
-			// for (int i =  0; i < plantGenomeSize; ++i)
-			// {
-			// 	if ( game.world[worldI].plantGenes[  ( game.world[worldI].geneCursor + i) ] == PLANTGENE_BBREAK)
-			// 	{
+
 
 			if ((game.world[worldI].geneCursor + 1) < plantGenomeSize)
 			{
-				skipAhead =   game.world[worldI].plantGenes[  game.world[worldI].geneCursor + 1];
+				// skipAhead =   game.world[worldI].plantGenes[  game.world[worldI].geneCursor + 1  ]; // take the value of the next gene- that is the length of the branch.
+
+
+				for (int i =  0; i < plantGenomeSize; ++i)
+				{
+					if ( game.world[worldI].plantGenes[  ( game.world[worldI].geneCursor + i) ] == PLANTGENE_BREAK)
+					{
+						skipAhead = i;
+						break;
+					}
+				}
+
+
+
 				for (int i = 0; i < nNeighbours; ++i)
 				{
 					if (game.world[worldI].growthMatrix[i])
@@ -2462,11 +2505,15 @@ void growPlants(unsigned int worldI)
 							growInto( neighbour, worldI, game.world[worldI].plantState, false);
 							// if (branch) {
 							clearGrowthMask(neighbour) ;
-							game.world[neighbour].growthMatrix[i] = true;
-							// }
+							game.world[neighbour].growthMatrix[i] = true; // branch grows perpendicular to the trunk.
+
+
 						}
 					}
 				}
+
+
+				// game.world[worldI].sequenceDepth++;
 				// break;
 			}
 			// 	}
@@ -2474,33 +2521,85 @@ void growPlants(unsigned int worldI)
 			break;
 		}
 
-		case PLANTGENE_SBREAK:
+		case PLANTGENE_BREAK:
 		{
-			// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number and depth.
-			if (game.world[worldI].sequenceNumber > 0)
-			{
-				game.world[worldI].geneCursor = game.world[worldI].sequenceReturn;
-				game.world[worldI].sequenceNumber--;
-			}
-			else
-			{
-				// if it is 0, you've completed doing the sequence n times, so you can exit it.
-				// In this case, sequenceReturn of the next cells will be sampled from a cell before the sequence start, which allows nested sequences.
-				int innerSequenceReturn = game.world[worldI].sequenceReturn;
 
-				if (innerSequenceReturn > 3) // impossible to have a complete sequence header earlier than 3
+
+			// scroll back and find what this break is for.
+
+			bool sequence = false;
+			int presentDepth = 1;
+
+			for (int i =  0; i < plantGenomeSize; ++i)
+			{
+
+
+
+
+				char geneAtThisLocation = game.world[worldI].plantGenes[  ( game.world[worldI].geneCursor + i) ];
+				if ( geneAtThisLocation == PLANTGENE_BRANCH)
 				{
-					// Why 3? Because sequence returns don't point at the sequence gene itself, they point at the first gene IN the sequence.
-					// The header goes <last cell of outer sequence> <sequence gene> <length> <first cell> .. . you always return to the first cell inside the sequence
-					// when breaking an inner sequence,  return to the last cell of outer sequence, which is 3 cells behind where the inner sequence returns to.
-					unsigned int lastCellOfOuterSequence = innerSequenceReturn - 3;
-					if (lastCellOfOuterSequence < worldSquareSize)
+					presentDepth --;
+					break;
+				}
+				else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
+				{
+					presentDepth--;
+
+					if (presentDepth == 0) // this is your stop
 					{
-						game.world[worldI].sequenceReturn = game.world[lastCellOfOuterSequence].sequenceReturn;
-						game.world[worldI].sequenceNumber = game.world[lastCellOfOuterSequence].sequenceNumber;
+						sequence = true;
+					}
+
+					break;
+
+				}
+				else if  ( geneAtThisLocation == PLANTGENE_BREAK)
+				{
+					presentDepth++;
+					break;
+
+				}
+
+
+
+
+			}
+
+
+
+
+			if (sequence)
+			{
+
+				// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number and depth.
+				if (game.world[worldI].sequenceNumber > 0)
+				{
+					game.world[worldI].geneCursor = game.world[worldI].sequenceReturn;
+					game.world[worldI].sequenceNumber--;
+				}
+				else
+				{
+					// if it is 0, you've completed doing the sequence n times, so you can exit it.
+					// In this case, sequenceReturn of the next cells will be sampled from a cell before the sequence start, which allows nested sequences.
+					int innerSequenceReturn = game.world[worldI].sequenceReturn;
+
+					if (innerSequenceReturn > 3) // impossible to have a complete sequence header earlier than 3
+					{
+						// Why 3? Because sequence returns don't point at the sequence gene itself, they point at the first gene IN the sequence.
+						// The header goes <last gene of outer sequence> <sequence gene> <length> <first gene> .. . you always return to the first gene inside the sequence
+						// when breaking an inner sequence,  return to the last gene of outer sequence, which is 3 cells behind where the inner sequence returns to.
+						unsigned int lastCellOfOuterSequence = innerSequenceReturn - 3;
+						if (lastCellOfOuterSequence < worldSquareSize)
+						{
+							game.world[worldI].sequenceReturn = game.world[lastCellOfOuterSequence].sequenceReturn;
+							game.world[worldI].sequenceNumber = game.world[lastCellOfOuterSequence].sequenceNumber;
+						}
 					}
 				}
 			}
+
+
 			break;
 		}
 
@@ -2540,28 +2639,28 @@ void growPlants(unsigned int worldI)
 			growIntoNeighbours(worldI, MATERIAL_BUD);
 			growIntoNeighbours(worldI, MATERIAL_POLLEN );
 			// done = true;
-			game.world[worldI].grown = true;
+			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_POLLENTRAP:
 		{
 			growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
 			// done = true;
-			game.world[worldI].grown = true;
+			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_LEAF:
 		{
 			growIntoNeighbours(worldI, MATERIAL_LEAF);
 			// done = true;
-			game.world[worldI].grown = true;
+			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_WOOD:
 		{
 			growIntoNeighbours(worldI, MATERIAL_WOOD);
 			// done = true;
-			game.world[worldI].grown = true;
+			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_RED:
@@ -2634,12 +2733,38 @@ void growPlants(unsigned int worldI)
 
 
 	}
-	// if (done)
-	// {
-	// 	game.world[worldI].grown = true;
-	// }
+	if (done) // if done, don't increment the gene cursor again- this cell will be what it is now permanently, until overgrown at least, but it will regrow into its neighbours if it can.
+	{
+		// if (  ! (plantGrowsBack( organ )))
+		// {
+		game.world[worldI].grown = true; // if 'grown' is set, the plant cannot grow into anything else. this is used for terminal parts such as flower buds.
+		// }
+	}
+	else
+	{
 
-	game.world[worldI].geneCursor = skipAhead;
+		game.world[worldI].geneCursor = skipAhead;
+	}
+
+
+}
+
+
+
+void damagePlants(unsigned int worldI)
+{
+
+	// regrow plants if they are damaged
+	for (int i = 0; i < nNeighbours; ++i)
+	{
+		unsigned int neighbour = worldI + neighbourOffsets[i];
+		if (neighbour < worldSquareSize)
+		{
+			game.world[worldI].grown = false;
+		}
+	}
+
+	game.world[worldI].plantState = MATERIAL_NOTHING;
 
 }
 
@@ -2745,6 +2870,15 @@ void updatePlants(unsigned int worldI)
 
 	if (    game.world[worldI].plantState != MATERIAL_NOTHING)
 	{
+
+
+		const float plantRate = 0.01f;
+		game.world[worldI].energy -= plantRate;
+		if (game.world[worldI].energy < -1.0f)
+		{
+			game.world[worldI].plantState = MATERIAL_NOTHING;
+		}
+
 		if (game.world[worldI].energyDebt <= 0.0f)
 		{
 			growPlants(worldI);
@@ -3856,10 +3990,27 @@ void animal_organs( int animalIndex)
 					game.playerCanPickupItem = -1;
 				}
 
+				// if an item is selected, only it can be picked up. This is for precise grabbing.
 				if (playerGrab)
 				{
-					sum = 1.0f;
-					playerGrab = false;
+					bool ye = false;
+					if (game.selectedAnimal >= 0)
+					{
+						if (game.selectedAnimal == potentialGrab)
+						{
+							ye = true;
+						}
+					}
+					else
+					{
+						ye = true;
+					}
+
+					if (ye)
+					{
+						sum = 1.0f;
+						playerGrab = false;
+					}
 				}
 				if (playerDrop && cellIndex == game.playerActiveGrabber)
 				{
@@ -4420,7 +4571,10 @@ void animal_organs( int animalIndex)
 			{
 				ate = true;
 				game.animals[animalIndex].energy += game.ecoSettings[1] ;
-				game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
+				// game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
+
+				damagePlants(cellWorldPositionI);
+
 			}
 
 // #else
@@ -4856,14 +5010,14 @@ void animalEnergy(int animalIndex)
 		{
 			if (game.animals[animalIndex].energy < 0.0f)
 			{
-				printf("died low energy\n");
+				// printf("died low energy\n");
 				execute = true;
 			}
 
 			if (game.animals[animalIndex].age > game.animals[animalIndex].lifespan)
 			{
 
-				printf("died old\n");
+				// printf("died old\n");
 				execute = true;
 			}
 			// if (game.animals[animalIndex].totalGonads == 0)
@@ -4879,13 +5033,13 @@ void animalEnergy(int animalIndex)
 		if (game.animals[animalIndex].damageReceived > game.animals[animalIndex].cellsUsed / 2)
 		{
 
-			printf("died damaged\n");
+			// printf("died damaged\n");
 			execute = true;
 		}
 		if (game.animals[animalIndex].cellsUsed <= 0)
 		{
 
-			printf("died no mass\n");
+			// printf("died no mass\n");
 			execute = true;
 		}
 	}
@@ -6313,7 +6467,7 @@ void setupGameItems()
 
 
 	// adversary is outside, under water
-	game.adversaryRespawnPos =  getRandomPosition(false);
+	game.adversaryRespawnPos =  getRandomPosition(true);
 	spawnAdversary(game.adversaryRespawnPos);
 
 
@@ -6937,7 +7091,9 @@ void setupTestPlant(unsigned int worldPositionI)
 	game.world[worldPositionI].seedGenes[16] = 3;
 	game.world[worldPositionI].seedGenes[17] = PLANTGENE_BUD;
 	// game.world[worldPositionI].seedGenes[18] = PLANTGENE_BREAK;
-	game.world[worldPositionI].seedGenes[18] = PLANTGENE_SBREAK;
+	game.world[worldPositionI].seedGenes[18] = PLANTGENE_BREAK;
+	game.world[worldPositionI].seedGenes[19] = PLANTGENE_BREAK;
+	game.world[worldPositionI].seedGenes[20] = PLANTGENE_BREAK;
 
 
 
