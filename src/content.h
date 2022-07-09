@@ -143,7 +143,6 @@
 
 
 
-
 // plant genes must be higher than the highest nNeighbour but must be lower than the maximum size of a char (255).
 
 #define PLANTGENE_GROW_SYMM_H 9
@@ -183,25 +182,139 @@
 
 #define numberOfPlantGenes 30
 
-std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
+// std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
+// {
+//
+//
+// 	,
+//
+//
+//
+// 	std::string( "It smells like dried hay." ),
+// 	std::string( "It smells like fresh dried laundry. Delightful." ),
+// 	,
+// 	std::string( "It smells like the salt air at the beach." ),
+// 	std::string( "It smells like the perfume of a jasmine flower." ),
+// 	std::string( "It smells like pool chlorine." ),
+// 	std::string( "It smells like electricity." ),
+// 	,
+// 	std::string( "You can smell raspberries. Incredible!" ),
+// 	std::string( "It smells like vomit. Disgusting." ),
+// };
+
+
+
+
+
+// some smells happen deliberately and are used for communication and other purposes
+#define PHEROMONE_EARTH     1
+#define PHEROMONE_MILDEW    2
+#define PHEROMONE_URINE     3
+#define PHEROMONE_SOAP      4
+#define PHEROMONE_FUR       5
+#define PHEROMONE_LAUNDRY   6
+#define PHEROMONE_JASMINE   7
+#define PHEROMONE_CHLORINE  8
+#define PHEROMONE_STATIC    9
+#define PHEROMONE_RASPBERRY 10
+
+// some smells happen by natural means.
+#define PHEROMONE_BLOOD 11
+#define PHEROMONE_ROTTINGMEAT 12
+#define PHEROMONE_RAIN 13
+#define PHEROMONE_MUSK 14
+#define PHEROMONE_SEABREEZE 15
+#define PHEROMONE_GRASSGROWING 16
+#define PHEROMONE_PUKE 17
+
+
+
+std::string pheromoneDescriptions(unsigned int pheromone)
 {
-	std::string( "It has an earthy smell." ),
-	std::string( "It has a musty smell." ),
-	std::string( "It smells of urine." ),
-	std::string( "It smells like soap." ),
-	std::string( "It has a gamey smell." ),
-	std::string( "It smells like a cat's fur." ),
-	std::string( "It smells like dried hay." ),
-	std::string( "It smells like fresh dried laundry. Delightful." ),
-	std::string( "It smells like the rain after a hot summer day." ),
-	std::string( "It smells like the salt air at the beach." ),
-	std::string( "It smells like the perfume of a jasmine flower." ),
-	std::string( "It smells like pool chlorine." ),
-	std::string( "It smells like electricity." ),
-	std::string( "It smells like rotting meat. Yuck!" ),
-	std::string( "You can smell raspberries. Incredible!" ),
-	std::string( "It smells like vomit. Disgusting." ),
-};
+
+	switch (pheromone)
+	{
+
+
+
+	case PHEROMONE_BLOOD :
+		return	std::string( "The raw, metallic smell of blood." );
+
+	case PHEROMONE_ROTTINGMEAT :
+		return	std::string( "The sweetly putrid smell of rotting meat. Yuck!" );
+
+	case PHEROMONE_RAIN :
+		return	std::string( "It smells like the rain after a hot summer day." );
+
+	case PHEROMONE_MUSK:
+		return	std::string( "It has a gamey smell, like a wild animal." );
+
+
+	case PHEROMONE_SEABREEZE:
+		return	std::string( "It smells like the salt air at the beach." );
+
+	case PHEROMONE_GRASSGROWING:
+		return	std::string( "A fresh smell of growing grass." );
+
+	case PHEROMONE_PUKE:
+		return	std::string( "It smells like vomit. Disgusting." );
+
+
+
+
+
+
+
+	case PHEROMONE_EARTH :
+		return	std::string( "The smell of fresh-turned earth." );
+	case PHEROMONE_MILDEW :
+		return	std::string( "The clammy, stale smell of mold." );
+	case PHEROMONE_URINE:
+		return	std::string( "The ammonia stink of urine." );
+	case PHEROMONE_SOAP:
+		return	std::string( "It smells like what soap tastes like." );
+	case PHEROMONE_FUR:
+		return	std::string( "There is a clean smell, like a cat's fur." );
+	case PHEROMONE_LAUNDRY:
+		return	std::string( "It smells like fresh dried laundry. Delightful." );
+	case PHEROMONE_JASMINE:
+		return	std::string( "It smells like the perfume of a jasmine flower." );
+	case PHEROMONE_CHLORINE:
+		return	std::string( "It smells like pool chlorine." );
+	case PHEROMONE_STATIC:
+		return	std::string( "It smells like electricity." );
+	case PHEROMONE_RASPBERRY:
+		return	std::string( "You can smell raspberries. Incredible!" );
+
+
+
+	}
+
+	return std::string("You can't smell anything.");
+
+}
+
+bool isALiquid(unsigned int material)
+{
+
+	switch (material)
+	{
+	case MATERIAL_WATER:
+		return true;
+	case MATERIAL_BLOOD:
+		return true;
+	case MATERIAL_HONEY:
+		return true;
+	case MATERIAL_VOMIT:
+		return true;
+	case MATERIAL_SEMEN:
+		return true;
+
+	}
+	return false;
+
+}
+
 
 std::string tileDescriptions(unsigned int tile)
 {
@@ -728,7 +841,7 @@ std::string tileShortNames(unsigned int tile)
 	}
 
 
-case ORGAN_GENITAL_A:
+	case ORGAN_GENITAL_A:
 	{
 		return std::string("Penis.");
 	}
@@ -1195,7 +1308,7 @@ bool organIsAnActuator(unsigned int organ)
 	if (    organ == ORGAN_MUSCLE ||
 	        organ == ORGAN_MUSCLE_TURN ||
 	        organ == ORGAN_MUSCLE_STRAFE ||
-	        organ == ORGAN_SPEAKER  || 
+	        organ == ORGAN_SPEAKER  ||
 	        organ == ORGAN_EMITTER_PHEROMONE ||
 	        organ == ORGAN_EMITTER_PHEROMONE
 	        // organ == ORGAN_MEMORY_TX

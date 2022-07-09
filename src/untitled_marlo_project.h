@@ -57,7 +57,8 @@ struct Square
     float trail;            // movement direction of the last animal to cross the tile
     float height;
     Color light;
-    float pheromoneIntensity;
+    // float pheromoneIntensity;
+    unsigned int downhillNeighbour;
     int pheromoneChannel;
 
     Color grassColor;
@@ -237,6 +238,8 @@ void decrementSelectedOrgan();
 // void playerDrop();
 
     
+void toggleRain();
+
 extern bool playerGrab ;
 extern bool playerDrop ;
 

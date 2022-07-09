@@ -585,7 +585,7 @@ void resetGrid()
 		game.world[i].trail = 0.0f;
 		game.world[i].height = 1.0f;
 		game.world[i].light = color_black;
-		game.world[i].pheromoneIntensity = 0.0f;
+		game.world[i].downhillNeighbour = 0;
 		game.world[i].pheromoneChannel = -1;
 // #ifdef PLANTS
 		game.world[i].grassColor =  color_green;
@@ -2109,7 +2109,7 @@ void killAnimal(int animalIndex)
 			if (game.animals[animalIndex].body[cellIndex].organ != MATERIAL_NOTHING && game.animals[animalIndex].body[cellIndex].damage < 1.0f)
 			{
 				game.world[cellWorldPositionI].pheromoneChannel = 13;
-				game.world[cellWorldPositionI].pheromoneIntensity = 1.0f;
+				// game.world[cellWorldPositionI].pheromoneIntensity = 1.0f;
 				if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
 				{
 					game.world[cellWorldPositionI].wall = MATERIAL_FOOD;
@@ -2209,18 +2209,41 @@ float getNormalisedHeight(unsigned int worldPositionI)
 	return answer;
 }
 
+
+// given two world vertices, find the direction from a to b, as expressed by what entry in neighbourOffsets is the closest.
+// basically get the angle with atan, apply an angle offset so both 0's are in the same place, and then map 0..2pi to 0..8
+unsigned int getDownhillNeighbour ( float x,  float y)
+{
+	unsigned int result = 0;
+	float angle = atan2(y, x);
+	angle += const_pi;
+	angle = angle / (2.0 * const_pi);
+	angle *= 8.0f;
+	result = angle;
+	unsigned int dhn = result % nNeighbours;
+	// printf("%u \n", dhn);
+	return dhn;
+}
+
 void computeLight(unsigned int worldPositionI, float xLightAngle, float yLightAngle)
 {
-	Vec_f2 slope = getTerrainSlope( worldPositionI);
-	float xSurfaceDifference = (xLightAngle - slope.x);
-	float ySurfaceDifference = (yLightAngle - slope.y);
 	if (worldPositionI + worldSize < worldSquareSize)
 	{
+
+		Vec_f2 slope = getTerrainSlope( worldPositionI);
+		game.world[worldPositionI].downhillNeighbour = getDownhillNeighbour(slope.x, slope.y);
+		float xSurfaceDifference = (xLightAngle - slope.x);
+		float ySurfaceDifference = (yLightAngle - slope.y);
+
 		float brightness = 1.0f - ((xSurfaceDifference + ySurfaceDifference) / (2.0f * const_pi));
 		brightness *= 0.5;
 		brightness += 0.5f;
 		game.world[worldPositionI].light = multiplyColorByScalar(color_white, brightness);
 	}
+
+
+
+
 }
 
 void smoothSquare(unsigned int worldPositionI, float strength)
@@ -2858,68 +2881,116 @@ void updatePlants(unsigned int worldI)
 }
 
 // #endif
+void spill(unsigned int material,  unsigned int worldPositionI)
+{
+	if (game.world[worldPositionI].wall == MATERIAL_NOTHING)
+	{
+		game.world[worldPositionI].wall = material;
+	}
+	else
+	{
+		for (int i = 0; i < nNeighbours; ++i)
+		{
+			unsigned int neighbour = worldPositionI += neighbourOffsets[i];
+			if ( neighbour < worldSquareSize)
+			{
+				if (game.world[neighbour].wall == MATERIAL_NOTHING)
+				{
+					game.world[neighbour].wall = material;
+					break;
+				}
+			}
+		}
+	}
+	switch (material)
+	{
+	case MATERIAL_BLOOD:
+	{
+		game.world[worldPositionI].pheromoneChannel = PHEROMONE_BLOOD;
+		break;
+	}
+
+	case MATERIAL_VOMIT:
+	{
+		game.world[worldPositionI].pheromoneChannel = PHEROMONE_PUKE;
+		break;
+	}
+
+	case MATERIAL_FOOD:
+	{
+		game.world[worldPositionI].pheromoneChannel = PHEROMONE_ROTTINGMEAT;
+		break;
+	}
+
+	case MATERIAL_WATER:
+	{
+		game.world[worldPositionI].pheromoneChannel = PHEROMONE_RAIN;
+		break;
+	}
+	}
+}
 
 
+bool raining = false;
+void toggleRain()
+{
+	raining = !raining;
+}
 
-
-void updateMapI(unsigned int randomI)
+void updateMapI(unsigned int worldI)
 {
 	// slowly reduce pheromones over time.
-	if (game.world[randomI].pheromoneIntensity > 0.01f)
+	if (game.world[worldI].pheromoneChannel >= 0)
 	{
-		game.world[randomI].pheromoneIntensity *= 0.95f;
-	}
-	else
-	{
-		game.world[randomI].pheromoneChannel = -1;
-	}
-	if (game.world[randomI].height < seaLevel)
-	{
-		if (game.world[randomI].wall == MATERIAL_NOTHING)
+		for (int n = 0; n < nNeighbours; ++n)
 		{
-			game.world[randomI].wall = MATERIAL_WATER;
+			unsigned int neighbour = worldI + neighbourOffsets[n];
+			if (neighbour < worldSquareSize)
+			{
+				if (game.world[neighbour].pheromoneChannel == MATERIAL_NOTHING)
+				{
+					game.world[neighbour].pheromoneChannel = game.world[worldI].pheromoneChannel;
+					game.world[worldI].pheromoneChannel = MATERIAL_NOTHING;
+				}
+			}
+		}
+		const unsigned int pheromoneDecayRate = 10;
+		if (extremelyFastNumberFromZeroTo(pheromoneDecayRate))
+		{
+			game.world[worldI].pheromoneChannel = MATERIAL_NOTHING;
 		}
 	}
-	else
+
+	if (game.world[worldI].height > seaLevel)
 	{
-		if (game.world[randomI].wall == MATERIAL_WATER)
+		if (isALiquid(game.world[worldI].wall))
 		{
-			game.world[randomI].wall = MATERIAL_NOTHING;
+			unsigned int dhn =  worldI + neighbourOffsets[ game.world[worldI].downhillNeighbour ] ;
+			if (dhn < worldSquareSize)
+			{
+				if ( !(  materialBlocksMovement(  game.world[   dhn  ].wall )  ))
+				{
+					unsigned int swapWall = game.world[  dhn ].wall;
+					game.world[  dhn ].wall = game.world[  worldI ].wall;
+					game.world[  worldI ].wall = swapWall;
+				}
+			}
+		}
+	}
+	if (raining)
+	{
+		const unsigned int rainStrength = 1000;
+		if (extremelyFastNumberFromZeroTo(rainStrength) == 0 )
+		{
+			spill(MATERIAL_WATER, worldI);
 		}
 	}
 
-
-	if ( materialDegrades( game.world[randomI].wall) )
+	if ( materialDegrades( game.world[worldI].wall) )
 	{
-		game.world[randomI].wall = MATERIAL_NOTHING;
+		game.world[worldI].wall = MATERIAL_NOTHING;
 	}
-
-// #ifdef PLANTS
-
-	// if ( game.world[randomI].plantState != MATERIAL_NOTHING || game.world[randomI].seedState != MATERIAL_NOTHING)
-	// {
-	updatePlants(randomI);
-	// }
-
-// #else
-
-// 	if (game.world[randomI].wall == MATERIAL_GRASS)
-// 	{
-// 		for (int n = 0; n < nNeighbours; ++n)
-// 		{
-// 			unsigned int neighbour = randomI + neighbourOffsets[n];
-// 			if (neighbour < worldSquareSize)
-// 			{
-// 				if (game.world[neighbour].wall == MATERIAL_NOTHING && !materialBlocksMovement(game.world[neighbour].wall ) &&  materialSupportsGrowth(game.world[neighbour].terrain ) )
-// 				{
-// 					game.world[neighbour].wall = MATERIAL_GRASS;
-// 					game.world[neighbour].pheromoneChannel = 6;
-// 					game.world[neighbour].pheromoneIntensity = 1.0f; // the smell of grass
-// 				}
-// 			}
-// 		}
-// 	}
-// #endif
+	updatePlants(worldI);
 }
 
 
@@ -3091,30 +3162,6 @@ void drawPalette2()
 	}
 }
 
-void spill(unsigned int material,  unsigned int worldPositionI)
-
-// void spillBlood(unsigned int worldPositionI)
-{
-	if (game.world[worldPositionI].wall == MATERIAL_NOTHING)
-	{
-		game.world[worldPositionI].wall = material;
-	}
-	else
-	{
-		for (int i = 0; i < nNeighbours; ++i)
-		{
-			unsigned int neighbour = worldPositionI += neighbourOffsets[i];
-			if ( neighbour < worldSquareSize)
-			{
-				if (game.world[neighbour].wall == MATERIAL_NOTHING)
-				{
-					game.world[neighbour].wall = material;
-					break;
-				}
-			}
-		}
-	}
-}
 
 void defeatAdversary()
 {
@@ -4050,7 +4097,7 @@ void animal_organs( int animalIndex)
 				if (game.animals[animalIndex].body[cellIndex]. speakerChannel ==   game.world[cellWorldPositionI].pheromoneChannel)
 				{
 					// game.animals[animalIndex].body[cellIndex].signalIntensity
-					sensorium[cellIndex]  = game.world[cellWorldPositionI].pheromoneIntensity;
+					sensorium[cellIndex]  = 1.0f; //game.world[cellWorldPositionI].pheromoneIntensity;
 				}
 			}
 			break;
@@ -4079,7 +4126,7 @@ void animal_organs( int animalIndex)
 			{
 
 				game.world[cellWorldPositionI].pheromoneChannel = game.animals[animalIndex].body[cellIndex]. speakerChannel ;
-				game.world[cellWorldPositionI].pheromoneIntensity = sum;// game.animals[animalIndex].body[cellIndex].signalIntensity;
+				// game.world[cellWorldPositionI].pheromoneIntensity = sum;// game.animals[animalIndex].body[cellIndex].signalIntensity;
 			}
 
 			break;
@@ -4307,6 +4354,16 @@ void animal_organs( int animalIndex)
 							game.animals[animalIndex].energy -= game.animals[animalIndex].offspringEnergy;
 							game.animals[result].energy       =  game.animals[animalIndex].offspringEnergy;
 							game.animals[result].parentIdentity       = animalIndex;
+
+							// distribute pheromones
+							for (int i = 0; i < nNeighbours; ++i)
+							{
+								unsigned int neighbour = cellWorldPositionI += neighbourOffsets[i];
+								if ( neighbour < worldSquareSize)
+								{
+									game.world[neighbour].pheromoneChannel = PHEROMONE_MUSK;
+								}
+							}
 
 							bonked = true;
 						}
@@ -4634,6 +4691,7 @@ void animal_organs( int animalIndex)
 					if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_B )
 					{
 						sexBetweenTwoCreatures( animalIndex, game.world[cellWorldPositionI].identity );
+
 						bonked = true;
 					}
 				}
@@ -4664,6 +4722,17 @@ void animal_organs( int animalIndex)
 					if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_A )
 					{
 						sexBetweenTwoCreatures( game.world[cellWorldPositionI].identity , animalIndex);
+
+						// distribute pheromones
+						for (int i = 0; i < nNeighbours; ++i)
+						{
+							unsigned int neighbour = cellWorldPositionI += neighbourOffsets[i];
+							if ( neighbour < worldSquareSize)
+							{
+								game.world[neighbour].pheromoneChannel = PHEROMONE_MUSK;
+							}
+						}
+
 						bonked = true;
 					}
 				}
@@ -5660,7 +5729,7 @@ void drawGameInterfaceText()
 			unsigned int playerPheromoneSensorWorldPos = game.animals[game.playerCreature].body[playerPheromoneSensor].worldPositionI;
 			if (game.world[playerPheromoneSensorWorldPos].pheromoneChannel >= 0 &&  game.world[playerPheromoneSensorWorldPos].pheromoneChannel < numberOfSpeakerChannels)
 			{
-				printText2D(   pheromoneChannelDescriptions[  game.world[playerPheromoneSensorWorldPos].pheromoneChannel ] , menuX, menuY, textSize);
+				printText2D(   pheromoneDescriptions( game.world[playerPheromoneSensorWorldPos].pheromoneChannel ) , menuX, menuY, textSize);
 				menuY += spacing;
 			}
 			else

@@ -191,10 +191,15 @@ void threadInterface()
 				break;
 			}
 
+			case SDLK_v:
+			{
+				toggleRain();
+			}
+
 			case SDLK_b:
 			{
 
-			 setupPlantAtCursor();
+				setupPlantAtCursor();
 			}
 
 			case SDLK_PERIOD:
