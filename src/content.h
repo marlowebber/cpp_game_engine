@@ -192,9 +192,10 @@
 #define PLANTGENE_UPHILL      35
 #define PLANTGENE_INVERTMATRIX  36
 
+#define PLANTGENE_END 37
 
 
-#define numberOfPlantGenes 36
+#define numberOfPlantGenes 37
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {

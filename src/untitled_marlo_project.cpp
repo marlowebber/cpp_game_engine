@@ -593,7 +593,7 @@ void resetGrid()
 		game.world[i].pheromoneChannel = -1;
 // #ifdef PLANTS
 		game.world[i].grassColor =  color_green;
-		memset(&(game.world[i].plantGenes[0]), MATERIAL_NOTHING, sizeof(char) * plantGenomeSize);
+		memset(&(game.world[i].plantGenes[0]), PLANTGENE_END, sizeof(char) * plantGenomeSize);
 		game.world[i].plantState = MATERIAL_NOTHING;
 		game.world[i].geneCursor = 0;
 		game.world[i].plantIdentity = -1;
@@ -602,7 +602,7 @@ void resetGrid()
 		game.world[i].sequenceReturn = 0;
 		game.world[i].sequenceNumber = 0;
 		game.world[i].grown = false;;
-		memset(&(game.world[i].seedGenes[0]), MATERIAL_NOTHING, sizeof(char) * plantGenomeSize);
+		memset(&(game.world[i].seedGenes[0]), PLANTGENE_END, sizeof(char) * plantGenomeSize);
 		game.world[i].seedState = MATERIAL_NOTHING;
 		game.world[i].seedIdentity =  -1;
 		game.world[i].seedColor = color_yellow;
@@ -2548,33 +2548,27 @@ void growPlants(unsigned int worldI)
 			break;
 		}
 
+		case PLANTGENE_END:
+		{
+			done=  true;
+		}
+
 		case PLANTGENE_BRANCH:
 		{
-
+			// scan forward to find the break point associated with this
 			int presentDepth = 1;
-			for (int i =  0; i < plantGenomeSize; ++i)
+			for (int i =  game.world[worldI].geneCursor + 1; i < plantGenomeSize; ++i)
 			{
-
-				if (( game.world[worldI].geneCursor + i) < plantGenomeSize)
-				{
-					char geneAtThisLocation = game.world[worldI].plantGenes[  ( game.world[worldI].geneCursor + i) ];
-
-
+				// if (( game.world[worldI].geneCursor + i) < plantGenomeSize)
+				// {
+					char geneAtThisLocation = game.world[worldI].plantGenes[  i];
 					if ( geneAtThisLocation == PLANTGENE_BRANCH)
 					{
 						presentDepth ++;
-
-
-
-						// break;
 					}
 					else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
 					{
 						presentDepth++;
-
-
-						// break;
-
 					}
 					else if  ( geneAtThisLocation == PLANTGENE_BREAK)
 					{
@@ -2582,25 +2576,13 @@ void growPlants(unsigned int worldI)
 
 						if (presentDepth == 0) // this is your stop
 						{
-							// sequenceBreak = true;
-
-							skipAhead = game.world[worldI].geneCursor + i + 1;
+							skipAhead =   i+1 ; // game.world[worldI].geneCursor + i + 1;
 							break;
 						}
-
-
 					}
-
-				}
-
+				// }
 			}
-
-
-
-
-
 			growIntoNeighbours(worldI, game.world[worldI].plantState );
-
 			for (int i = 0; i < nNeighbours; ++i)
 			{
 				if (game.world[worldI].growthMatrix[i])
@@ -2608,7 +2590,6 @@ void growPlants(unsigned int worldI)
 					unsigned int neighbour = worldI + neighbourOffsets[i];
 					if (neighbour < worldSquareSize)
 					{
-						// growInto( neighbour, worldI, game.world[worldI].plantState, false);
 						clearGrowthMask(neighbour) ;
 						game.world[neighbour].growthMatrix[i] = true; // branch grows perpendicular to the trunk.
 
@@ -2616,9 +2597,6 @@ void growPlants(unsigned int worldI)
 					}
 				}
 			}
-
-
-			done = true;
 			break;
 		}
 
@@ -2630,9 +2608,9 @@ void growPlants(unsigned int worldI)
 
 			bool sequenceBreak = false;
 			bool branchBreak = false;
-			int presentDepth = 0;
+			int presentDepth = 1;
 
-			for (int i =  game.world[worldI].geneCursor; i > 0; --i)
+			for (int i =  game.world[worldI].geneCursor-1; i > 0; --i)
 			{
 
 
@@ -2706,10 +2684,10 @@ void growPlants(unsigned int worldI)
 					// Why 3? Because sequence returns don't point at the sequence gene itself, they point at the first gene IN the sequence.
 					// The header goes <last gene of outer sequence> <sequence gene> <length> <first gene> .. . you always return to the first gene inside the sequence
 					// when breaking an inner sequence,  return to the last gene of outer sequence, which is 3 cells behind where the inner sequence returns to.
-					int lastGeneOfOuterSequence = innerSequenceReturn - 3;
-					if (lastGeneOfOuterSequence > 0)
+					// int lastGeneOfOuterSequence = innerSequenceReturn - 3;
+					if (innerSequenceReturn > 3)
 					{
-						game.world[worldI].sequenceReturn = lastGeneOfOuterSequence ;
+						game.world[worldI].sequenceReturn = innerSequenceReturn-3 ;
 						game.world[worldI].sequenceNumber =  0;
 					}
 					// }
@@ -7393,9 +7371,14 @@ void setupTestPlant2(unsigned int worldPositionI)
 	game.world[worldPositionI].seedGenes[9] = 5;
 	game.world[worldPositionI].seedGenes[10] = PLANTGENE_WOOD;
 	game.world[worldPositionI].seedGenes[11] = PLANTGENE_BLUE;
-	game.world[worldPositionI].seedGenes[12] = PLANTGENE_LEAF;
-	game.world[worldPositionI].seedGenes[13] = PLANTGENE_BREAK;
-	game.world[worldPositionI].seedGenes[14] = PLANTGENE_BREAK;
+	game.world[worldPositionI].seedGenes[12] = PLANTGENE_WOOD;
+	game.world[worldPositionI].seedGenes[13] = 0;
+	game.world[worldPositionI].seedGenes[14] = PLANTGENE_BRANCH;
+	game.world[worldPositionI].seedGenes[15] = PLANTGENE_LEAF;
+	game.world[worldPositionI].seedGenes[16] = PLANTGENE_BREAK;
+	game.world[worldPositionI].seedGenes[17] = 2;
+	game.world[worldPositionI].seedGenes[18] = PLANTGENE_BREAK;
+	game.world[worldPositionI].seedGenes[19] = PLANTGENE_BREAK;
 
 	// game.world[worldPositionI].seedGenes[7] = PLANTGENE_RUNNER;
 
