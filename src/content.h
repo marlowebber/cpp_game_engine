@@ -343,6 +343,33 @@ bool isALiquid(unsigned int material)
 
 }
 
+// bool transportsEnergy(unsigned int material)
+// {
+// 	switch (material)
+// 	{
+// 	case MATERIAL_LEAF:
+// 		return true;
+// 	case MATERIAL_WOOD:
+// 		return true;
+// 	case MATERIAL_TUBER:
+// 		return true;
+// 	}
+// 	return false;
+// }
+
+// bool transportsNutrients(unsigned int material)
+// {
+// 	switch (material)
+// 	{
+// 	case MATERIAL_ROOT:
+// 		return true;
+// 	case MATERIAL_WOOD:
+// 		return true;
+// 	case MATERIAL_TUBER:
+// 		return true;
+// 	}
+// 	return false;
+// }
 
 std::string tileDescriptions(unsigned int tile)
 {
@@ -1831,19 +1858,23 @@ bool materialSupportsGrowth(unsigned int material)
 
 float materialFertility(unsigned int material)
 {
+
+	return 1.0f;
+	
 	switch (material)
 	{
 	case MATERIAL_SOIL:
 		return 1.0f;
 	case MATERIAL_DIRT:
-		return 0.5f;
+		return 0.65f;
 	case MATERIAL_GRAVEL:
-		return 0.125f;
+		return 0.35f;
 	case MATERIAL_SAND:
-		return 0.125f;
-
+		return 0.35f;
+	case MATERIAL_WATER:
+		return 0.2f;
 	case MATERIAL_ROCK:
-		return 0.1f;
+		return 0.2f;
 	}
 	return 0.0f;
 }

@@ -223,6 +223,8 @@ struct GameState
 } ;
 
 
+
+
 // the following are used as an interface to the game.
 void setupRandomWorld();
 void startSimulation();
