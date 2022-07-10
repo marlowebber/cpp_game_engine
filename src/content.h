@@ -156,7 +156,7 @@
 #define PLANTGENE_WOOD        13
 #define PLANTGENE_GOTO        14
 #define PLANTGENE_SEQUENCE    15
-#define PLANTGENE_SBREAK		  16
+#define PLANTGENE_BREAK		  16
 
 #define PLANTGENE_RED     17
 #define PLANTGENE_GREEN   18
@@ -304,8 +304,8 @@ std::string pheromoneDescriptions(unsigned int pheromone)
 bool plantGrowsBack(unsigned int material)
 {
 	if (material == MATERIAL_WOOD ||
-		material == MATERIAL_TUBER
-		)
+	        material == MATERIAL_TUBER
+	   )
 	{
 		return true;
 	}
@@ -675,7 +675,13 @@ std::string tileDescriptions(unsigned int tile)
 
 	case MATERIAL_TUBER:
 	{
-		return std::string("a plump root full of starch.");
+		return std::string("a potato full of starch.");
+	}
+
+
+	case MATERIAL_ROOT:
+	{
+		return std::string("roots twisted in the dirt.");
 	}
 
 
@@ -1818,16 +1824,17 @@ float materialFertility(unsigned int material)
 {
 	switch (material)
 	{
-	case MATERIAL_ROCK:
-		return 0.1f;
-	case MATERIAL_SAND:
-		return 0.125f;
-	case MATERIAL_DIRT:
-		return 1.0f;
 	case MATERIAL_SOIL:
+		return 1.0f;
+	case MATERIAL_DIRT:
 		return 0.5f;
 	case MATERIAL_GRAVEL:
 		return 0.125f;
+	case MATERIAL_SAND:
+		return 0.125f;
+
+	case MATERIAL_ROCK:
+		return 0.1f;
 	}
 	return 0.0f;
 }

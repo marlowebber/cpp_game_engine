@@ -86,6 +86,7 @@ const int neighbourOffsets[] =
 	+worldSize - 1
 };
 
+const float plantRate = 0.01f;
 
 int plantIdentityCursor = 0;
 
@@ -597,7 +598,7 @@ void resetGrid()
 		game.world[i].geneCursor = 0;
 		game.world[i].plantIdentity = -1;
 		game.world[i].energy = 0.0f;
-		game.world[i].energyDebt = 0.0f;
+		// game.world[i].energyDebt = 0.0f;
 		game.world[i].sequenceReturn = 0;
 		game.world[i].sequenceNumber = 0;
 		game.world[i].grown = false;;
@@ -940,6 +941,17 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 		return false;
 	}
 
+
+	if (!fromSeed)
+	{
+		if (game.world[from].energy < 1.0f)
+		{
+			return false;
+		}
+	}
+
+
+
 	if (!( materialBlocksMovement (game.world[to].wall)))
 	{
 
@@ -970,10 +982,11 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			if (fromSeed)
 			{
 				memcpy( & (game.world[to].seedGenes[0]) , &(game.world[from].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
+				game.world[from].seedState = MATERIAL_NOTHING;
 			}
 			else
 			{
-				game.world[from].energyDebt += 2.0f;
+				// game.world[from].energyDebt += 2.0f;
 				memcpy( & (game.world[to].seedGenes[0]) , &(game.world[from].plantGenes[0]),  plantGenomeSize * sizeof(char)  );
 			}
 			game.world[to].seedState = organ;
@@ -989,12 +1002,17 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 				game.world[to].seedColor = color_yellow;
 				memcpy( & (game.world[to].plantGenes[0]) , &(game.world[from].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
 				memset( & (game.world[to].growthMatrix), false, sizeof(bool) * nNeighbours);
-				game.world[to].energyDebt = 0.0f;
+				// game.world[to].energyDebt = 0.0f;
 				game.world[to].energy = 1.0f;
+				game.world[to].nutrients = 1.0f;
 				game.world[to].geneCursor = 0;
+				game.world[from].seedState = MATERIAL_NOTHING;
 			}
 			else                                                 // when propagating from existing tissues
 			{
+
+
+
 
 				// printf("4\n");
 				game.world[to].plantIdentity = game.world[from].plantIdentity ;
@@ -1002,8 +1020,11 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 				game.world[to].seedColor = game.world[from].seedColor;
 				memcpy( & (game.world[to].plantGenes[0]) , &(game.world[from].plantGenes[0]),  plantGenomeSize * sizeof(char)  );
 				memcpy( &(game.world[to].growthMatrix[0]), &(game.world[from].growthMatrix[0]), sizeof(bool) * nNeighbours   );
-				game.world[to].energyDebt = 1.0f;
+				// game.world[to].energyDebt = 1.0f;
+				game.world[to].nutrients = 0.0f;
 				game.world[to].energy = 0.0f;
+				game.world[from].energy -= 1.0f;
+				game.world[from].nutrients -= 1.0f;
 				game.world[to].geneCursor = game.world[from].geneCursor + 1 ;
 			}
 			game.world[to].plantState = organ;
@@ -2527,7 +2548,7 @@ void growPlants(unsigned int worldI)
 
 			// scroll back and find what this break is for.
 
-			bool sequence = false;
+			bool sequenceBreak = false;
 			int presentDepth = 1;
 
 			for (int i =  0; i < plantGenomeSize; ++i)
@@ -2548,7 +2569,7 @@ void growPlants(unsigned int worldI)
 
 					if (presentDepth == 0) // this is your stop
 					{
-						sequence = true;
+						sequenceBreak = true;
 					}
 
 					break;
@@ -2569,7 +2590,7 @@ void growPlants(unsigned int worldI)
 
 
 
-			if (sequence)
+			if (sequenceBreak)
 			{
 
 				// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number and depth.
@@ -2631,34 +2652,35 @@ void growPlants(unsigned int worldI)
 			game.world[worldI].seedColor = color_yellow;
 			mutatePlants(worldI);
 			// }
-			// done = true;
+			done = true;
 			break;
 		}
 		case PLANTGENE_BUD:
 		{
-			growIntoNeighbours(worldI, MATERIAL_BUD);
-			growIntoNeighbours(worldI, MATERIAL_POLLEN );
+			// bool a = false;
+			done |=	growIntoNeighbours(worldI, MATERIAL_BUD);
+			done |=	growIntoNeighbours(worldI, MATERIAL_POLLEN );
 			// done = true;
 			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_POLLENTRAP:
 		{
-			growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
+			done |= growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
 			// done = true;
 			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_LEAF:
 		{
-			growIntoNeighbours(worldI, MATERIAL_LEAF);
+			done |= growIntoNeighbours(worldI, MATERIAL_LEAF);
 			// done = true;
 			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_WOOD:
 		{
-			growIntoNeighbours(worldI, MATERIAL_WOOD);
+			done |= growIntoNeighbours(worldI, MATERIAL_WOOD);
 			// done = true;
 			// game.world[worldI].grown = true;
 			break;
@@ -2833,7 +2855,6 @@ void updatePlants(unsigned int worldI)
 						if (materialSupportsGrowth(game.world[neighbour].terrain))
 						{
 							growInto(  neighbour, worldI, MATERIAL_LEAF, true );
-							game.world[worldI].seedState = MATERIAL_NOTHING;
 							mutatePlants(neighbour);
 							break;
 						}
@@ -2872,34 +2893,33 @@ void updatePlants(unsigned int worldI)
 	{
 
 
-		const float plantRate = 0.01f;
 		game.world[worldI].energy -= plantRate;
-		if (game.world[worldI].energy < -1.0f)
-		{
-			game.world[worldI].plantState = MATERIAL_NOTHING;
-		}
 
-		if (game.world[worldI].energyDebt <= 0.0f)
+		if (game.world[worldI].energy >= 1.0f)
 		{
 			growPlants(worldI);
 		}
-		else
+		else if (game.world[worldI].energy < -1.0f)
 		{
-			if (game.world[worldI].energy > 0.0f)
-			{
-				game.world[worldI].energyDebt -= game.world[worldI].energy;
-				game.world[worldI].energy = 0.0f;
-			}
+			// game.world[worldI].plantState = MATERIAL_NOTHING;
+			damagePlants(worldI);
 		}
+
+
+		// else
+		// {
+		// 	if (game.world[worldI].energy > 0.0f)
+		// 	{
+		// 		game.world[worldI].energyDebt -= game.world[worldI].energy;
+		// 		game.world[worldI].energy = 0.0f;
+		// 	}
+		// }
 
 		// grow plant into neighboring squares if applicable
 		switch (game.world[worldI].plantState)
 		{
 
-		case MATERIAL_FIRE:
-		{
-			propagateFlame(worldI, 0);
-		}
+
 
 
 		case MATERIAL_LEAF:
@@ -2909,7 +2929,7 @@ void updatePlants(unsigned int worldI)
 		}
 		case MATERIAL_WOOD:
 		{
-			// transfer energy between adjacent cells with same ID
+			// transfer energy and nutrients between adjacent cells with same ID
 			for (int i = 0; i < nNeighbours; ++i)
 			{
 				unsigned int neighbour = worldI + neighbourOffsets[  i ];
@@ -2917,19 +2937,94 @@ void updatePlants(unsigned int worldI)
 				{
 					if ( game.world[neighbour].identity == game.world[worldI].identity)
 					{
-						float avg = game.world[worldI].energy + game.world[neighbour].energy;
-						avg *= 0.5f;
-						game.world[worldI].energy = avg;
-						game.world[neighbour].energy = avg;
+
+
+						if ( game.world[neighbour].plantState == MATERIAL_TUBER)
+						{
+
+
+
+							if (game.world[worldI].energy > 1.0f)
+							{
+								if (game.world[neighbour].energy < 10.0f)
+								{
+									float amount = game.world[worldI].energy - 1.0f;
+									game.world[neighbour].energy += amount;
+									game.world[worldI].energy -= amount;
+								}
+							}
+							else
+							{
+								float amount = 1.0f - game.world[worldI].energy;
+								game.world[neighbour].energy -= amount;
+								game.world[worldI].energy += amount;
+							}
+
+
+
+							if (game.world[worldI].nutrients > 1.0f)
+							{
+								if (game.world[neighbour].nutrients < 10.0f)
+								{
+									float amount = game.world[worldI].nutrients - 1.0f;
+									game.world[neighbour].nutrients += amount;
+									game.world[worldI].nutrients -= amount;
+								}
+							}
+							else
+							{
+								float amount = 1.0f - game.world[worldI].nutrients;
+								game.world[neighbour].nutrients -= amount;
+								game.world[worldI].nutrients += amount;
+							}
+
+
+						}
+						else
+						{
+							float avgEnergy = game.world[worldI].energy + game.world[neighbour].energy;
+							avgEnergy *= 0.5f;
+							float avgNoot = game.world[worldI].nutrients + game.world[neighbour].nutrients;
+							avgNoot *= 0.5f;
+							game.world[worldI].nutrients = avgNoot;
+							game.world[worldI].energy = avgEnergy;
+							game.world[neighbour].nutrients = avgNoot;
+							game.world[neighbour].energy = avgEnergy;
+
+
+						}
+
+
+
+
 					}
 				}
 			}
 			break;
 		}
 
+		case MATERIAL_TUBER:
+		{
+			// stores energy with great capacity.
+			break;
+		}
+
+		case MATERIAL_ROOT:
+		{
+			// get nutrients from the environment
+
+			if (  materialFertility (game.world[worldI].terrain) > game.world[worldI].nutrients )
+			{
+				game.world[worldI].nutrients = materialFertility (game.world[worldI].terrain);
+			}
+
+			break;
+		}
+
+
 		case MATERIAL_BUD:
 		{
-			if (game.world[worldI].energyDebt <= 0.0f)
+			if (game.world[worldI].energy > 1.0f && game.world[worldI].nutrients > 1.0f)
 			{
 				for (int n = 0; n < nNeighbours; ++n)
 				{
@@ -3011,6 +3106,11 @@ void updatePlants(unsigned int worldI)
 			break;
 		}
 		}
+	}
+
+	if ( game.world[worldI].plantState == MATERIAL_FIRE)
+	{
+		propagateFlame(worldI, 0);
 	}
 }
 
@@ -5749,7 +5849,7 @@ void drawGameInterfaceText()
 			if (game.world[worldCursorPos].plantIdentity == game.selectedPlant)
 			{
 				cursorDescription = std::string(". Energy ") + std::to_string(game.world[worldCursorPos].energy)
-				                    + std::string(", debt ") + std::to_string(game.world[worldCursorPos].energyDebt)
+				                    // + std::string(", debt ") + std::to_string(game.world[worldCursorPos].energyDebt)
 				                    + std::string(", genecursor ") + std::to_string(game.world[worldCursorPos].geneCursor)
 
 

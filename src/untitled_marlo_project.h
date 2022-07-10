@@ -73,7 +73,8 @@ struct Square
     int geneCursor;
     int plantIdentity;
     float energy;
-    float energyDebt;
+    // float energyDebt;
+    float nutrients;
     int sequenceNumber;
     int sequenceReturn;
     bool grown;
