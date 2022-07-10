@@ -9,10 +9,10 @@ project(game)
 # To make a debug build
 
 
- set(CMAKE_CXX_FLAGS "-g ") 					# this one makes a regular build and it is done quickly
+# set(CMAKE_CXX_FLAGS "-g ") 					# this one makes a regular build and it is done quickly
 #set(CMAKE_CXX_FLAGS "-g -O2 -flto") 					# 
 
- #set(CMAKE_CXX_FLAGS " -Ofast -flto") 					# this one makes a crazy fast build but it takes ages. it's my favorite to use.
+ set(CMAKE_CXX_FLAGS " -Ofast -flto") 					# this one makes a crazy fast build but it takes ages. it's my favorite to use.
 
 # set(CMAKE_CXX_FLAGS " -Ofast -flto -fsanitize=address") 					# this one makes a crazy fast build but it takes ages. it's my favorite to use.
 
