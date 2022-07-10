@@ -86,7 +86,7 @@ const int neighbourOffsets[] =
 	+worldSize - 1
 };
 
-const float plantRate = 0.01f;
+const float plantRate = 0.05f;
 
 int plantIdentityCursor = 0;
 
@@ -1111,7 +1111,7 @@ void detailTerrain()
 				if (grade < 5.0f)
 				{
 
-					if (extremelyFastNumberFromZeroTo(100) == 0)
+					if (extremelyFastNumberFromZeroTo(5) == 0)
 					{
 						spawnRandomPlant( worldPositionI );
 					}
@@ -1951,12 +1951,14 @@ void place( int animalIndex)
 
 	if (newPosition < worldSquareSize)
 	{
-		if (  materialBlocksMovement( game.world[game.animals[animalIndex].position].wall ) ) // vibrate out of wall if stuck.
+		if (game.animals[animalIndex].position < worldSquareSize)
 		{
-			game.animals[animalIndex].fPosX += ( (RNG() - 0.5f) * 10.0f  );
-			game.animals[animalIndex].fPosY += ( (RNG() - 0.5f) * 10.0f  );
+			if (  materialBlocksMovement( game.world[game.animals[animalIndex].position].wall ) ) // vibrate out of wall if stuck.
+			{
+				game.animals[animalIndex].fPosX += ( (RNG() - 0.5f) * 10.0f  );
+				game.animals[animalIndex].fPosY += ( (RNG() - 0.5f) * 10.0f  );
+			}
 		}
-
 
 
 		bool animalInTheWay = false;
@@ -2784,9 +2786,17 @@ void growPlants(unsigned int worldI)
 
 		case PLANTGENE_EXTRUDEMATRIX:
 		{
+
+
+			bool tempMatrix[nNeighbours];
 			for (unsigned int i = 0; i < nNeighbours; ++i)
 			{
-				if (game.world[worldI].growthMatrix[i])
+				tempMatrix[i] = game.world[worldI].growthMatrix[i];
+			}
+
+			for (unsigned int i = 0; i < nNeighbours; ++i)
+			{
+				if (tempMatrix[i])
 				{
 					unsigned int prevNeighbour = (i - 1) % nNeighbours;
 					unsigned int nextNeighbour = (i + 1) % nNeighbours;
@@ -3249,7 +3259,7 @@ void updatePlants(unsigned int worldI)
 			// if (  materialFertility (game.world[worldI].terrain) > game.world[worldI].nutrients )
 			// {
 			game.world[worldI].nutrients += materialFertility (game.world[worldI].terrain);
-			game.world[worldI].energy += plantRate * 4.0f;
+			game.world[worldI].energy += materialFertility (game.world[worldI].terrain)  ;
 
 			// }
 
@@ -7805,13 +7815,19 @@ bool test_plants()
 
 
 	// inspecc the plant
-	unsigned int woodProbe1 = testPos + (worldSize * 5);
+	unsigned int woodProbe1 = testPos ;//+ (worldSize * 4);
+
+	// for (int i = 0; i < testPlantPatch; ++i)
+	// {
+	/* code */
+	woodProbe1 -= worldSize * 4;
 
 	if (game.world[woodProbe1].plantState == MATERIAL_WOOD)
 	{
+		// printf("wood at %i\n", i);
 		testResult_1 = true;
 	}
-
+	// }
 
 
 
@@ -7839,11 +7855,11 @@ bool test_all()
 		testResult_all = false;
 	}
 
-	// if ( !testResult_plants )
-	// {
-	// 	printf("plants: FAIL\n");
-	// 	testResult_all = false;
-	// }
+	if ( !testResult_plants )
+	{
+		printf("plants: FAIL\n");
+		testResult_all = false;
+	}
 
 	return testResult_all;
 }
