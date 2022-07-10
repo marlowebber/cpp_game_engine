@@ -2550,7 +2550,7 @@ void growPlants(unsigned int worldI)
 
 		case PLANTGENE_END:
 		{
-			done=  true;
+			done =  true;
 		}
 
 		case PLANTGENE_BRANCH:
@@ -2561,25 +2561,25 @@ void growPlants(unsigned int worldI)
 			{
 				// if (( game.world[worldI].geneCursor + i) < plantGenomeSize)
 				// {
-					char geneAtThisLocation = game.world[worldI].plantGenes[  i];
-					if ( geneAtThisLocation == PLANTGENE_BRANCH)
-					{
-						presentDepth ++;
-					}
-					else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
-					{
-						presentDepth++;
-					}
-					else if  ( geneAtThisLocation == PLANTGENE_BREAK)
-					{
-						presentDepth--;
+				char geneAtThisLocation = game.world[worldI].plantGenes[  i];
+				if ( geneAtThisLocation == PLANTGENE_BRANCH)
+				{
+					presentDepth ++;
+				}
+				else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
+				{
+					presentDepth++;
+				}
+				else if  ( geneAtThisLocation == PLANTGENE_BREAK)
+				{
+					presentDepth--;
 
-						if (presentDepth == 0) // this is your stop
-						{
-							skipAhead =   i+1 ; // game.world[worldI].geneCursor + i + 1;
-							break;
-						}
+					if (presentDepth == 0) // this is your stop
+					{
+						skipAhead =   i + 1 ; // game.world[worldI].geneCursor + i + 1;
+						break;
 					}
+				}
 				// }
 			}
 			growIntoNeighbours(worldI, game.world[worldI].plantState );
@@ -2610,7 +2610,7 @@ void growPlants(unsigned int worldI)
 			bool branchBreak = false;
 			int presentDepth = 1;
 
-			for (int i =  game.world[worldI].geneCursor-1; i > 0; --i)
+			for (int i =  game.world[worldI].geneCursor - 1; i > 0; --i)
 			{
 
 
@@ -2687,7 +2687,7 @@ void growPlants(unsigned int worldI)
 					// int lastGeneOfOuterSequence = innerSequenceReturn - 3;
 					if (innerSequenceReturn > 3)
 					{
-						game.world[worldI].sequenceReturn = innerSequenceReturn-3 ;
+						game.world[worldI].sequenceReturn = innerSequenceReturn - 3 ;
 						game.world[worldI].sequenceNumber =  0;
 					}
 					// }
@@ -7769,41 +7769,50 @@ bool test_animals()
 bool test_plants()
 {
 
-
+	// setup the test plant, which has a very distinctive shape
 	resetGameState();
 	bool testResult_1 = false;
-
 	unsigned int testPos = (worldSize * 10) +  extremelyFastNumberFromZeroTo(worldSquareSize -  ((worldSize * 10) + 1) );
+	game.world[testPos].terrain = MATERIAL_SOIL;
+	setupTestPlant2(testPos);
+	growInto(  testPos, testPos, MATERIAL_ROOT, true );
+	int testPlantPatch = 10;
+	unsigned int testPosX = testPos % worldSize;
+	unsigned int testPosY = testPos / worldSize;
 
-
-	for (int i = -(worldSize * 5); i < (worldSize * 5); ++i)
-	{
-		game.world[testPos + i].terrain = MATERIAL_SOIL;
-	}
-
-	simpleTestPlant(testPos);
-	growInto(  testPos, testPos, MATERIAL_LEAF, true );
-	game.world[testPos].seedState = MATERIAL_NOTHING;
-
-	game.world[testPos].light = color_white;
-	unsigned int woodProbe = testPos - worldSize;
-
-
-	// unsigned int testSector = (testPos / sectorSize) ;
+	// grow the plant
 	for (int i = 0; i < 100; ++i)
 	{
-		// updateMapSector(  testSector );
+		for (int vy = -testPlantPatch; vy < +testPlantPatch; ++vy)
+		{
+			for (int vx = -testPlantPatch; vx < +testPlantPatch; ++vx)
+			{
 
-		// printf("testpos plantState %u \n", game.world[testPos].plantState );
-		// printf("woodProbe plantState %u \n", game.world[woodProbe].plantState );
-		updateMapI(testPos);
+				unsigned int actualX = testPosX + vx;
+				unsigned int actualY = testPosY + vy;
+
+				unsigned int updateAddress = ( (actualY) * worldSize ) + (actualX);
+
+
+				game.world[updateAddress].terrain = MATERIAL_SOIL;
+				game.world[updateAddress].light = color_white;
+				updatePlants(updateAddress);
+
+
+			}
+		}
 	}
 
 
-	if (game.world[woodProbe].plantState == MATERIAL_LEAF)
+	// inspecc the plant
+	unsigned int woodProbe1 = testPos + (worldSize * 5);
+
+	if (game.world[woodProbe1].plantState == MATERIAL_WOOD)
 	{
 		testResult_1 = true;
 	}
+
+
 
 
 	if (testResult_1)
