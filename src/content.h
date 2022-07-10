@@ -186,7 +186,16 @@
 // #define PLANTGENE_SEED_LIGHT   25
 // #define PLANTGENE_SEED_DARK    26
 
-#define numberOfPlantGenes 32
+#define PLANTGENE_EXTRUDEMATRIX 32
+#define PLANTGENE_ROTATEMATRIX 33
+
+#define PLANTGENE_TOWARDLIGHT 34
+#define PLANTGENE_UPHILL      35
+#define PLANTGENE_INVERTMATRIX  36
+
+
+
+#define numberOfPlantGenes 36
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {

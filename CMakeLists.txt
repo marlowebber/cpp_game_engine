@@ -9,9 +9,15 @@ project(game)
 # To make a debug build
 
 
-# set(CMAKE_CXX_FLAGS "-g ") 					# this one makes a regular build and it is done quickly
+ set(CMAKE_CXX_FLAGS "-g ") 					# this one makes a regular build and it is done quickly
 #set(CMAKE_CXX_FLAGS "-g -O2 -flto") 					# 
- set(CMAKE_CXX_FLAGS " -Ofast -flto") 					# this one makes a crazy fast build but it takes ages and crashes a lot
+
+# set(CMAKE_CXX_FLAGS " -Ofast -flto") 					# this one makes a crazy fast build but it takes ages. it's my favorite to use.
+
+ #set(CMAKE_CXX_FLAGS " -Ofast -flto -fsanitize=address") 					# this one makes a crazy fast build but it takes ages. it's my favorite to use.
+
+
+
  #set(CMAKE_CXX_FLAGS " -Ofast -flto -fprofile-generate")               # use profiling instrumentation (use this and run the program once)
  #set(CMAKE_CXX_FLAGS "-Ofast -flto -fprofile-use -fprofile-correction") # apply what was learned from profiling (use this after profiling instrumentation, for best results)
 

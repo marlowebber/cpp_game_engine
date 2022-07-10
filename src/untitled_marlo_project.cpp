@@ -1924,7 +1924,7 @@ void place( int animalIndex)
 		bool animalInTheWay = false;
 
 		int donkedCreature = game.world[newPosition].identity;
-		if (donkedCreature != animalIndex)
+		if (donkedCreature != animalIndex && donkedCreature >= 0 && donkedCreature < numberOfAnimals)
 		{
 			int targetLocalPositionI = isAnimalInSquare( donkedCreature, newPosition);
 			if (targetLocalPositionI >= 0)
@@ -2647,7 +2647,7 @@ void growPlants(unsigned int worldI)
 			// {
 			growInto(  worldI, worldI, MATERIAL_LEAF, false );
 			skipAhead = 0;
-			// game.world[worldI].identity = extremelyFastNumberFromZeroTo(65536);
+			game.world[worldI].identity = extremelyFastNumberFromZeroTo(65536);
 			game.world[worldI].grassColor = color_green;
 			game.world[worldI].seedColor = color_yellow;
 			mutatePlants(worldI);
@@ -2658,33 +2658,143 @@ void growPlants(unsigned int worldI)
 		case PLANTGENE_BUD:
 		{
 			// bool a = false;
-			done |=	growIntoNeighbours(worldI, MATERIAL_BUD);
-			done |=	growIntoNeighbours(worldI, MATERIAL_POLLEN );
-			// done = true;
+			growIntoNeighbours(worldI, MATERIAL_BUD);
+			growIntoNeighbours(worldI, MATERIAL_POLLEN );
+			done = true;
 			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_POLLENTRAP:
 		{
-			done |= growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
-			// done = true;
+			growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
+			done = true;
 			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_LEAF:
 		{
-			done |= growIntoNeighbours(worldI, MATERIAL_LEAF);
-			// done = true;
+			// done |=
+			growIntoNeighbours(worldI, MATERIAL_LEAF);
+			done = true;
 			// game.world[worldI].grown = true;
 			break;
 		}
 		case PLANTGENE_WOOD:
 		{
-			done |= growIntoNeighbours(worldI, MATERIAL_WOOD);
-			// done = true;
+			// done |=
+			growIntoNeighbours(worldI, MATERIAL_WOOD);
+			done = true;
 			// game.world[worldI].grown = true;
 			break;
 		}
+		case PLANTGENE_ROOT:
+		{
+			// done |=
+			growIntoNeighbours(worldI, MATERIAL_ROOT);
+			done = true;
+			// game.world[worldI].grown = true;
+			break;
+		}
+
+		case PLANTGENE_TUBER:
+		{
+			// done |=
+			growIntoNeighbours(worldI, MATERIAL_TUBER);
+			done = true;
+			// game.world[worldI].grown = true;
+			break;
+		}
+
+
+
+
+		case PLANTGENE_EXTRUDEMATRIX:
+		{
+			for (unsigned int i = 0; i < nNeighbours; ++i)
+			{
+				if (game.world[worldI].growthMatrix[i])
+				{
+					unsigned int prevNeighbour = (i - 1) % nNeighbours;
+					unsigned int nextNeighbour = (i + 1) % nNeighbours;
+					game.world[worldI].growthMatrix[prevNeighbour] = true;
+					game.world[worldI].growthMatrix[nextNeighbour] = true;
+				}
+			}
+			break;
+		}
+
+		case PLANTGENE_ROTATEMATRIX:
+		{
+			bool temp = game.world[worldI].growthMatrix[0];
+			for (unsigned int i = 0; i < nNeighbours; ++i)
+			{
+				unsigned int n = (i + 1) % nNeighbours;
+				game.world[worldI].growthMatrix[i] = game.world[worldI].growthMatrix[n]  ;
+			}
+			game.world[worldI].growthMatrix[nNeighbours - 1] = temp;
+			break;
+		}
+
+		case PLANTGENE_UPHILL:
+		{
+			for (unsigned int i = 0; i < nNeighbours; ++i)
+			{
+				game.world[worldI].growthMatrix[i] = false;
+			}
+			unsigned int uphillNeighbour = 0;
+			float uphillHeight = -1 * (worldSize) * 10.0f;
+			for (unsigned int i = 0; i < nNeighbours; ++i)
+			{
+				unsigned int neighbour = worldI + neighbourOffsets[i];
+				if (neighbour < worldSquareSize)
+				{
+					if (game.world[  neighbour  ].height > uphillHeight)
+					{
+						uphillNeighbour = i;
+						uphillHeight = game.world[  neighbour  ].height ;
+					}
+				}
+			}
+			game.world[worldI].growthMatrix[uphillNeighbour] = true;
+			break;
+		}
+
+		case PLANTGENE_TOWARDLIGHT:
+		{
+			for (unsigned int i = 0; i < nNeighbours; ++i)
+			{
+				game.world[worldI].growthMatrix[i] = false;
+			}
+			unsigned int uphillNeighbour = 0;
+			float uphillHeight = -1 * (worldSize) * 10.0f;
+			for (unsigned int i = 0; i < nNeighbours; ++i)
+			{
+				unsigned int neighbour = worldI + neighbourOffsets[i];
+				if (neighbour < worldSquareSize)
+				{
+					float cuctus = colorAmplitude( game.world[  neighbour  ].light );
+					if ( cuctus  > uphillHeight)
+					{
+						uphillNeighbour = i;
+						uphillHeight = cuctus ;
+					}
+				}
+			}
+			game.world[worldI].growthMatrix[uphillNeighbour] = true;
+			break;
+		}
+
+
+		case PLANTGENE_INVERTMATRIX:
+		{
+			for (unsigned int i = 0; i < nNeighbours; ++i)
+			{
+				game.world[worldI].growthMatrix[i] = !(game.world[worldI].growthMatrix[i]);
+			}
+
+			break;
+		}
+
 		case PLANTGENE_RED:
 		{
 			game.world[worldI].grassColor.r *= 1.35f;
@@ -2757,10 +2867,8 @@ void growPlants(unsigned int worldI)
 	}
 	if (done) // if done, don't increment the gene cursor again- this cell will be what it is now permanently, until overgrown at least, but it will regrow into its neighbours if it can.
 	{
-		// if (  ! (plantGrowsBack( organ )))
-		// {
-		game.world[worldI].grown = true; // if 'grown' is set, the plant cannot grow into anything else. this is used for terminal parts such as flower buds.
-		// }
+
+		game.world[worldI].grown = true;
 	}
 	else
 	{
@@ -2855,7 +2963,6 @@ void updatePlants(unsigned int worldI)
 						if (materialSupportsGrowth(game.world[neighbour].terrain))
 						{
 							growInto(  neighbour, worldI, MATERIAL_LEAF, true );
-							mutatePlants(neighbour);
 							break;
 						}
 					}
@@ -3051,6 +3158,9 @@ void updatePlants(unsigned int worldI)
 								{
 									// sex between two plants
 									// take half the pollen genes, put them in that bud's plantgenes.
+									// mutate the bud before adding the new genes, the result is that this method offers 50% less mutation.
+									mutatePlants(worldI);
+
 									for (int i = 0; i < plantGenomeSize; ++i)
 									{
 										if (extremelyFastNumberFromZeroTo(1) == 0)
@@ -3063,6 +3173,7 @@ void updatePlants(unsigned int worldI)
 
 									// then grow a seed from that mix.
 									growInto( worldI, worldI, MATERIAL_SEED, false);
+
 									game.world[worldI].plantState = MATERIAL_NOTHING;
 									game.world[worldI].plantIdentity = -1;
 									break;
@@ -4035,9 +4146,10 @@ void animal_organs( int animalIndex)
 					unsigned int targetPosI = (targetPosY * worldSize) + targetPosX;
 					if (targetPosI < worldSquareSize)
 					{
-						if (game.world[targetPosI].identity >= 0 && game.world[targetPosI].identity != animalIndex)
+						if (game.world[targetPosI].identity >= 0 && game.world[targetPosI].identity < numberOfAnimals && game.world[targetPosI].identity != animalIndex)
 						{
-							if ( ! (game.animals[game.world[targetPosI].identity ].isMachine) )
+							unsigned int targetSpecies = game.world[targetPosI].identity / numberOfAnimalsPerSpecies;
+							if ( targetSpecies != 0 )
 							{
 								int targetCell = isAnimalInSquare( game.world[targetPosI].identity , targetPosI );
 								if (targetCell >= 0)
