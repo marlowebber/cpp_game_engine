@@ -121,7 +121,7 @@ int distanceBetweenPoints( Vec_i2 a, Vec_i2 b )
 	return magnitude_int( diffX,  diffY);
 }
 
-	static std::default_random_engine eeeee;
+static std::default_random_engine eeeee;
 float RNG()
 {
 
@@ -204,9 +204,10 @@ bool exists_test3(std::string filename)
 
 float clamp(float in, float min, float max)
 {
-float out = in;
-if (out < min) { out = min;}
-else if (out > max){ out = max;}
-return out;
+	float out = in;
+	if (out < min) { out = min;}
+	else if (out > max) { out = max;}
+	return out;
 
 }
+
