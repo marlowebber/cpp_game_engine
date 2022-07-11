@@ -6,7 +6,7 @@
 
 
 const unsigned int nNeighbours     = 8;
-const int worldSize = 2500;
+const int worldSize = 2400;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
 const unsigned int numberOfAnimals = 20000;
@@ -17,7 +17,7 @@ const unsigned int nLogs = 32;
 const unsigned int logLength = 64;
 const float panSpeed = 0.1f;
 const unsigned int numberOfSpeakerChannels = 16;
-const unsigned int numberOfEcologySettings = 5;
+const unsigned int numberOfEcologySettings = 6;
 
 const float viewPanLimit = 250.0f;
 
@@ -62,11 +62,12 @@ struct Square
     int pheromoneChannel;
 
     Color grassColor;
+    Color seedColor;
 
     char seedGenes[plantGenomeSize];
     int seedIdentity;
     int seedState;
-    Color seedColor;
+    Color seedColorMoving;
 
     char plantGenes[plantGenomeSize];
     int plantState;

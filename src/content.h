@@ -218,7 +218,9 @@
 #define PLANTGENE_BUD_F      40
 #define PLANTGENE_BUD_A     41
 
-#define numberOfPlantGenes 41
+#define PLANTGENE_NECTAR    42
+
+#define numberOfPlantGenes 42
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {
@@ -403,6 +405,8 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("a triangular beak for eating seeds.");
 	}
+
+	
 
 
 	case ORGAN_MOUTH_WOOD:
@@ -814,7 +818,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 
 	}
-	return std::string("something you can't describe.");
+	return std::string("something you can't describe: ") + std::to_string(tile);
 }
 
 
