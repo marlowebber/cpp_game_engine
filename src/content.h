@@ -67,7 +67,11 @@
 
 
 
-#define numberOfOrganTypes        52 // the number limit of growable genes
+#define ORGAN_MOUTH_WOOD    53 // eats roots and wood
+#define ORGAN_MOUTH_SEEDS    54 // eats pollen and seeds
+
+
+#define numberOfOrganTypes        54 // the number limit of growable genes
 
 #define MARKER                    65  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        66
@@ -112,7 +116,7 @@
 
 #define MATERIAL_LEAF      180       // for energy capture and transmission.
 #define MATERIAL_SEED      181       // to produce copies of plant.
-#define MATERIAL_BUD       182       // a seed whose debt has not paid off.
+#define MATERIAL_BUD_A       182       // a seed whose debt has not paid off.
 #define MATERIAL_WOOD      183
 #define MATERIAL_POLLEN    184
 
@@ -127,6 +131,13 @@
 #define MATERIAL_TUBER         192
 #define MATERIAL_ROOT          193
 
+
+#define MATERIAL_BUD_M       194
+#define MATERIAL_BUD_F       195
+
+#define MATERIAL_THORNS       196
+#define MATERIAL_TRICHOME       197
+
 #define MUTATION_ADDWEIGHT        10001
 #define MUTATION_ALTERBIAS        10002
 #define MUTATION_SKINCOLOR        10003
@@ -140,6 +151,11 @@
 #define MUTATION_BREAKCONNECTION  10011
 #define MUTATION_MULTIPLYWEIGHT   10012
 
+
+// #define STATUSEFFECT_DEPRESSANT  1
+// #define STATUSEFFECT_STIMULANT   2
+// #define STATUSEFFECT_SICK        3
+
 #define VISUALIZER_TRUECOLOR           1001
 #define VISUALIZER_TRACKS              1003
 #define VISUALIZER_IDENTITY            1004
@@ -147,11 +163,13 @@
 
 
 
+
+
 // plant genes must be higher than the highest nNeighbour but must be lower than the maximum size of a char (255).
 
 #define PLANTGENE_GROW_SYMM_H 9
 #define PLANTGENE_GROW_SYMM_V 10
-#define PLANTGENE_BUD         11
+#define PLANTGENE_BUD_M         11
 #define PLANTGENE_LEAF        12
 #define PLANTGENE_WOOD        13
 #define PLANTGENE_GOTO        14
@@ -195,7 +213,12 @@
 #define PLANTGENE_END 37
 
 
-#define numberOfPlantGenes 37
+#define PLANTGENE_THORNS      38
+#define PLANTGENE_TRICHOME     39
+#define PLANTGENE_BUD_F      40
+#define PLANTGENE_BUD_A     41
+
+#define numberOfPlantGenes 41
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {
@@ -375,13 +398,26 @@ std::string tileDescriptions(unsigned int tile)
 {
 	switch (tile)
 	{
+
+	case ORGAN_MOUTH_SEEDS:
+	{
+		return std::string("a triangular beak for eating seeds.");
+	}
+
+
+	case ORGAN_MOUTH_WOOD:
+	{
+		return std::string("a mouth with chisel-like teeth for eating wood and roots.");
+	}
+
+
 	case ORGAN_MOUTH_VEG:
 	{
-		return std::string("a chomping mouth with flat teeth that chews side-to-side.");
+		return std::string("a mouth with flat grinding teeth that chew side-to-side.");
 	}
 	case ORGAN_MOUTH_SCAVENGE:
 	{
-		return std::string("a sucker-like mouth that slurps up detritus.");
+		return std::string("a mouth with flabby lips that swallows slime and detritus.");
 	}
 	case ORGAN_GONAD:
 	{
@@ -684,11 +720,18 @@ std::string tileDescriptions(unsigned int tile)
 	}
 
 
-	case MATERIAL_BUD:
+	case MATERIAL_BUD_A:
 	{
-		return std::string("flowers.");
+		return std::string("flowers that produce seed automatically.");
 	}
-
+	case MATERIAL_BUD_M:
+	{
+		return std::string("flower anthers heavy with pollen.");
+	}
+	case MATERIAL_BUD_F:
+	{
+		return std::string("fertile carpels protected by petals.");
+	}
 
 	case MATERIAL_WOOD:
 	{
@@ -758,6 +801,17 @@ std::string tileDescriptions(unsigned int tile)
 		return std::string("sticky droplets that neutralize enemy pollen.");
 	}
 
+
+	case MATERIAL_THORNS:
+	{
+		return std::string("brambles covered in long, sharp thorns.");
+	}
+
+
+	case MATERIAL_TRICHOME:
+	{
+		return std::string("fuzzy hairs covered in psychoactive chemicals.");
+	}
 
 	}
 	return std::string("something you can't describe.");
@@ -1076,9 +1130,9 @@ std::string tileShortNames(unsigned int tile)
 	}
 
 
-	case MATERIAL_BUD:
+	case MATERIAL_BUD_A:
 	{
-		return std::string("Flower.");
+		return std::string("Ace flowers.");
 	}
 
 
@@ -1453,8 +1507,11 @@ bool organIsASensor(unsigned int organ)
 	        organ == ORGAN_GONAD ||
 	        organ == ORGAN_GENITAL_A ||
 	        organ == ORGAN_GENITAL_B ||
-	        organ == ORGAN_GRABBER
+	        organ == ORGAN_GRABBER ||
 
+
+	        organ == ORGAN_MOUTH_SEEDS ||
+	        organ == ORGAN_MOUTH_WOOD
 	   )
 	{
 		return true;
@@ -1860,7 +1917,7 @@ float materialFertility(unsigned int material)
 {
 
 	return 1.0f;
-	
+
 	switch (material)
 	{
 	case MATERIAL_SOIL:

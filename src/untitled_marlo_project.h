@@ -22,7 +22,7 @@ const unsigned int numberOfEcologySettings = 5;
 const float viewPanLimit = 250.0f;
 
 const float  maxZoom = 450.0f;
-const float  minZoom = 50.0f;
+const float  minZoom = 25.0f;
 
 const bool variedGrowthCost      = false;
 const bool variedUpkeep          = false;
@@ -114,6 +114,10 @@ struct Cell
     Connection connections[NUMBER_OF_CONNECTIONS];
 };
 
+
+const unsigned int numberOfStatusEffects = 4;
+
+
 struct Animal
 {
     Cell body[animalSquareSize];
@@ -150,6 +154,9 @@ struct Animal
     float lastfposy;
     bool isMachine;
     unsigned int machineCallback;
+
+    // char statusEffects[numberOfStatusEffects];
+    // unsigned int statusEffect;
 };
 
 

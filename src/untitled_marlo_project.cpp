@@ -1846,17 +1846,21 @@ void spawnAnimalIntoSlot(  int animalIndex,
 int isAnimalInSquare(int animalIndex, unsigned int cellWorldPositionI)
 {
 	ZoneScoped;
-	if (cellWorldPositionI < worldSquareSize && game.world[cellWorldPositionI].identity >= 0 )
+	if ( animalIndex >= 0 && animalIndex < numberOfAnimals)
 	{
-		if (!game.animals[animalIndex].retired)
+		if (cellWorldPositionI < worldSquareSize && game.world[cellWorldPositionI].identity >= 0)
 		{
-			unsigned int cellIndex = game.world[cellWorldPositionI].occupyingCell;
 
-			if (game.animals[animalIndex].body[cellIndex].worldPositionI == cellWorldPositionI)
+			if (!game.animals[animalIndex].retired)
 			{
-				if (game.animals[animalIndex].body[cellIndex].damage < 1.0f)
+				unsigned int cellIndex = game.world[cellWorldPositionI].occupyingCell;
+
+				if (game.animals[animalIndex].body[cellIndex].worldPositionI == cellWorldPositionI)
 				{
-					return cellIndex;
+					if (game.animals[animalIndex].body[cellIndex].damage < 1.0f)
+					{
+						return cellIndex;
+					}
 				}
 			}
 		}
@@ -1904,6 +1908,164 @@ void selectCursorAnimal()
 	}
 }
 
+void killAnimal(int animalIndex)
+{
+	if (animalIndex == game.playerCreature)
+	{
+		game.playerCreature = -1;
+		appendLog(std::string("You died!"));
+	}
+	if (animalIndex == game.cameraTargetCreature)
+	{
+		game.cameraTargetCreature = -1;
+	}
+	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+	game.speciesVacancies[speciesIndex] = true;
+	game.animals[animalIndex].retired = true;
+	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex) // process organs and signals and clear animalIndex on grid
+	{
+		unsigned int cellWorldPositionI  = game.animals[animalIndex].body[cellIndex].worldPositionI; 
+		if (cellWorldPositionI < worldSquareSize)
+		{
+			if (game.animals[animalIndex].body[cellIndex].organ != MATERIAL_NOTHING && game.animals[animalIndex].body[cellIndex].damage < 1.0f)
+			{
+				game.world[cellWorldPositionI].pheromoneChannel = 13;
+				if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
+				{
+					game.world[cellWorldPositionI].wall = MATERIAL_FOOD;
+				}
+				if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_BONE)
+				{
+					game.world[cellWorldPositionI].wall = MATERIAL_BONE;
+				}
+			}
+		}
+	}
+}
+
+
+void defeatAdversary()
+{
+	int i = 1;
+	setupNeuroGlasses(i);
+	spawnAnimalIntoSlot(8, game.animals[i], game.animals[game.adversary].position, false);
+
+	game.adversaryDefeated = true;
+	killAnimal(game.adversary);
+
+	appendLog( std::string("the adversary was killed!") );
+}
+
+void spill(unsigned int material,  unsigned int worldPositionI)
+{
+	if (game.world[worldPositionI].wall == MATERIAL_NOTHING)
+	{
+		game.world[worldPositionI].wall = material;
+	}
+	else
+	{
+		for (int i = 0; i < nNeighbours; ++i)
+		{
+			unsigned int neighbour = worldPositionI += neighbourOffsets[i];
+			if ( neighbour < worldSquareSize)
+			{
+				if (game.world[neighbour].wall == MATERIAL_NOTHING)
+				{
+					game.world[neighbour].wall = material;
+					break;
+				}
+			}
+		}
+	}
+	switch (material)
+	{
+	case MATERIAL_BLOOD:
+	{
+		game.world[worldPositionI].pheromoneChannel = PHEROMONE_BLOOD;
+		break;
+	}
+
+	case MATERIAL_VOMIT:
+	{
+		game.world[worldPositionI].pheromoneChannel = PHEROMONE_PUKE;
+		break;
+	}
+
+	case MATERIAL_FOOD:
+	{
+		game.world[worldPositionI].pheromoneChannel = PHEROMONE_ROTTINGMEAT;
+		break;
+	}
+
+	case MATERIAL_WATER:
+	{
+		game.world[worldPositionI].pheromoneChannel = PHEROMONE_RAIN;
+		break;
+	}
+	}
+}
+
+int defenseAtWorldPoint( int animalIndex, unsigned int cellWorldPositionI)
+{
+	int defense = 1;
+	for (unsigned int n = 0; n < nNeighbours; ++n)
+	{
+		unsigned int worldNeighbour = cellWorldPositionI + neighbourOffsets[n];
+		int occupyingCell = isAnimalInSquare(animalIndex, worldNeighbour) ;
+		if ( occupyingCell >= 0)
+		{
+			if (game.animals[animalIndex].body[occupyingCell].organ == ORGAN_BONE)
+			{
+				defense++;
+			}
+		}
+	}
+	return defense;
+}
+
+
+// return true if you blow the limb off, false if its still attached.
+void hurtAnimal( int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
+{
+	std::string damageLog = std::string("");
+	bool limbLost = false;
+	unsigned int cellWorldPositionI = game.animals[animalIndex].body[cellIndex].worldPositionI;
+	float defense = defenseAtWorldPoint(game.world[cellWorldPositionI].identity, cellWorldPositionI);
+	float finalAmount = amount / defense;
+	game.animals[animalIndex].body[cellIndex].damage += amount;
+	int painCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PAIN);
+	if (painCell >= 0)
+	{
+		game.animals[animalIndex].body[painCell].signalIntensity += amount;
+	}
+	if (game.animals[animalIndex].body[cellIndex].damage > 1.0f)
+	{
+		game.animals[animalIndex].damageReceived++;
+
+		if (animalIndex == game.adversary && shooterIndex == game.playerCreature)
+		{
+			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].cellsUsed / 2)
+			{
+				defeatAdversary();
+			}
+
+		}
+		limbLost = true;
+	}
+	bool dropped = false;
+	if (limbLost)
+	{
+		if (game.animals[animalIndex].energyDebt <= 0.0f) // if the animal can lose the limb, and create energetic food, before the debt is paid, infinite energy can be produced.
+		{
+			spill(organProduces(game.animals[animalIndex].body[cellIndex].organ), cellWorldPositionI);
+			dropped = true;
+		}
+	}
+	if (!dropped)
+	{
+		spill(MATERIAL_BLOOD,  cellWorldPositionI);
+	}
+}
 
 
 // updates the animal's position, and performs any actions resulting from that.
@@ -2070,17 +2232,20 @@ void place( int animalIndex)
 
 			// printf("OK to step: yes\n" );
 			// spawn grass
-			if (speciesIndex > 0)
-			{
-				if (game.world[cellWorldPositionI].identity < 0)
-				{
-					if (materialSupportsGrowth(game.world[cellWorldPositionI].terrain) && ! materialBlocksMovement(game.world[cellWorldPositionI].wall) )
-					{
+			// if (speciesIndex > 0)
+			// {
+			// if (game.world[cellWorldPositionI].identity < 0)
+			// {
+			// if (materialSupportsGrowth(game.world[cellWorldPositionI].terrain) && ! materialBlocksMovement(game.world[cellWorldPositionI].wall) )
+			// {
 // #ifdef PLANTS
-						if (game.world[cellWorldPositionI].plantState == MATERIAL_NOTHING)
-						{
-							// game.world[cellWorldPositionI].plantState = MATERIAL_GRASS;
-						}
+			if (game.world[cellWorldPositionI].plantState == MATERIAL_THORNS)
+			{
+				// game.world[cellWorldPositionI].plantState = MATERIAL_GRASS;
+
+// void hurtAnimal( int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
+				hurtAnimal(  animalIndex, cellIndex, 0.1f, -1 );
+			}
 // #else
 // 						if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
 // 						{
@@ -2088,9 +2253,9 @@ void place( int animalIndex)
 // 							game.world[cellWorldPositionI].wall = MATERIAL_GRASS;
 // 						}
 // #endif
-					}
-				}
-			}
+			// }
+			// }
+			// }
 
 			game.world[cellWorldPositionI].identity = animalIndex;
 			game.world[cellWorldPositionI].occupyingCell = cellIndex;
@@ -2166,47 +2331,6 @@ int spawnAnimal( unsigned int speciesIndex,
 	return animalIndex;
 }
 
-void killAnimal(int animalIndex)
-{
-	if (animalIndex == game.playerCreature)
-	{
-		game.playerCreature = -1;
-		appendLog(std::string("You died!"));
-	}
-	if (animalIndex == game.cameraTargetCreature)
-	{
-		game.cameraTargetCreature = -1;
-	}
-	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
-	game.speciesVacancies[speciesIndex] = true;
-	game.animals[animalIndex].retired = true;
-	// unsigned int animalWorldPositionX    = game.animals[animalIndex].position % worldSize;
-	// unsigned int animalWorldPositionY    = game.animals[animalIndex].position / worldSize;
-	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex) // process organs and signals and clear animalIndex on grid
-	{
-		// unsigned int cellLocalPositionX  = game.animals[animalIndex].body[cellIndex].localPosX;
-		// unsigned int cellLocalPositionY  = game.animals[animalIndex].body[cellIndex].localPosY;
-		// unsigned int cellWorldPositionX  = cellLocalPositionX + animalWorldPositionX;
-		// unsigned int cellWorldPositionY  = cellLocalPositionY + animalWorldPositionY;
-		unsigned int cellWorldPositionI  = game.animals[animalIndex].body[cellIndex].worldPositionI; //(cellWorldPositionY * worldSize) + cellWorldPositionX;
-		if (cellWorldPositionI < worldSquareSize)
-		{
-			if (game.animals[animalIndex].body[cellIndex].organ != MATERIAL_NOTHING && game.animals[animalIndex].body[cellIndex].damage < 1.0f)
-			{
-				game.world[cellWorldPositionI].pheromoneChannel = 13;
-				// game.world[cellWorldPositionI].pheromoneIntensity = 1.0f;
-				if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
-				{
-					game.world[cellWorldPositionI].wall = MATERIAL_FOOD;
-				}
-				if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_BONE)
-				{
-					game.world[cellWorldPositionI].wall = MATERIAL_BONE;
-				}
-			}
-		}
-	}
-}
 
 Color whatColorIsThisSquare(  unsigned int worldI)
 {
@@ -2492,459 +2616,556 @@ void growPlants(unsigned int worldI)
 	}
 	else
 	{
-		switch (c)
+
+
+
+
+
+
+
+
+
+
+		// case PLANTGENE_BUD_A:
+		// 	{
+		// 		// bool a = false;
+		// 		growIntoNeighbours(worldI, MATERIAL_BUD_A);
+		// 		// growIntoNeighbours(worldI, MATERIAL_POLLEN );
+		// 		done = true;
+		// 		// game.world[worldI].grown = true;
+		// 		break;
+		// 	}
+		// case PLANTGENE_POLLENTRAP:
+		// 	{
+		// 		growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
+		// 		done = true;
+		// 		// game.world[worldI].grown = true;
+		// 		break;
+		// 	}
+		// case PLANTGENE_LEAF:
+		// 	{
+		// 		// done |=
+		// 		growIntoNeighbours(worldI, MATERIAL_LEAF);
+		// 		done = true;
+		// 		// game.world[worldI].grown = true;
+		// 		break;
+		// 	}
+		// case PLANTGENE_WOOD:
+		// 	{
+		// 		// done |=
+		// 		growIntoNeighbours(worldI, MATERIAL_WOOD);
+		// 		done = true;
+		// 		// game.world[worldI].grown = true;
+		// 		break;
+		// 	}
+		// case PLANTGENE_ROOT:
+		// 	{
+		// 		// done |=
+		// 		growIntoNeighbours(worldI, MATERIAL_ROOT);
+		// 		done = true;
+		// 		// game.world[worldI].grown = true;
+		// 		break;
+		// 	}
+
+		// case PLANTGENE_TUBER:
+		// 	{
+		// 		// done |=
+
+		// 		// game.world[worldI].grown = true;
+		// 		break;
+		// 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+		if (
+
+		    c == PLANTGENE_TUBER
+		    ||    c == PLANTGENE_WOOD
+		    ||    c == PLANTGENE_ROOT
+		    ||    c == PLANTGENE_LEAF
+		    ||    c == PLANTGENE_POLLENTRAP
+		    ||    c == PLANTGENE_BUD_A
+		    ||    c == PLANTGENE_BUD_M
+		    ||    c == PLANTGENE_BUD_F
+		    ||    c == PLANTGENE_THORNS
+		    ||    c == PLANTGENE_TRICHOME
+		)
 		{
-		case PLANTGENE_GROW_SYMM_H:
-		{
-			// mirror the left and right halves of the growth matrix.
-			bool originalGrowthMatrix[nNeighbours];
-			for (int i = 0; i < nNeighbours; ++i)
+
+
+			unsigned int material;
+
+
+			switch (c)
 			{
-				originalGrowthMatrix[i] = game.world[worldI].growthMatrix[i];
-				// game.world[worldI].growthMatrix[i] = false;
+			case PLANTGENE_TUBER:
+				material = MATERIAL_TUBER; break;
+
+			case PLANTGENE_ROOT:
+				material = MATERIAL_ROOT; break;
+
+			case PLANTGENE_LEAF:
+				material = MATERIAL_LEAF; break;
+
+			case PLANTGENE_POLLENTRAP:
+				material = MATERIAL_POLLENTRAP; break;
+
+			case PLANTGENE_BUD_A:
+				material = MATERIAL_BUD_A; break;
+
+			case PLANTGENE_BUD_M:
+				material = MATERIAL_BUD_M; break;
+
+			case PLANTGENE_BUD_F:
+				material = MATERIAL_BUD_F; break;
+
+			case PLANTGENE_THORNS:
+				material = MATERIAL_THORNS; break;
+
+			case PLANTGENE_TRICHOME:
+				material = MATERIAL_TRICHOME; break;
+
+
+
+
 			}
-			// memcpy(&(originalGrowthMatrix[0]), &(game.world[worldI].growthMatrix[0]), sizeof(bool)*nNeighbours  );
-			// memset(&(game.world[worldI].growthMatrix), false, sizeof(bool)*nNeighbours);
-			if (originalGrowthMatrix[7]) { game.world[worldI].growthMatrix[5] = true;}
-			if (originalGrowthMatrix[5]) { game.world[worldI].growthMatrix[7] = true;}
-			if (originalGrowthMatrix[0]) { game.world[worldI].growthMatrix[4] = true;}
-			if (originalGrowthMatrix[4]) { game.world[worldI].growthMatrix[0] = true;}
-			if (originalGrowthMatrix[1]) { game.world[worldI].growthMatrix[3] = true;}
-			if (originalGrowthMatrix[3]) { game.world[worldI].growthMatrix[1] = true;}
 
 
+			growIntoNeighbours(worldI, material);
 
 
-			break;
-		}
-		case PLANTGENE_GROW_SYMM_V:
-		{
-			// mirror the top and bottom halves of the growth matrix.
-			bool originalGrowthMatrix[nNeighbours];
-			// memcpy(&(originalGrowthMatrix[0]), &(game.world[worldI].growthMatrix[0]), sizeof(bool)*nNeighbours  );
-			for (int i = 0; i < nNeighbours; ++i)
+			if (material == MATERIAL_BUD_A)
 			{
-				originalGrowthMatrix[i] = game.world[worldI].growthMatrix[i];
-				// game.world[worldI].growthMatrix[i] = false;
+				growIntoNeighbours(worldI, MATERIAL_SEED);
+
 			}
-			// memset(&(game.world[worldI].growthMatrix), false, sizeof(bool)*nNeighbours);
-			if (originalGrowthMatrix[1]) { game.world[worldI].growthMatrix[5] = true;}
-			if (originalGrowthMatrix[2]) { game.world[worldI].growthMatrix[6] = true;}
-			if (originalGrowthMatrix[3]) { game.world[worldI].growthMatrix[7] = true;}
-			if (originalGrowthMatrix[5]) { game.world[worldI].growthMatrix[1] = true;}
-			if (originalGrowthMatrix[6]) { game.world[worldI].growthMatrix[2] = true;}
-			if (originalGrowthMatrix[7]) { game.world[worldI].growthMatrix[3] = true;}
-			break;
-		}
-
-		case PLANTGENE_SEQUENCE:
-		{
-			if ((game.world[worldI].geneCursor + 1) < plantGenomeSize)
+			else if (material == MATERIAL_BUD_M)
 			{
-				game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1]; // take the value of the next gene- that is the number of times to repeat the sequence.
-				game.world[worldI].sequenceReturn = game.world[worldI].geneCursor + 2;
+				growIntoNeighbours(worldI, MATERIAL_POLLEN);
 			}
 
-			skipAhead = game.world[worldI].geneCursor + 2;
-
-			break;
+			done = true;
 		}
-
-		case PLANTGENE_END:
+		else
 		{
-			done =  true;
-		}
 
-		case PLANTGENE_BRANCH:
-		{
-			// scan forward to find the break point associated with this
-			int presentDepth = 1;
-			for (int i =  game.world[worldI].geneCursor + 1; i < plantGenomeSize; ++i)
+
+
+			switch (c)
 			{
-				// if (( game.world[worldI].geneCursor + i) < plantGenomeSize)
-				// {
-				char geneAtThisLocation = game.world[worldI].plantGenes[  i];
-				if ( geneAtThisLocation == PLANTGENE_BRANCH)
+			case PLANTGENE_GROW_SYMM_H:
+			{
+				// mirror the left and right halves of the growth matrix.
+				bool originalGrowthMatrix[nNeighbours];
+				for (int i = 0; i < nNeighbours; ++i)
 				{
-					presentDepth ++;
+					originalGrowthMatrix[i] = game.world[worldI].growthMatrix[i];
+					// game.world[worldI].growthMatrix[i] = false;
 				}
-				else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
-				{
-					presentDepth++;
-				}
-				else if  ( geneAtThisLocation == PLANTGENE_BREAK)
-				{
-					presentDepth--;
+				// memcpy(&(originalGrowthMatrix[0]), &(game.world[worldI].growthMatrix[0]), sizeof(bool)*nNeighbours  );
+				// memset(&(game.world[worldI].growthMatrix), false, sizeof(bool)*nNeighbours);
+				if (originalGrowthMatrix[7]) { game.world[worldI].growthMatrix[5] = true;}
+				if (originalGrowthMatrix[5]) { game.world[worldI].growthMatrix[7] = true;}
+				if (originalGrowthMatrix[0]) { game.world[worldI].growthMatrix[4] = true;}
+				if (originalGrowthMatrix[4]) { game.world[worldI].growthMatrix[0] = true;}
+				if (originalGrowthMatrix[1]) { game.world[worldI].growthMatrix[3] = true;}
+				if (originalGrowthMatrix[3]) { game.world[worldI].growthMatrix[1] = true;}
 
-					if (presentDepth == 0) // this is your stop
+
+
+
+				break;
+			}
+			case PLANTGENE_GROW_SYMM_V:
+			{
+				// mirror the top and bottom halves of the growth matrix.
+				bool originalGrowthMatrix[nNeighbours];
+				// memcpy(&(originalGrowthMatrix[0]), &(game.world[worldI].growthMatrix[0]), sizeof(bool)*nNeighbours  );
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					originalGrowthMatrix[i] = game.world[worldI].growthMatrix[i];
+					// game.world[worldI].growthMatrix[i] = false;
+				}
+				// memset(&(game.world[worldI].growthMatrix), false, sizeof(bool)*nNeighbours);
+				if (originalGrowthMatrix[1]) { game.world[worldI].growthMatrix[5] = true;}
+				if (originalGrowthMatrix[2]) { game.world[worldI].growthMatrix[6] = true;}
+				if (originalGrowthMatrix[3]) { game.world[worldI].growthMatrix[7] = true;}
+				if (originalGrowthMatrix[5]) { game.world[worldI].growthMatrix[1] = true;}
+				if (originalGrowthMatrix[6]) { game.world[worldI].growthMatrix[2] = true;}
+				if (originalGrowthMatrix[7]) { game.world[worldI].growthMatrix[3] = true;}
+				break;
+			}
+
+			case PLANTGENE_SEQUENCE:
+			{
+				if ((game.world[worldI].geneCursor + 1) < plantGenomeSize)
+				{
+					game.world[worldI].sequenceNumber = game.world[worldI].plantGenes[game.world[worldI].geneCursor + 1]; // take the value of the next gene- that is the number of times to repeat the sequence.
+					game.world[worldI].sequenceReturn = game.world[worldI].geneCursor + 2;
+				}
+
+				skipAhead = game.world[worldI].geneCursor + 2;
+
+				break;
+			}
+
+			case PLANTGENE_END:
+			{
+				done =  true;
+			}
+
+			case PLANTGENE_BRANCH:
+			{
+				// scan forward to find the break point associated with this
+				int presentDepth = 1;
+				for (int i =  game.world[worldI].geneCursor + 1; i < plantGenomeSize; ++i)
+				{
+					// if (( game.world[worldI].geneCursor + i) < plantGenomeSize)
+					// {
+					char geneAtThisLocation = game.world[worldI].plantGenes[  i];
+					if ( geneAtThisLocation == PLANTGENE_BRANCH)
 					{
-						skipAhead =   i + 1 ; // game.world[worldI].geneCursor + i + 1;
-						break;
+						presentDepth ++;
+					}
+					else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
+					{
+						presentDepth++;
+					}
+					else if  ( geneAtThisLocation == PLANTGENE_BREAK)
+					{
+						presentDepth--;
+
+						if (presentDepth == 0) // this is your stop
+						{
+							skipAhead =   i + 1 ; // game.world[worldI].geneCursor + i + 1;
+							break;
+						}
+					}
+					// }
+				}
+				growIntoNeighbours(worldI, game.world[worldI].plantState );
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					if (game.world[worldI].growthMatrix[i])
+					{
+						unsigned int neighbour = worldI + neighbourOffsets[i];
+						if (neighbour < worldSquareSize)
+						{
+							clearGrowthMask(neighbour) ;
+							game.world[neighbour].growthMatrix[i] = true; // branch grows perpendicular to the trunk.
+
+
+						}
+					}
+				}
+				break;
+			}
+
+			case PLANTGENE_BREAK:
+			{
+
+
+				// scroll back and find what this break is for.
+
+				bool sequenceBreak = false;
+				bool branchBreak = false;
+				int presentDepth = 1;
+
+				for (int i =  game.world[worldI].geneCursor - 1; i > 0; --i)
+				{
+
+
+					// if ( ( game.world[worldI].geneCursor + i) < plantGenomeSize)
+					// {
+
+
+					char geneAtThisLocation = game.world[worldI].plantGenes[ i ];
+					if ( geneAtThisLocation == PLANTGENE_BRANCH)
+					{
+						presentDepth --;
+						if (presentDepth == 0) // this is your stop
+						{
+							branchBreak = true;
+							break;
+						}
+						// break;
+					}
+					else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
+					{
+						presentDepth--;
+
+						if (presentDepth == 0) // this is your stop
+						{
+							sequenceBreak = true;
+							break;
+						}
+
+
+					}
+					else if  ( geneAtThisLocation == PLANTGENE_BREAK)
+					{
+						presentDepth++;
+						// break;
+
+					}
+
+					// }
+
+
+				}
+
+
+
+				if (branchBreak)
+				{
+					// if this is a branch break, it means you have come to the end of the branch, you should just deactivate this cell for now.
+					done = true;
+				}
+
+
+				if (sequenceBreak)
+				{
+
+					// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number and depth.
+					if (game.world[worldI].sequenceNumber > 0)
+					{
+						// game.world[worldI].geneCursor = game.world[worldI].sequenceReturn;
+
+						skipAhead = game.world[worldI].sequenceReturn;//game.world[worldI].geneCursor + i + 1;
+						game.world[worldI].sequenceNumber--;
+					}
+					else
+					{
+						// if it is 0, you've completed doing the sequence n times, so you can exit it.
+						// In this case, sequenceReturn of the next cells will be sampled from a cell before the sequence start, which allows nested sequences.
+						int innerSequenceReturn = game.world[worldI].sequenceReturn;
+
+						// if (innerSequenceReturn > 3) // impossible to have a complete sequence header earlier than 3
+						// {
+						// Why 3? Because sequence returns don't point at the sequence gene itself, they point at the first gene IN the sequence.
+						// The header goes <last gene of outer sequence> <sequence gene> <length> <first gene> .. . you always return to the first gene inside the sequence
+						// when breaking an inner sequence,  return to the last gene of outer sequence, which is 3 cells behind where the inner sequence returns to.
+						// int lastGeneOfOuterSequence = innerSequenceReturn - 3;
+						if (innerSequenceReturn > 3)
+						{
+							game.world[worldI].sequenceReturn = innerSequenceReturn - 3 ;
+							game.world[worldI].sequenceNumber =  0;
+						}
+						// }
+					}
+				}
+
+
+				break;
+			}
+
+			case PLANTGENE_GOTO:
+			{
+				// if ((game.world[worldI].geneCursor + 1) < plantGenomeSize)
+				// {
+				int nextgene = game.world[worldI].geneCursor + 1 ;
+				if (nextgene < plantGenomeSize)
+				{
+					int destination = game.world[worldI].plantGenes[  nextgene  ];
+					if (destination < plantGenomeSize)
+					{
+						int newGeneCursor = nextgene % plantGenomeSize;
+						skipAhead = nextgene;
 					}
 				}
 				// }
+				break;
 			}
-			growIntoNeighbours(worldI, game.world[worldI].plantState );
-			for (int i = 0; i < nNeighbours; ++i)
+			case PLANTGENE_RUNNER: // start the plant over from zero at this location
 			{
-				if (game.world[worldI].growthMatrix[i])
+				// if (materialSupportsGrowth(game.world[worldI].terrain))
+				// {
+				growInto(  worldI, worldI, MATERIAL_LEAF, false );
+				skipAhead = 0;
+				game.world[worldI].identity = extremelyFastNumberFromZeroTo(65536);
+				game.world[worldI].grassColor = color_green;
+				game.world[worldI].seedColor = color_yellow;
+				mutatePlants(worldI);
+				// }
+				done = true;
+				break;
+			}
+
+
+
+
+			case PLANTGENE_EXTRUDEMATRIX:
+			{
+
+
+				bool tempMatrix[nNeighbours];
+				for (unsigned int i = 0; i < nNeighbours; ++i)
+				{
+					tempMatrix[i] = game.world[worldI].growthMatrix[i];
+				}
+
+				for (unsigned int i = 0; i < nNeighbours; ++i)
+				{
+					if (tempMatrix[i])
+					{
+						unsigned int prevNeighbour = (i - 1) % nNeighbours;
+						unsigned int nextNeighbour = (i + 1) % nNeighbours;
+						game.world[worldI].growthMatrix[prevNeighbour] = true;
+						game.world[worldI].growthMatrix[nextNeighbour] = true;
+					}
+				}
+				break;
+			}
+
+			case PLANTGENE_ROTATEMATRIX:
+			{
+				bool temp = game.world[worldI].growthMatrix[0];
+				for (unsigned int i = 0; i < nNeighbours; ++i)
+				{
+					unsigned int n = (i + 1) % nNeighbours;
+					game.world[worldI].growthMatrix[i] = game.world[worldI].growthMatrix[n]  ;
+				}
+				game.world[worldI].growthMatrix[nNeighbours - 1] = temp;
+				break;
+			}
+
+			case PLANTGENE_UPHILL:
+			{
+				for (unsigned int i = 0; i < nNeighbours; ++i)
+				{
+					game.world[worldI].growthMatrix[i] = false;
+				}
+				unsigned int uphillNeighbour = 0;
+				float uphillHeight = -1 * (worldSize) * 10.0f;
+				for (unsigned int i = 0; i < nNeighbours; ++i)
 				{
 					unsigned int neighbour = worldI + neighbourOffsets[i];
 					if (neighbour < worldSquareSize)
 					{
-						clearGrowthMask(neighbour) ;
-						game.world[neighbour].growthMatrix[i] = true; // branch grows perpendicular to the trunk.
-
-
+						if (game.world[  neighbour  ].height > uphillHeight)
+						{
+							uphillNeighbour = i;
+							uphillHeight = game.world[  neighbour  ].height ;
+						}
 					}
 				}
+				game.world[worldI].growthMatrix[uphillNeighbour] = true;
+				break;
 			}
-			break;
-		}
 
-		case PLANTGENE_BREAK:
-		{
-
-
-			// scroll back and find what this break is for.
-
-			bool sequenceBreak = false;
-			bool branchBreak = false;
-			int presentDepth = 1;
-
-			for (int i =  game.world[worldI].geneCursor - 1; i > 0; --i)
+			case PLANTGENE_TOWARDLIGHT:
 			{
-
-
-				// if ( ( game.world[worldI].geneCursor + i) < plantGenomeSize)
-				// {
-
-
-				char geneAtThisLocation = game.world[worldI].plantGenes[ i ];
-				if ( geneAtThisLocation == PLANTGENE_BRANCH)
+				for (unsigned int i = 0; i < nNeighbours; ++i)
 				{
-					presentDepth --;
-					if (presentDepth == 0) // this is your stop
+					game.world[worldI].growthMatrix[i] = false;
+				}
+				unsigned int uphillNeighbour = 0;
+				float uphillHeight = -1 * (worldSize) * 10.0f;
+				for (unsigned int i = 0; i < nNeighbours; ++i)
+				{
+					unsigned int neighbour = worldI + neighbourOffsets[i];
+					if (neighbour < worldSquareSize)
 					{
-						branchBreak = true;
-						break;
-					}
-					// break;
-				}
-				else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
-				{
-					presentDepth--;
-
-					if (presentDepth == 0) // this is your stop
-					{
-						sequenceBreak = true;
-						break;
-					}
-
-
-				}
-				else if  ( geneAtThisLocation == PLANTGENE_BREAK)
-				{
-					presentDepth++;
-					// break;
-
-				}
-
-				// }
-
-
-			}
-
-
-
-			if (branchBreak)
-			{
-				// if this is a branch break, it means you have come to the end of the branch, you should just deactivate this cell for now.
-				done = true;
-			}
-
-
-			if (sequenceBreak)
-			{
-
-				// if the sequence number is greater than zero, return to the sequence origin and decrement the sequence number and depth.
-				if (game.world[worldI].sequenceNumber > 0)
-				{
-					// game.world[worldI].geneCursor = game.world[worldI].sequenceReturn;
-
-					skipAhead = game.world[worldI].sequenceReturn;//game.world[worldI].geneCursor + i + 1;
-					game.world[worldI].sequenceNumber--;
-				}
-				else
-				{
-					// if it is 0, you've completed doing the sequence n times, so you can exit it.
-					// In this case, sequenceReturn of the next cells will be sampled from a cell before the sequence start, which allows nested sequences.
-					int innerSequenceReturn = game.world[worldI].sequenceReturn;
-
-					// if (innerSequenceReturn > 3) // impossible to have a complete sequence header earlier than 3
-					// {
-					// Why 3? Because sequence returns don't point at the sequence gene itself, they point at the first gene IN the sequence.
-					// The header goes <last gene of outer sequence> <sequence gene> <length> <first gene> .. . you always return to the first gene inside the sequence
-					// when breaking an inner sequence,  return to the last gene of outer sequence, which is 3 cells behind where the inner sequence returns to.
-					// int lastGeneOfOuterSequence = innerSequenceReturn - 3;
-					if (innerSequenceReturn > 3)
-					{
-						game.world[worldI].sequenceReturn = innerSequenceReturn - 3 ;
-						game.world[worldI].sequenceNumber =  0;
-					}
-					// }
-				}
-			}
-
-
-			break;
-		}
-
-		case PLANTGENE_GOTO:
-		{
-			// if ((game.world[worldI].geneCursor + 1) < plantGenomeSize)
-			// {
-			int nextgene = game.world[worldI].geneCursor + 1 ;
-			if (nextgene < plantGenomeSize)
-			{
-				int destination = game.world[worldI].plantGenes[  nextgene  ];
-				if (destination < plantGenomeSize)
-				{
-					int newGeneCursor = nextgene % plantGenomeSize;
-					skipAhead = nextgene;
-				}
-			}
-			// }
-			break;
-		}
-		case PLANTGENE_RUNNER: // start the plant over from zero at this location
-		{
-			// if (materialSupportsGrowth(game.world[worldI].terrain))
-			// {
-			growInto(  worldI, worldI, MATERIAL_LEAF, false );
-			skipAhead = 0;
-			game.world[worldI].identity = extremelyFastNumberFromZeroTo(65536);
-			game.world[worldI].grassColor = color_green;
-			game.world[worldI].seedColor = color_yellow;
-			mutatePlants(worldI);
-			// }
-			done = true;
-			break;
-		}
-		case PLANTGENE_BUD:
-		{
-			// bool a = false;
-			growIntoNeighbours(worldI, MATERIAL_BUD);
-			growIntoNeighbours(worldI, MATERIAL_POLLEN );
-			done = true;
-			// game.world[worldI].grown = true;
-			break;
-		}
-		case PLANTGENE_POLLENTRAP:
-		{
-			growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
-			done = true;
-			// game.world[worldI].grown = true;
-			break;
-		}
-		case PLANTGENE_LEAF:
-		{
-			// done |=
-			growIntoNeighbours(worldI, MATERIAL_LEAF);
-			done = true;
-			// game.world[worldI].grown = true;
-			break;
-		}
-		case PLANTGENE_WOOD:
-		{
-			// done |=
-			growIntoNeighbours(worldI, MATERIAL_WOOD);
-			done = true;
-			// game.world[worldI].grown = true;
-			break;
-		}
-		case PLANTGENE_ROOT:
-		{
-			// done |=
-			growIntoNeighbours(worldI, MATERIAL_ROOT);
-			done = true;
-			// game.world[worldI].grown = true;
-			break;
-		}
-
-		case PLANTGENE_TUBER:
-		{
-			// done |=
-			growIntoNeighbours(worldI, MATERIAL_TUBER);
-			done = true;
-			// game.world[worldI].grown = true;
-			break;
-		}
-
-
-
-
-		case PLANTGENE_EXTRUDEMATRIX:
-		{
-
-
-			bool tempMatrix[nNeighbours];
-			for (unsigned int i = 0; i < nNeighbours; ++i)
-			{
-				tempMatrix[i] = game.world[worldI].growthMatrix[i];
-			}
-
-			for (unsigned int i = 0; i < nNeighbours; ++i)
-			{
-				if (tempMatrix[i])
-				{
-					unsigned int prevNeighbour = (i - 1) % nNeighbours;
-					unsigned int nextNeighbour = (i + 1) % nNeighbours;
-					game.world[worldI].growthMatrix[prevNeighbour] = true;
-					game.world[worldI].growthMatrix[nextNeighbour] = true;
-				}
-			}
-			break;
-		}
-
-		case PLANTGENE_ROTATEMATRIX:
-		{
-			bool temp = game.world[worldI].growthMatrix[0];
-			for (unsigned int i = 0; i < nNeighbours; ++i)
-			{
-				unsigned int n = (i + 1) % nNeighbours;
-				game.world[worldI].growthMatrix[i] = game.world[worldI].growthMatrix[n]  ;
-			}
-			game.world[worldI].growthMatrix[nNeighbours - 1] = temp;
-			break;
-		}
-
-		case PLANTGENE_UPHILL:
-		{
-			for (unsigned int i = 0; i < nNeighbours; ++i)
-			{
-				game.world[worldI].growthMatrix[i] = false;
-			}
-			unsigned int uphillNeighbour = 0;
-			float uphillHeight = -1 * (worldSize) * 10.0f;
-			for (unsigned int i = 0; i < nNeighbours; ++i)
-			{
-				unsigned int neighbour = worldI + neighbourOffsets[i];
-				if (neighbour < worldSquareSize)
-				{
-					if (game.world[  neighbour  ].height > uphillHeight)
-					{
-						uphillNeighbour = i;
-						uphillHeight = game.world[  neighbour  ].height ;
+						float cuctus = colorAmplitude( game.world[  neighbour  ].light );
+						if ( cuctus  > uphillHeight)
+						{
+							uphillNeighbour = i;
+							uphillHeight = cuctus ;
+						}
 					}
 				}
+				game.world[worldI].growthMatrix[uphillNeighbour] = true;
+				break;
 			}
-			game.world[worldI].growthMatrix[uphillNeighbour] = true;
-			break;
-		}
 
-		case PLANTGENE_TOWARDLIGHT:
-		{
-			for (unsigned int i = 0; i < nNeighbours; ++i)
+
+			case PLANTGENE_INVERTMATRIX:
 			{
-				game.world[worldI].growthMatrix[i] = false;
-			}
-			unsigned int uphillNeighbour = 0;
-			float uphillHeight = -1 * (worldSize) * 10.0f;
-			for (unsigned int i = 0; i < nNeighbours; ++i)
-			{
-				unsigned int neighbour = worldI + neighbourOffsets[i];
-				if (neighbour < worldSquareSize)
+				for (unsigned int i = 0; i < nNeighbours; ++i)
 				{
-					float cuctus = colorAmplitude( game.world[  neighbour  ].light );
-					if ( cuctus  > uphillHeight)
-					{
-						uphillNeighbour = i;
-						uphillHeight = cuctus ;
-					}
+					game.world[worldI].growthMatrix[i] = !(game.world[worldI].growthMatrix[i]);
 				}
+
+				break;
 			}
-			game.world[worldI].growthMatrix[uphillNeighbour] = true;
-			break;
-		}
 
-
-		case PLANTGENE_INVERTMATRIX:
-		{
-			for (unsigned int i = 0; i < nNeighbours; ++i)
+			case PLANTGENE_RED:
 			{
-				game.world[worldI].growthMatrix[i] = !(game.world[worldI].growthMatrix[i]);
+				game.world[worldI].grassColor.r *= 1.35f;
+				game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
+				break;
 			}
-
-			break;
-		}
-
-		case PLANTGENE_RED:
-		{
-			game.world[worldI].grassColor.r *= 1.35f;
-			game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
-			break;
-		}
-		case PLANTGENE_GREEN:
-		{
-			game.world[worldI].grassColor.b *= 1.35f;
-			game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
-			break;
-		}
-		case PLANTGENE_BLUE:
-		{
-			game.world[worldI].grassColor.b *= 1.35f;
-			game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
-			break;
-		}
-		case PLANTGENE_LIGHT:
-		{
-			game.world[worldI].grassColor.r *= 1.35f;
-			game.world[worldI].grassColor.g *= 1.35f;
-			game.world[worldI].grassColor.b *= 1.35f;
-			game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
-			break;
-		}
-		case PLANTGENE_DARK:
-		{
-			game.world[worldI].grassColor.r *= 0.75f;
-			game.world[worldI].grassColor.g *= 0.75f;
-			game.world[worldI].grassColor.b *= 0.75f;
-			break;
-		}
-		case PLANTGENE_SEEDCOLOR_RED:
-		{
-			game.world[worldI].seedColor.r *= 1.35f;
-			game.world[worldI].seedColor = normalizeColor(game.world[worldI].seedColor);
-			break;
-		}
-		case PLANTGENE_SEEDCOLOR_GREEN:
-		{
-			game.world[worldI].seedColor.b *= 1.35f;
-			game.world[worldI].seedColor = normalizeColor(game.world[worldI].seedColor);
-			break;
-		}
-		case PLANTGENE_SEEDCOLOR_BLUE:
-		{
-			game.world[worldI].seedColor.b *= 1.35f;
-			game.world[worldI].seedColor = normalizeColor(game.world[worldI].seedColor);
-			break;
-		}
-		case PLANTGENE_SEEDCOLOR_LIGHT:
-		{
-			game.world[worldI].seedColor.r *= 1.35f;
-			game.world[worldI].seedColor.g *= 1.35f;
-			game.world[worldI].seedColor.b *= 1.35f;
-			game.world[worldI].seedColor = normalizeColor(game.world[worldI].seedColor);
-			break;
-		}
-		case PLANTGENE_SEEDCOLOR_DARK:
-		{
-			game.world[worldI].seedColor.r *= 0.75f;
-			game.world[worldI].seedColor.g *= 0.75f;
-			game.world[worldI].seedColor.b *= 0.75f;
-			break;
-		}
+			case PLANTGENE_GREEN:
+			{
+				game.world[worldI].grassColor.b *= 1.35f;
+				game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_BLUE:
+			{
+				game.world[worldI].grassColor.b *= 1.35f;
+				game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_LIGHT:
+			{
+				game.world[worldI].grassColor.r *= 1.35f;
+				game.world[worldI].grassColor.g *= 1.35f;
+				game.world[worldI].grassColor.b *= 1.35f;
+				game.world[worldI].grassColor = normalizeColor(game.world[worldI].grassColor);
+				break;
+			}
+			case PLANTGENE_DARK:
+			{
+				game.world[worldI].grassColor.r *= 0.75f;
+				game.world[worldI].grassColor.g *= 0.75f;
+				game.world[worldI].grassColor.b *= 0.75f;
+				break;
+			}
+			case PLANTGENE_SEEDCOLOR_RED:
+			{
+				game.world[worldI].seedColor.r *= 1.35f;
+				game.world[worldI].seedColor = normalizeColor(game.world[worldI].seedColor);
+				break;
+			}
+			case PLANTGENE_SEEDCOLOR_GREEN:
+			{
+				game.world[worldI].seedColor.b *= 1.35f;
+				game.world[worldI].seedColor = normalizeColor(game.world[worldI].seedColor);
+				break;
+			}
+			case PLANTGENE_SEEDCOLOR_BLUE:
+			{
+				game.world[worldI].seedColor.b *= 1.35f;
+				game.world[worldI].seedColor = normalizeColor(game.world[worldI].seedColor);
+				break;
+			}
+			case PLANTGENE_SEEDCOLOR_LIGHT:
+			{
+				game.world[worldI].seedColor.r *= 1.35f;
+				game.world[worldI].seedColor.g *= 1.35f;
+				game.world[worldI].seedColor.b *= 1.35f;
+				game.world[worldI].seedColor = normalizeColor(game.world[worldI].seedColor);
+				break;
+			}
+			case PLANTGENE_SEEDCOLOR_DARK:
+			{
+				game.world[worldI].seedColor.r *= 0.75f;
+				game.world[worldI].seedColor.g *= 0.75f;
+				game.world[worldI].seedColor.b *= 0.75f;
+				break;
+			}
+			}
 		}
 
 
@@ -3098,7 +3319,6 @@ void equalizeWithNeighbours( unsigned int worldI )
 
 
 
-
 void updatePlants(unsigned int worldI)
 {
 	if ( (worldI >= worldSquareSize)) {return;}
@@ -3109,15 +3329,25 @@ void updatePlants(unsigned int worldI)
 		{
 		case MATERIAL_POLLEN:
 		{
-			// move seeds randomly
-			unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
-			if (neighbour < worldSquareSize)
-			{
-				if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
-				{
-					moveSeed(worldI, neighbour);
-				}
 
+
+			// only move the pollen if it's drifted from where it grew.
+			if (game.world[worldI].seedIdentity != game.world[worldI].plantIdentity)
+			{
+
+				// move seeds randomly
+				unsigned int neighbour = worldI + neighbourOffsets[extremelyFastNumberFromZeroTo(nNeighbours - 1)];
+				if (neighbour < worldSquareSize)
+				{
+
+
+
+					if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
+					{
+						moveSeed(worldI, neighbour);
+					}
+
+				}
 
 				// pollen degrades if not attached to an animal, to prevent it building up too much in the world.
 				bool bonded = false;
@@ -3137,7 +3367,17 @@ void updatePlants(unsigned int worldI)
 					}
 				}
 			}
+
+
+
 			break;
+
+
+
+
+
+
+
 		}
 		case MATERIAL_SEED:
 		{
@@ -3269,7 +3509,7 @@ void updatePlants(unsigned int worldI)
 		}
 
 
-		case MATERIAL_BUD:
+		case MATERIAL_BUD_F:
 		{
 			if (game.world[worldI].energy > 1.0f && game.world[worldI].nutrients > 1.0f)
 			{
@@ -3366,54 +3606,7 @@ void updatePlants(unsigned int worldI)
 }
 
 // #endif
-void spill(unsigned int material,  unsigned int worldPositionI)
-{
-	if (game.world[worldPositionI].wall == MATERIAL_NOTHING)
-	{
-		game.world[worldPositionI].wall = material;
-	}
-	else
-	{
-		for (int i = 0; i < nNeighbours; ++i)
-		{
-			unsigned int neighbour = worldPositionI += neighbourOffsets[i];
-			if ( neighbour < worldSquareSize)
-			{
-				if (game.world[neighbour].wall == MATERIAL_NOTHING)
-				{
-					game.world[neighbour].wall = material;
-					break;
-				}
-			}
-		}
-	}
-	switch (material)
-	{
-	case MATERIAL_BLOOD:
-	{
-		game.world[worldPositionI].pheromoneChannel = PHEROMONE_BLOOD;
-		break;
-	}
 
-	case MATERIAL_VOMIT:
-	{
-		game.world[worldPositionI].pheromoneChannel = PHEROMONE_PUKE;
-		break;
-	}
-
-	case MATERIAL_FOOD:
-	{
-		game.world[worldPositionI].pheromoneChannel = PHEROMONE_ROTTINGMEAT;
-		break;
-	}
-
-	case MATERIAL_WATER:
-	{
-		game.world[worldPositionI].pheromoneChannel = PHEROMONE_RAIN;
-		break;
-	}
-	}
-}
 
 
 bool raining = false;
@@ -3535,23 +3728,7 @@ void updateMap()
 	}
 }
 
-int defenseAtWorldPoint( int animalIndex, unsigned int cellWorldPositionI)
-{
-	int defense = 1;
-	for (unsigned int n = 0; n < nNeighbours; ++n)
-	{
-		unsigned int worldNeighbour = cellWorldPositionI + neighbourOffsets[n];
-		int occupyingCell = isAnimalInSquare(animalIndex, worldNeighbour) ;
-		if ( occupyingCell >= 0)
-		{
-			if (game.animals[animalIndex].body[occupyingCell].organ == ORGAN_BONE)
-			{
-				defense++;
-			}
-		}
-	}
-	return defense;
-}
+
 
 Vec_i2 getMousePositionRelativeToAnimal( int animalIndex)
 {
@@ -3648,17 +3825,7 @@ void drawPalette2()
 }
 
 
-void defeatAdversary()
-{
-	int i = 1;
-	setupNeuroGlasses(i);
-	spawnAnimalIntoSlot(8, game.animals[i], game.animals[game.adversary].position, false);
 
-	game.adversaryDefeated = true;
-	killAnimal(game.adversary);
-
-	appendLog( std::string("the adversary was killed!") );
-}
 
 void healAnimal( int animalIndex)
 {
@@ -3700,74 +3867,7 @@ void healAnimal( int animalIndex)
 
 }
 
-// return true if you blow the limb off, false if its still attached.
-void hurtAnimal( int animalIndex, unsigned int cellIndex, float amount, int shooterIndex)
-{
-	std::string damageLog = std::string("");
-	bool limbLost = false;
 
-	unsigned int cellWorldPositionI = game.animals[animalIndex].body[cellIndex].worldPositionI;
-	float defense = defenseAtWorldPoint(game.world[cellWorldPositionI].identity, cellWorldPositionI);
-
-	float finalAmount = amount / defense;
-
-	game.animals[animalIndex].body[cellIndex].damage += amount;
-
-
-	int painCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_PAIN);
-	if (painCell >= 0)
-	{
-		game.animals[animalIndex].body[painCell].signalIntensity += amount;
-	}
-	if (game.animals[animalIndex].body[cellIndex].damage > 1.0f)
-	{
-		game.animals[animalIndex].damageReceived++;
-
-		if (animalIndex == game.adversary && shooterIndex == game.playerCreature)
-		{
-			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].cellsUsed / 2)
-			{
-				defeatAdversary();
-			}
-
-		}
-		limbLost = true;
-	}
-
-	// if (animalIndex == game.playerCreature)
-	// {
-	// 	std::string num_text = std::to_string(amount);
-	// 	std::string rounded = num_text.substr(0, num_text.find(".") + 2);
-	// 	damageLog += std::string("Hit for ") + std::string( rounded );
-
-	// 	if (limbLost)
-	// 	{
-	// 		damageLog += std::string(", lost a ") + tileShortNames(game.animals[animalIndex].body[cellIndex].organ ) + std::string("!");
-	// 	}
-
-	// 	appendLog(damageLog);
-	// }
-
-	bool dropped = false;
-	if (limbLost)
-	{
-		if (game.animals[animalIndex].energyDebt <= 0.0f) // if the animal can lose the limb, and create energetic food, before the debt is paid, infinite energy can be produced.
-		{
-			// if (game.world[cellWorldPositionI].wall == MATERIAL_NOTHING)
-			// {
-			// 	game.world[cellWorldPositionI].wall = organProduces(game.animals[animalIndex].body[cellIndex].organ);//MATERIAL_FOOD;
-			// }
-			spill(organProduces(game.animals[animalIndex].body[cellIndex].organ), cellWorldPositionI);
-			dropped = true;
-		}
-	}
-
-	if (!dropped)
-	{
-		spill(MATERIAL_BLOOD,  cellWorldPositionI);
-	}
-
-}
 
 int lastCutSquare = 0;
 
@@ -3810,7 +3910,11 @@ void shoot(unsigned int gunIndex, int shooterIndex,  unsigned int shootWorldPosi
 				int shotOffNub = isAnimalInSquare(game.world[shootWorldPosition].identity, shootWorldPosition);
 				if (shotOffNub >= 0 && shotOffNub < animalSquareSize)
 				{
-					hurtAnimal(game.world[shootWorldPosition].identity, shotOffNub, 0.35f + RNG(), shooterIndex);
+
+
+					float defense = defenseAtWorldPoint(game.world[shootWorldPosition].identity, shootWorldPosition);
+
+					hurtAnimal(game.world[shootWorldPosition].identity, shotOffNub, (RNG()) / defense, shooterIndex);
 				}
 			}
 			if (game.world[shootWorldPosition].wall == MATERIAL_NOTHING )
@@ -4745,7 +4849,7 @@ void animal_organs( int animalIndex)
 				unsigned int neighbour = cellWorldPositionI + neighbourOffsets[i];
 				if (neighbour < worldSquareSize)
 				{
-					if (game.world[neighbour].identity >= 0)
+					if (game.world[neighbour].identity >= 0 && game.world[neighbour].identity < numberOfAnimals)
 					{
 						if (isAnimalInSquare( game.world[neighbour].identity , neighbour ) >= 0)
 						{
@@ -4763,7 +4867,7 @@ void animal_organs( int animalIndex)
 			unsigned int touchedAnimal = game.world[cellWorldPositionI].identity;
 			if (touchedAnimal < numberOfAnimals)
 			{
-				if (touchedAnimal >= 0)
+				if (touchedAnimal >= 0 && touchedAnimal < numberOfAnimals)
 				{
 					if (touchedAnimal != animalIndex)
 					{
@@ -4895,29 +4999,17 @@ void animal_organs( int animalIndex)
 		}
 		case ORGAN_MOUTH_VEG :
 		{
-
-// #ifdef PLANTS
-
 			bool ate_plant = false;
 
-			if (game.world[cellWorldPositionI].plantState == MATERIAL_BUD)
+			if (game.world[cellWorldPositionI].plantState == MATERIAL_BUD_A ||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_BUD_M ||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_BUD_F ||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_TUBER ||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_LEAF)
 			{
+
 				ate_plant = true;
 			}
-
-			else if (game.world[cellWorldPositionI].plantState == MATERIAL_LEAF)
-			{
-
-				ate_plant = true;
-			}
-
-			// else if (game.world[cellWorldPositionI].plantState == MATERIAL_GRASS)
-			// {
-
-			// 	ate_plant = true;
-			// }
-
-
 			bool ate = false;
 			if (ate_plant)
 			{
@@ -4928,21 +5020,81 @@ void animal_organs( int animalIndex)
 				damagePlants(cellWorldPositionI);
 
 			}
-
-// #else
-// 			if (game.world[cellWorldPositionI].wall == MATERIAL_GRASS)
-// 			{
-// 				game.animals[animalIndex].energy += game.ecoSettings[1] ;
-// 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
-// 			}
-// #endif
 			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
 			{
 				ate = true;
 				game.animals[animalIndex].energy += 1.0f;
 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
 			}
+			sensorium[cellIndex] = 0.0f;
+			if (ate)
+			{
+				sensorium[cellIndex] += 1.0f;
+			}
 
+			break;
+		}
+		case ORGAN_MOUTH_WOOD:
+		{
+			bool ate_plant = false;
+
+			if (game.world[cellWorldPositionI].plantState == MATERIAL_ROOT ||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_TUBER ||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_WOOD)
+			{
+
+				ate_plant = true;
+			}
+			bool ate = false;
+			if (ate_plant)
+			{
+				ate = true;
+				game.animals[animalIndex].energy += game.ecoSettings[1] ;
+				// game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
+
+				damagePlants(cellWorldPositionI);
+
+			}
+			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
+			{
+				ate = true;
+				game.animals[animalIndex].energy += 1.0f;
+				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
+			}
+			sensorium[cellIndex] = 0.0f;
+			if (ate)
+			{
+				sensorium[cellIndex] += 1.0f;
+			}
+
+			break;
+		}
+		case ORGAN_MOUTH_SEEDS:
+		{
+			bool ate_plant = false;
+
+			if (game.world[cellWorldPositionI].seedState     == MATERIAL_SEED ||
+			        game.world[cellWorldPositionI].seedState == MATERIAL_POLLEN )
+			{
+
+				ate_plant = true;
+			}
+			bool ate = false;
+			if (ate_plant)
+			{
+				ate = true;
+				game.animals[animalIndex].energy += game.ecoSettings[0] ;
+				game.world[cellWorldPositionI].seedState = MATERIAL_NOTHING;
+// geeg
+				// damagePlants(cellWorldPositionIfefge);
+
+			}
+			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
+			{
+				ate = true;
+				game.animals[animalIndex].energy += 1.0f;
+				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
+			}
 			sensorium[cellIndex] = 0.0f;
 			if (ate)
 			{
@@ -5307,11 +5459,58 @@ void animal_organs( int animalIndex)
 	}
 
 
+
+	// // status effects
+	// for (int i = 0; i < numberOfStatusEffects; ++i)
+	// {
+
+
+
+	// 	char effect = game.animals[animalIndex].statusEffects[i];
+	// 	switch (effect)
+	// 	{
+
+	// 	case STATUSEFFECT_DEPRESSANT:
+	// 	{
+	// 		for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	// 		{
+	// 			sensorium[cellIndex] = sensorium[cellIndex] * 0.5f;
+	// 		}
+	// 		break;
+	// 	}
+	// 	case STATUSEFFECT_STIMULANT:
+	// 	{
+
+	// 		for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
+	// 		{
+	// 			sensorium[cellIndex] = sensorium[cellIndex] * 1.5f;
+	// 		}
+	// 		break;
+	// 	}
+
+	// 	case STATUSEFFECT_SICK:
+	// 	{
+	// 		totalLiver = 0;
+	// 		game.animals[animalIndex].fAngle += (RNG() - 0.5f) * 0.05f;
+	// 		break;
+	// 	}
+	// 	}
+
+
+
+
+
+	// }
+
+
+
+
+
+
+
 	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
 		game.animals[animalIndex]. body[cellIndex].signalIntensity = sensorium[cellIndex];
-
-
 	}
 
 	// game.animals[animalIndex].totalGonads = totalGonads;
@@ -5329,6 +5528,13 @@ void animalEnergy(int animalIndex)
 	ZoneScoped;
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	game.animals[animalIndex].age++;
+
+
+
+
+
+
+
 
 	game.animals[animalIndex].energy -= game.ecoSettings[3] * game.animals[animalIndex].cellsUsed;
 
@@ -7438,7 +7644,7 @@ void setupTestPlant(unsigned int worldPositionI)
 	game.world[worldPositionI].seedGenes[14] = PLANTGENE_BRANCH;
 	game.world[worldPositionI].seedGenes[15] = 3;
 	game.world[worldPositionI].seedGenes[16] = 3;
-	game.world[worldPositionI].seedGenes[17] = PLANTGENE_BUD;
+	game.world[worldPositionI].seedGenes[17] = PLANTGENE_BUD_A;
 	// game.world[worldPositionI].seedGenes[18] = PLANTGENE_BREAK;
 	game.world[worldPositionI].seedGenes[18] = PLANTGENE_BREAK;
 	game.world[worldPositionI].seedGenes[19] = PLANTGENE_BREAK;
