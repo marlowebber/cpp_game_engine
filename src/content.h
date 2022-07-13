@@ -220,7 +220,7 @@
 
 #define PLANTGENE_NECTAR    42
 
-#define numberOfPlantGenes 42
+#define numberOfPlantGenes 43
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {
@@ -1558,7 +1558,7 @@ bool isCellConnectable(unsigned int organ)
 
 
 
-const  char lighter[] =
+  char lighter[] =
 {
 	'1', ' ',
 	'1', '1',
@@ -1573,7 +1573,7 @@ void setupExampleLighter(int i)
 
 	setupCreatureFromCharArray( i, lighter, 8, 2 , std::string("lighter"), MACHINECALLBACK_LIGHTER);
 }
-const 	char humanBody[] =
+ 	char humanBody[] =
 {
 	' ', ' ', ' ', '/', 'B', '/', ' ', ' ', ' ',
 	' ', ' ', '/', 'B', 'B', 'B', '/', ' ', ' ',
@@ -1611,7 +1611,7 @@ const 	char humanBody[] =
 };
 
 
-const 	char humanPaint[] =
+ 	char humanPaint[] =
 {
 	' ', ' ', ' ', 'R', 'R', 'R', ' ', ' ', ' ',
 	' ', ' ', 'R', 'R', 'R', 'R', 'R', ' ', ' ',
@@ -1654,7 +1654,7 @@ void setupExampleHuman(int i)
 	paintCreatureFromCharArray( i, humanPaint, (9 * 33), 9 );
 }
 
-const 	char destroyer[] =
+ 	char destroyer[] =
 {
 	' ', ' ', '1', ' ', ' ',
 	' ', '1', '1', '1', ' ',
@@ -1678,7 +1678,7 @@ const 	char destroyer[] =
 	' ', ' ', '1', ' ', ' ',
 };
 
-const 	char destroyerPaint[] =
+ 	char destroyerPaint[] =
 {
 	' ', ' ', 'V', ' ', ' ',
 	' ', 'V', 'V', 'V', ' ',
@@ -1709,7 +1709,7 @@ void setupDestroyer(int i)
 	setupCreatureFromCharArray( i, destroyer, 20 * 5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
 	paintCreatureFromCharArray( i, destroyerPaint, (20 * 5), 5);
 }
-const  char trackerGlasses[] =
+  char trackerGlasses[] =
 {
 	' ', '2', ' ', '2', ' ',
 	'2', '2', '1', '2', '2',
@@ -1717,7 +1717,7 @@ const  char trackerGlasses[] =
 };
 
 
-const char trackerGlassesPaint[] =
+ char trackerGlassesPaint[] =
 {
 	' ', 'W', ' ', 'W', ' ',
 	'W', 'L', 'M', 'L', 'W',
@@ -1731,14 +1731,14 @@ void setupTrackerGlasses(int i)
 	paintCreatureFromCharArray( i, trackerGlassesPaint, 15, 5 );
 }
 
-const  char neuroGlasses[] =
+  char neuroGlasses[] =
 {
 	'1', '1', ' ', '1', '1',
 	'1', '2', '1', '2', '1',
 	'1', '1', ' ', '1', '1',
 };
 
-const  char neuroGlassesPaint[] =
+  char neuroGlassesPaint[] =
 {
 	'W', 'W', ' ', 'W', 'W',
 	'W', 'K', 'M', 'K', 'W',
@@ -1751,7 +1751,7 @@ void setupNeuroGlasses(int i)
 	paintCreatureFromCharArray( i, neuroGlassesPaint, 15, 5 );
 }
 
-const 	char pistol[] =
+ 	char pistol[] =
 {
 	'1', '1', '1', '1',
 	'1', '1', '1', '1',
@@ -1759,7 +1759,7 @@ const 	char pistol[] =
 	'1', '1', ' ', ' ',
 };
 
-const 	char pistolPaint[] =
+ 	char pistolPaint[] =
 {
 	'M', 'M', 'M', 'M',
 	'V', 'V', 'V', 'V',
@@ -1774,14 +1774,14 @@ void setupExampleGun(int i)
 }
 
 
-const char knife[] =
+ char knife[] =
 {
 	' ', '1', ' ', ' ',
 	'1', '1', '1', '1',
 	' ', '1', ' ', ' ',
 };
 
-const char knifePaint[] =
+ char knifePaint[] =
 {
 	' ', 'D', ' ', ' ',
 	'V', 'D', 'M', 'M',
@@ -1793,7 +1793,7 @@ void setupExampleKnife(int i)
 	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") , MACHINECALLBACK_KNIFE);
 	paintCreatureFromCharArray( i, knifePaint, 12, 4 );
 }
-const char computer[] =
+ char computer[] =
 {
 	'1', '1', '1', '1', '1',
 	'1', '2', '2', '2', '1',
@@ -1803,7 +1803,7 @@ const char computer[] =
 	'1', '1', '1', '1', '1',
 };
 
-const char computerPaint[] =
+ char computerPaint[] =
 {
 	'B', 'B', 'B', 'B', 'B',
 	'B', 'L', 'L', 'L', 'B',
@@ -1820,7 +1820,7 @@ void setupEcologyCompter(int i)
 }
 
 
-const char ecoComputer[] =
+ char ecoComputer[] =
 {
 	'2', '2', '2', '2', '2',
 	'2', '2', '2', '2', '2',
@@ -1830,7 +1830,7 @@ const char ecoComputer[] =
 	'1', '1', '1', '1', '1',
 };
 
-const char ecoComputerPaint[] =
+ char ecoComputerPaint[] =
 {
 	'L', 'L', 'L', 'L', 'L',
 	'L', 'L', 'L', 'L', 'L',
@@ -1846,7 +1846,7 @@ void setupMessageComputer(int i, unsigned int messageComputerNumber)
 	paintCreatureFromCharArray( i, ecoComputerPaint, 30, 5 );
 }
 
-const char hospital[] =
+ char hospital[] =
 {
 	' ', '2', ' ',
 	'2', '2', '2',
@@ -1856,7 +1856,7 @@ const char hospital[] =
 	'2', '2', '2',
 };
 
-const char hospitalPaint[] =
+ char hospitalPaint[] =
 {
 	' ', 'M', ' ',
 	'M', 'M', 'M',

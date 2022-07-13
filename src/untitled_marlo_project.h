@@ -285,10 +285,10 @@ void checkLongestMenu(std::string in);
 void fastReset();
 // the following are used privately to create the game content.
 void animalAppendCell(int animalIndex, unsigned int organType);
-void setupCreatureFromCharArray( int animalIndex, const char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );
+void setupCreatureFromCharArray( int animalIndex,  char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback );
 void resetAnimal(int animalIndex);
 
-void paintCreatureFromCharArray( int animalIndex, const char * start, unsigned int len, unsigned int width );
+void paintCreatureFromCharArray( int animalIndex,  char * start, unsigned int len, unsigned int width );
 
 void appendCell(int animalIndex, unsigned int organType, Vec_i2 newPosition);
 #endif //MARLO_H
