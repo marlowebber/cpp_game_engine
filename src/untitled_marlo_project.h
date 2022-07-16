@@ -80,6 +80,7 @@ struct Square
     int sequenceReturn;
     bool grown;
     bool growthMatrix[nNeighbours];
+    bool branching;
 
     // #endif
 };

@@ -205,7 +205,7 @@
 // #define PLANTGENE_SEED_DARK    26
 
 #define PLANTGENE_EXTRUDEMATRIX 32
-#define PLANTGENE_ROTATEMATRIX 33
+#define PLANTGENE_ROTATEMATRIXCCW 33
 #define PLANTGENE_TOWARDLIGHT 34
 #define PLANTGENE_UPHILL      35
 #define PLANTGENE_INVERTMATRIX  36
@@ -224,8 +224,9 @@
 #define PLANTGENE_RANDOMDIRECTION    43
 
 #define PLANTGENE_RANDOMIZEGROWTHMASK   44
+#define PLANTGENE_ROTATEMATRIXCW 45
 
-#define numberOfPlantGenes 44
+#define numberOfPlantGenes 45
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {
@@ -372,6 +373,29 @@ bool isALiquid(unsigned int material)
 	return false;
 
 }
+
+
+
+bool growable(char c)
+{
+ if (  c == PLANTGENE_TUBER
+		    ||    c == PLANTGENE_WOOD
+		    ||    c == PLANTGENE_ROOT
+		    ||    c == PLANTGENE_LEAF
+		    ||    c == PLANTGENE_POLLENTRAP
+		    ||    c == PLANTGENE_BUD_A
+		    ||    c == PLANTGENE_BUD_M
+		    ||    c == PLANTGENE_BUD_F
+		    ||    c == PLANTGENE_THORNS
+		    ||    c == PLANTGENE_TRICHOME
+		    ||    c == PLANTGENE_RUNNER
+		)
+ {
+return true;
+ }
+ return false;
+}
+
 
 // bool transportsEnergy(unsigned int material)
 // {
