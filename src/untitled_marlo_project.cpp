@@ -1036,14 +1036,14 @@ void spawnRandomPlant(unsigned int worldI)
 // spawn some plants
 	if (game.world[worldI].seedState == MATERIAL_NOTHING)
 	{
-		// for (int k = 0; k < plantGenomeSize; ++k)
-		// {
-		// 	game.world[worldI].plantGenes[k] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
-		// }
+		for (int k = 0; k < plantGenomeSize; ++k)
+		{
+			game.world[worldI].plantGenes[k] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
+		}
 
-		setupTestPlant3(worldI);
+		// setupTestPlant3(worldI);
 
-		// growInto(worldI, worldI, MATERIAL_SEED, false);
+		growInto(worldI, worldI, MATERIAL_SEED, false);
 	}
 }
 
