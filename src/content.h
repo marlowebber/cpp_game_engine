@@ -223,7 +223,9 @@
 
 #define PLANTGENE_RANDOMDIRECTION    43
 
-#define numberOfPlantGenes 43
+#define PLANTGENE_RANDOMIZEGROWTHMASK   44
+
+#define numberOfPlantGenes 44
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {

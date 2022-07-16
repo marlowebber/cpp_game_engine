@@ -994,11 +994,9 @@ void setupTestPlant3(unsigned int worldPositionI)
 {
 	memset(game.world[worldPositionI].seedGenes, 255, sizeof(char) * plantGenomeSize);
 	game.world[worldPositionI].seedGenes[0] = PLANTGENE_RANDOMDIRECTION;
-	game.world[worldPositionI].seedGenes[1] = PLANTGENE_ROOT;
-	game.world[worldPositionI].seedGenes[2] = PLANTGENE_WOOD;
-	game.world[worldPositionI].seedGenes[3] = PLANTGENE_LEAF;
-	game.world[worldPositionI].seedGenes[3] = PLANTGENE_RUNNER;
-	game.world[worldPositionI].seedGenes[4] = PLANTGENE_END;
+	game.world[worldPositionI].seedGenes[1] = PLANTGENE_LEAF;
+	game.world[worldPositionI].seedGenes[2] = PLANTGENE_RUNNER;
+	game.world[worldPositionI].seedGenes[3] = PLANTGENE_END;
 	game.world[worldPositionI].seedColorMoving = color_yellow;
 	growInto(worldPositionI, worldPositionI, MATERIAL_SEED, true);
 }
@@ -2435,6 +2433,9 @@ void growIntoNeighbours(unsigned int worldI, unsigned int material)
 
 }
 
+// this is what seeds and runners spawn.
+#define SPROUT MATERIAL_ROOT
+
 void growPlants(unsigned int worldI)
 {
 	if (worldI >= worldSquareSize) {return;}
@@ -2466,6 +2467,13 @@ void growPlants(unsigned int worldI)
 		    ||    c == PLANTGENE_BUD_F
 		    ||    c == PLANTGENE_THORNS
 		    ||    c == PLANTGENE_TRICHOME
+
+
+
+
+
+		    ||    c == PLANTGENE_RUNNER
+		    ||    c == PLANTGENE_BRANCH
 		)
 		{
 			int numberToGrow = 0;
@@ -2478,7 +2486,7 @@ void growPlants(unsigned int worldI)
 			}
 			bool canAfford = false;
 			float cost = 1.0f * numberToGrow;
-			if (c == PLANTGENE_BUD_A || c == PLANTGENE_BUD_F)
+			if (c == PLANTGENE_BUD_A || c == PLANTGENE_BUD_F || PLANTGENE_RUNNER)
 			{
 				cost  *= 3.0f; // each seed carries enough nutrients to make a wood, a root, and a leaf
 			}
@@ -2527,6 +2535,95 @@ void growPlants(unsigned int worldI)
 				case PLANTGENE_TRICHOME:
 					growIntoNeighbours(worldI, MATERIAL_TRICHOME);
 					break;
+
+
+				case PLANTGENE_RUNNER: // start the plant over from zero at this location
+				{
+
+
+					growIntoNeighbours(worldI, SPROUT);
+
+
+					for (int i = 0; i < nNeighbours; ++i)
+					{
+						if (game.world[worldI].growthMatrix[i])
+						{
+							unsigned int neighbour = worldI + neighbourOffsets[i];
+							if (neighbour < worldSquareSize)
+							{
+								// clearGrowthMask(neighbour) ;
+								// game.world[neighbour].growthMatrix[i] = true; // branch grows perpendicular to the trunk.
+
+
+
+								game.world[neighbour].identity = extremelyFastNumberFromZeroTo(65536);
+								game.world[neighbour].grassColor = color_green;
+								game.world[neighbour].seedColor = color_yellow;
+
+								game.world[neighbour].nutrients = 3.0f;
+								game.world[neighbour].energy = 3.0f;
+
+								game.world[neighbour].geneCursor = 0;
+								game.world[neighbour].grown = false;
+								mutatePlants(neighbour);
+
+
+							}
+						}
+					}
+
+
+					// growInto(  worldI, worldI, SPROUT, false );
+					// skipAhead = 0;
+					done = true;
+					break;
+				}
+
+
+
+				case PLANTGENE_BRANCH:
+				{
+					// scan forward to find the break point associated with this
+					int presentDepth = 1;
+					for (int i =  game.world[worldI].geneCursor + 1; i < plantGenomeSize; ++i)
+					{
+						char geneAtThisLocation = game.world[worldI].plantGenes[  i];
+						if ( geneAtThisLocation == PLANTGENE_BRANCH)
+						{
+							presentDepth ++;
+						}
+						else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
+						{
+							presentDepth++;
+						}
+						else if  ( geneAtThisLocation == PLANTGENE_BREAK)
+						{
+							presentDepth--;
+
+							if (presentDepth == 0) // this is your stop
+							{
+								skipAhead =   i + 1 ;
+								break;
+							}
+						}
+					}
+					growIntoNeighbours(worldI, game.world[worldI].plantState );
+					for (int i = 0; i < nNeighbours; ++i)
+					{
+						if (game.world[worldI].growthMatrix[i])
+						{
+							unsigned int neighbour = worldI + neighbourOffsets[i];
+							if (neighbour < worldSquareSize)
+							{
+								clearGrowthMask(neighbour) ;
+								game.world[neighbour].growthMatrix[i] = true; // branch grows perpendicular to the trunk.
+							}
+						}
+					}
+					break;
+				}
+
+
 
 
 
@@ -2646,6 +2743,19 @@ void growPlants(unsigned int worldI)
 
 				break;
 			}
+			case PLANTGENE_RANDOMIZEGROWTHMASK:
+			{
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+
+					game.world[worldI].growthMatrix[i] = extremelyFastNumberFromZeroTo(1);
+				}
+
+				// unsigned int randomDirection = extremelyFastNumberFromZeroTo(nNeighbours - 1);
+				// game.world[worldI].growthMatrix[randomDirection] = true;
+
+				break;
+			}
 
 
 
@@ -2656,7 +2766,7 @@ void growPlants(unsigned int worldI)
 					game.world[worldI].growthMatrix[i] = false;
 				}
 
-				unsigned int randomDirection = extremelyFastNumberFromZeroTo(nNeighbours-1);
+				unsigned int randomDirection = extremelyFastNumberFromZeroTo(nNeighbours - 1);
 				game.world[worldI].growthMatrix[randomDirection] = true;
 
 				break;
@@ -2670,47 +2780,6 @@ void growPlants(unsigned int worldI)
 				break;
 			}
 
-			case PLANTGENE_BRANCH:
-			{
-				// scan forward to find the break point associated with this
-				int presentDepth = 1;
-				for (int i =  game.world[worldI].geneCursor + 1; i < plantGenomeSize; ++i)
-				{
-					char geneAtThisLocation = game.world[worldI].plantGenes[  i];
-					if ( geneAtThisLocation == PLANTGENE_BRANCH)
-					{
-						presentDepth ++;
-					}
-					else if  ( geneAtThisLocation == PLANTGENE_SEQUENCE)
-					{
-						presentDepth++;
-					}
-					else if  ( geneAtThisLocation == PLANTGENE_BREAK)
-					{
-						presentDepth--;
-
-						if (presentDepth == 0) // this is your stop
-						{
-							skipAhead =   i + 1 ;
-							break;
-						}
-					}
-				}
-				growIntoNeighbours(worldI, game.world[worldI].plantState );
-				for (int i = 0; i < nNeighbours; ++i)
-				{
-					if (game.world[worldI].growthMatrix[i])
-					{
-						unsigned int neighbour = worldI + neighbourOffsets[i];
-						if (neighbour < worldSquareSize)
-						{
-							clearGrowthMask(neighbour) ;
-							game.world[neighbour].growthMatrix[i] = true; // branch grows perpendicular to the trunk.
-						}
-					}
-				}
-				break;
-			}
 
 			case PLANTGENE_BREAK:
 			{
@@ -2809,18 +2878,7 @@ void growPlants(unsigned int worldI)
 				}
 				break;
 			}
-			case PLANTGENE_RUNNER: // start the plant over from zero at this location
-			{
 
-				growInto(  worldI, worldI, MATERIAL_LEAF, false );
-				skipAhead = 0;
-				game.world[worldI].identity = extremelyFastNumberFromZeroTo(65536);
-				game.world[worldI].grassColor = color_green;
-				game.world[worldI].seedColor = color_yellow;
-				mutatePlants(worldI);
-				done = true;
-				break;
-			}
 
 
 
@@ -3074,26 +3132,27 @@ void equalizeWithNeighbours( unsigned int worldI )
 		unsigned int neighbour = worldI + neighbourOffsets[  i ];
 		if (neighbour < worldSquareSize)
 		{
-			if (game.world[worldI].plantState != MATERIAL_NOTHING && game.world[neighbour].plantState != MATERIAL_NOTHING)
+			if ( game.world[neighbour].identity == game.world[worldI].identity  )
 			{
-				if ( game.world[neighbour].identity == game.world[worldI].identity  )
+				if (game.world[worldI].plantState != MATERIAL_NOTHING && game.world[neighbour].plantState != MATERIAL_NOTHING)
 				{
-					bool swap = false;
-					if ( game.world[worldI].plantState == game.world[neighbour].plantState)
-					{swap = true;}
 
-					if ( game.world[worldI].plantState == MATERIAL_WOOD || game.world[neighbour].plantState == MATERIAL_WOOD)
-					{swap = true;}
-					if (
-					    (game.world[worldI].plantState == MATERIAL_ROOT  && game.world[neighbour].plantState == MATERIAL_TUBER) ||
-					    (game.world[worldI].plantState == MATERIAL_TUBER && game.world[neighbour].plantState == MATERIAL_ROOT)
-					)
-					{swap = true;}
-					if (swap)
-					{
-						swapNootsWithNeighbour(worldI, neighbour);
-						swapEnergyWitNeighbour(worldI, neighbour);
-					}
+					// bool swap = false;
+					// if ( game.world[worldI].plantState == game.world[neighbour].plantState)
+					// {swap = true;}
+
+					// if ( game.world[worldI].plantState == MATERIAL_WOOD || game.world[neighbour].plantState == MATERIAL_WOOD)
+					// {swap = true;}
+					// if (
+					//     (game.world[worldI].plantState == MATERIAL_ROOT  && game.world[neighbour].plantState == MATERIAL_TUBER) ||
+					//     (game.world[worldI].plantState == MATERIAL_TUBER && game.world[neighbour].plantState == MATERIAL_ROOT)
+					// )
+					// {swap = true;}
+					// if (swap)
+					// {
+					swapNootsWithNeighbour(worldI, neighbour);
+					swapEnergyWitNeighbour(worldI, neighbour);
+					// }
 				}
 			}
 		}
@@ -3156,7 +3215,7 @@ void updatePlants(unsigned int worldI)
 			{
 
 
-				growInto(  worldI, worldI, MATERIAL_WOOD, true );
+				growInto(  worldI, worldI, SPROUT, true );
 				game.world[worldI].seedState = MATERIAL_NOTHING;
 
 			}
@@ -3196,7 +3255,7 @@ void updatePlants(unsigned int worldI)
 	if (    game.world[worldI].plantState != MATERIAL_NOTHING)
 	{
 
-
+		equalizeWithNeighbours( worldI );
 
 		if (game.world[worldI].energy >= 0.0f && game.world[worldI].nutrients >= 0.0f)
 		{
@@ -3230,7 +3289,6 @@ void updatePlants(unsigned int worldI)
 		{
 			// equalizeWithNeighbours( worldI );
 
-			equalizeWithNeighbours( worldI );
 			// if a cut stem is sitting in water, it can survive for a little while.
 			// if (game.world[worldI].wall == MATERIAL_WATER)
 			// {
