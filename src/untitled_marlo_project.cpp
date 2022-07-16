@@ -40,6 +40,8 @@ const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = false;
 const bool printLogs             = true;
 
+const bool environmentScarcity = false;
+
 const bool killLoiteringAdversary = false;
 const bool erode = true;
 const int prelimSize = worldSize / 10;
@@ -86,7 +88,7 @@ const int neighbourOffsets[] =
 	+worldSize - 1
 };
 
-const float plantRate = 0.05f;
+// const float plantRate = 0.05f;
 
 int plantIdentityCursor = 0;
 
@@ -594,7 +596,7 @@ void resetGameState()
 	game.palette = false;
 	game.playerCanPickup = false;
 	game.playerCanPickupItem = -1;
-	game.lockfps           = true;
+	game.lockfps           = false;
 	game.paused = false;
 	game.mousePositionX =  -430;
 	game.mousePositionY =  330;
@@ -629,7 +631,8 @@ void resetGameState()
 	game.ecoSettings[0]           = 0.95f; // food (meat) energy
 	game.ecoSettings[1]          = 0.25f; // grass energy
 	game.ecoSettings[4] = (worldSquareSize / 64) / sectors; ;//updateSize;
-	game.ecoSettings[5] = 1.0f / 20.0f ;//nutrient rate
+	game.ecoSettings[5] = 1.0f ;  //nutrient rate
+	game.ecoSettings[6] = 1.0f / 20.0f ; // amount of energy a plant tile requires
 	game.activeEcoSetting = 0;
 	resetAnimals();
 	resetGrid();
@@ -877,6 +880,8 @@ void swapNootsWithNeighbour(unsigned int worldI, unsigned int neighbour)
 }
 
 
+const float seedCost = 3.0f;
+
 // this function governs how plants propagate from square to square.
 // The reason for the separation of plant and seed identities is that it allows seeds to move in front of plants in the game world.
 // returns if any growth was made, or not.
@@ -935,7 +940,8 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			if (organ == MATERIAL_SEED)
 			{
 				game.world[to].seedIdentity = extremelyFastNumberFromZeroTo(65536);
-				game.world[from].nutrients -= 1.0f;
+				game.world[from].nutrients -= seedCost;//1.0f;
+				game.world[from].energy    -= seedCost;//1.0f;
 			}
 			else if (organ == MATERIAL_POLLEN)
 			{
@@ -960,8 +966,8 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			game.world[to].seedColor = color_yellow;
 			memcpy( & (game.world[to].plantGenes[0]) , &(game.world[from].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
 			memset( & (game.world[to].growthMatrix), false, sizeof(bool) * nNeighbours);
-			game.world[to].energy = 6.0f;
-			game.world[to].nutrients = 6.0f;
+			game.world[to].energy = seedCost;
+			game.world[to].nutrients = seedCost;
 			game.world[to].geneCursor = 0;
 		}
 		else                                                 // when propagating from existing tissues
@@ -971,6 +977,7 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			game.world[to].seedColor = game.world[from].seedColor;
 			memcpy( & (game.world[to].plantGenes[0]) , &(game.world[from].plantGenes[0]),  plantGenomeSize * sizeof(char)  );
 			memcpy( &(game.world[to].growthMatrix[0]), &(game.world[from].growthMatrix[0]), sizeof(bool) * nNeighbours   );
+
 			game.world[from].nutrients -= 1.0f;
 
 			game.world[to].nutrients = 0.0f;
@@ -1972,7 +1979,7 @@ void hurtAnimal( int animalIndex, unsigned int cellIndex, float amount, int shoo
 	{
 		game.animals[animalIndex].damageReceived++;
 
-		if (animalIndex == game.adversary && shooterIndex == game.playerCreature)
+		if (animalIndex == game.adversary && shooterIndex == game.playerCreature && shooterIndex != -1 && animalIndex != -1 )
 		{
 			if (game.animals[game.adversary].damageReceived > game.animals[game.adversary].cellsUsed / 2)
 			{
@@ -2124,7 +2131,7 @@ void place( int animalIndex)
 		{
 			if (game.world[cellWorldPositionI].plantState == MATERIAL_THORNS)
 			{
-				hurtAnimal(  animalIndex, cellIndex, 0.1f, -1 );
+				hurtAnimal(  animalIndex, cellIndex, 0.01f, -1 );
 			}
 
 			game.world[cellWorldPositionI].identity = animalIndex;
@@ -2362,6 +2369,8 @@ void smoothHeightMap(unsigned int passes, float strength)
 // operates on seed genes, not plant genes.
 void mutatePlants(unsigned int worldI)
 {
+	if (extremelyFastNumberFromZeroTo(1) == 0) {return;}
+
 	unsigned int mutationChoice = extremelyFastNumberFromZeroTo(2);
 	unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
 
@@ -2583,11 +2592,18 @@ void growPlants(unsigned int worldI)
 			}
 			// bool canAfford = false;
 			float cost = 1.0f * numberToGrow;
-			if (c == PLANTGENE_BUD_A || c == PLANTGENE_BUD_F || c== PLANTGENE_RUNNER)
+			float energyCost = 0.0f;
+			if (c == PLANTGENE_BUD_A || c == PLANTGENE_BUD_F || c == PLANTGENE_RUNNER)
 			{
-				cost  *= 6.0f; // each seed carries enough nutrients to make a wood, a root, and a leaf
+				energyCost = seedCost;
+				cost  = (seedCost + 1.0f) * numberToGrow; // each seed carries enough nutrients to make a wood, a root, and a leaf, and to afford it you must also be able to make a bud.
 			}
-			if (game.world[worldI].nutrients > cost)
+			else if (c == PLANTGENE_BUD_M)
+			{
+				cost  = 2.0f * numberToGrow;
+			}
+
+			if (game.world[worldI].nutrients > cost && game.world[worldI].energy > energyCost)
 			{
 
 
@@ -2628,7 +2644,7 @@ void growPlants(unsigned int worldI)
 
 							if (presentDepth == 0) // this is your stop
 							{
-								skipAhead =   i+1 ;
+								skipAhead =   i + 1 ;
 								break;
 							}
 						}
@@ -2706,8 +2722,10 @@ void growPlants(unsigned int worldI)
 								game.world[neighbour].grassColor = color_green;
 								game.world[neighbour].seedColor = color_yellow;
 
-								game.world[neighbour].nutrients = 6.0f;
-								game.world[neighbour].energy = 6.0f;
+								game.world[neighbour].nutrients = seedCost; //6.0f;
+								game.world[neighbour].energy    = seedCost; //6.0f;
+								game.world[worldI].nutrients    -= seedCost; //6.0f;
+								game.world[worldI].energy       -= seedCost; //6.0f;
 
 								game.world[neighbour].geneCursor = 0;
 								game.world[neighbour].grown = false;
@@ -2752,7 +2770,7 @@ void growPlants(unsigned int worldI)
 				{
 					done = true;
 				}
-				
+
 				// }
 
 
@@ -3383,7 +3401,7 @@ void updatePlants(unsigned int worldI)
 		}
 
 
-		game.world[worldI].energy -= plantRate;
+		game.world[worldI].energy -= game.ecoSettings[6];
 
 
 
@@ -3397,7 +3415,16 @@ void updatePlants(unsigned int worldI)
 
 		case MATERIAL_LEAF:
 		{
-			game.world[worldI].energy += colorAmplitude(    multiplyColor(  game.world[worldI].light , game.world[worldI].grassColor)) ;
+			if (environmentScarcity)
+			{
+
+				game.world[worldI].energy += colorAmplitude(    multiplyColor(  game.world[worldI].light , game.world[worldI].grassColor)) ;
+			}
+			else
+			{
+
+				game.world[worldI].energy += 1.0f; // colorAmplitude(    multiplyColor(  game.world[worldI].light , game.world[worldI].grassColor)) ;
+			}
 			// equalizeWithNeighbours( worldI );
 			break;
 		}
@@ -3425,7 +3452,16 @@ void updatePlants(unsigned int worldI)
 		case MATERIAL_ROOT:
 		{
 			// get nutrients from the environment
-			game.world[worldI].nutrients += materialFertility (game.world[worldI].terrain) * (game.ecoSettings[5] );
+			if (environmentScarcity)
+			{
+
+				game.world[worldI].nutrients += materialFertility (game.world[worldI].terrain) * (game.ecoSettings[5] );
+			}
+			else
+			{
+
+				game.world[worldI].nutrients +=  (game.ecoSettings[5]) ;
+			}
 
 			break;
 		}
@@ -5232,27 +5268,22 @@ void animalEnergy(int animalIndex)
 		}
 	}
 
-
-	if (game.adversary >= 0 && game.adversary < numberOfAnimals)
+	if (speciesIndex > 0)
 	{
-		// bool nominate = false;
-		float animalScore = 0.0f;
-		animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + (game.animals[animalIndex].numberOfTimesReproduced ) ;
-		float distance = abs(game.animals[animalIndex].fPosX - game.animals[game.adversary].fPosX) + abs(game.animals[animalIndex].fPosY - game.animals[game.adversary].fPosY) ;
-		if (distance > 100.0f) { distance = 100.0f;}
-		distance  *= 0.5f;
-		animalScore += distance ;
-		if ( animalScore > game.championScores[speciesIndex])
+		if (game.adversary >= 0 && game.adversary < numberOfAnimals)
 		{
-			// 	if ( animalScore > game.championScores[speciesIndex])
-			// 	{
-			// 		nominate = true;
-			// 	}
-			// }
-			// if (nominate)
-			// {
-			game.championScores[speciesIndex] = animalScore;
-			game.champions[speciesIndex] = game.animals[animalIndex];
+			// bool nominate = false;
+			float animalScore = 0.0f;
+			animalScore = game.animals[animalIndex].damageDone + game.animals[animalIndex].damageReceived  + (game.animals[animalIndex].numberOfTimesReproduced ) ;
+			float distance = abs(game.animals[animalIndex].fPosX - game.animals[game.adversary].fPosX) + abs(game.animals[animalIndex].fPosY - game.animals[game.adversary].fPosY) ;
+			if (distance > 100.0f) { distance = 100.0f;}
+			distance  *= 0.5f;
+			animalScore += distance ;
+			if ( animalScore > game.championScores[speciesIndex])
+			{
+				game.championScores[speciesIndex] = animalScore;
+				game.champions[speciesIndex] = game.animals[animalIndex];
+			}
 		}
 	}
 }
@@ -5469,27 +5500,27 @@ void camera()
 
 }
 
-bool displayComputerText()
+void displayComputerText()
 {
 	int menuX = 50;
 	int menuY = 500;
 	int textSize = 10;
 	int spacing = 20;
 
-	bool displayedAComputer = false;
+	// bool displayedAComputer = false;
 
 
 	if (game.palette)
 	{
 		menuY += spacing;
 		drawPalette(menuX, menuY);
-		displayedAComputer = true;
+		// displayedAComputer = true;
 	}
 
 
-	if (game.ecologyComputerDisplay)
+	else if (game.ecologyComputerDisplay)
 	{
-		displayedAComputer = true;
+		// displayedAComputer = true;
 
 		// draw the food web.
 		int originalMenuX = menuX;
@@ -5553,15 +5584,20 @@ bool displayComputerText()
 				printText2D( selectString +  std::string("Nutrition each plant can extract each turn: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
 				break;
 			}
+			case 6:
+			{
+				printText2D( selectString +  std::string("Energy each plant requires each turn: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				break;
+			}
 			}
 			menuY -= spacing;
 		}
 	}
 
-	if (game.computerdisplays[0])
+	else if (game.computerdisplays[0])
 	{
 
-		displayedAComputer = true;
+		// displayedAComputer = true;
 		menuY -= spacing;
 		printText2D(   std::string("Animals are groups of tiles. Each tile is an organ that performs a dedicated bodily function. ") , menuX, menuY, textSize);
 		menuY -= spacing;
@@ -5577,7 +5613,7 @@ bool displayComputerText()
 	else if (game.computerdisplays[1])
 	{
 
-		displayedAComputer = true;
+		// displayedAComputer = true;
 		printText2D(   std::string("The hospital will heal you if you pick it up.") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("It can also be used to alter your body and mind.") , menuX, menuY, textSize);
@@ -5592,7 +5628,7 @@ bool displayComputerText()
 	else if (game.computerdisplays[2])
 	{
 
-		displayedAComputer = true;
+		// displayedAComputer = true;
 		printText2D(   std::string("Activate the tracker glasses to see the trails that creatures leave.") , menuX, menuY, textSize);
 		menuY -= spacing;
 		printText2D(   std::string("You will recognize the adversary by its white trail.") , menuX, menuY, textSize);
@@ -5607,7 +5643,7 @@ bool displayComputerText()
 	else if (game.computerdisplays[3])
 	{
 
-		displayedAComputer = true;
+		// displayedAComputer = true;
 		if (game.adversaryDefeated)
 		{
 			printText2D(   std::string("The adversary has been destroyed. Life will no longer be created in the world, but will persist from its current state,") , menuX, menuY, textSize);
@@ -5621,11 +5657,28 @@ bool displayComputerText()
 			menuY -= spacing;
 		}
 	}
+
+	else
+	{
+
+		if (  printLogs)
+		{
+			menuY += spacing;
+			for (int i = 0; i < 8; ++i)
+			{
+				printText2D(   game.logs[i] , menuX, menuY, textSize);
+				menuY += spacing;
+			}
+			menuY += spacing;
+		}
+	}
+
+
 	menuY -= spacing;
 
 
 
-	return displayedAComputer;
+	// return displayedAComputer;
 }
 
 void incrementSelectedGrabber()
@@ -5879,6 +5932,30 @@ void drawGameInterfaceText()
 		printText2D(   std::string("Selected plant ") + std::to_string(game.selectedPlant) + cursorDescription  , menuX, menuY, textSize);
 		menuY += spacing;
 
+
+		std::string geneString = std::string("Plant genes: ");
+
+		for (int i = 0; i < plantGenomeSize; ++i)
+		{
+			geneString += std::to_string(game.world[worldCursorPos].plantGenes[i]) + " ";
+		}
+
+		printText2D( geneString  , menuX, menuY, textSize);
+		menuY += spacing;
+
+		// std::string
+		geneString = std::string("Seed genes: ");
+
+		for (int i = 0; i < plantGenomeSize; ++i)
+		{
+			geneString += std::to_string(game.world[worldCursorPos].seedGenes[i]) + " ";
+		}
+
+		printText2D( geneString  , menuX, menuY, textSize);
+		menuY += spacing;
+
+
+
 	}
 
 	// print what is at the cursor position.
@@ -5997,17 +6074,12 @@ void drawGameInterfaceText()
 			}
 		}
 	}
-	bool pute = displayComputerText();
-	if (!pute &&  printLogs)
-	{
-		menuY += spacing;
-		for (int i = 0; i < 8; ++i)
-		{
-			printText2D(   game.logs[i] , menuX, menuY, textSize);
-			menuY += spacing;
-		}
-		menuY += spacing;
-	}
+
+
+	// bool pute =
+	displayComputerText();
+
+
 
 }
 
