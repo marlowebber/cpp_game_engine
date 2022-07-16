@@ -220,6 +220,9 @@
 
 #define PLANTGENE_NECTAR    42
 
+
+#define PLANTGENE_RANDOMDIRECTION    43
+
 #define numberOfPlantGenes 43
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =

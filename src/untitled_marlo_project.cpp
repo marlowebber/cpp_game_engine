@@ -860,7 +860,8 @@ Vec_f2 getTerrainSlope(unsigned int worldPositionI)
 // this function governs how plants propagate from square to square.
 // The reason for the separation of plant and seed identities is that it allows seeds to move in front of plants in the game world.
 // returns if any growth was made, or not.
-bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
+// bool
+void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 {
 
 	// don't do it if the destination cell already has the same organ type and identity. stops wood from endlessly overgrowing itself.
@@ -870,19 +871,19 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 		originID = game.world[from].seedIdentity;
 		if (game.world[to].plantState == organ && game.world[to].plantIdentity == originID) //the thing you are trying to grow is already grown- you should stop.
 		{
-			return false;
+			return ;//false;
 		}
 	}
 	if (to < 0 || from < 0 || to >= worldSquareSize || from >= worldSquareSize)  // trying to grow over the world size. In this case, the function reports true but you grow nothing, as if the tissue disappeared.
 	{
-		return true;
+		return;// true;
 	}
 
 
 	if (( materialBlocksMovement (game.world[to].wall))) // again, return true but get nothing.
 	{
 
-		return true;
+		return;// true;
 	}
 	if (organ == MATERIAL_SEED || organ == MATERIAL_POLLEN) // production of plant gametes
 	{
@@ -895,15 +896,15 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			if (organ == MATERIAL_SEED)
 			{
 				game.world[to].seedIdentity = extremelyFastNumberFromZeroTo(65536);
-				// game.world[from].nutrients -= 1.0f;
-				game.world[to].seedColorMoving = game.world[from].seedColorMoving;
 			}
 			else if (organ == MATERIAL_POLLEN)
 			{
 				game.world[to].seedIdentity = game.world[from].seedIdentity;
 			}
-			memcpy( & (game.world[to].seedGenes[0]) , &(game.world[from].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
-			game.world[to].seedState = organ;
+
+			game.world[to].seedColorMoving = game.world[from].seedColorMoving;
+			memcpy( game.world[to].seedGenes , game.world[from].seedGenes,  plantGenomeSize * sizeof(char)  );
+
 		}
 
 		else
@@ -915,16 +916,19 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			{
 				game.world[to].seedIdentity = extremelyFastNumberFromZeroTo(65536);
 				game.world[from].nutrients -= 1.0f;
-				game.world[to].seedColorMoving = game.world[from].seedColor;
 			}
 			else if (organ == MATERIAL_POLLEN)
 			{
 				game.world[to].seedIdentity = game.world[from].plantIdentity;
 			}
-			memcpy( & (game.world[to].seedGenes[0]) , &(game.world[from].plantGenes[0]),  plantGenomeSize * sizeof(char)  );
-			game.world[to].seedState = organ;
+
+			game.world[to].seedColorMoving = game.world[from].seedColor;
+			memcpy( game.world[to].seedGenes , game.world[from].plantGenes,  plantGenomeSize * sizeof(char)  );
+
 
 		}
+
+		game.world[to].seedState = organ;
 
 	}
 	else                                          // production of functional tissues
@@ -937,7 +941,7 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			memcpy( & (game.world[to].plantGenes[0]) , &(game.world[from].seedGenes[0]),  plantGenomeSize * sizeof(char)  );
 			memset( & (game.world[to].growthMatrix), false, sizeof(bool) * nNeighbours);
 			game.world[to].energy = 1.0f;
-			game.world[to].nutrients = 1.0f;
+			game.world[to].nutrients = 3.0f;
 			game.world[to].geneCursor = 0;
 		}
 		else                                                 // when propagating from existing tissues
@@ -957,7 +961,7 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 		game.world[to].plantState = organ;
 		game.world[to].grown = false;
 	}
-	return true;
+	return;// true;
 }
 
 
@@ -989,18 +993,13 @@ bool growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 void setupTestPlant3(unsigned int worldPositionI)
 {
 	memset(game.world[worldPositionI].seedGenes, 255, sizeof(char) * plantGenomeSize);
-
-	// game.world[worldPositionI].seedGenes[0] = PLANTGENE_ROOT;
-	game.world[worldPositionI].seedGenes[0] = 2;
-	game.world[worldPositionI].seedGenes[1] = PLANTGENE_WOOD;
-	game.world[worldPositionI].seedGenes[3] = 2;
-	game.world[worldPositionI].seedGenes[4] = PLANTGENE_WOOD;
-	game.world[worldPositionI].seedGenes[5] = 2;
-	game.world[worldPositionI].seedGenes[6] = PLANTGENE_WOOD;
-	game.world[worldPositionI].seedGenes[6] = PLANTGENE_WOOD;
-	// game.world[worldPositionI].seedGenes[14] = PLANTGENE_BUD_A;
-
-
+	game.world[worldPositionI].seedGenes[0] = PLANTGENE_RANDOMDIRECTION;
+	game.world[worldPositionI].seedGenes[1] = PLANTGENE_ROOT;
+	game.world[worldPositionI].seedGenes[2] = PLANTGENE_WOOD;
+	game.world[worldPositionI].seedGenes[3] = PLANTGENE_LEAF;
+	game.world[worldPositionI].seedGenes[3] = PLANTGENE_RUNNER;
+	game.world[worldPositionI].seedGenes[4] = PLANTGENE_END;
+	game.world[worldPositionI].seedColorMoving = color_yellow;
 	growInto(worldPositionI, worldPositionI, MATERIAL_SEED, true);
 }
 
@@ -2401,9 +2400,9 @@ void clearGrowthMask(unsigned int worldI)
 }
 
 // attempt to grow into the nearby squares. return true if there is no potential for growth.
-bool growIntoNeighbours(unsigned int worldI, unsigned int material)
+void growIntoNeighbours(unsigned int worldI, unsigned int material)
 {
-	bool result = false;
+	// bool result = false;
 
 
 
@@ -2412,52 +2411,49 @@ bool growIntoNeighbours(unsigned int worldI, unsigned int material)
 		if (game.world[worldI].growthMatrix[i])
 		{
 
-			bool thisOne = true;
+			// bool thisOne = true;
 
 			unsigned int neighbour = worldI + neighbourOffsets[i];
 			if (neighbour < worldSquareSize)
 			{
-				bool j = growInto( neighbour, worldI, material, false);
-				if (!j)
-				{
-					thisOne = false;
-				}
-			}
+				// bool j =
+				growInto( neighbour, worldI, material, false);
+				// 	if (!j)
+				// 	{
+				// 		thisOne = false;
+				// 	}
+				// }
 
-			if (!thisOne)
-			{
-				result = false;
+				// if (!thisOne)
+				// {
+				// 	result = false;
+				// }
 			}
 		}
+		// return result;
 	}
-	return result;
+
 }
 
 void growPlants(unsigned int worldI)
 {
 	if (worldI >= worldSquareSize) {return;}
 	if (game.world[worldI].grown) {return;}
-	if (game.world[worldI].geneCursor >= plantGenomeSize) {return;}
-
-
-
-	// if (game.world[worldI].nutrients < numberToGrow) {return;}
-
+	if (game.world[worldI].geneCursor >= plantGenomeSize)
+	{
+		game.world[worldI].grown = true;
+		return;
+	}
 
 	bool done = false;
 	int	skipAhead = game.world[worldI].geneCursor + 1;
 	char c = game.world[worldI].plantGenes[game.world[worldI].geneCursor];
 	if (c < nNeighbours)
 	{
-		// clearGrowthMask(worldI);
-		game.world[worldI].growthMatrix[c] = !game.world[worldI].growthMatrix[c];
+		game.world[worldI].growthMatrix[c] = !(game.world[worldI].growthMatrix[c]);
 	}
 	else
 	{
-
-
-
-
 		// physically growable stuff
 		if (
 		    c == PLANTGENE_TUBER
@@ -2470,11 +2466,8 @@ void growPlants(unsigned int worldI)
 		    ||    c == PLANTGENE_BUD_F
 		    ||    c == PLANTGENE_THORNS
 		    ||    c == PLANTGENE_TRICHOME
-		    ||    c == PLANTGENE_NECTAR
 		)
 		{
-
-
 			int numberToGrow = 0;
 			for (int i = 0; i < nNeighbours; ++i)
 			{
@@ -2483,99 +2476,60 @@ void growPlants(unsigned int worldI)
 					numberToGrow++;
 				}
 			}
-
-
 			bool canAfford = false;
 			float cost = 1.0f * numberToGrow;
-
 			if (c == PLANTGENE_BUD_A || c == PLANTGENE_BUD_F)
 			{
 				cost  *= 3.0f; // each seed carries enough nutrients to make a wood, a root, and a leaf
 			}
-
-
-			if (game.world[worldI].nutrients > numberToGrow)
+			if (game.world[worldI].nutrients > cost)
 			{
-				canAfford = true;
-			}
-
-
-
-
-			if (canAfford)
-			{
-
-
-				bool successfullyGrown = false;
-
 				switch (c)
 				{
 				case PLANTGENE_TUBER:
-					// material = MATERIAL_TUBER;
-
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_TUBER);
+					growIntoNeighbours(worldI, MATERIAL_TUBER);
 					break;
 
-
 				case PLANTGENE_WOOD:
-
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_WOOD);
-					// material = MATERIAL_WOOD;
+					growIntoNeighbours(worldI, MATERIAL_WOOD);
 					break;
 
 				case PLANTGENE_ROOT:
-
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_ROOT);
-					// material = MATERIAL_ROOT;
+					growIntoNeighbours(worldI, MATERIAL_ROOT);
 					break;
 
 				case PLANTGENE_LEAF:
-
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_LEAF);
-					// material = MATERIAL_LEAF;
+					growIntoNeighbours(worldI, MATERIAL_LEAF);
 					break;
 
 				case PLANTGENE_POLLENTRAP:
-
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
-					// material = MATERIAL_POLLENTRAP;
+					growIntoNeighbours(worldI, MATERIAL_POLLENTRAP);
 					break;
 
 				case PLANTGENE_BUD_A:
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_BUD_A);
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_SEED);
+					growIntoNeighbours(worldI, MATERIAL_BUD_A);
+					growIntoNeighbours(worldI, MATERIAL_SEED);
 					break;
 
 				case PLANTGENE_BUD_M:
-
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_BUD_M);
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_POLLEN);
+					growIntoNeighbours(worldI, MATERIAL_BUD_M);
+					growIntoNeighbours(worldI, MATERIAL_POLLEN);
 					break;
 
 				case PLANTGENE_BUD_F:
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_BUD_F);
+					growIntoNeighbours(worldI, MATERIAL_BUD_F);
 					break;
 
 				case PLANTGENE_THORNS:
-
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_THORNS);
-					// material = MATERIAL_THORNS;
+					growIntoNeighbours(worldI, MATERIAL_THORNS);
 					break;
 
 				case PLANTGENE_TRICHOME:
-
-					successfullyGrown = growIntoNeighbours(worldI, MATERIAL_TRICHOME);
-					// material = MATERIAL_TRICHOME;
+					growIntoNeighbours(worldI, MATERIAL_TRICHOME);
 					break;
 
 
-				case PLANTGENE_NECTAR:
-					// {
-					spill( MATERIAL_HONEY, worldI);
-					// successfullyGrown= true;
-					game.world[worldI].nutrients -= 1.0f;
 
-					break;
 					// }
 
 				}
@@ -2594,13 +2548,18 @@ void growPlants(unsigned int worldI)
 				// {
 
 				// }
-				if (successfullyGrown)
-				{
+				// if (successfullyGrown)
+				// {
 
-					done = true;
-				}
+				// printf("successfully Grown\n");
+				done = true;
+				// }
 
 
+			}
+			else
+			{
+				return;
 			}
 
 		}
@@ -2611,6 +2570,30 @@ void growPlants(unsigned int worldI)
 
 			switch (c)
 			{
+
+
+
+			case PLANTGENE_NECTAR:
+			{
+
+
+
+
+
+				if (game.world[worldI].nutrients < 1.0f)
+				{
+					return;
+				}
+
+
+
+				// {
+				spill( MATERIAL_HONEY, worldI);
+				// successfullyGrown= true;
+				game.world[worldI].nutrients -= 1.0f;
+
+				break;
+			}
 
 
 
@@ -2663,6 +2646,22 @@ void growPlants(unsigned int worldI)
 
 				break;
 			}
+
+
+
+			case PLANTGENE_RANDOMDIRECTION:
+			{
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					game.world[worldI].growthMatrix[i] = false;
+				}
+
+				unsigned int randomDirection = extremelyFastNumberFromZeroTo(nNeighbours-1);
+				game.world[worldI].growthMatrix[randomDirection] = true;
+
+				break;
+			}
+
 
 			case PLANTGENE_END:
 			{
@@ -3198,7 +3197,6 @@ void updatePlants(unsigned int worldI)
 	{
 
 
-		game.world[worldI].energy -= plantRate;
 
 		if (game.world[worldI].energy >= 0.0f && game.world[worldI].nutrients >= 0.0f)
 		{
@@ -3208,6 +3206,10 @@ void updatePlants(unsigned int worldI)
 		{
 			damagePlants(worldI);
 		}
+
+
+		game.world[worldI].energy -= plantRate;
+
 
 
 		game.world[worldI].energy     = clamp(game.world[worldI].energy ,    -1.0f, nNeighbours * 3.0f);
@@ -5684,9 +5686,17 @@ void drawGameInterfaceText()
 				                     + std::string(", grown ") + std::to_string(game.world[worldCursorPos].grown)
 
 
+				                     + std::string(", growthMatrix: ")
 
 				                     ;
 			}
+
+
+			for (int i = 0; i < nNeighbours; ++i)
+			{
+				cursorDescription += std::to_string(game.world[worldCursorPos].growthMatrix[i]);
+			}
+
 
 		}
 
