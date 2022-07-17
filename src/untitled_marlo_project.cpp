@@ -98,6 +98,14 @@ const int sectorSize = worldSquareSize / sectors;
 std::string progressString = std::string("");
 GameState game;
 
+
+
+// struct Square world[worldSquareSize * 4];
+Square *world = new Square[worldSquareSize];
+
+// GameState * smoothBum = new GameState;
+
+
 // these are variables which are only needed per session, and never need to be stored.
 float prelimMap[prelimSquareSize];
 float prelimWater[prelimSquareSize];
@@ -3391,6 +3399,9 @@ void updatePlants(unsigned int worldI)
 	{
 
 
+
+		equalizeWithNeighbours( worldI );
+
 		if (game.world[worldI].energy >= 0.0f && game.world[worldI].nutrients >= 0.0f)
 		{
 			growPlants(worldI);
@@ -3432,7 +3443,6 @@ void updatePlants(unsigned int worldI)
 		{
 			// equalizeWithNeighbours( worldI );
 
-			equalizeWithNeighbours( worldI );
 
 			// if a cut stem is sitting in water, it can survive for a little while.
 			// if (game.world[worldI].wall == MATERIAL_WATER)
@@ -4033,21 +4043,32 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 int getRandomCreature(unsigned int speciesIndex)
 {
 
-	int result = -1;
-	if (speciesIndex == 0 || game.speciesPopulationCounts[speciesIndex] == 0) {return result;}
+	// int result = -1;
+	if (speciesIndex == 0 || game.speciesPopulationCounts[speciesIndex] == 0) {return -1;}
 
 	int start = (speciesIndex * numberOfAnimalsPerSpecies) + extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies - 1);
 	for (int i = 0; i < numberOfAnimalsPerSpecies; ++i)
 	{
 
-		int choice = (start + i) % numberOfAnimalsPerSpecies;
+
+
+		int choice = (start + i);
+
+
+		if (choice > (((speciesIndex + 1) * numberOfAnimalsPerSpecies) - 1 )   ) // wrap around this species
+		{
+			choice -= (numberOfAnimalsPerSpecies - 1);
+		}
+
+
 		if (  !( game.animals[choice].retired))
 		{
-			result = choice;
+			// result = choice;
+			return choice;
 		}
 	}
 
-	return result;
+	return -1;
 }
 
 
@@ -6709,6 +6730,8 @@ void setupRandomWorld()
 }
 
 
+const int emergencyPopulationLimit = 10;
+
 void tournamentController()
 {
 	ZoneScoped;
@@ -6787,90 +6810,186 @@ void tournamentController()
 				if (respawnLowSpecies)
 				{
 					census();
-					for (int k = 0; k < numberOfSpecies; ++k)// spawn lots of the example animal
+
+
+					int totalPopulation = 0;
+
+					for (int k = 1; k < numberOfSpecies; ++k)// spawn lots of the example animal
 					{
-						if (game.speciesPopulationCounts[k] < 32 && k != 0)
+						totalPopulation  += game.speciesPopulationCounts[k];
+					}
+
+
+
+
+
+
+					if (totalPopulation < emergencyPopulationLimit)
+					{
+
+
+						// the entire ecosystem has crashed, respawn some champions and example animals.
+
+
+						for (int k = 1; k < numberOfSpecies; ++k)// spawn lots of the example animal
 						{
-							int j = 1;
-							int domingo = -1;
-							unsigned int randomPos = game.animals[game.adversary].position + (-5 + extremelyFastNumberFromZeroTo(10)  + ( (-5 * worldSize) + (extremelyFastNumberFromZeroTo(10) * worldSize)  )   );
 
-							int whatToSpawn = 0;
 
-							if (whatToSpawn == 0)  // spawn example animals
-							{
-								setupExampleAnimal3(j);
-								domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
-								game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
-							}
-							else if (whatToSpawn == 1)  // spawn a species champion
-							{
-								domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
 
-							}
-							else if (whatToSpawn == 2)  // spawn an individual from another successful species (horizontal gene transfer)
+							if (game.speciesPopulationCounts[k] < 1)
 							{
-								// get the most populous species.
-								unsigned int mostPopulousSpecies = 1;
-								for (int i = 1; i < numberOfSpecies; ++i)
+
+
+
+
+
+								int j = 1;
+								int domingo = -1;
+								unsigned int randomPos = game.animals[game.adversary].position + (-5 + extremelyFastNumberFromZeroTo(10)  + ( (-5 * worldSize) + (extremelyFastNumberFromZeroTo(10) * worldSize)  )   );
+
+								int whatToSpawn = extremelyFastNumberFromZeroTo(1);
+
+								if (whatToSpawn == 0)  // spawn example animals
 								{
-									if (game.speciesPopulationCounts[i] > mostPopulousSpecies)
-									{
-										mostPopulousSpecies = i;
-									}
+									setupExampleAnimal3(j);
+									domingo = spawnAnimal( k,  game.animals[j], randomPos, true);
+									game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
 								}
-								int  bromelich = getRandomCreature(mostPopulousSpecies);
-								if (bromelich >= 0 )
+								else if (whatToSpawn == 1)  // spawn a species champion
 								{
-									domingo = spawnAnimal( k,  game.animals[bromelich], randomPos, true);
-								}
-							}
-							if (domingo >= 0)
-							{
-								game.animals[domingo].fPosX += ((RNG() - 0.5) * 10.0f);
-								game.animals[domingo].fPosY += ((RNG() - 0.5) * 10.0f);
-								game.animals[domingo].fAngle += ((RNG() - 0.5) );
-								game.animals[domingo].fAngleCos = cos(game.animals[domingo].fAngle);
-								game.animals[domingo].fAngleSin = sin(game.animals[domingo].fAngle);
-								game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
-								game.animals[domingo].parentIdentity = game.adversary;
+									domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
 
-								if (game.world[game.animals[game.adversary].position].wall == MATERIAL_WATER)
+								}
+								// else if (whatToSpawn == 2)  // spawn an individual from another successful species (horizontal gene transfer)
+								// {
+								// 	// get the most populous species.
+								// 	unsigned int mostPopulousSpecies = 1;
+								// 	for (int i = 1; i < numberOfSpecies; ++i)
+								// 	{
+								// 		if (game.speciesPopulationCounts[i] > mostPopulousSpecies)
+								// 		{
+								// 			mostPopulousSpecies = i;
+								// 		}
+								// 	}
+								// 	int  bromelich = getRandomCreature(mostPopulousSpecies);
+								// 	if (bromelich >= 0 )
+								// 	{
+								// 		domingo = spawnAnimal( k,  game.animals[bromelich], game.animals[bromelich].position, true);
+								// 	}
+								// }
+								if (domingo >= 0)
 								{
-									bool hasGill = false;
-									for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
+									game.animals[domingo].fPosX += ((RNG() - 0.5) * 10.0f);
+									game.animals[domingo].fPosY += ((RNG() - 0.5) * 10.0f);
+									game.animals[domingo].fAngle += ((RNG() - 0.5) );
+									game.animals[domingo].fAngleCos = cos(game.animals[domingo].fAngle);
+									game.animals[domingo].fAngleSin = sin(game.animals[domingo].fAngle);
+									game.animals[domingo].energy = game.animals[domingo].maxEnergy / 2.0f;
+									game.animals[domingo].parentIdentity = game.adversary;
+
+									if (game.world[game.animals[game.adversary].position].wall == MATERIAL_WATER)
 									{
-										if (game.animals[domingo].body[i].organ == ORGAN_GILL)
+										bool hasGill = false;
+										for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
 										{
-											hasGill = true;
-											break;
+											if (game.animals[domingo].body[i].organ == ORGAN_GILL)
+											{
+												hasGill = true;
+												break;
+											}
+										}
+										if (!hasGill)
+										{
+											animalAppendCell(domingo, ORGAN_GILL);
 										}
 									}
-									if (!hasGill)
+									else
 									{
-										animalAppendCell(domingo, ORGAN_GILL);
-									}
-								}
-								else
-								{
-									bool hasLung = false;
-									for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
-									{
-										if (game.animals[domingo].body[i].organ == ORGAN_LUNG)
+										bool hasLung = false;
+										for (int i = 0; i < game.animals[domingo].cellsUsed; ++i)
 										{
-											hasLung = true;
-											break;
+											if (game.animals[domingo].body[i].organ == ORGAN_LUNG)
+											{
+												hasLung = true;
+												break;
+											}
+										}
+										if (!hasLung)
+										{
+											animalAppendCell(domingo, ORGAN_LUNG);
 										}
 									}
-									if (!hasLung)
-									{
-										animalAppendCell(domingo, ORGAN_LUNG);
-									}
 								}
+								// game.championScores[k] = 0.0f;
 							}
-							// game.championScores[k] = 0.0f;
 						}
 					}
+
+					else
+
+					{
+
+
+						for (int k = 1; k < numberOfSpecies; ++k)// spawn lots of the example animal
+						{
+
+
+
+							if (game.speciesPopulationCounts[k] < emergencyPopulationLimit)
+							{
+								// printf("LO SPECIES!\n");
+
+// get the most populous species.
+								int mostPopulousSpecies = 1;
+								unsigned int mostPopulousCount = 0;
+								for (int i = 1; i < numberOfSpecies; ++i)
+								{
+									if (game.speciesPopulationCounts[i] > mostPopulousCount)
+									{
+										mostPopulousSpecies = i;
+										mostPopulousCount = game.speciesPopulationCounts[i];
+									}
+								}
+
+								if (mostPopulousCount > emergencyPopulationLimit * 2) {
+
+									// for (int i = 0; i < emergencyPopulationLimit; ++i)
+									// {
+									/* code */
+
+
+									int  bromelich = getRandomCreature(mostPopulousSpecies);
+									if (bromelich >= 0 )
+									{
+										// printf("LO SPECIES RESPEENDED!\n");
+										int domingo = spawnAnimal( k,  game.animals[bromelich], game.animals[bromelich].position, false);
+
+										// int newCreature = (k * numberOfAnimalsPerSpecies) + i;// extremelyFastNumberFromZeroTo((numberOfAnimalsPerSpecies - 1));
+										// game.animals[newCreature] = game.animals[bromelich];
+										// game.animals[bromelich].retired = true;
+										if (domingo >= 0)
+										{
+
+											game.animals[bromelich].retired = true;
+										}
+
+									}
+									// }
+								}
+
+							}
+						}
+
+
+
+					}
+
+
+
+
+
+
+
 				}
 			}
 		}
