@@ -6,10 +6,10 @@
 
 
 const unsigned int nNeighbours     = 8;
-const int worldSize = 4200;// 2400;
+const int worldSize = 3000;// 2400;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
-const unsigned int numberOfAnimals = 100000;  //20000;
+const unsigned int numberOfAnimals = 20000;  //20000;
 const unsigned int numberOfSpecies = 6;
 const unsigned int animalSquareSize      = 256;
 const unsigned int displayNameSize = 32;

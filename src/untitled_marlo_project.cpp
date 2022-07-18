@@ -40,6 +40,9 @@ const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = false;
 const bool printLogs             = true;
 
+const bool doHoney = false;
+const bool doBrambles = false;
+
 const bool environmentScarcity = false;
 
 const bool killLoiteringAdversary = false;
@@ -65,6 +68,10 @@ const int paletteMenuY = 50;
 const int paletteTextSize = 10;
 const int paletteSpacing = 20;
 const unsigned int paletteWidth = 4;
+
+
+const float honeyCost = 3.0f;
+
 
 // these are the parameters that set up the physical geography of the world.
 const float seaLevel =  0.5f * worldSize;;;
@@ -538,7 +545,7 @@ void resetAnimals()
 	for (int i = 0; i < numberOfSpecies; ++i)
 	{
 		setupExampleAnimal3(j);
-		paintAnimal(j);
+		// paintAnimal(j);
 		game.champions[i] = animals[j];
 		game.championScores[i] = 0;
 		game.speciesVacancies[i] = true;
@@ -2143,9 +2150,15 @@ void place( int animalIndex)
 
 		if (okToStep)
 		{
-			if (world[cellWorldPositionI].plantState == MATERIAL_THORNS)
+			if (doBrambles)
 			{
-				hurtAnimal(  animalIndex, cellIndex, 0.01f, -1 );
+				if (world[cellWorldPositionI].plantState == MATERIAL_THORNS)
+				{
+					if (extremelyFastNumberFromZeroTo(10) == 0)
+					{
+						hurtAnimal(  animalIndex, cellIndex, 0.1f, -1 );
+					}
+				}
 			}
 
 			world[cellWorldPositionI].identity = animalIndex;
@@ -2815,25 +2828,27 @@ void growPlants(unsigned int worldI)
 			}
 
 
+
 			case PLANTGENE_NECTAR:
 			{
 
 
 
 
-
-				if (world[worldI].nutrients < 1.0f)
+				if (doHoney)
 				{
-					return;
+					if (world[worldI].nutrients < honeyCost)
+					{
+						return;
+					}
+
+
+
+					// {
+					spill( MATERIAL_HONEY, worldI);
+					// successfullyGrown= true;
+					world[worldI].nutrients -= honeyCost;
 				}
-
-
-
-				// {
-				spill( MATERIAL_HONEY, worldI);
-				// successfullyGrown= true;
-				world[worldI].nutrients -= 1.0f;
-
 				break;
 			}
 
@@ -5252,14 +5267,14 @@ void animalEnergy(int animalIndex)
 		{
 			if (animals[animalIndex].energy < 0.0f)
 			{
-				// printf("died low energy\n");
+				printf("died low energy\n");
 				execute = true;
 			}
 
 			if (animals[animalIndex].age > animals[animalIndex].lifespan)
 			{
 
-				// printf("died old\n");
+				printf("died old\n");
 				execute = true;
 			}
 			// if (animals[animalIndex].totalGonads == 0)
@@ -5275,13 +5290,13 @@ void animalEnergy(int animalIndex)
 		if (animals[animalIndex].damageReceived > animals[animalIndex].cellsUsed / 2)
 		{
 
-			// printf("died damaged\n");
+			printf("died damaged\n");
 			execute = true;
 		}
 		if (animals[animalIndex].cellsUsed <= 0)
 		{
 
-			// printf("died no mass\n");
+			printf("died no mass\n");
 			execute = true;
 		}
 	}
@@ -6112,6 +6127,9 @@ void drawGameInterfaceText()
 
 void paintCreatureFromCharArray( int animalIndex,  char * start, unsigned int len, unsigned int width )
 {
+
+	printf("painting animal %i\n", animalIndex);
+
 	Vec_i2 o = Vec_i2(0, 0);
 	Vec_i2 p = Vec_i2(0, 0);
 	if (len > animalSquareSize)
@@ -6166,6 +6184,7 @@ void paintCreatureFromCharArray( int animalIndex,  char * start, unsigned int le
 			if (animals[animalIndex].body[i].localPosX == p.x && animals[animalIndex].body[i].localPosY == p.y)
 			{
 				animals[animalIndex].body[i].color = newColor;
+				break;
 			}
 		}
 		p.x++;
@@ -6304,16 +6323,9 @@ void spawnAdversary(unsigned int targetWorldPositionI)
 	}
 }
 
-void spawnPlayer()
+void resetGameItems()
 {
-	unsigned int targetWorldPositionI =  game.playerRespawnPos;
-	int i = 1;
-	setupExampleHuman(i);
-	game.playerCreature = 0;
-	spawnAnimalIntoSlot(game.playerCreature, animals[i], targetWorldPositionI, false);
-	game.cameraTargetCreature = game.playerCreature;
-	appendLog( std::string("Spawned the player.") );
-
+	// puts the pick-upable items back in their right place and heals them of damage
 	for (int animalIndex = 0; animalIndex < 13; ++animalIndex)
 	{
 		animals[animalIndex].retired = false;
@@ -6337,6 +6349,22 @@ void spawnPlayer()
 	}
 
 	appendLog( std::string("Restored game items.") );
+}
+
+void spawnPlayer()
+{
+
+	resetGameItems();
+
+	unsigned int targetWorldPositionI =  game.playerRespawnPos;
+	int i = 0;
+	setupExampleHuman(i);
+	game.playerCreature = 0;
+	spawnAnimalIntoSlot(game.playerCreature, animals[i], targetWorldPositionI, false);
+	game.cameraTargetCreature = game.playerCreature;
+	appendLog( std::string("Spawned the player.") );
+
+
 }
 
 void adjustPlayerPos(Vec_f2 pos)
@@ -6729,6 +6757,8 @@ void setupRandomWorld()
 	recomputeTerrainLighting();
 	worldCreationStage = 13;
 
+
+
 	save();
 
 	worldCreationStage = 10;
@@ -6859,7 +6889,7 @@ void tournamentController()
 								{
 									setupExampleAnimal3(j);
 									domingo = spawnAnimal( k,  animals[j], randomPos, true);
-									animals[domingo].energy = animals[domingo].maxEnergy / 2.0f;
+
 								}
 								else if (whatToSpawn == 1)  // spawn a species champion
 								{
@@ -6968,17 +6998,15 @@ void tournamentController()
 									if (bromelich >= 0 )
 									{
 										// printf("LO SPECIES RESPEENDED!\n");
-										int domingo = spawnAnimal( k,  animals[bromelich], animals[bromelich].position, false);
+										// int domingo = spawnAnimal( k,  animals[bromelich], animals[bromelich].position, false);
 
+										int newId = getNewIdentity(k);
+										animals[newId] = animals[bromelich];
+										animals[bromelich].retired = true;
 										// int newCreature = (k * numberOfAnimalsPerSpecies) + i;// extremelyFastNumberFromZeroTo((numberOfAnimalsPerSpecies - 1));
 										// animals[newCreature] = animals[bromelich];
 										// animals[bromelich].retired = true;
-										if (domingo >= 0)
-										{
-
-											animals[bromelich].retired = true;
-										}
-
+								
 									}
 									// }
 								}
