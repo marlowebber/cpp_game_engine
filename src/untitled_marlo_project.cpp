@@ -793,8 +793,38 @@ void appendCell( int animalIndex, unsigned int organType, Vec_i2 newPosition)
 void animalAppendCell(int animalIndex, unsigned int organType)
 {
 	ZoneScoped;
-	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
-	appendCell(animalIndex, organType,  newPosition);
+
+
+	if (extremelyFastNumberFromZeroTo(1) == 0)
+	{
+		// add symmetric
+
+		Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
+		Vec_i2 mirrorPos   =  newPosition;
+		mirrorPos.x *= -1;
+
+
+		    appendCell(animalIndex, organType,  newPosition);
+		    appendCell(animalIndex, organType,  mirrorPos);
+
+
+
+	}
+
+	else
+
+	{
+		// add asymmetric
+
+		Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
+		appendCell(animalIndex, organType,  newPosition);
+
+
+
+	}
+
+
+
 }
 
 void setupTestAnimal_eye(int i)
@@ -1504,8 +1534,8 @@ void mutateAnimal( int animalIndex)
 
 	// some mutations are chosen more commonly than others. They are classed into groups, and each group is associated with a normalized likelyhood of occurring.
 	// the reason for this is that the development of the brain must always occur faster and in more detail than the development of the body, or else intelligent behavior can never arise.
-	const float group1Probability = 1.0f;//1.0f;
-	const float group2Probability = 0.75f;//0.5f;
+	const float group1Probability = 0.75f;//1.0f;
+	const float group2Probability = 1.0f;//0.5f;
 	const float group3Probability = 0.5f;//0.125f;
 	const float group4Probability = 0.25f;//0.0625f;
 	float sum = group1Probability + group2Probability + group3Probability + group4Probability;
@@ -1750,6 +1780,32 @@ void mutateAnimal( int animalIndex)
 	}
 }
 
+void normalizeAnimalCellPositions( int animalIndex)
+{
+	// this function moves all the cell local positions so that the animal's geometric center is at 0,0.
+
+	if (animals[animalIndex].cellsUsed == 0) {return;}
+
+	// find the geometric center.
+	Vec_i2 centroid = Vec_i2(0, 0);
+
+	for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
+	{
+		centroid.x += animals[animalIndex].body[i].localPosX;
+		centroid.y += animals[animalIndex].body[i].localPosY;
+	}
+
+	centroid.x = centroid.x / animals[animalIndex].cellsUsed;
+	centroid.y = centroid.y / animals[animalIndex].cellsUsed;
+
+	for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
+	{
+		animals[animalIndex].body[i].localPosX -= centroid.x;
+		animals[animalIndex].body[i].localPosY -= centroid.y;
+	}
+
+}
+
 void spawnAnimalIntoSlot(  int animalIndex,
                            Animal parent,
                            unsigned int position, bool mutation) // copy genes from the parent and then copy body from own new genes.
@@ -1761,6 +1817,10 @@ void spawnAnimalIntoSlot(  int animalIndex,
 	{
 		animals[animalIndex].body[i] = parent.body[i];
 	}
+
+
+	normalizeAnimalCellPositions( animalIndex);
+
 	for (int i = 0; i < animalSquareSize; ++i)
 	{
 		animals[animalIndex].body[i].damage = 0.0f;
@@ -3765,6 +3825,13 @@ void drawPalette(int menuX, int menuY)
 	int paletteFinalX ;
 	int paletteFinalY ;
 
+
+	if (game.selectedAnimal < 0)
+	{
+
+		printText2D(   std::string("Select a creature to add or remove tiles from it."), paletteFinalX, paletteFinalY, paletteTextSize);
+
+	}
 	// draw the available tiles.
 	for (int i = 0; i < numberOfOrganTypes; ++i)
 	{
@@ -5542,12 +5609,12 @@ void camera()
 
 }
 
-void displayComputerText()
+void displayComputerText( int menuX    ,  int menuY    , int textSize ,  int spacing)
 {
-	int menuX = 50;
-	int menuY = 500;
-	int textSize = 10;
-	int spacing = 20;
+	// int menuX = 50;
+	// int menuY = 500;
+	// int textSize = 10;
+	// int spacing = 20;
 
 	// bool displayedAComputer = false;
 
@@ -5577,7 +5644,7 @@ void displayComputerText()
 
 			}
 			menuX = originalMenuX;
-			menuY -= spacing;
+			menuY += spacing;
 		}
 
 		for (int i = 0; i < numberOfSpecies; ++i)
@@ -5588,7 +5655,7 @@ void displayComputerText()
 			               + " champion score " + std::to_string(game.championScores[i])
 
 			               , menuX, menuY, textSize);
-			menuY -= spacing;
+			menuY += spacing;
 		}
 		for (int j = 0; j < numberOfEcologySettings; ++j)
 		{
@@ -5632,7 +5699,7 @@ void displayComputerText()
 				break;
 			}
 			}
-			menuY -= spacing;
+			menuY += spacing;
 		}
 	}
 
@@ -5640,47 +5707,47 @@ void displayComputerText()
 	{
 
 		// displayedAComputer = true;
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("Animals are groups of tiles. Each tile is an organ that performs a dedicated bodily function. ") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("Your body is made this way too. ") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("If your tiles are damaged, you will lose the tile's function,") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("which can include your sight, movement, or breathing, resulting in disorientation and death. ") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("Find the hospital! It is in a black building on land, just like this one.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 	}
 	else if (game.computerdisplays[1])
 	{
 
 		// displayedAComputer = true;
 		printText2D(   std::string("The hospital will heal you if you pick it up.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("It can also be used to alter your body and mind.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("Use it to add a gill anywhere on your body, so that you can survive underwater") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("Find a building in the ocean and retrieve the tracker glasses.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("But beware, there are dangers other than the water itself.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 	}
 	else if (game.computerdisplays[2])
 	{
 
 		// displayedAComputer = true;
 		printText2D(   std::string("Activate the tracker glasses to see the trails that creatures leave.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("You will recognize the adversary by its white trail.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("Take the weapon, find the adversary and destroy it.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("The adversary posesses neuro glasses, which allow you to see the minute electrical activity of living flesh.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 		printText2D(   std::string("You can use them, in combination with the hospital, to edit the mind of a living creature.") , menuX, menuY, textSize);
-		menuY -= spacing;
+		menuY += spacing;
 	}
 	else if (game.computerdisplays[3])
 	{
@@ -5689,14 +5756,14 @@ void displayComputerText()
 		if (game.adversaryDefeated)
 		{
 			printText2D(   std::string("The adversary has been destroyed. Life will no longer be created in the world, but will persist from its current state,") , menuX, menuY, textSize);
-			menuY -= spacing;
+			menuY += spacing;
 			printText2D(   std::string("or eventually be driven to extinction.") , menuX, menuY, textSize);
-			menuY -= spacing;
+			menuY += spacing;
 		}
 		else
 		{
 			printText2D(   std::string("You must defeat the adversary. Return here when it is done.") , menuX, menuY, textSize);
-			menuY -= spacing;
+			menuY += spacing;
 		}
 	}
 
@@ -5716,7 +5783,7 @@ void displayComputerText()
 	}
 
 
-	menuY -= spacing;
+	menuY += spacing;
 
 
 
@@ -6119,7 +6186,7 @@ void drawGameInterfaceText()
 
 
 	// bool pute =
-	displayComputerText();
+	displayComputerText( menuX    ,   menuY    , textSize ,   spacing);
 
 
 
@@ -6127,6 +6194,9 @@ void drawGameInterfaceText()
 
 void paintCreatureFromCharArray( int animalIndex,  char * start, unsigned int len, unsigned int width )
 {
+
+
+
 
 	printf("painting animal %i\n", animalIndex);
 
@@ -6139,6 +6209,8 @@ void paintCreatureFromCharArray( int animalIndex,  char * start, unsigned int le
 	for (unsigned int i = 0; i < len; ++i)
 	{
 		char c = start[i];
+
+		printf("%c ", c);
 		Color newColor = color_black;
 		switch (c)
 		{
@@ -6190,6 +6262,7 @@ void paintCreatureFromCharArray( int animalIndex,  char * start, unsigned int le
 		p.x++;
 		if (p.x == width)
 		{
+			printf("\n");
 			p.x = 0;
 			p.y --;
 		}
@@ -6205,6 +6278,8 @@ void printAnimalCells(int animalIndex)
 		printf( "%s\n",   tileShortNames(animals[animalIndex].body[i].organ).c_str()  );
 	}
 }
+
+
 
 void setupCreatureFromCharArray( int animalIndex, char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback )
 {
@@ -6299,11 +6374,7 @@ void setupCreatureFromCharArray( int animalIndex, char * start, unsigned int len
 		i++;
 		if (i > len) { break;}
 	}
-	for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
-	{
-		animals[animalIndex].body[i].localPosX -= width / 2;
-		animals[animalIndex].body[i].localPosY -= p.y / 2;
-	}
+
 }
 
 void spawnAdversary(unsigned int targetWorldPositionI)
@@ -6362,6 +6433,7 @@ void spawnPlayer()
 	game.playerCreature = 0;
 	spawnAnimalIntoSlot(game.playerCreature, animals[i], targetWorldPositionI, false);
 	game.cameraTargetCreature = game.playerCreature;
+	paintCreatureFromCharArray( game.playerCreature, humanPaint, (9 * 33), 9 );
 	appendLog( std::string("Spawned the player.") );
 
 
@@ -7006,7 +7078,7 @@ void tournamentController()
 										// int newCreature = (k * numberOfAnimalsPerSpecies) + i;// extremelyFastNumberFromZeroTo((numberOfAnimalsPerSpecies - 1));
 										// animals[newCreature] = animals[bromelich];
 										// animals[bromelich].retired = true;
-								
+
 									}
 									// }
 								}

@@ -857,9 +857,53 @@ std::string tileShortNames(unsigned int tile)
 {
 	switch (tile)
 	{
+
+
+// #define ORGAN_EMITTER_WAX          35
+// #define ORGAN_EMITTER_HONEY        36
+// #define ORGAN_GRABBER              37
+// #define ORGAN_SENSOR_PAIN          38
+// #define ORGAN_HAIR                 39
+
+// #define ORGAN_GENITAL_A            40
+// #define ORGAN_GENITAL_B            41
+
+// #define ORGAN_SENSOR_RANDOM       43
+// #define ORGAN_LOCATIONREMEMBERER     44
+
+
+// #define ORGAN_MOUTH_WOOD    53 // eats roots and wood
+// #define ORGAN_MOUTH_SEEDS    54 // eats pollen and seeds
+
+
+
+
+	case ORGAN_EMITTER_WAX:
+	{
+		return std::string("Wax gland");
+	}
+
+	case ORGAN_EMITTER_HONEY:
+	{
+		return std::string("Honey gland");
+	}
+
+	case ORGAN_LOCATIONREMEMBERER:
+	{
+		return std::string("Location rememberer");
+	}
+	case ORGAN_MOUTH_WOOD:
+	{
+		return std::string("Wood mouth");
+	}
+	case ORGAN_MOUTH_SEEDS:
+	{
+		return std::string("Seeds mouth");
+	}
+
 	case ORGAN_MOUTH_VEG:
 	{
-		return std::string("Herbivore mouth");
+		return std::string("Leaves mouth");
 	}
 	case ORGAN_MOUTH_SCAVENGE:
 	{
@@ -997,12 +1041,12 @@ std::string tileShortNames(unsigned int tile)
 
 	case ORGAN_GENITAL_A:
 	{
-		return std::string("Penis.");
+		return std::string("Penis");
 	}
 
 	case ORGAN_GENITAL_B:
 	{
-		return std::string("Vagina.");
+		return std::string("Vagina");
 	}
 
 
