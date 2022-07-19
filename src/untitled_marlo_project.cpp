@@ -79,7 +79,7 @@ const float biome_marine  = seaLevel + (worldSize / 20);
 const float biome_coastal = seaLevel + (worldSize / 3);
 const float sunXangle = 0.35f;
 const float sunYangle = 0.35f;
-const unsigned int baseSize = 100;
+const unsigned int baseSize = 50;
 const unsigned int wallThickness = 8;
 const unsigned int doorThickness = 16;
 const int destroyerRange = 250;
@@ -582,6 +582,7 @@ void resetGrid()
 		world[i].seedIdentity =  -1;
 		world[i].seedColor = color_yellow;
 		world[i].branching = false;
+		world[i].aquaticPlant = true;
 
 
 // #endif
@@ -648,7 +649,7 @@ void resetGameState()
 	game.ecoSettings[1]          = 0.25f; // grass energy
 	game.ecoSettings[4] = (worldSquareSize / 64) / sectors; ;//updateSize;
 	game.ecoSettings[5] = 1.0f ;  //nutrient rate
-	game.ecoSettings[6] = 1.0f / 20.0f ; // amount of energy a plant tile requires
+	game.ecoSettings[6] = 0.05f ; // amount of energy a plant tile requires
 	game.activeEcoSetting = 0;
 	resetAnimals();
 	resetGrid();
@@ -795,33 +796,33 @@ void animalAppendCell(int animalIndex, unsigned int organType)
 	ZoneScoped;
 
 
-	if (extremelyFastNumberFromZeroTo(1) == 0)
-	{
-		// add symmetric
+	// if (extremelyFastNumberFromZeroTo(1) == 0)
+	// {
+	// 	// add symmetric
 
-		Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
-		Vec_i2 mirrorPos   =  newPosition;
-		mirrorPos.x *= -1;
-
-
-		    appendCell(animalIndex, organType,  newPosition);
-		    appendCell(animalIndex, organType,  mirrorPos);
+	// 	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
+	// 	Vec_i2 mirrorPos   =  newPosition;
+	// 	mirrorPos.x *= -1;
 
 
-
-	}
-
-	else
-
-	{
-		// add asymmetric
-
-		Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
-		appendCell(animalIndex, organType,  newPosition);
+	// 	appendCell(animalIndex, organType,  newPosition);
+	// 	appendCell(animalIndex, organType,  mirrorPos);
 
 
 
-	}
+	// }
+
+	// else
+
+	// {
+	// add asymmetric
+
+	Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
+	appendCell(animalIndex, organType,  newPosition);
+
+
+
+	// }
 
 
 
@@ -961,6 +962,9 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 
 		return;// true;
 	}
+
+
+
 	if (organ == MATERIAL_SEED || organ == MATERIAL_POLLEN) // production of plant gametes
 	{
 
@@ -1639,7 +1643,38 @@ void mutateAnimal( int animalIndex)
 	}
 	case MUTATION_ADDORGAN:
 	{
-		animalAppendCell(animalIndex, extremelyFastNumberFromZeroTo(numberOfOrganTypes));
+		// animalAppendCell(animalIndex, extremelyFastNumberFromZeroTo(numberOfOrganTypes));
+
+		unsigned int newOrgan = extremelyFastNumberFromZeroTo(numberOfOrganTypes);
+		// 	// add symmetric
+		if (extremelyFastNumberFromZeroTo(1) == 0   || organIsASensor(newOrgan))
+		{
+
+			Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
+			Vec_i2 mirrorPos   =  newPosition;
+			mirrorPos.x *= -1;
+
+
+			appendCell(animalIndex, newOrgan,  newPosition);
+			appendCell(animalIndex, newOrgan,  mirrorPos);
+
+
+		}
+		else
+		{
+
+			Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
+			// Vec_i2 mirrorPos   =  newPosition;
+			// mirrorPos.x *= -1;
+
+
+			appendCell(animalIndex, newOrgan,  newPosition);
+			// appendCell(animalIndex, organType,  mirrorPos);
+
+
+		}
+
+
 		break;
 	}
 	case MUTATION_MAKECONNECTION:
@@ -1782,12 +1817,13 @@ void mutateAnimal( int animalIndex)
 
 void normalizeAnimalCellPositions( int animalIndex)
 {
+	// return;
 	// this function moves all the cell local positions so that the animal's geometric center is at 0,0.
 
 	if (animals[animalIndex].cellsUsed == 0) {return;}
 
 	// find the geometric center.
-	Vec_i2 centroid = Vec_i2(0, 0);
+	Vec_f2 centroid = Vec_f2(0.0f, 0.0f);
 
 	for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
 	{
@@ -1798,10 +1834,14 @@ void normalizeAnimalCellPositions( int animalIndex)
 	centroid.x = centroid.x / animals[animalIndex].cellsUsed;
 	centroid.y = centroid.y / animals[animalIndex].cellsUsed;
 
+	printf("normalized animal %i. The centroid was %f %f \n", animalIndex, centroid.x, centroid.y);
+
+	Vec_i2 i_centroid = Vec_i2(centroid.x, centroid.y);
+
 	for (int i = 0; i < animals[animalIndex].cellsUsed; ++i)
 	{
-		animals[animalIndex].body[i].localPosX -= centroid.x;
-		animals[animalIndex].body[i].localPosY -= centroid.y;
+		animals[animalIndex].body[i].localPosX -= i_centroid.x;
+		animals[animalIndex].body[i].localPosY -= i_centroid.y;
 	}
 
 }
@@ -1813,19 +1853,20 @@ void spawnAnimalIntoSlot(  int animalIndex,
 
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
 	resetAnimal(animalIndex);
-	for (int i = 0; i < animalSquareSize; ++i)
+
+	animals[animalIndex].cellsUsed = parent.cellsUsed;
+	for (int i = 0; i < animals[animalIndex].cellsUsed ; ++i)
 	{
 		animals[animalIndex].body[i] = parent.body[i];
 	}
 
-
+	// printf("CUNGAMUNGMUNG\n");
 	normalizeAnimalCellPositions( animalIndex);
 
 	for (int i = 0; i < animalSquareSize; ++i)
 	{
 		animals[animalIndex].body[i].damage = 0.0f;
 	}
-	animals[animalIndex].cellsUsed = parent.cellsUsed;
 
 	animals[animalIndex].isMachine = parent.isMachine;
 	animals[animalIndex].machineCallback = parent.machineCallback;
@@ -3001,6 +3042,14 @@ void growPlants(unsigned int worldI)
 			}
 
 
+			case PLANTGENE_TERRESTRIAL:
+			{
+				// done =  true;
+				world[worldI].aquaticPlant = false;
+				break;
+			}
+
+
 			case PLANTGENE_BREAK:
 			{
 				// scroll back and find what this break is for.
@@ -3493,6 +3542,7 @@ void updatePlants(unsigned int worldI)
 		}
 
 
+
 		world[worldI].energy -= game.ecoSettings[6];
 
 
@@ -3543,16 +3593,41 @@ void updatePlants(unsigned int worldI)
 		case MATERIAL_ROOT:
 		{
 			// get nutrients from the environment
+
+
+			float amount = 0.0f;
 			if (environmentScarcity)
 			{
 
-				world[worldI].nutrients += materialFertility (world[worldI].terrain) * (game.ecoSettings[5] );
+				amount = materialFertility (world[worldI].terrain) * (game.ecoSettings[5] );
 			}
 			else
 			{
 
-				world[worldI].nutrients +=  (game.ecoSettings[5]) ;
+				amount =  (game.ecoSettings[5]) ;
 			}
+
+
+
+
+
+			if (world[worldI].aquaticPlant)
+			{
+				if (world[worldI].wall == MATERIAL_WATER)
+				{
+					world[worldI].nutrients += amount;
+				}
+			}
+			else
+			{
+				if (world[worldI].wall != MATERIAL_WATER)
+				{
+					world[worldI].nutrients += amount;
+				}
+			}
+
+
+
 
 			break;
 		}
@@ -5495,13 +5570,13 @@ void camera()
 	{
 		const int viewFieldMax = +(viewFieldY / 2);
 		const int viewFieldMin = -(viewFieldX / 2);
-		const unsigned int shadowSquareSize = viewFieldX * viewFieldY;
-		bool shadows[shadowSquareSize];
+		// const unsigned int shadowSquareSize = viewFieldX * viewFieldY;
+		// bool shadows[shadowSquareSize];
 
-		for (int i = 0; i < shadowSquareSize; ++i)
-		{
-			shadows[i] = false;
-		}
+		// for (int i = 0; i < shadowSquareSize; ++i)
+		// {
+		// 	shadows[i] = false;
+		// }
 		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
 		{
 			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
@@ -5515,15 +5590,55 @@ void camera()
 					float fx = vx;
 					float fy = vy;
 					displayColor = whatColorIsThisSquare(worldI);
-					unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
-					if (shadowIndex < shadowSquareSize)
-					{
-						if (shadows[shadowIndex])
-						{
-							displayColor = filterColor(displayColor, tint_shadow);
-						}
-					}
+					// unsigned int shadowIndex = ( (viewFieldX * (vy + abs(viewFieldMin))  ) + (vx + abs(viewFieldMin)) ) ;
 
+
+
+
+
+					// if (shadowIndex < shadowSquareSize)
+					// {
+					// 	if (shadows[shadowIndex])
+					// 	{
+					// 		displayColor = filterColor(displayColor, tint_shadow);
+					// 	}
+					// }
+
+
+
+					// shadows
+					if (worldI > worldSize + 1)
+					{
+						unsigned int shadowCaster = worldI - (worldSize + 1);
+
+
+						bool shadow = false;
+
+
+						int shadowCasterCell = isAnimalInSquare( world[shadowCaster].identity,  shadowCaster) ;
+						int currentCell = isAnimalInSquare( world[worldI].identity,  worldI);
+
+						if (currentCell < 0)
+						{
+							if (shadowCasterCell >= 0 )
+							{
+								shadow = true;
+							}
+
+							else if ( materialIsTransparent(world[worldI].wall) && (! (materialIsTransparent(world[shadowCaster].wall )  )))
+							{
+								shadow = true;
+							}
+
+							if (shadow)
+							{
+
+								displayColor = filterColor(displayColor, tint_shadow);
+							}
+						}
+
+
+					}
 
 
 
@@ -6430,10 +6545,10 @@ void spawnPlayer()
 	unsigned int targetWorldPositionI =  game.playerRespawnPos;
 	int i = 0;
 	setupExampleHuman(i);
+	paintCreatureFromCharArray(i, humanPaint, (9 * 33), 9 );
 	game.playerCreature = 0;
 	spawnAnimalIntoSlot(game.playerCreature, animals[i], targetWorldPositionI, false);
 	game.cameraTargetCreature = game.playerCreature;
-	paintCreatureFromCharArray( game.playerCreature, humanPaint, (9 * 33), 9 );
 	appendLog( std::string("Spawned the player.") );
 
 
@@ -6949,85 +7064,79 @@ void tournamentController()
 
 
 
-
-
-								int j = 1;
-								int domingo = -1;
-								unsigned int randomPos = animals[game.adversary].position + (-5 + extremelyFastNumberFromZeroTo(10)  + ( (-5 * worldSize) + (extremelyFastNumberFromZeroTo(10) * worldSize)  )   );
-
-								int whatToSpawn = extremelyFastNumberFromZeroTo(1);
-
-								if (whatToSpawn == 0)  // spawn example animals
+								for (int nnn = 0; nnn < 32; ++nnn)
 								{
-									setupExampleAnimal3(j);
-									domingo = spawnAnimal( k,  animals[j], randomPos, true);
 
-								}
-								else if (whatToSpawn == 1)  // spawn a species champion
-								{
-									domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
 
-								}
-								// else if (whatToSpawn == 2)  // spawn an individual from another successful species (horizontal gene transfer)
-								// {
-								// 	// get the most populous species.
-								// 	unsigned int mostPopulousSpecies = 1;
-								// 	for (int i = 1; i < numberOfSpecies; ++i)
-								// 	{
-								// 		if (game.speciesPopulationCounts[i] > mostPopulousSpecies)
-								// 		{
-								// 			mostPopulousSpecies = i;
-								// 		}
-								// 	}
-								// 	int  bromelich = getRandomCreature(mostPopulousSpecies);
-								// 	if (bromelich >= 0 )
-								// 	{
-								// 		domingo = spawnAnimal( k,  animals[bromelich], animals[bromelich].position, true);
-								// 	}
-								// }
-								if (domingo >= 0)
-								{
-									animals[domingo].fPosX += ((RNG() - 0.5) * 10.0f);
-									animals[domingo].fPosY += ((RNG() - 0.5) * 10.0f);
-									animals[domingo].fAngle += ((RNG() - 0.5) );
-									animals[domingo].fAngleCos = cos(animals[domingo].fAngle);
-									animals[domingo].fAngleSin = sin(animals[domingo].fAngle);
-									animals[domingo].energy = animals[domingo].maxEnergy / 2.0f;
-									animals[domingo].parentIdentity = game.adversary;
+									int j = 1;
+									int domingo = -1;
+									unsigned int randomPos = animals[game.adversary].position + (-5 + extremelyFastNumberFromZeroTo(10)  + ( (-5 * worldSize) + (extremelyFastNumberFromZeroTo(10) * worldSize)  )   );
 
-									if (world[animals[game.adversary].position].wall == MATERIAL_WATER)
+									int whatToSpawn = extremelyFastNumberFromZeroTo(1);
+
+									if (whatToSpawn == 0)  // spawn example animals
 									{
-										bool hasGill = false;
-										for (int i = 0; i < animals[domingo].cellsUsed; ++i)
+										setupExampleAnimal3(j);
+										domingo = spawnAnimal( k,  animals[j], randomPos, true);
+
+									}
+									else if (whatToSpawn == 1)  // spawn a species champion
+									{
+										domingo = spawnAnimal( k,  game.champions[k], randomPos, true);
+
+									}
+
+									if (domingo >= 0)
+									{
+										animals[domingo].fPosX += ((RNG() - 0.5) * 10.0f);
+										animals[domingo].fPosY += ((RNG() - 0.5) * 10.0f);
+										animals[domingo].fAngle += ((RNG() - 0.5) );
+										animals[domingo].fAngleCos = cos(animals[domingo].fAngle);
+										animals[domingo].fAngleSin = sin(animals[domingo].fAngle);
+										animals[domingo].energy = 10.0f;
+										animals[domingo].parentIdentity = game.adversary;
+
+										if (world[animals[game.adversary].position].wall == MATERIAL_WATER)
 										{
-											if (animals[domingo].body[i].organ == ORGAN_GILL)
+											bool hasGill = false;
+											for (int i = 0; i < animals[domingo].cellsUsed; ++i)
 											{
-												hasGill = true;
-												break;
+												if (animals[domingo].body[i].organ == ORGAN_GILL)
+												{
+													hasGill = true;
+													break;
+												}
+											}
+											if (!hasGill)
+											{
+												animalAppendCell(domingo, ORGAN_GILL);
 											}
 										}
-										if (!hasGill)
+										else
 										{
-											animalAppendCell(domingo, ORGAN_GILL);
-										}
-									}
-									else
-									{
-										bool hasLung = false;
-										for (int i = 0; i < animals[domingo].cellsUsed; ++i)
-										{
-											if (animals[domingo].body[i].organ == ORGAN_LUNG)
+											bool hasLung = false;
+											for (int i = 0; i < animals[domingo].cellsUsed; ++i)
 											{
-												hasLung = true;
-												break;
+												if (animals[domingo].body[i].organ == ORGAN_LUNG)
+												{
+													hasLung = true;
+													break;
+												}
+											}
+											if (!hasLung)
+											{
+												animalAppendCell(domingo, ORGAN_LUNG);
 											}
 										}
-										if (!hasLung)
-										{
-											animalAppendCell(domingo, ORGAN_LUNG);
-										}
 									}
+
+
+
 								}
+
+
+
+
 								// game.championScores[k] = 0.0f;
 							}
 						}
@@ -7193,13 +7302,13 @@ void drawMainMenuText()
 		{
 			printText2D(   std::string("[i] load "), menuX, menuY, textSize);
 			menuY += spacing;
-			break;
+			// break;
 		}
-		else
-		{
-			printText2D(   std::string("[j] new "), menuX, menuY, textSize);
-			menuY += spacing;
-		}
+		// else
+		// {
+		printText2D(   std::string("[j] new "), menuX, menuY, textSize);
+		menuY += spacing;
+		// }
 		break;
 
 	case 1:
@@ -7764,7 +7873,7 @@ bool test_plants()
 
 bool test_all()
 {
-
+	return true;
 	bool testResult_all = true;
 
 	bool testResult_animals = test_animals();

@@ -225,8 +225,9 @@
 
 #define PLANTGENE_RANDOMIZEGROWTHMASK   44
 #define PLANTGENE_ROTATEMATRIXCW 45
+#define PLANTGENE_TERRESTRIAL 46
 
-#define numberOfPlantGenes 45
+#define numberOfPlantGenes 46
 
 // std::string pheromoneChannelDescriptions[numberOfSpeakerChannels] =
 // {
@@ -1600,7 +1601,11 @@ bool organIsASensor(unsigned int organ)
 bool materialIsTransparent(unsigned int material)
 {
 
-	if (material == MATERIAL_WATER)
+	if (
+		material == MATERIAL_WATER
+	|| material == MATERIAL_NOTHING
+
+		)
 	{
 		return true;
 	}
