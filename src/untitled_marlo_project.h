@@ -6,12 +6,11 @@
 
 
 const unsigned int nNeighbours     = 8;
-const int worldSize = 2000;// 2400;
-const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
-const unsigned int numberOfAnimals = 6000;  //20000;
-const unsigned int numberOfSpecies = 6;
-const unsigned int animalSquareSize      = 256;
+
+
+
+
 const unsigned int displayNameSize = 32;
 const unsigned int nLogs = 32;
 const unsigned int logLength = 64;
@@ -41,10 +40,13 @@ extern int mouseY;
 extern int worldCreationStage;
 extern unsigned int longestMenu;
 
+
 // extern bool fastCam;
 
-const unsigned int plantGenomeSize = 24;
-const float lightEnergy = 1.0f;
+
+
+
+// const float lightEnergy = 1.0f;
 
 
 
@@ -67,12 +69,12 @@ struct Square
     Color grassColor;
     Color seedColor;
 
-    char seedGenes[plantGenomeSize];
+    std::vector <char> seedGenes ;//[plantGenomeSize];
     int seedIdentity;
     int seedState;
     Color seedColorMoving;
 
-    char plantGenes[plantGenomeSize];
+    std::vector <char>  plantGenes ;//[plantGenomeSize];
     int plantState;
     int geneCursor;
     int plantIdentity;
@@ -125,7 +127,7 @@ const unsigned int numberOfStatusEffects = 4;
 
 struct Animal
 {
-    Cell body[animalSquareSize];
+    std::vector<Cell> body ;//[animalSquareSize];
     // unsigned int mass;
     unsigned int numberOfTimesReproduced;
     unsigned int damageDone;
@@ -166,11 +168,19 @@ struct Animal
 
 
 
-// these parts need to be recorded in between sessions.
+// these parts need to be recorded in between sessions. This struct is what goes into a save file.
 struct GameState
 {
     char saveName[displayNameSize];
     char version[displayNameSize];
+
+    unsigned int numberOfAnimals = 6000;  //20000;
+    int worldSize = 2000;// 2400;
+    unsigned int worldSquareSize       = worldSize * worldSize;
+    unsigned int numberOfSpecies = 6;
+    unsigned int animalSquareSize      = 256;
+    unsigned int plantGenomeSize = 24;
+
 
     // these variables are how the player drives their character, and what they get back from it.
     int playerActiveGrabber;
@@ -196,9 +206,6 @@ struct GameState
     int cursorAnimal ;
     unsigned int playerRespawnPos;
 
-    Animal champions[numberOfSpecies];
-    int championScores[numberOfSpecies] ;
-    // float championEnergies[numberOfSpecies];
 
     bool adversaryDefeated;
     bool adversaryCreated;
@@ -216,17 +223,19 @@ struct GameState
     char logs[logLength][nLogs];
     unsigned int paletteSelectedOrgan ;
 
-    bool speciesVacancies [numberOfSpecies];
-    unsigned int speciesPopulationCounts [numberOfSpecies];
-    unsigned int populationCountUpdates  [numberOfSpecies];
-    unsigned int speciesAttacksPerTurn   [numberOfSpecies];
+
+    std::vector<Animal       > champions               ;//[numberOfSpecies];
+    std::vector<int          > championScores          ;//[numberOfSpecies] ;
+    std::vector<bool         > speciesVacancies        ;//[numberOfSpecies];
+    std::vector<unsigned int > speciesPopulationCounts ;//[numberOfSpecies];
+    std::vector<unsigned int > populationCountUpdates  ;//[numberOfSpecies];
+    std::vector<unsigned int > speciesAttacksPerTurn   ;//[numberOfSpecies];
+    std::vector<Animal       > animals                 ;//[numberOfAnimals];
+    std::vector<struct Square> world                   ;//[worldSquareSize];
 
     float speakerChannels[numberOfSpeakerChannels];
     float speakerChannelsLastTurn[numberOfSpeakerChannels];
 
-    // Animal animals[numberOfAnimals];
-
-        // struct Square world[worldSquareSize];
 
     float ecoSettings[numberOfEcologySettings];
 
@@ -253,7 +262,7 @@ void decrementSelectedOrgan();
 // void playerGrab();
 // void playerDrop();
 
-    
+
 void toggleRain();
 
 extern bool playerGrab ;
