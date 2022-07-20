@@ -111,22 +111,22 @@ GameState game;
 Square *world = new Square[worldSquareSize];
 Animal *animals = new Animal[numberOfAnimals];
 
-	int menuX = 50;
-	int menuY = 50;
-	int textSize = 10;
-	int spacing = 20;
+int menuX = 50;
+int menuY = 50;
+int textSize = 10;
+int spacing = 20;
 
 
 float sideTextScrollPos = 0.0f;
 
 void incrementSideText()
 {
-sideTextScrollPos += spacing;
+	sideTextScrollPos += spacing;
 }
 void decrementSideText()
 {
-sideTextScrollPos -= spacing;
-	
+	sideTextScrollPos -= spacing;
+
 }
 // these are variables which are only needed per session, and never need to be stored.
 float prelimMap[prelimSquareSize];
@@ -5805,16 +5805,16 @@ void displayComputerText( std::vector<std::string>  * sideText)
 			// menuY += spacing;
 		}
 
-	std::string foodweblabels =					"               " ;
+		std::string foodweblabels =					"               " ;
 
 		for (int i = 0; i < numberOfSpecies; ++i)
 		{
 
-				foodweblabels +=  " species" + std::to_string(i) + " ";
+			foodweblabels +=  " species" + std::to_string(i) + " ";
 		}
 
 
-			sideText->push_back( foodweblabels);
+		sideText->push_back( foodweblabels);
 
 		for (int i = 0; i < numberOfSpecies; ++i)
 		{
@@ -6481,24 +6481,11 @@ void drawGameInterfaceText()
 
 			std::string painString = std::string("");
 
-			if (animals[game.playerCreature].body[playerGill].signalIntensity > 0.5f && animals[game.playerCreature].body[playerGill].signalIntensity  < 1.0f )
-			{
-				painString = std::string("It stings.");
-			}
-			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 2.0f )
-			{
-				painString = std::string("It hurts.");
-			}
-			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 5.0f )
-			{
-				painString = std::string("It hurts really bad!.");
-			}
-			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 10.0f )
-			{
-				painString = std::string("The pain is agonizing!");
-			}
 
 
+
+
+			bool printPainString = false;
 
 
 
@@ -6507,22 +6494,73 @@ void drawGameInterfaceText()
 			   )
 			{
 				// printText2D(
-				sideText->push_back(  std::string("You're badly damaged. ") + painString );
+				printPainString = true;
+				painString += std::string("You're badly damaged. ") ;
 				//  , menuX, menuY, textSize);
 				// menuY += spacing;
 			}
 			else if (animals[game.playerCreature].damageReceived > (animals[game.playerCreature].cellsUsed) * 0.375)
 			{
+
+				printPainString = true;
 				// printText2D(
-				sideText->push_back(   std::string("You are mortally wounded. ")  + painString);
+				// sideText->push_back(
+				painString += std::string("You are mortally wounded. ") ;
+				// + painString);
 				//   , menuX, menuY, textSize);
 				// menuY += spacing;
 			}
+
+
+
+
+
+
+
+
+			if (animals[game.playerCreature].body[playerGill].signalIntensity < 0.5f)
+			{
+				// painString = std::string("It stings.");
+				// printPainString = false;
+			}
+			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 1.0f)
+			{
+				painString = std::string("It stings.");
+
+				printPainString = true;
+			}
+			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 2.0f )
+			{
+				painString = std::string("It hurts.");
+
+				printPainString = true;
+			}
+			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 5.0f )
+			{
+				painString = std::string("It hurts really bad!.");
+
+				printPainString = true;
+			}
 			else
+				// if (animals[game.playerCreature].body[playerGill].signalIntensity < 10.0f )
+			{
+				painString = std::string("The pain is agonizing!");
+
+				printPainString = true;
+			}
+
+
+
+
+
+
+			if (
+			    printPainString )
 			{
 
 				sideText->push_back(  painString );
 			}
+
 		}
 	}
 
@@ -6541,10 +6579,10 @@ void drawGameInterfaceText()
 	{
 		// printText2D(*it, menuX, rollingY, textSize);
 
-		Vec_f2 upperBound=Vec_f2(menuX + ((spacing * (it->length()+1) ) * 0.25f    ) + (spacing/2) , rollingY + spacing - (spacing/2) + sideTextScrollPos);
-		Vec_f2 lowerBound=Vec_f2(menuX + (                                        0) - (spacing/2) , rollingY           - (spacing/2) + sideTextScrollPos);
+		Vec_f2 upperBound = Vec_f2(menuX + ((spacing * (it->length() + 1) ) * 0.25f    ) + (spacing / 2) , rollingY + spacing - (spacing / 2) + sideTextScrollPos);
+		Vec_f2 lowerBound = Vec_f2(menuX + (                                        0) - (spacing / 2) , rollingY           - (spacing / 2) + sideTextScrollPos);
 
-		drawPanel( lowerBound, upperBound, Color(0.1f, 0.5, 0.9f, 0.1f)  );
+		drawPanel( lowerBound, upperBound, tint_shadow  );
 
 		rollingY += spacing;
 	}
@@ -6554,7 +6592,7 @@ void drawGameInterfaceText()
 	rollingY = menuY;
 	for (std::vector<std::string>::iterator it = sideText->begin(); it != sideText->end(); ++it)
 	{
-		printText2D(*it, menuX, rollingY+ sideTextScrollPos, textSize);
+		printText2D(*it, menuX, rollingY + sideTextScrollPos, textSize);
 		rollingY += spacing;
 	}
 

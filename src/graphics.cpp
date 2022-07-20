@@ -358,13 +358,13 @@ void printText2D(std::string m_text, int x, int y, int size)
     glBindBuffer(GL_ARRAY_BUFFER, Text2DUVBufferID);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0 );
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Draw call
     glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
 
-    glDisable(GL_BLEND);
+    // glDisable(GL_BLEND);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
