@@ -61,6 +61,15 @@ const unsigned int numberOfFieldsPerVertex = 6; /*  R, G, B, A, X, Y  */
 
 // extern const Color color_lightblue;
 
+
+Vec_f2 transformScreenPositionToWorld( Vec_f2 screen );
+
+void cleanupText2D();
+
+void initText2D();
+
+void printText2D(std::string m_text, int x, int y, int size);
+
 void setupGraphics() ;
 void shutdownGraphics() ;
 

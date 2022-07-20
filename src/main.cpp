@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "graphics.h"
-#include "menus.h"
+// #include "menus.h"
 #include "untitled_marlo_project.h"
 
 #ifdef TRACY_ENABLE
@@ -61,21 +61,21 @@ void threadInterface()
 		}
 		case SDL_KEYDOWN:
 		{
-			if (capturingText)
-			{
-				if (event.key.keysym.sym > 0x20 && event.key.keysym.sym < 0x7f)
-				{
-					capturedString += event.key.keysym.sym;
-				}
+			// if (capturingText)
+			// {
+			// 	if (event.key.keysym.sym > 0x20 && event.key.keysym.sym < 0x7f)
+			// 	{
+			// 		capturedString += event.key.keysym.sym;
+			// 	}
 
-				switch ( event.key.keysym.sym )
-				{
-				case SDLK_RETURN:
-					editUserDataCallback();
-					break;
-				}
-				break;
-			}
+			// 	switch ( event.key.keysym.sym )
+			// 	{
+			// 	case SDLK_RETURN:
+			// 		editUserDataCallback();
+			// 		break;
+			// 	}
+			// 	break;
+			// }
 
 			switch ( event.key.keysym.sym )
 			{

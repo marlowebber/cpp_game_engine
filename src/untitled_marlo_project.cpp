@@ -28,7 +28,7 @@
 #include "utilities.h"
 #include "graphics.h"
 #include "untitled_marlo_project.h"
-#include "menus.h"
+// #include "menus.h"
 #include "main.h"
 #include "SimplexNoise.h"
 #include "TinyErode.h"
@@ -111,7 +111,7 @@ GameState game;
 Square *world = new Square[worldSquareSize];
 Animal *animals = new Animal[numberOfAnimals];
 
-// GameState * smoothBum = new GameState;
+
 
 
 // these are variables which are only needed per session, and never need to be stored.
@@ -3893,34 +3893,40 @@ void rightClickCallback ()
 	}
 }
 
-void drawPalette(int menuX, int menuY)
+void drawPalette( std::vector<std::string>  * sideText)
 {
-	int closestValue = 1000;
-	unsigned int tempClosestToMouse = 0;
-	int paletteFinalX ;
-	int paletteFinalY ;
+	// int closestValue = 1000;
+	// unsigned int tempClosestToMouse = 0;
+	// int paletteFinalX ;
+	// int paletteFinalY ;
 
 
 	if (game.selectedAnimal < 0)
 	{
 
-		printText2D(   std::string("Select a creature to add or remove tiles from it."), paletteFinalX, paletteFinalY, paletteTextSize);
+		// printText2D(
+
+		    sideText->push_back(   std::string("Select a creature to add or remove tiles from it."));
 
 	}
 	// draw the available tiles.
 	for (int i = 0; i < numberOfOrganTypes; ++i)
 	{
-		unsigned int paletteX = i % paletteWidth;
-		unsigned int paletteY = i / paletteWidth;
-		paletteFinalX = menuX + (paletteX * paletteSpacing * 10);
-		paletteFinalY = menuY + (paletteY * paletteSpacing);
+		// unsigned int paletteX = i % paletteWidth;
+		// unsigned int paletteY = i / paletteWidth;
+		// paletteFinalX = menuX + (paletteX * paletteSpacing * 10);
+		// paletteFinalY = menuY + (paletteY * paletteSpacing);
 		if (i == game.paletteSelectedOrgan)
 		{
-			printText2D(  std::string("X ") +  tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
+			// printText2D(
+			sideText->push_back(  std::string("X ") +  tileShortNames(i) );
+			// , paletteFinalX, paletteFinalY, paletteTextSize);
 		}
 		else
 		{
-			printText2D(   tileShortNames(i) , paletteFinalX, paletteFinalY, paletteTextSize);
+			// printText2D(
+			sideText->push_back( tileShortNames(i));
+			// , paletteFinalX, paletteFinalY, paletteTextSize);
 		}
 	}
 
@@ -3929,22 +3935,22 @@ void drawPalette(int menuX, int menuY)
 
 
 
-void drawPalette2()
-{
-	if (game.selectedAnimal >= 0)
-	{
-		for (int i = 0; i < animals[game.selectedAnimal].cellsUsed; ++i)
-		{
-			float startPosX = 500.0f;
-			float startPosY = 500.0f;
-			float bigSquareSize = 100.0f;
+// void drawPalette2()
+// {
+// 	if (game.selectedAnimal >= 0)
+// 	{
+// 		for (int i = 0; i < animals[game.selectedAnimal].cellsUsed; ++i)
+// 		{
+// 			float startPosX = 500.0f;
+// 			float startPosY = 500.0f;
+// 			float bigSquareSize = 100.0f;
 
-			drawRectangle( Vec_f2(startPosX + (animals[game.selectedAnimal].body[i].localPosX * bigSquareSize), startPosY + (animals[game.selectedAnimal].body[i].localPosY * bigSquareSize)) ,
-			               organColors(animals[game.selectedAnimal].body[i].organ), bigSquareSize, bigSquareSize);
+// 			drawRectangle( Vec_f2(startPosX + (animals[game.selectedAnimal].body[i].localPosX * bigSquareSize), startPosY + (animals[game.selectedAnimal].body[i].localPosY * bigSquareSize)) ,
+// 			               organColors(animals[game.selectedAnimal].body[i].organ), bigSquareSize, bigSquareSize);
 
-		}
-	}
-}
+// 		}
+// 	}
+// }
 
 
 
@@ -5724,7 +5730,7 @@ void camera()
 
 }
 
-void displayComputerText( int menuX    ,  int menuY    , int textSize ,  int spacing)
+void displayComputerText( std::vector<std::string>  * sideText)
 {
 	// int menuX = 50;
 	// int menuY = 500;
@@ -5736,8 +5742,8 @@ void displayComputerText( int menuX    ,  int menuY    , int textSize ,  int spa
 
 	if (game.palette)
 	{
-		menuY += spacing;
-		drawPalette(menuX, menuY);
+		// menuY += spacing;
+		drawPalette( sideText);
 		// displayedAComputer = true;
 	}
 
@@ -5747,30 +5753,51 @@ void displayComputerText( int menuX    ,  int menuY    , int textSize ,  int spa
 		// displayedAComputer = true;
 
 		// draw the food web.
-		int originalMenuX = menuX;
+		// int originalMenuX = menuX;
 		for (int i = 0; i < numberOfSpecies; ++i)
 		{
-			printText2D( "species " + std::to_string(i) + " eats: " , menuX, menuY, textSize);
+			// printText2D(
+
+
+			// sideText->push_back(
+
+			std::string foodwebstring =					"species " + std::to_string(i) + " eats: " ;
+
+			// );
+
+			// , menuX, menuY, textSize);
 
 			for (int j = 0; j < numberOfSpecies; ++j)
 			{
-				printText2D(  std::to_string(foodWeb[i][j]) , menuX, menuY, textSize);
-				menuX += spacing * 5;
+				// printText2D(
+
+
+				foodwebstring += std::to_string(foodWeb[i][j]);
+
+
+				                 // 	, menuX, menuY, textSize);
+				                 // menuX += spacing * 5;
 
 			}
-			menuX = originalMenuX;
-			menuY += spacing;
+
+
+			sideText->push_back( foodwebstring);
+			// menuX = originalMenuX;
+			// menuY += spacing;
 		}
 
 		for (int i = 0; i < numberOfSpecies; ++i)
 		{
-			printText2D(   "Species " + std::to_string(i) +
-			               " pop. " + std::to_string(game.speciesPopulationCounts[i]) +
-			               " hits " + std::to_string(game.speciesAttacksPerTurn[i])
-			               + " champion score " + std::to_string(game.championScores[i])
+			// printText2D(
 
-			               , menuX, menuY, textSize);
-			menuY += spacing;
+			sideText->push_back(
+			    "Species " + std::to_string(i) +
+			    " pop. " + std::to_string(game.speciesPopulationCounts[i]) +
+			    " hits " + std::to_string(game.speciesAttacksPerTurn[i])
+			    + " champion score " + std::to_string(game.championScores[i])
+			);
+			// , menuX, menuY, textSize);
+			// menuY += spacing;
 		}
 		for (int j = 0; j < numberOfEcologySettings; ++j)
 		{
@@ -5780,41 +5807,62 @@ void displayComputerText( int menuX    ,  int menuY    , int textSize ,  int spa
 			{
 			case 0:
 			{
-				printText2D( selectString +  std::string("Energy in 1 square of meat: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				// printText2D(
+
+				sideText->push_back( selectString +  std::string("Energy in 1 square of meat: ") + std::to_string(game.ecoSettings[j])  );
+				// , menuX, menuY, textSize);
 				break;
 			}
 			case 1:
 			{
-				printText2D( selectString +  std::string("Energy in 1 square of grass: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				// printText2D(
+
+				sideText->push_back(	selectString +  std::string("Energy in 1 square of grass: ") + std::to_string(game.ecoSettings[j]) );
+				// , menuX, menuY, textSize);
 				break;
 			}
 			case 2:
 			{
-				printText2D( selectString +  std::string("Energy required to move 1 square: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				// printText2D(
+
+				sideText->push_back( selectString +  std::string("Energy required to move 1 square: ") + std::to_string(game.ecoSettings[j])  );
+				// , menuX, menuY, textSize);
 				break;
 			}
 			case 3:
 			{
-				printText2D( selectString +  std::string("Energy required for each animal square each turn: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				// printText2D(
+
+				sideText->push_back( selectString +  std::string("Energy required for each animal square each turn: ") + std::to_string(game.ecoSettings[j]) );
+				// , menuX, menuY, textSize);
 				break;
 			}
 			case 4:
 			{
-				printText2D( selectString +  std::string("Number of map squares to update each turn: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				// printText2D(
+
+				sideText->push_back(	selectString +  std::string("Number of map squares to update each turn: ") + std::to_string(game.ecoSettings[j]) );
+				// , menuX, menuY, textSize);
 				break;
 			}
 			case 5:
 			{
-				printText2D( selectString +  std::string("Nutrition each plant can extract each turn: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				// printText2D(
+
+				sideText->push_back(	selectString +  std::string("Nutrition each plant can extract each turn: ") + std::to_string(game.ecoSettings[j]) );
+				// , menuX, menuY, textSize);
 				break;
 			}
 			case 6:
 			{
-				printText2D( selectString +  std::string("Energy each plant requires each turn: ") + std::to_string(game.ecoSettings[j]) , menuX, menuY, textSize);
+				// printText2D(
+
+				sideText->push_back(selectString +  std::string("Energy each plant requires each turn: ") + std::to_string(game.ecoSettings[j]) );
+				// , menuX, menuY, textSize);
 				break;
 			}
 			}
-			menuY += spacing;
+			// menuY += spacing;
 		}
 	}
 
@@ -5822,47 +5870,47 @@ void displayComputerText( int menuX    ,  int menuY    , int textSize ,  int spa
 	{
 
 		// displayedAComputer = true;
-		menuY += spacing;
-		printText2D(   std::string("Animals are groups of tiles. Each tile is an organ that performs a dedicated bodily function. ") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("Your body is made this way too. ") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("If your tiles are damaged, you will lose the tile's function,") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("which can include your sight, movement, or breathing, resulting in disorientation and death. ") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("Find the hospital! It is in a black building on land, just like this one.") , menuX, menuY, textSize);
-		menuY += spacing;
+
+		sideText->push_back(   std::string("Animals are groups of tiles. Each tile is an organ that performs a dedicated bodily function. ") );
+
+		sideText->push_back(   std::string("Your body is made this way too. ") );
+
+		sideText->push_back(   std::string("If your tiles are damaged, you will lose the tile's function,") );
+
+		sideText->push_back(   std::string("which can include your sight, movement, or breathing, resulting in disorientation and death. ") );
+
+		sideText->push_back(   std::string("Find the hospital! It is in a black building on land, just like this one.") );
+
 	}
 	else if (game.computerdisplays[1])
 	{
 
 		// displayedAComputer = true;
-		printText2D(   std::string("The hospital will heal you if you pick it up.") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("It can also be used to alter your body and mind.") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("Use it to add a gill anywhere on your body, so that you can survive underwater") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("Find a building in the ocean and retrieve the tracker glasses.") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("But beware, there are dangers other than the water itself.") , menuX, menuY, textSize);
-		menuY += spacing;
+		sideText->push_back(   std::string("The hospital will heal you if you pick it up.") );
+
+		sideText->push_back(   std::string("It can also be used to alter your body and mind.") );
+
+		sideText->push_back(   std::string("Use it to add a gill anywhere on your body, so that you can survive underwater") );
+
+		sideText->push_back(   std::string("Find a building in the ocean and retrieve the tracker glasses.") );
+
+		sideText->push_back(   std::string("But beware, there are dangers other than the water itself.") );
+
 	}
 	else if (game.computerdisplays[2])
 	{
 
 		// displayedAComputer = true;
-		printText2D(   std::string("Activate the tracker glasses to see the trails that creatures leave.") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("You will recognize the adversary by its white trail.") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("Take the weapon, find the adversary and destroy it.") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("The adversary posesses neuro glasses, which allow you to see the minute electrical activity of living flesh.") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("You can use them, in combination with the hospital, to edit the mind of a living creature.") , menuX, menuY, textSize);
-		menuY += spacing;
+		sideText->push_back(   std::string("Activate the tracker glasses to see the trails that creatures leave.") );
+
+		sideText->push_back(   std::string("You will recognize the adversary by its white trail.") );
+
+		sideText->push_back(   std::string("Take the weapon, find the adversary and destroy it.") );
+
+		sideText->push_back(   std::string("The adversary posesses neuro glasses, which allow you to see the minute electrical activity of living flesh.") );
+
+		sideText->push_back(   std::string("You can use them, in combination with the hospital, to edit the mind of a living creature.") );
+
 	}
 	else if (game.computerdisplays[3])
 	{
@@ -5870,15 +5918,15 @@ void displayComputerText( int menuX    ,  int menuY    , int textSize ,  int spa
 		// displayedAComputer = true;
 		if (game.adversaryDefeated)
 		{
-			printText2D(   std::string("The adversary has been destroyed. Life will no longer be created in the world, but will persist from its current state,") , menuX, menuY, textSize);
-			menuY += spacing;
-			printText2D(   std::string("or eventually be driven to extinction.") , menuX, menuY, textSize);
-			menuY += spacing;
+			sideText->push_back(   std::string("The adversary has been destroyed. Life will no longer be created in the world, but will persist from its current state,") );
+
+			sideText->push_back(   std::string("or eventually be driven to extinction.") );
+
 		}
 		else
 		{
-			printText2D(   std::string("You must defeat the adversary. Return here when it is done.") , menuX, menuY, textSize);
-			menuY += spacing;
+			sideText->push_back(   std::string("You must defeat the adversary. Return here when it is done.") );
+
 		}
 	}
 
@@ -5887,18 +5935,18 @@ void displayComputerText( int menuX    ,  int menuY    , int textSize ,  int spa
 
 		if (  printLogs)
 		{
-			menuY += spacing;
+
 			for (int i = 0; i < 8; ++i)
 			{
-				printText2D(   game.logs[i] , menuX, menuY, textSize);
-				menuY += spacing;
+				sideText->push_back(   game.logs[i] );
+
 			}
-			menuY += spacing;
+
 		}
 	}
 
 
-	menuY += spacing;
+
 
 
 
@@ -5932,10 +5980,22 @@ void drawGameInterfaceText()
 	int textSize = 10;
 	int spacing = 20;
 
+
+	std::vector<std::string> vec_sideText;
+	std::vector<std::string> * sideText = &vec_sideText;
+
+
+
+
+
 	if (flagSave)
 	{
-		printText2D(   std::string("saving") , menuX, menuY, textSize);
-		menuY += spacing;
+
+		// printText2D(
+		sideText->push_back(  std::string("saving")  );
+
+		// 	, menuX, menuY, textSize);
+		// menuY += spacing;
 		return;
 	}
 	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
@@ -5943,24 +6003,50 @@ void drawGameInterfaceText()
 	unsigned int worldCursorPos = ((cursorPosY * worldSize) + cursorPosX ) % worldSquareSize;
 	if (game.paused)
 	{
-		printText2D(   std::string("FPS 0 (Paused)")   , menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+
+		sideText->push_back(  std::string("FPS 0 (Paused)")  );
+
+		// 	 , menuX, menuY, textSize);
+		// menuY += spacing;
 	}
 	else
 	{
-		printText2D(   std::string("FPS ") + std::to_string(modelFrameCount ) , menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+
+		sideText->push_back( 	 std::string("FPS ") + std::to_string(modelFrameCount )  );
+
+
+
+		//  , menuX, menuY, textSize);
+		// menuY += spacing;
 	}
 	modelFrameCount = 0;
 	if (game.showInstructions)
 	{
-		menuY += spacing;
-		printText2D(   std::string("Start by finding items in the world and picking them up.") , menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("[esc] quit"), menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("[arrows] pan, [-,=] zoom"), menuX, menuY, textSize);
-		menuY += spacing;
+		// menuY += spacing;
+		// printText2D(
+
+		sideText->push_back( std::string("Start by finding items in the world and picking them up.") );
+
+
+		// 	, menuX, menuY, textSize);
+		// menuY += spacing;
+		// printText2D(
+
+
+
+		sideText->push_back( 	 std::string("[esc] quit") );
+
+		//  , menuX, menuY, textSize);
+		// menuY += spacing;
+		// printText2D(
+
+
+		sideText->push_back(  std::string("[arrows] pan, [-,=] zoom") );
+
+		//   , menuX, menuY, textSize);
+		// menuY += spacing;
 		std::string pauseString = std::string("[p] pause ");
 		if (game.paused)
 		{
@@ -5969,40 +6055,84 @@ void drawGameInterfaceText()
 
 		if (game.lockfps)
 		{
-			printText2D(   std::string("[l] max simulation speed"), menuX, menuY, textSize);
-			menuY += spacing;
+			// printText2D(
+
+			sideText->push_back(   std::string("[l] max simulation speed") );
+
+			//   , menuX, menuY, textSize);
+			// menuY += spacing;
 		}
 		else
 		{
-			printText2D(   std::string("[l] limit simulation speed"), menuX, menuY, textSize);
-			menuY += spacing;
+			// printText2D(
+
+			sideText->push_back(  std::string("[l] limit simulation speed") );
+
+			//  , menuX, menuY, textSize);
+			// menuY += spacing;
 		}
 
-		printText2D(   std::string("[o] save, ") + pauseString, menuX, menuY, textSize);
-		menuY += spacing;
-		printText2D(   std::string("[space] return mouse") , menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+
+		sideText->push_back( std::string("[o] save, ") + pauseString );
+
+
+		//   , menuX, menuY, textSize);
+		// menuY += spacing;
+		// printText2D(
+
+		sideText->push_back(    std::string("[space] return mouse") );
+
+		//    , menuX, menuY, textSize);
+		// menuY += spacing;
 		if (game.playerCreature >= 0)
 		{
-			printText2D(   std::string("[w,a,s,d] move") , menuX, menuY, textSize);
-			menuY += spacing;
-			printText2D(   std::string("[r] despawn") , menuX, menuY, textSize);
-			menuY += spacing;
+
+
+
+			// printText2D(
+
+
+			sideText->push_back( 	std::string("[w,a,s,d] move")  );
+
+			// 	, menuX, menuY, textSize);
+			// menuY += spacing;
+			// printText2D(
+
+
+			sideText->push_back(   std::string("[r] despawn") );
+
+			//   , menuX, menuY, textSize);
+			// menuY += spacing;
+
+
 
 		}
 		else
 		{
-			printText2D(   std::string("[r] spawn") , menuX, menuY, textSize);
-			menuY += spacing;
+			// printText2D(
+
+			sideText->push_back(  std::string("[r] spawn") );
+
+			// 		, menuX, menuY, textSize);
+			// menuY += spacing;
 		}
 
-		printText2D(   std::string("[u] hide instructions"), menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+
+		sideText->push_back(   std::string("[u] hide instructions") );
+
+		// 		, menuX, menuY, textSize);
+		// menuY += spacing;
 	}
 	else
 	{
-		printText2D(   std::string("[u] instructions"), menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+
+		sideText->push_back( 	std::string("[u] instructions") );
+
+		// 	, menuX, menuY, textSize);
+		// menuY += spacing;
 	}
 
 	game.palette = false;
@@ -6034,8 +6164,12 @@ void drawGameInterfaceText()
 
 		std::string stringToPrint;
 
-		printText2D(   std::string("Holding ") + std::to_string(holding )  + std::string(" items. [t] next"), menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+
+		sideText->push_back( 	 std::string("Holding ") + std::to_string(holding )  + std::string(" items. [t] next") );
+
+		//  , menuX, menuY, textSize);
+		// menuY += spacing;
 
 		if (game.playerActiveGrabber >= 0 && game.playerActiveGrabber < animalSquareSize)
 		{
@@ -6090,15 +6224,23 @@ void drawGameInterfaceText()
 				}
 
 			}
-			printText2D( stringToPrint   , menuX, menuY, textSize);
-			menuY += spacing;
+			// printText2D(
+
+			sideText->push_back(  stringToPrint  );
+
+			//    , menuX, menuY, textSize);
+			// menuY += spacing;
 		}
 	}
 
 	if (game.playerCanPickup && game.playerCanPickupItem >= 0 && game.playerCanPickupItem < numberOfAnimals)
 	{
-		printText2D(   std::string("[g] pick up ") + std::string(animals[game.playerCanPickupItem].displayName) , menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+
+		sideText->push_back( 	 std::string("[g] pick up ") + std::string(animals[game.playerCanPickupItem].displayName) );
+
+		//   , menuX, menuY, textSize);
+		// menuY += spacing;
 	}
 
 
@@ -6106,16 +6248,20 @@ void drawGameInterfaceText()
 	if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals)
 	{
 		int selectedAnimalSpecies = game.selectedAnimal / numberOfAnimalsPerSpecies;
-		printText2D(   std::string("Selected an animal of species ") + std::to_string(selectedAnimalSpecies ) +
-		               std::string(". Energy ") + std::to_string(animals[game.cursorAnimal].energy ) +
-		               std::string(", size ") + std::to_string(animals[game.cursorAnimal].maxEnergy ) +
-		               std::string(", debt ") + std::to_string(animals[game.cursorAnimal].energyDebt ) +
-		               std::string(", age ") + std::to_string(animals[game.cursorAnimal].age ) +
-		               std::string(", gen. ") + std::to_string(animals[game.cursorAnimal].generation )
+		// printText2D(
 
+		sideText->push_back(
 
-		               , menuX, menuY, textSize);
-		menuY += spacing;
+		    std::string("Selected an animal of species ") + std::to_string(selectedAnimalSpecies ) +
+		    std::string(". Energy ") + std::to_string(animals[game.cursorAnimal].energy ) +
+		    std::string(", size ") + std::to_string(animals[game.cursorAnimal].maxEnergy ) +
+		    std::string(", debt ") + std::to_string(animals[game.cursorAnimal].energyDebt ) +
+		    std::string(", age ") + std::to_string(animals[game.cursorAnimal].age ) +
+		    std::string(", gen. ") + std::to_string(animals[game.cursorAnimal].generation )
+
+		);
+		//                , menuX, menuY, textSize);
+		// menuY += spacing;
 
 
 
@@ -6153,8 +6299,10 @@ void drawGameInterfaceText()
 
 		}
 
-		printText2D(   std::string("Selected plant ") + std::to_string(game.selectedPlant) + cursorDescription  , menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+		sideText->push_back(  std::string("Selected plant ") + std::to_string(game.selectedPlant) + cursorDescription );
+		//    , menuX, menuY, textSize);
+		// menuY += spacing;
 
 
 		std::string geneString = std::string("Plant genes: ");
@@ -6164,8 +6312,12 @@ void drawGameInterfaceText()
 			geneString += std::to_string(world[worldCursorPos].plantGenes[i]) + " ";
 		}
 
-		printText2D( geneString  , menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+
+		sideText->push_back(  geneString );
+
+		//   , menuX, menuY, textSize);
+		// menuY += spacing;
 
 		// std::string
 		geneString = std::string("Seed genes: ");
@@ -6175,8 +6327,10 @@ void drawGameInterfaceText()
 			geneString += std::to_string(world[worldCursorPos].seedGenes[i]) + " ";
 		}
 
-		printText2D( geneString  , menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+		sideText->push_back( 	geneString );
+		// 	 , menuX, menuY, textSize);
+		// menuY += spacing;
 
 
 
@@ -6240,8 +6394,10 @@ void drawGameInterfaceText()
 			cursorDescription += std::string(" Below is ") +  tileDescriptions(world[worldCursorPos].terrain);
 		}
 
-		printText2D(  cursorDescription, menuX, menuY, textSize);
-		menuY += spacing;
+		// printText2D(
+		sideText->push_back(  cursorDescription);
+		//  , menuX, menuY, textSize);
+		// menuY += spacing;
 	}
 	if (game.playerCreature >= 0)
 	{
@@ -6251,19 +6407,27 @@ void drawGameInterfaceText()
 			unsigned int playerPheromoneSensorWorldPos = animals[game.playerCreature].body[playerPheromoneSensor].worldPositionI;
 			if (world[playerPheromoneSensorWorldPos].pheromoneChannel >= 0 &&  world[playerPheromoneSensorWorldPos].pheromoneChannel < numberOfSpeakerChannels)
 			{
-				printText2D(   pheromoneDescriptions( world[playerPheromoneSensorWorldPos].pheromoneChannel ) , menuX, menuY, textSize);
-				menuY += spacing;
+				// printText2D(
+				sideText->push_back(   pheromoneDescriptions( world[playerPheromoneSensorWorldPos].pheromoneChannel ));
+
+
+				//    , menuX, menuY, textSize);
+				// menuY += spacing;
 			}
 			else
 			{
-				printText2D(   std::string("You can't smell anything in particular.") , menuX, menuY, textSize);
-				menuY += spacing;
+				// printText2D(
+				sideText->push_back(   std::string("You can't smell anything in particular.")  );
+				//   , menuX, menuY, textSize);
+				// menuY += spacing;
 			}
 		}
 		if (!game.playerCanSee)// if the player is blind, say so!
 		{
-			printText2D(   std::string("You can't see anything. ") , menuX, menuY, textSize);
-			menuY += spacing;
+			// printText2D(
+			sideText->push_back( 	std::string("You can't see anything. ")  );
+			// 	, menuX, menuY, textSize);
+			// menuY += spacing;
 		}
 
 		int playerGill = getCellWithAir(game.playerCreature);
@@ -6271,37 +6435,83 @@ void drawGameInterfaceText()
 		{
 			if (animals[game.playerCreature].body[playerGill].signalIntensity < 0.0f)
 			{
-				printText2D(   std::string("You have no oxygen left.") , menuX, menuY, textSize);
-				menuY += spacing;
+				// printText2D(
+				sideText->push_back(  std::string("You have no oxygen left.") );
+				//  , menuX, menuY, textSize);
+				// menuY += spacing;
 			}
 			else if (animals[game.playerCreature].body[playerGill].signalIntensity < baseLungCapacity / 2)
 			{
-				printText2D(   std::string("You're half out of oxygen.") , menuX, menuY, textSize);
-				menuY += spacing;
+				// printText2D(
+				sideText->push_back( 	  std::string("You're half out of oxygen.") );
+				//   , menuX, menuY, textSize);
+				// menuY += spacing;
 			}
 		}
 
 		playerGill = getRandomCellOfType( game.playerCreature, ORGAN_SENSOR_PAIN ) ;
 		if (playerGill >= 0)
 		{
+
+			std::string painString = std::string("");
+
+			if (animals[game.playerCreature].body[playerGill].signalIntensity < 1.0f )
+			{
+				painString = std::string("It stings.");
+			}
+			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 2.0f )
+			{
+				painString = std::string("It hurts.");
+			}
+			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 5.0f )
+			{
+				painString = std::string("It hurts really bad!.");
+			}
+			else if (animals[game.playerCreature].body[playerGill].signalIntensity < 10.0f )
+			{
+				painString = std::string("The pain is agonizing!");
+			}
+
+
+
+
+
 			if (animals[game.playerCreature].damageReceived > (animals[game.playerCreature].cellsUsed) * 0.25 &&
 			        animals[game.playerCreature].damageReceived < (animals[game.playerCreature].cellsUsed) * 0.375
 			   )
 			{
-				printText2D(   std::string("You're badly hurt.") , menuX, menuY, textSize);
-				menuY += spacing;
+				// printText2D(
+				sideText->push_back(  std::string("You're badly damaged. ") + painString );
+				//  , menuX, menuY, textSize);
+				// menuY += spacing;
 			}
 			else if (animals[game.playerCreature].damageReceived > (animals[game.playerCreature].cellsUsed) * 0.375)
 			{
-				printText2D(   std::string("You are mortally wounded.") , menuX, menuY, textSize);
-				menuY += spacing;
+				// printText2D(
+				sideText->push_back(   std::string("You are mortally wounded. ")  + painString);
+				//   , menuX, menuY, textSize);
+				// menuY += spacing;
 			}
 		}
 	}
 
 
 	// bool pute =
-	displayComputerText( menuX    ,   menuY    , textSize ,   spacing);
+	displayComputerText( sideText);
+
+	// int i = 0;
+	float rollingY = menuY;
+	for (std::vector<std::string>::iterator it = sideText->begin(); it != sideText->end(); ++it)
+	{
+		printText2D(
+
+		    *it
+
+
+		    , menuX, rollingY, textSize);
+		// i++;
+		rollingY += spacing;
+	}
 
 
 

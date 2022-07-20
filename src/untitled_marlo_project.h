@@ -6,7 +6,7 @@
 
 
 const unsigned int nNeighbours     = 8;
-const int worldSize = 1000;// 2400;
+const int worldSize = 2000;// 2400;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
 const unsigned int numberOfAnimals = 6000;  //20000;
@@ -45,6 +45,9 @@ extern unsigned int longestMenu;
 
 const unsigned int plantGenomeSize = 24;
 const float lightEnergy = 1.0f;
+
+
+
 
 #define PLANTS
 
@@ -270,12 +273,12 @@ void drawMainMenuText();
 void incrementCameraPos(Vec_i2 in);
 void incrementSelectedGrabber();
 void notifyLMBUp();
-void drawInterfacePanel();
+// void drawInterfacePanel();
 
 
 void setupPlantAtCursor();
 void lookAtNextNonretiredAnimal();
-void drawPalette2();
+// void drawPalette2();
 
 void resetGameState();
 

@@ -40,8 +40,6 @@ set(SRCS
 	src/main.h
 	src/graphics.cpp
 	src/graphics.h
-	src/menus.h
-	src/menus.cpp
 	src/utilities.h
 	src/utilities.cpp
 	src/TinyErode.h
