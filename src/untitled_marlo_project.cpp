@@ -111,9 +111,23 @@ GameState game;
 Square *world = new Square[worldSquareSize];
 Animal *animals = new Animal[numberOfAnimals];
 
+	int menuX = 50;
+	int menuY = 50;
+	int textSize = 10;
+	int spacing = 20;
 
 
+float sideTextScrollPos = 0.0f;
 
+void incrementSideText()
+{
+sideTextScrollPos += spacing;
+}
+void decrementSideText()
+{
+sideTextScrollPos -= spacing;
+	
+}
 // these are variables which are only needed per session, and never need to be stored.
 float prelimMap[prelimSquareSize];
 float prelimWater[prelimSquareSize];
@@ -3906,7 +3920,7 @@ void drawPalette( std::vector<std::string>  * sideText)
 
 		// printText2D(
 
-		    sideText->push_back(   std::string("Select a creature to add or remove tiles from it."));
+		sideText->push_back(   std::string("Select a creature to add or remove tiles from it."));
 
 	}
 	// draw the available tiles.
@@ -5754,6 +5768,11 @@ void displayComputerText( std::vector<std::string>  * sideText)
 
 		// draw the food web.
 		// int originalMenuX = menuX;
+
+
+
+
+
 		for (int i = 0; i < numberOfSpecies; ++i)
 		{
 			// printText2D(
@@ -5772,11 +5791,11 @@ void displayComputerText( std::vector<std::string>  * sideText)
 				// printText2D(
 
 
-				foodwebstring += std::to_string(foodWeb[i][j]);
+				foodwebstring += std::to_string(foodWeb[i][j]) + "  ";
 
 
-				                 // 	, menuX, menuY, textSize);
-				                 // menuX += spacing * 5;
+				// 	, menuX, menuY, textSize);
+				// menuX += spacing * 5;
 
 			}
 
@@ -5785,6 +5804,17 @@ void displayComputerText( std::vector<std::string>  * sideText)
 			// menuX = originalMenuX;
 			// menuY += spacing;
 		}
+
+	std::string foodweblabels =					"               " ;
+
+		for (int i = 0; i < numberOfSpecies; ++i)
+		{
+
+				foodweblabels +=  " species" + std::to_string(i) + " ";
+		}
+
+
+			sideText->push_back( foodweblabels);
 
 		for (int i = 0; i < numberOfSpecies; ++i)
 		{
@@ -5975,10 +6005,6 @@ void incrementSelectedGrabber()
 
 void drawGameInterfaceText()
 {
-	int menuX = 50;
-	int menuY = 50;
-	int textSize = 10;
-	int spacing = 20;
 
 
 	std::vector<std::string> vec_sideText;
@@ -6340,7 +6366,7 @@ void drawGameInterfaceText()
 	if (worldCursorPos < worldSquareSize)
 	{
 		int heightInt = world[worldCursorPos].height;
-		menuY += spacing;
+		// menuY += spacing;?
 
 
 		std::string cursorDescription = std::string("");
@@ -6455,7 +6481,7 @@ void drawGameInterfaceText()
 
 			std::string painString = std::string("");
 
-			if (animals[game.playerCreature].body[playerGill].signalIntensity < 1.0f )
+			if (animals[game.playerCreature].body[playerGill].signalIntensity > 0.5f && animals[game.playerCreature].body[playerGill].signalIntensity  < 1.0f )
 			{
 				painString = std::string("It stings.");
 			}
@@ -6492,6 +6518,11 @@ void drawGameInterfaceText()
 				//   , menuX, menuY, textSize);
 				// menuY += spacing;
 			}
+			else
+			{
+
+				sideText->push_back(  painString );
+			}
 		}
 	}
 
@@ -6499,17 +6530,31 @@ void drawGameInterfaceText()
 	// bool pute =
 	displayComputerText( sideText);
 
-	// int i = 0;
+
+
+
+
+	// first, go through and draw rectangles where the text will be.
+
 	float rollingY = menuY;
 	for (std::vector<std::string>::iterator it = sideText->begin(); it != sideText->end(); ++it)
 	{
-		printText2D(
+		// printText2D(*it, menuX, rollingY, textSize);
 
-		    *it
+		Vec_f2 upperBound=Vec_f2(menuX + ((spacing * (it->length()+1) ) * 0.25f    ) + (spacing/2) , rollingY + spacing - (spacing/2) + sideTextScrollPos);
+		Vec_f2 lowerBound=Vec_f2(menuX + (                                        0) - (spacing/2) , rollingY           - (spacing/2) + sideTextScrollPos);
 
+		drawPanel( lowerBound, upperBound, Color(0.1f, 0.5, 0.9f, 0.1f)  );
 
-		    , menuX, rollingY, textSize);
-		// i++;
+		rollingY += spacing;
+	}
+
+	commitBufferToScreen();
+
+	rollingY = menuY;
+	for (std::vector<std::string>::iterator it = sideText->begin(); it != sideText->end(); ++it)
+	{
+		printText2D(*it, menuX, rollingY+ sideTextScrollPos, textSize);
 		rollingY += spacing;
 	}
 

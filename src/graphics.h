@@ -29,6 +29,10 @@ extern GLuint vs, fs, program;
 extern GLuint vao, vbo;
 extern GLuint IndexBufferId;
 
+
+extern float vertexKerning ;
+extern float uvKerning ;
+
 typedef float t_mat4x4[16];
 static inline void mat4x4_ortho( t_mat4x4 out, float left, float right, float bottom, float top, float znear, float zfar )
 {
@@ -70,9 +74,12 @@ void initText2D();
 
 void printText2D(std::string m_text, int x, int y, int size);
 
+void drawPanel(Vec_f2 lowerBound , Vec_f2 upperBound, Color color);
+
 void setupGraphics() ;
 void shutdownGraphics() ;
 
+void commitBufferToScreen();
 void preDraw() ;
 void postDraw();
 

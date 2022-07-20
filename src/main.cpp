@@ -194,12 +194,26 @@ void threadInterface()
 			case SDLK_v:
 			{
 				toggleRain();
+				break;
 			}
 
 			case SDLK_b:
 			{
 
 				setupPlantAtCursor();
+				break;
+			}
+
+
+			case SDLK_LEFTBRACKET:
+			{
+				incrementSideText();
+				break;
+			}
+			case SDLK_RIGHTBRACKET:
+			{
+				decrementSideText();
+				break;
 			}
 
 			case SDLK_PERIOD:

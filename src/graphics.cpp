@@ -944,11 +944,17 @@ void advanceIndexBuffers (unsigned int * index_buffer_data, unsigned int * index
 	(*index_buffer_content)++;
 }
 
+void resetColorgridCursor()
+{
+
+	colorGridCursor = 0;
+}
+
 void preDraw()
 {
-	colorGridCursor = 0;
+	// colorGridCursor = 0;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	colorGridCursor = 0;
+	resetColorgridCursor();
 }
 
 void postDraw ()
@@ -983,6 +989,18 @@ void addExamplePanelToBuffer(float x , float y)
 }
 
 
+
+void drawPanel(Vec_f2 lowerBound , Vec_f2 upperBound, Color color)
+{
+	vertToBuffer(color, Vec_f2(lowerBound.x, lowerBound.y));
+	vertToBuffer(color, Vec_f2(upperBound.x, upperBound.y));
+	vertToBuffer(color, Vec_f2(lowerBound.x, upperBound.y));
+	vertToBuffer(color, Vec_f2(lowerBound.x, lowerBound.y));
+	vertToBuffer(color, Vec_f2(upperBound.x, upperBound.y));
+	vertToBuffer(color, Vec_f2(upperBound.x, lowerBound.y));
+}
+
+
 void mainMenuDraw()
 {
 	preDraw();
@@ -992,6 +1010,14 @@ void mainMenuDraw()
 	drawMainMenuText();
 
 	postDraw();
+}
+
+
+void commitBufferToScreen()
+{
+	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
+	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
+
 }
 
 void threadGraphics()
@@ -1015,19 +1041,17 @@ void threadGraphics()
 		model();
 	}
 
-	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
-	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
+	commitBufferToScreen();
 
 	// unsigned int endOfWorldVertexRegion = colorGridCursor;
-
+	resetColorgridCursor();
+	
 	prepareForMenuDraw();
 
 
-	addExamplePanelToBuffer(0, 0);
+	// addExamplePanelToBuffer(0, 0);
 
-	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, energyColorGrid);
-	glDrawArrays(GL_TRIANGLES, 0,  colorGridCursor);
-
+	
 
 	// addExamplePanelToBuffer(10000,0);
 	// addExamplePanelToBuffer(0, -10000);

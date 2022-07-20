@@ -235,7 +235,8 @@ struct GameState
 } ;
 
 
-
+void incrementSideText();
+void decrementSideText();
 
 // the following are used as an interface to the game.
 void setupRandomWorld();
