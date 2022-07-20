@@ -150,6 +150,7 @@
 #define MUTATION_SPEAKERCHANNEL   10010
 #define MUTATION_BREAKCONNECTION  10011
 #define MUTATION_MULTIPLYWEIGHT   10012
+#define MUTATION_DUPLICATEORGAN   10013
 
 
 // #define STATUSEFFECT_DEPRESSANT  1
@@ -468,7 +469,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_MOUTH_SCAVENGE:
 	{
-		return std::string("a mouth with flabby lips that swallows slime and detritus.");
+		return std::string("a slurping mouth that can eat carrion and waste.");
 	}
 	case ORGAN_GONAD:
 	{

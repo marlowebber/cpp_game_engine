@@ -98,6 +98,9 @@ const Color tint_wall              = Color (1.0f, 1.0f, 1.0f, 0.1f);
 
 const Color tint_shadow              = Color (0.0f, 0.0f, 0.0f, 0.5f);
 
+
+const Color color_white_half              = Color (1.0f, 1.0f, 1.0f, 0.65f);
+
 struct Vec_u2
 {
 	unsigned int x;
