@@ -98,8 +98,8 @@ GameState * pgame = new GameState;
 GameState& game   = *pgame; // https://stackoverflow.com/questions/4436805/does-dereferencing-a-pointer-make-a-copy-of-it
 
 
-Square * world   = new Square[worldSquareSize];
-Animal * animals = new Animal[numberOfAnimals];
+// Square * world   = new Square[worldSquareSize];
+// Animal * animals = new Animal[numberOfAnimals];
 
 int menuX = 50;
 int menuY = 50;
@@ -1161,10 +1161,9 @@ bool validateAnimal(unsigned int animalIndex)
 			totalBreathing++;
 		}
 
-		if (          game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_CARNIVORE
-		              || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_SCAVENGE
-		              || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_PARASITE
-		              || game.animals[animalIndex].body[i].organ == ORGAN_MOUTH_VEG
+		if (        
+
+		 organIsAMouth( game.animals[animalIndex].body[i].organ )
 		   )
 		{
 			totalMouths++;
@@ -2289,6 +2288,7 @@ Color whatColorIsThisSquare(  unsigned int worldI)
 	}
 
 	displayColor = multiplyColor(displayColor, game.world[worldI].light);
+	displayColor.a = 1.0f;
 	return displayColor;
 }
 
@@ -3321,7 +3321,12 @@ void updateMapI(unsigned int worldI)
 	{
 		if (isALiquid(game.world[worldI].wall))
 		{
-			unsigned int dhn =  worldI + neighbourOffsets[ game.world[worldI].downhillNeighbour ] ;
+
+			unsigned int dhnn = game.world[worldI].downhillNeighbour ;
+			dhnn += (extremelyFastNumberFromZeroTo(2)-1);
+			dhnn = dhnn % nNeighbours;
+
+			unsigned int dhn =  worldI + neighbourOffsets[dhnn ] ;
 			if (dhn < worldSquareSize)
 			{
 				if ( !(  materialBlocksMovement(  game.world[   dhn  ].wall )  ))
@@ -4442,7 +4447,8 @@ void animal_organs( int animalIndex)
 			if (game.world[cellWorldPositionI].plantState == MATERIAL_BUD_A ||
 			        game.world[cellWorldPositionI].plantState == MATERIAL_BUD_M ||
 			        game.world[cellWorldPositionI].plantState == MATERIAL_BUD_F ||
-			        game.world[cellWorldPositionI].plantState == MATERIAL_TUBER ||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_POLLENTRAP ||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_TRICHOME ||
 			        game.world[cellWorldPositionI].plantState == MATERIAL_LEAF)
 			{
 
@@ -4475,7 +4481,10 @@ void animal_organs( int animalIndex)
 
 			if (game.world[cellWorldPositionI].plantState == MATERIAL_ROOT ||
 			        game.world[cellWorldPositionI].plantState == MATERIAL_TUBER ||
-			        game.world[cellWorldPositionI].plantState == MATERIAL_WOOD)
+			        game.world[cellWorldPositionI].plantState == MATERIAL_WOOD||
+			        game.world[cellWorldPositionI].plantState == MATERIAL_THORNS
+
+			        )
 			{
 
 				ate_plant = true;
@@ -4506,7 +4515,11 @@ void animal_organs( int animalIndex)
 		{
 			bool ate_plant = false;
 
-			if (game.world[cellWorldPositionI].seedState     == MATERIAL_SEED )
+			if (
+				game.world[cellWorldPositionI].seedState     == MATERIAL_SEED  || 
+				game.world[cellWorldPositionI].seedState     == MATERIAL_POLLEN   
+
+				)
 			{
 
 				ate_plant = true;
@@ -4535,7 +4548,15 @@ void animal_organs( int animalIndex)
 		case ORGAN_MOUTH_SCAVENGE :
 		{
 			bool ate = false;
-			if (game.world[cellWorldPositionI].wall == MATERIAL_FOOD)
+			if (
+
+				game.world[cellWorldPositionI].wall == MATERIAL_FOOD ||
+				game.world[cellWorldPositionI].wall == MATERIAL_BONE ||
+				game.world[cellWorldPositionI].wall == MATERIAL_BLOOD ||
+				game.world[cellWorldPositionI].wall == MATERIAL_VOMIT ||
+				game.world[cellWorldPositionI].wall == MATERIAL_SEMEN
+
+				)
 			{
 				game.animals[animalIndex].energy += game.ecoSettings[0] ;
 				game.world[cellWorldPositionI].wall = MATERIAL_NOTHING;
@@ -5027,10 +5048,16 @@ void camera()
 			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
 			{
 				Color displayColor = color_black;
-				int x = (vx + game.cameraPositionX) % worldSize;
-				int y = (vy + game.cameraPositionY) % worldSize;
+				int x = (vx + game.cameraPositionX);// % worldSize;
+				int y = (vy + game.cameraPositionY);// % worldSize;
+
+				bool overlap = false;
+				if (x < 0 || x > worldSize) { overlap = true; }
+				if (y < 0 || y > worldSize) { overlap = true; }
+
+
 				unsigned int worldI = (y * worldSize) + x;
-				if (worldI < worldSquareSize)
+				if (worldI < worldSquareSize && (!overlap))
 				{
 					float fx = vx;
 					float fy = vy;
@@ -5414,6 +5441,7 @@ void drawGameInterfaceText()
 		    std::string(". Energy ") + std::to_string(game.animals[game.cursorAnimal].energy ) +
 		    std::string(", size ") + std::to_string(game.animals[game.cursorAnimal].maxEnergy ) +
 		    std::string(", debt ") + std::to_string(game.animals[game.cursorAnimal].energyDebt ) +
+		    std::string(", offspringEnergy ") + std::to_string(game.animals[game.cursorAnimal].offspringEnergy ) +
 		    std::string(", age ") + std::to_string(game.animals[game.cursorAnimal].age ) +
 		    std::string(", gen. ") + std::to_string(game.animals[game.cursorAnimal].generation )
 		);

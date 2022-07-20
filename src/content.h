@@ -377,24 +377,41 @@ bool isALiquid(unsigned int material)
 
 
 
+bool organIsAMouth(unsigned int organ)
+{
+	if (
+
+	       organ == ORGAN_MOUTH_CARNIVORE
+	    || organ == ORGAN_MOUTH_SCAVENGE
+	    || organ == ORGAN_MOUTH_PARASITE
+	    || organ == ORGAN_MOUTH_VEG
+	    || organ == ORGAN_MOUTH_SEEDS
+	    || organ == ORGAN_MOUTH_WOOD
+	)
+	{
+		return true;
+	}
+	return false;
+	}
+
 bool growable(char c)
 {
- if (  c == PLANTGENE_TUBER
-		    ||    c == PLANTGENE_WOOD
-		    ||    c == PLANTGENE_ROOT
-		    ||    c == PLANTGENE_LEAF
-		    ||    c == PLANTGENE_POLLENTRAP
-		    ||    c == PLANTGENE_BUD_A
-		    ||    c == PLANTGENE_BUD_M
-		    ||    c == PLANTGENE_BUD_F
-		    ||    c == PLANTGENE_THORNS
-		    ||    c == PLANTGENE_TRICHOME
-		    ||    c == PLANTGENE_RUNNER
-		)
- {
-return true;
- }
- return false;
+	if (  c == PLANTGENE_TUBER
+	        ||    c == PLANTGENE_WOOD
+	        ||    c == PLANTGENE_ROOT
+	        ||    c == PLANTGENE_LEAF
+	        ||    c == PLANTGENE_POLLENTRAP
+	        ||    c == PLANTGENE_BUD_A
+	        ||    c == PLANTGENE_BUD_M
+	        ||    c == PLANTGENE_BUD_F
+	        ||    c == PLANTGENE_THORNS
+	        ||    c == PLANTGENE_TRICHOME
+	        ||    c == PLANTGENE_RUNNER
+	   )
+	{
+		return true;
+	}
+	return false;
 }
 
 
@@ -436,7 +453,7 @@ std::string tileDescriptions(unsigned int tile)
 		return std::string("a triangular beak for eating seeds.");
 	}
 
-	
+
 
 
 	case ORGAN_MOUTH_WOOD:
@@ -1602,10 +1619,10 @@ bool materialIsTransparent(unsigned int material)
 {
 
 	if (
-		material == MATERIAL_WATER
-	|| material == MATERIAL_NOTHING
+	    material == MATERIAL_WATER
+	    || material == MATERIAL_NOTHING
 
-		)
+	)
 	{
 		return true;
 	}
@@ -1636,7 +1653,7 @@ bool isCellConnectable(unsigned int organ)
 
 
 
-  char lighter[] =
+char lighter[] =
 {
 	'1', ' ',
 	'1', '1',
@@ -1651,7 +1668,7 @@ void setupExampleLighter(int i)
 
 	setupCreatureFromCharArray( i, lighter, 8, 2 , std::string("lighter"), MACHINECALLBACK_LIGHTER);
 }
- 	char humanBody[] =
+char humanBody[] =
 {
 	' ', ' ', ' ', '/', 'B', '/', ' ', ' ', ' ',
 	' ', ' ', '/', 'B', 'B', 'B', '/', ' ', ' ',
@@ -1689,7 +1706,7 @@ void setupExampleLighter(int i)
 };
 
 
- 	char humanPaint[] =
+char humanPaint[] =
 {
 	' ', ' ', ' ', 'R', 'R', 'R', ' ', ' ', ' ',
 	' ', ' ', 'R', 'R', 'R', 'R', 'R', ' ', ' ',
@@ -1732,7 +1749,7 @@ void setupExampleHuman(int i)
 	paintCreatureFromCharArray( i, humanPaint, (9 * 33), 9 );
 }
 
- 	char destroyer[] =
+char destroyer[] =
 {
 	' ', ' ', '1', ' ', ' ',
 	' ', '1', '1', '1', ' ',
@@ -1756,7 +1773,7 @@ void setupExampleHuman(int i)
 	' ', ' ', '1', ' ', ' ',
 };
 
- 	char destroyerPaint[] =
+char destroyerPaint[] =
 {
 	' ', ' ', 'V', ' ', ' ',
 	' ', 'V', 'V', 'V', ' ',
@@ -1787,7 +1804,7 @@ void setupDestroyer(int i)
 	setupCreatureFromCharArray( i, destroyer, 20 * 5, 5 , std::string("destroyer") , MACHINECALLBACK_DESTROYER);
 	paintCreatureFromCharArray( i, destroyerPaint, (20 * 5), 5);
 }
-  char trackerGlasses[] =
+char trackerGlasses[] =
 {
 	' ', '2', ' ', '2', ' ',
 	'2', '2', '1', '2', '2',
@@ -1795,7 +1812,7 @@ void setupDestroyer(int i)
 };
 
 
- char trackerGlassesPaint[] =
+char trackerGlassesPaint[] =
 {
 	' ', 'W', ' ', 'W', ' ',
 	'W', 'L', 'M', 'L', 'W',
@@ -1809,14 +1826,14 @@ void setupTrackerGlasses(int i)
 	paintCreatureFromCharArray( i, trackerGlassesPaint, 15, 5 );
 }
 
-  char neuroGlasses[] =
+char neuroGlasses[] =
 {
 	'1', '1', ' ', '1', '1',
 	'1', '2', '1', '2', '1',
 	'1', '1', ' ', '1', '1',
 };
 
-  char neuroGlassesPaint[] =
+char neuroGlassesPaint[] =
 {
 	'W', 'W', ' ', 'W', 'W',
 	'W', 'K', 'M', 'K', 'W',
@@ -1829,7 +1846,7 @@ void setupNeuroGlasses(int i)
 	paintCreatureFromCharArray( i, neuroGlassesPaint, 15, 5 );
 }
 
- 	char pistol[] =
+char pistol[] =
 {
 	'1', '1', '1', '1',
 	'1', '1', '1', '1',
@@ -1837,7 +1854,7 @@ void setupNeuroGlasses(int i)
 	'1', '1', ' ', ' ',
 };
 
- 	char pistolPaint[] =
+char pistolPaint[] =
 {
 	'M', 'M', 'M', 'M',
 	'V', 'V', 'V', 'V',
@@ -1852,14 +1869,14 @@ void setupExampleGun(int i)
 }
 
 
- char knife[] =
+char knife[] =
 {
 	' ', '1', ' ', ' ',
 	'1', '1', '1', '1',
 	' ', '1', ' ', ' ',
 };
 
- char knifePaint[] =
+char knifePaint[] =
 {
 	' ', 'D', ' ', ' ',
 	'V', 'D', 'M', 'M',
@@ -1871,7 +1888,7 @@ void setupExampleKnife(int i)
 	setupCreatureFromCharArray( i, knife, 12, 4 , std::string("knife") , MACHINECALLBACK_KNIFE);
 	paintCreatureFromCharArray( i, knifePaint, 12, 4 );
 }
- char computer[] =
+char computer[] =
 {
 	'1', '1', '1', '1', '1',
 	'1', '2', '2', '2', '1',
@@ -1881,7 +1898,7 @@ void setupExampleKnife(int i)
 	'1', '1', '1', '1', '1',
 };
 
- char computerPaint[] =
+char computerPaint[] =
 {
 	'B', 'B', 'B', 'B', 'B',
 	'B', 'L', 'L', 'L', 'B',
@@ -1898,7 +1915,7 @@ void setupEcologyCompter(int i)
 }
 
 
- char ecoComputer[] =
+char ecoComputer[] =
 {
 	'2', '2', '2', '2', '2',
 	'2', '2', '2', '2', '2',
@@ -1908,7 +1925,7 @@ void setupEcologyCompter(int i)
 	'1', '1', '1', '1', '1',
 };
 
- char ecoComputerPaint[] =
+char ecoComputerPaint[] =
 {
 	'L', 'L', 'L', 'L', 'L',
 	'L', 'L', 'L', 'L', 'L',
@@ -1924,7 +1941,7 @@ void setupMessageComputer(int i, unsigned int messageComputerNumber)
 	paintCreatureFromCharArray( i, ecoComputerPaint, 30, 5 );
 }
 
- char hospital[] =
+char hospital[] =
 {
 	' ', '2', ' ',
 	'2', '2', '2',
@@ -1934,7 +1951,7 @@ void setupMessageComputer(int i, unsigned int messageComputerNumber)
 	'2', '2', '2',
 };
 
- char hospitalPaint[] =
+char hospitalPaint[] =
 {
 	' ', 'M', ' ',
 	'M', 'M', 'M',
@@ -1969,12 +1986,13 @@ bool materialBlocksMovement(unsigned int material)
 
 bool materialDegrades(unsigned int material)
 {
-	if (material == MATERIAL_FOOD ||
-	        material == MATERIAL_BONE ||
-	        material == MATERIAL_BLOOD ||
-	        material == MATERIAL_SMOKE ||
-	        material == MATERIAL_VOMIT ||
-	        material == MATERIAL_SEMEN
+	if (
+		// material == MATERIAL_FOOD ||
+	        // material == MATERIAL_BONE ||
+	        // material == MATERIAL_BLOOD ||
+	        material == MATERIAL_SMOKE 
+	        // material == MATERIAL_VOMIT ||
+	        // material == MATERIAL_SEMEN
 
 	   )
 	{return true;}
