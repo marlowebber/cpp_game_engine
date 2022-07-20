@@ -18,7 +18,7 @@ project(game)
 
 
 
- #set(CMAKE_CXX_FLAGS " -Ofast -flto -fprofile-generate")               # use profiling instrumentation (use this and run the program once)
+ #set(CMAKE_CXX_FLAGS " -Ofast -flto -fprofile-generate")               # use profiling instrumentation (use this first and run the program once)
  #set(CMAKE_CXX_FLAGS "-Ofast -flto -fprofile-use -fprofile-correction") # apply what was learned from profiling (use this after profiling instrumentation, for best results)
 
 

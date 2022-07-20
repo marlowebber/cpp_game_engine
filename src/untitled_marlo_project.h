@@ -6,10 +6,10 @@
 
 
 const unsigned int nNeighbours     = 8;
-const int worldSize = 2000;// 2400;
+const int worldSize = 3000;// 2400;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
-const unsigned int numberOfAnimals = 6000;  //20000;
+const unsigned int numberOfAnimals = 100000;//6000;  //20000;
 const unsigned int numberOfSpecies = 6;
 const unsigned int animalSquareSize      = 256;
 const unsigned int displayNameSize = 32;
@@ -224,9 +224,8 @@ struct GameState
     float speakerChannels[numberOfSpeakerChannels];
     float speakerChannelsLastTurn[numberOfSpeakerChannels];
 
-    // Animal animals[numberOfAnimals];
-
-        // struct Square world[worldSquareSize];
+    Animal animals     [numberOfAnimals];
+    struct Square world[worldSquareSize];
 
     float ecoSettings[numberOfEcologySettings];
 
