@@ -679,6 +679,8 @@ void resetGameState()
 	game.ecoSettings[4] = (worldSquareSize / 64) / sectors; ;//updateSize;
 	game.ecoSettings[5] = 1.0f ;  //nutrient rate
 	game.ecoSettings[6] = 0.05f ; // amount of energy a plant tile requires
+	game.ecoSettings[7] = 1.0f ; // the animal mutation rate
+	game.ecoSettings[8] = 1.0f ; // the plant mutation rate
 	game.activeEcoSetting = 0;
 	resetAnimals();
 	resetGrid();
@@ -1599,6 +1601,19 @@ void mutateAnimal( int animalIndex)
 	{
 		unsigned int newOrgan = extremelyFastNumberFromZeroTo(numberOfOrganTypes);
 
+
+		// animal should only have one kind of mouth, if you add a new type, convert every existing mouth to that type.
+		if (organIsAMouth(newOrgan))
+		{
+			for (int i = 0; i < game.animals[animalIndex].cellsUsed; ++i)
+			{
+				if (organIsAMouth (game.animals[animalIndex].body[i].organ))
+				{
+					game.animals[animalIndex].body[i].organ = newOrgan;
+				}
+			}
+		}
+
 		if (extremelyFastNumberFromZeroTo(1) == 0   || organIsASensor(newOrgan)) // add symmetric
 		{
 			Vec_i2 newPosition   = getRandomEmptyEdgeLocation(animalIndex); 	// figure out a new position anywhere on the animal edge
@@ -1703,11 +1718,26 @@ void mutateAnimal( int animalIndex)
 	}
 	case MUTATION_ALTERBIAS:// randomise a bias neuron's strength, or anything else that uses the working value.
 	{
-		int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
-		if (extremelyFastNumberFromZeroTo(1) == 0)
+		int nChoices = 6;
+		int choices[nChoices] = {
+			getRandomCellOfType(animalIndex, ORGAN_BIASNEURON)         ,
+			getRandomCellOfType(animalIndex, ORGAN_TIMER)         ,
+			getRandomCellOfType(animalIndex, ORGAN_SENSOR_SCANNINGEYE) ,
+			getRandomCellOfType(animalIndex, ORGAN_SCANNING_EYE_PLANT) ,
+			getRandomCellOfType(animalIndex, ORGAN_SCANNING_EYE_CREATURE) ,
+			getRandomCellOfType(animalIndex, ORGAN_SCANNING_EYE_OBSTACLE) ,
+		};
+		int mutantCell = -1;
+		int i = 0;
+		while (true)
 		{
-			mutantCell = getRandomCellOfType(animalIndex, ORGAN_TIMER);
-
+			int choice = choices[extremelyFastNumberFromZeroTo(nChoices - 1)];
+			if (choice >= 0 )
+			{
+				mutantCell = choice;
+				break;
+			}
+			i++; if (i > nChoices) {return;}
 		}
 
 
@@ -1761,27 +1791,58 @@ void mutateAnimal( int animalIndex)
 	}
 	case MUTATION_EYELOOK:// mutate an eyelook
 	{
-		int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
 
-		if (extremelyFastNumberFromZeroTo(1) == 0)
+		int nChoices = 5;
+		int choices[nChoices] = {
+			getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE)         ,
+			getRandomCellOfType(animalIndex, ORGAN_SENSOR_SCANNINGEYE) ,
+			getRandomCellOfType(animalIndex, ORGAN_SCANNING_EYE_PLANT) ,
+			getRandomCellOfType(animalIndex, ORGAN_SCANNING_EYE_CREATURE) ,
+			getRandomCellOfType(animalIndex, ORGAN_SCANNING_EYE_OBSTACLE) ,
+		};
+		int mutantCell = -1;
+		int i = 0;
+		while (true)
 		{
-			mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_SCANNINGEYE);
+			int choice = choices[extremelyFastNumberFromZeroTo(nChoices - 1)];
+			if (choice >= 0 )
+			{
+				mutantCell = choice;
+				break;
+			}
+			i++; if (i > nChoices) {return;}
 		}
 
 		if (mutantCell >= 0 && mutantCell < animalSquareSize)
 		{
-			if (extremelyFastNumberFromZeroTo(1) == 0)
-			{
-				game.animals[animalIndex].body[mutantCell].eyeLookX += (extremelyFastNumberFromZeroTo(2) - 1);
-			}
-			else
-			{
-				game.animals[animalIndex].body[mutantCell].eyeLookY += (extremelyFastNumberFromZeroTo(2) - 1);
-			}
+
+			game.animals[animalIndex].body[mutantCell].eyeLookX += (extremelyFastNumberFromZeroTo(2) - 1);
+			game.animals[animalIndex].body[mutantCell].eyeLookY += (extremelyFastNumberFromZeroTo(2) - 1);
+
 		}
 		break;
 	}
 
+	}
+}
+
+void mutateAnimalByRate( int animalIndex)
+{
+	// if the mutation rate is less than 1, roll for a chance.
+	if (game.ecoSettings[7] < 1.0f)
+	{
+		if (RNG() < game.ecoSettings[7])
+		{
+			mutateAnimal(animalIndex);
+		}
+	}
+	else
+	{
+		int n = game.ecoSettings[7];
+		for (int i = 0; i < n; ++i)
+		{
+			mutateAnimal(animalIndex);
+		}
 	}
 }
 
@@ -1852,7 +1913,7 @@ void spawnAnimalIntoSlot(  int animalIndex,
 
 	if (mutation)
 	{
-		mutateAnimal( animalIndex);
+		mutateAnimalByRate( animalIndex);
 	}
 
 	memcpy( &( game.animals[animalIndex].displayName[0]), &(parent.displayName[0]), sizeof(char) * displayNameSize  );
@@ -2447,7 +2508,7 @@ void smoothHeightMap(unsigned int passes, float strength)
 // operates on seed genes, not plant genes.
 void mutatePlants(unsigned int worldI)
 {
-	if (extremelyFastNumberFromZeroTo(1) == 0) {return;}
+	// if (extremelyFastNumberFromZeroTo(1) == 0) {return;}
 
 	unsigned int mutationChoice = extremelyFastNumberFromZeroTo(2);
 	unsigned int mutationIndex = extremelyFastNumberFromZeroTo(plantGenomeSize - 1);
@@ -2475,6 +2536,29 @@ void mutatePlants(unsigned int worldI)
 		game.world[worldI].plantGenes[plantGenomeSize - 1] = extremelyFastNumberFromZeroTo(numberOfPlantGenes);
 	}
 }
+
+
+
+void mutatePlantByRate(unsigned int worldI)
+{
+	// if the mutation rate is less than 1, roll for a chance.
+	if (game.ecoSettings[8] < 1.0f)
+	{
+		if (RNG() < game.ecoSettings[8])
+		{
+			mutatePlants(worldI);
+		}
+	}
+	else
+	{
+		int n = game.ecoSettings[8];
+		for (int i = 0; i < n; ++i)
+		{
+			mutatePlants(worldI);
+		}
+	}
+}
+
 
 
 
@@ -2701,7 +2785,7 @@ void growPlants(unsigned int worldI)
 								game.world[worldI].energy       -= seedCost;
 								game.world[neighbour].geneCursor = 0;
 								game.world[neighbour].grown = false;
-								mutatePlants(neighbour);
+								mutatePlantByRate(neighbour);
 							}
 						}
 					}
@@ -3296,7 +3380,7 @@ void updatePlants(unsigned int worldI)
 									// sex between two plants
 									// take half the pollen genes, put them in that bud's plantgenes.
 									// mutate the bud before adding the new genes, the result is that this method offers 50% less mutation.
-									mutatePlants(worldI);
+									mutatePlantByRate(worldI);
 
 									for (int i = 0; i < plantGenomeSize; ++i)
 									{
@@ -4398,7 +4482,7 @@ void animal_organs( int animalIndex)
 		{
 			Vec_f2 eyeLook = Vec_f2(game.animals[animalIndex].body[cellIndex].eyeLookX , game.animals[animalIndex].body[cellIndex].eyeLookY);
 
-			eyeLook.x += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue;
+			eyeLook.x += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue; // unlike a normal eye, the scanning eye looks in a range around its viewpoint. It still only sees 1 pixel per turn.
 			eyeLook.y += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue;
 
 			Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[animalIndex].fAngleSin, game.animals[animalIndex].fAngleCos, eyeLook);
@@ -4415,6 +4499,86 @@ void animal_organs( int animalIndex)
 			sensorium[cellIndex] = 1.0f - perceivedColor;
 			break;
 		}
+
+
+
+
+		case ORGAN_SCANNING_EYE_CREATURE:
+		{
+			Vec_f2 eyeLook = Vec_f2(game.animals[animalIndex].body[cellIndex].eyeLookX , game.animals[animalIndex].body[cellIndex].eyeLookY);
+			eyeLook.x += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue; // unlike a normal eye, the scanning eye looks in a range around its viewpoint. It still only sees 1 pixel per turn.
+			eyeLook.y += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue;
+			Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[animalIndex].fAngleSin, game.animals[animalIndex].fAngleCos, eyeLook);
+			unsigned int eyeLookWorldPositionX = cellWorldPositionX + rotatedEyeLook.x;
+			unsigned int eyeLookWorldPositionY = cellWorldPositionY + rotatedEyeLook.y;
+			unsigned int eyeLookWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+
+			// if there is an animal in the square, report 1, else report 0.
+			int occupyingCell = isAnimalInSquare(game.world[eyeLookWorldPositionI].identity , eyeLookWorldPositionI);
+			if ( occupyingCell >= 0)
+			{
+				sensorium[cellIndex] = 1.0f;
+			}
+			else
+			{
+				sensorium[cellIndex] = 0.0f;
+			}
+			break;
+		}
+
+		case ORGAN_SCANNING_EYE_PLANT:
+		{
+			Vec_f2 eyeLook = Vec_f2(game.animals[animalIndex].body[cellIndex].eyeLookX , game.animals[animalIndex].body[cellIndex].eyeLookY);
+			eyeLook.x += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue; // unlike a normal eye, the scanning eye looks in a range around its viewpoint. It still only sees 1 pixel per turn.
+			eyeLook.y += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue;
+			Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[animalIndex].fAngleSin, game.animals[animalIndex].fAngleCos, eyeLook);
+			unsigned int eyeLookWorldPositionX = cellWorldPositionX + rotatedEyeLook.x;
+			unsigned int eyeLookWorldPositionY = cellWorldPositionY + rotatedEyeLook.y;
+			unsigned int eyeLookWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+
+			// // if there is an animal in the square, report 1, else report 0.
+			// int occupyingCell = isAnimalInSquare(game.world[worldCursorPos].identity , eyeLookWorldPositionI);
+			if ( game.world[eyeLookWorldPositionI].plantState != MATERIAL_NOTHING)
+			{
+				sensorium[cellIndex] = 1.0f;
+			}
+			else
+			{
+				sensorium[cellIndex] = 0.0f;
+			}
+
+
+
+			break;
+		}
+
+		case ORGAN_SCANNING_EYE_OBSTACLE:
+		{
+			Vec_f2 eyeLook = Vec_f2(game.animals[animalIndex].body[cellIndex].eyeLookX , game.animals[animalIndex].body[cellIndex].eyeLookY);
+			eyeLook.x += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue; // unlike a normal eye, the scanning eye looks in a range around its viewpoint. It still only sees 1 pixel per turn.
+			eyeLook.y += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue;
+			Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[animalIndex].fAngleSin, game.animals[animalIndex].fAngleCos, eyeLook);
+			unsigned int eyeLookWorldPositionX = cellWorldPositionX + rotatedEyeLook.x;
+			unsigned int eyeLookWorldPositionY = cellWorldPositionY + rotatedEyeLook.y;
+			unsigned int eyeLookWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+
+			// if there is an animal in the square, report 1, else report 0.
+			// int occupyingCell = isAnimalInSquare(game.world[worldCursorPos].identity , eyeLookWorldPositionI);
+			if ( materialBlocksMovement(game.world[eyeLookWorldPositionI].wall) )
+			{
+				sensorium[cellIndex] = 1.0f;
+			}
+			else
+			{
+				sensorium[cellIndex] = 0.0f;
+			}
+			break;
+		}
+
+
+
+
+
 
 
 		case ORGAN_SENSOR_TOUCH:
@@ -5347,6 +5511,17 @@ void displayComputerText( std::vector<std::string>  * sideText)
 				sideText->push_back(selectString +  std::string("Energy each plant requires each turn: ") + std::to_string(game.ecoSettings[j]) );
 				break;
 			}
+			case 7:
+			{
+				sideText->push_back(selectString +  std::string("Animal mutation rate: ") + std::to_string(game.ecoSettings[j]) );
+				break;
+			}
+			case 8:
+			{
+				sideText->push_back(selectString +  std::string("Plant mutation rate: ") + std::to_string(game.ecoSettings[j]) );
+				break;
+			}
+
 			}
 		}
 	}

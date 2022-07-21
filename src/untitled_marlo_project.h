@@ -17,7 +17,7 @@ const unsigned int nLogs = 32;
 const unsigned int logLength = 64;
 const float panSpeed = 0.1f;
 const unsigned int numberOfSpeakerChannels = 16;
-const unsigned int numberOfEcologySettings = 7;
+const unsigned int numberOfEcologySettings = 9;
 
 const float viewPanLimit = 250.0f;
 

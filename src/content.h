@@ -70,8 +70,13 @@
 #define ORGAN_MOUTH_WOOD    53 // eats roots and wood
 #define ORGAN_MOUTH_SEEDS    54 // eats pollen and seeds
 
+#define ORGAN_SENSOR_SCANNINGEYE    55
+#define ORGAN_SCANNING_EYE_PLANT    56
+#define ORGAN_SCANNING_EYE_CREATURE 57
+#define ORGAN_SCANNING_EYE_OBSTACLE 58
 
-#define numberOfOrganTypes        54 // the number limit of growable genes
+
+#define numberOfOrganTypes        58 // the number limit of growable genes
 
 #define MARKER                    65  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        66
@@ -383,7 +388,7 @@ bool organIsAMouth(unsigned int organ)
 {
 	if (
 
-	       organ == ORGAN_MOUTH_CARNIVORE
+	    organ == ORGAN_MOUTH_CARNIVORE
 	    || organ == ORGAN_MOUTH_SCAVENGE
 	    || organ == ORGAN_MOUTH_PARASITE
 	    || organ == ORGAN_MOUTH_VEG
@@ -394,7 +399,7 @@ bool organIsAMouth(unsigned int organ)
 		return true;
 	}
 	return false;
-	}
+}
 
 bool growable(char c)
 {
@@ -455,6 +460,28 @@ std::string tileDescriptions(unsigned int tile)
 		return std::string("a triangular beak for eating seeds.");
 	}
 
+
+// #define ORGAN_SENSOR_SCANNINGEYE    55
+// #define ORGAN_SCANNING_EYE_PLANT    56
+// #define ORGAN_SCANNING_EYE_CREATURE 57
+// #define ORGAN_SCANNING_EYE_OBSTACLE 58
+
+	case ORGAN_SENSOR_SCANNINGEYE:
+	{
+		return std::string("a color-matching eye that rolls in its socket.");
+	}
+	case ORGAN_SCANNING_EYE_PLANT:
+	{
+		return std::string("an eye with a sideways pupil that sees plants.");
+	}
+	case ORGAN_SCANNING_EYE_CREATURE:
+	{
+		return std::string("a staring eye that sees other animals.");
+	}
+	case ORGAN_SCANNING_EYE_OBSTACLE:
+	{
+		return std::string("a compound lens that detects obstacles.");
+	}
 
 
 
@@ -1989,14 +2016,14 @@ bool materialBlocksMovement(unsigned int material)
 bool materialDegrades(unsigned int material)
 {
 	if (
-		// material == MATERIAL_FOOD ||
-	        // material == MATERIAL_BONE ||
-	        // material == MATERIAL_BLOOD ||
-	        material == MATERIAL_SMOKE 
-	        // material == MATERIAL_VOMIT ||
-	        // material == MATERIAL_SEMEN
+	    // material == MATERIAL_FOOD ||
+	    // material == MATERIAL_BONE ||
+	    // material == MATERIAL_BLOOD ||
+	    material == MATERIAL_SMOKE
+	    // material == MATERIAL_VOMIT ||
+	    // material == MATERIAL_SEMEN
 
-	   )
+	)
 	{return true;}
 
 	return false;
