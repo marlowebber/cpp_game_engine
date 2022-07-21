@@ -1237,7 +1237,7 @@ void measureAnimalQualities( int animalIndex)
 		}
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_ADDLIFESPAN)
 		{
-			game.animals[animalIndex].lifespan += baseLifespan;
+			game.animals[animalIndex].lifespan += game.animals[animalIndex].lifespan ; // increase fibonaccically. :)
 		}
 		if (game.animals[animalIndex].body[cellIndex].organ == ORGAN_LIVER)
 		{
@@ -1619,10 +1619,10 @@ void mutateAnimal( int animalIndex)
 		int mutantCell = getRandomPopulatedCell(animalIndex);
 		if ( mutantCell >= 0)
 		{
-			 int newOrgan = game.animals[animalIndex].body[mutantCell].organ;//extremelyFastNumberFromZeroTo(numberOfOrganTypes);
+			int newOrgan = game.animals[animalIndex].body[mutantCell].organ;//extremelyFastNumberFromZeroTo(numberOfOrganTypes);
 			appendCell(animalIndex, newOrgan,  Vec_i2(game.animals[animalIndex].body[mutantCell].localPosX, game.animals[animalIndex].body[mutantCell].localPosY));
-			
-			 int mostRecentAddedCell = game.animals[animalIndex].cellsUsed - 1;
+
+			int mostRecentAddedCell = game.animals[animalIndex].cellsUsed - 1;
 			if ( mostRecentAddedCell > 0 && mutantCell > 0 && mutantCell < game.animals[animalIndex].cellsUsed )
 			{
 				game.animals[animalIndex].body[game.animals[animalIndex].cellsUsed - 1] = game.animals[animalIndex].body[mutantCell];
@@ -1686,7 +1686,7 @@ void mutateAnimal( int animalIndex)
 		if (mutantCell >= 0)
 		{
 			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-			game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight += ((RNG() - 0.5f) * neuralMutationStrength);
+			game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight += ((RNG() - 0.5f) * 2.0f); // it can add -1 to 1 .
 		}
 		break;
 	}
@@ -1696,19 +1696,29 @@ void mutateAnimal( int animalIndex)
 		if (mutantCell >= 0)
 		{
 			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
-			game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight *= ((RNG() - 0.5f) * neuralMutationStrength);
+			game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight =
+			    game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight  * (RNG() + 0.5f)   ;    // it can double or halve the value (i.e. multiply from 0.5 to 1.5 times)
 		}
 		break;
 	}
-	case MUTATION_ALTERBIAS:// randomise a bias neuron's strength.
+	case MUTATION_ALTERBIAS:// randomise a bias neuron's strength, or anything else that uses the working value.
 	{
 		int mutantCell = getRandomCellOfType(animalIndex, ORGAN_BIASNEURON);
-		if (mutantCell >= 0)
+		if (extremelyFastNumberFromZeroTo(1) == 0)
 		{
-			game.animals[animalIndex].body[mutantCell].workingValue *= ((RNG() - 0.5f ) * neuralMutationStrength);
-			game.animals[animalIndex].body[mutantCell].workingValue += ((RNG() - 0.5f ) * neuralMutationStrength);
+			mutantCell = getRandomCellOfType(animalIndex, ORGAN_TIMER);
 
 		}
+
+
+
+		if (mutantCell >= 0)
+		{
+			game.animals[animalIndex].body[mutantCell].workingValue = game.animals[animalIndex].body[mutantCell].workingValue * (RNG() + 0.5f) ;
+			game.animals[animalIndex].body[mutantCell].workingValue += ((RNG() - 0.5f ) * 2.0f);
+
+		}
+
 		break;
 	}
 	case MUTATION_MOVECELL:// swap an existing cell location without messing up the connections.
@@ -1752,6 +1762,12 @@ void mutateAnimal( int animalIndex)
 	case MUTATION_EYELOOK:// mutate an eyelook
 	{
 		int mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_EYE);
+
+		if (extremelyFastNumberFromZeroTo(1) == 0)
+		{
+			mutantCell = getRandomCellOfType(animalIndex, ORGAN_SENSOR_SCANNINGEYE);
+		}
+
 		if (mutantCell >= 0 && mutantCell < animalSquareSize)
 		{
 			if (extremelyFastNumberFromZeroTo(1) == 0)
@@ -1765,6 +1781,7 @@ void mutateAnimal( int animalIndex)
 		}
 		break;
 	}
+
 	}
 }
 
@@ -4375,6 +4392,30 @@ void animal_organs( int animalIndex)
 			sensorium[cellIndex] = 1.0f - perceivedColor;
 			break;
 		}
+
+
+		case ORGAN_SENSOR_SCANNINGEYE:
+		{
+			Vec_f2 eyeLook = Vec_f2(game.animals[animalIndex].body[cellIndex].eyeLookX , game.animals[animalIndex].body[cellIndex].eyeLookY);
+
+			eyeLook.x += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue;
+			eyeLook.y += (RNG() - 0.5f) * game.animals[animalIndex].body[cellIndex].workingValue;
+
+			Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[animalIndex].fAngleSin, game.animals[animalIndex].fAngleCos, eyeLook);
+			unsigned int eyeLookWorldPositionX = cellWorldPositionX + rotatedEyeLook.x;
+			unsigned int eyeLookWorldPositionY = cellWorldPositionY + rotatedEyeLook.y;
+			unsigned int eyeLookWorldPositionI = (cellWorldPositionY * worldSize) + cellWorldPositionX;
+
+			Color receivedColor = whatColorIsThisSquare(eyeLookWorldPositionI);
+			float perceivedColor = 0.0f;
+			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.r - receivedColor.r );
+			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.g - receivedColor.g );
+			perceivedColor += (game.animals[animalIndex].body[cellIndex].color.b - receivedColor.b );
+			perceivedColor = perceivedColor / 3.0f;
+			sensorium[cellIndex] = 1.0f - perceivedColor;
+			break;
+		}
+
 
 		case ORGAN_SENSOR_TOUCH:
 		{
