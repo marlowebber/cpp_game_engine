@@ -1619,9 +1619,11 @@ void mutateAnimal( int animalIndex)
 		int mutantCell = getRandomPopulatedCell(animalIndex);
 		if ( mutantCell >= 0)
 		{
-			unsigned int newOrgan = game.animals[animalIndex].body[mutantCell].organ;//extremelyFastNumberFromZeroTo(numberOfOrganTypes);
+			 int newOrgan = game.animals[animalIndex].body[mutantCell].organ;//extremelyFastNumberFromZeroTo(numberOfOrganTypes);
 			appendCell(animalIndex, newOrgan,  Vec_i2(game.animals[animalIndex].body[mutantCell].localPosX, game.animals[animalIndex].body[mutantCell].localPosY));
-			if (game.animals[animalIndex].cellsUsed - 1 > 0 )
+			
+			 int mostRecentAddedCell = game.animals[animalIndex].cellsUsed - 1;
+			if ( mostRecentAddedCell > 0 && mutantCell > 0 && mutantCell < game.animals[animalIndex].cellsUsed )
 			{
 				game.animals[animalIndex].body[game.animals[animalIndex].cellsUsed - 1] = game.animals[animalIndex].body[mutantCell];
 				game.animals[animalIndex].body[mutantCell].localPosX  +=   -1 + extremelyFastNumberFromZeroTo(2) ;
@@ -3378,7 +3380,7 @@ void updateMapI(unsigned int worldI)
 		{
 
 			unsigned int dhnn = game.world[worldI].downhillNeighbour ;
-			dhnn += (extremelyFastNumberFromZeroTo(2) - 1);
+			dhnn += (extremelyFastNumberFromZeroTo(4) - 2);
 			dhnn = dhnn % nNeighbours;
 
 			unsigned int dhn =  worldI + neighbourOffsets[dhnn ] ;
