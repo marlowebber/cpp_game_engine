@@ -56,7 +56,7 @@ const float liverStorage = 20.0f;
 const unsigned int baseLifespan = 350;
 // if the lifespan is long, the animal's strategy can have a greater effect on its success. If it's very short, the animal is compelled to be just a moving mouth.
 // with that being said, this value is supposed to represent the smallest end of the valid range
-const float musclePower = 180.0f;
+const float musclePower = 100.0f;
 const float playerSpeed = 5.0f;
 const float turnMusclePower = 1.0f;
 const float aBreath = 0.01f;
@@ -6107,6 +6107,9 @@ void setupStructureFromCharArray(int worldPositionI, char * walls, char * floors
 		case 'G':
 			newWall = MATERIAL_GLASS;
 			break;
+		case 'S':
+			newWall = MATERIAL_BASALT;
+			break;
 		}
 
 
@@ -6122,6 +6125,9 @@ void setupStructureFromCharArray(int worldPositionI, char * walls, char * floors
 		case 'G':
 			newFloor = MATERIAL_GLASS;
 			break;
+		case 'S':
+			newWall = MATERIAL_BASALT;
+			break;
 		}
 
 
@@ -6129,27 +6135,30 @@ void setupStructureFromCharArray(int worldPositionI, char * walls, char * floors
 		switch (lc)
 		{
 		case '0':
-			newLight = 1.0f / 8.0f;
+			newLight = 0.0f;// 8.0f / 8.0f;
 			break;
 		case '1':
-			newLight = 2.0f / 8.0f;
+			newLight = 1.0f / 8.0f;
 			break;
 		case '2':
-			newLight = 3.0f / 8.0f;
+			newLight = 2.0f / 8.0f;
 			break;
 		case '3':
-			newLight = 4.0f / 8.0f;
+			newLight = 3.0f / 8.0f;
 			break;
 		case '4':
-			newLight = 5.0f / 8.0f;
+			newLight = 4.0f / 8.0f;
 			break;
 		case '5':
-			newLight = 6.0f / 8.0f;
+			newLight = 5.0f / 8.0f;
 			break;
 		case '6':
-			newLight = 7.0f / 8.0f;
+			newLight = 6.0f / 8.0f;
 			break;
 		case '7':
+			newLight = 7.0f / 8.0f;
+			break;
+		case '8':
 			newLight = 8.0f / 8.0f;
 			break;
 		}
@@ -6600,8 +6609,9 @@ void setupGameItems()
 
 	// setupBuilding_playerBase(building1);
 
-	setupBasicBuilding( building1);
+	// setupBasicBuilding( building1);
 
+	setupStructureFromCharArray(building1, basicBuilding, basicBuildingFloor, basicBuildingLight, 10 * 10, 10, 25);
 	int i = 1;
 	setupEcologyCompter( i);
 	spawnAnimalIntoSlot(2, game.animals[i], building1, false);
@@ -6631,7 +6641,9 @@ void setupGameItems()
 	// BUILDING 3
 	//contains tracker glasses, pistol, and message computer 3
 	int building3 =  getRandomPosition(true);
-	setupBuilding_playerBase(building3);
+	// setupBuilding_playerBase(building3);
+	setupStructureFromCharArray(building3, arenaBuilding, arenaBuildingFloor, arenaBuildingLight, 11 * 9, 11, 25);
+
 	setupTrackerGlasses(i);
 	spawnAnimalIntoSlot(6, game.animals[i], building3, false);
 
@@ -6652,7 +6664,12 @@ void setupGameItems()
 	// BUILDING 4
 	// contains knife, lighter, and message computer 4
 	int building4 =  getRandomPosition(true);
-	setupBuilding_playerBase(building4);
+	// setupBuilding_playerBase(building4);
+
+
+	setupStructureFromCharArray(building4, crashedShip, crashedShipFloor, crashedShipLight, 21 * 47, 21, 15);
+
+
 	setupExampleKnife(i);
 	spawnAnimalIntoSlot(9, game.animals[i], building4, false);
 
