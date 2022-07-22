@@ -478,23 +478,35 @@ void setupExampleAnimal3(int i)
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
 	animalAppendCell( i, ORGAN_MOUTH_VEG );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_SEEDS );
-	animalAppendCell( i, ORGAN_MOUTH_SEEDS );
-	animalAppendCell( i, ORGAN_MOUTH_SEEDS );
-	animalAppendCell( i, ORGAN_MOUTH_SEEDS );
-	animalAppendCell( i, ORGAN_MOUTH_SEEDS );
-	animalAppendCell( i, ORGAN_MOUTH_SEEDS );
-	animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
-	animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
-	animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
-	animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	// animalAppendCell( i, ORGAN_MOUTH_SEEDS );
+	// animalAppendCell( i, ORGAN_MOUTH_SEEDS );
+	// animalAppendCell( i, ORGAN_MOUTH_SEEDS );
+	// animalAppendCell( i, ORGAN_MOUTH_SEEDS );
+	// animalAppendCell( i, ORGAN_MOUTH_SEEDS );
+	// animalAppendCell( i, ORGAN_MOUTH_SEEDS );
+	// animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
+	// animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
+	// animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
+	// animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
 
 
 	game.animals[i].generation = 0;
@@ -2105,6 +2117,27 @@ int defenseAtWorldPoint( int animalIndex, unsigned int cellWorldPositionI)
 			if (game.animals[animalIndex].body[occupyingCell].organ == ORGAN_BONE)
 			{
 				defense++;
+			}
+		}
+	}
+	return defense;
+}
+
+
+int plantDefenseAtWorldPoint(unsigned int cellWorldPositionI)
+{
+	int defense = 1;
+	for (unsigned int n = 0; n < nNeighbours; ++n)
+	{
+		unsigned int worldNeighbour = cellWorldPositionI + neighbourOffsets[n];
+		if ( worldNeighbour < worldSquareSize)
+		{
+			if (game.world[worldNeighbour].plantState == MATERIAL_WOOD)
+			{
+				if (game.world[worldNeighbour].plantIdentity == game.world[cellWorldPositionI].plantIdentity)
+				{
+					defense++;
+				}
 			}
 		}
 	}
@@ -4715,7 +4748,14 @@ void animal_organs( int animalIndex)
 			        game.world[cellWorldPositionI].plantState == MATERIAL_LEAF)
 			{
 
-				ate_plant = true;
+
+
+				float defense =  plantDefenseAtWorldPoint(cellWorldPositionI);
+				if (RNG() < (1.0 / defense))
+				{
+					ate_plant = true;
+				}
+
 			}
 			bool ate = false;
 			if (ate_plant)
@@ -4750,7 +4790,12 @@ void animal_organs( int animalIndex)
 			   )
 			{
 
-				ate_plant = true;
+				float defense =  plantDefenseAtWorldPoint(cellWorldPositionI);
+				if (RNG() < (1.0 / defense))
+				{
+					ate_plant = true;
+				}
+
 			}
 			bool ate = false;
 			if (ate_plant)
@@ -6025,6 +6070,149 @@ void printAnimalCells(int animalIndex)
 	}
 }
 
+
+
+void setupStructureFromCharArray(int worldPositionI, char * walls, char * floors, char * lights, unsigned int len, unsigned int width, unsigned int scale)
+
+{
+
+
+	int x = worldPositionI % worldSize;
+	int y = worldPositionI / worldSize;
+
+	// Vec_i2 o = Vec_i2(0, 0);
+	Vec_i2 p = Vec_i2(0, 0);
+
+	int i = 0;
+	for (;;)
+	{
+
+		unsigned int newWall = MATERIAL_NOTHING;
+		unsigned int newFloor = MATERIAL_NOTHING;
+		float newLight = -1.0f;
+
+
+
+
+
+		char wc = walls[i];
+		switch (wc)
+		{
+		case 'V':
+			newWall = MATERIAL_VOIDMETAL;
+			break;
+		case 'M':
+			newWall = MATERIAL_METAL;
+			break;
+		case 'G':
+			newWall = MATERIAL_GLASS;
+			break;
+		}
+
+
+		char fc = floors[i];
+		switch (fc)
+		{
+		case 'V':
+			newFloor = MATERIAL_VOIDMETAL;
+			break;
+		case 'M':
+			newFloor = MATERIAL_METAL;
+			break;
+		case 'G':
+			newFloor = MATERIAL_GLASS;
+			break;
+		}
+
+
+		char lc = lights[i];
+		switch (lc)
+		{
+		case '0':
+			newLight = 1.0f / 8.0f;
+			break;
+		case '1':
+			newLight = 2.0f / 8.0f;
+			break;
+		case '2':
+			newLight = 3.0f / 8.0f;
+			break;
+		case '3':
+			newLight = 4.0f / 8.0f;
+			break;
+		case '4':
+			newLight = 5.0f / 8.0f;
+			break;
+		case '5':
+			newLight = 6.0f / 8.0f;
+			break;
+		case '6':
+			newLight = 7.0f / 8.0f;
+			break;
+		case '7':
+			newLight = 8.0f / 8.0f;
+			break;
+		}
+
+
+
+		// if (newMaterial != MATERIAL_NOTHING)
+		// {
+
+		int vx = x + (p.x * scale) ;
+		int vy = y + (p.y * scale) ;
+
+
+
+		// if scale is greater than 1, go fill in all the tiny squares inside the big size square.
+		for (int vvy = 0; vvy < scale; ++vvy)
+		{
+			for (int vvx = 0; vvx < scale; ++vvx)
+			{
+
+				int k = ((vy + vvy) * worldSize) + (vx + vvx);
+
+				if (k > 0 && k < worldSquareSize)
+				{
+
+
+					if (newFloor != MATERIAL_NOTHING)
+					{
+						game.world[k].terrain = newFloor;
+					}
+
+					if (newWall != MATERIAL_NOTHING)
+					{
+						game.world[k].wall = newWall;
+					}
+
+					if (newLight > 0.0 )
+					{
+						game.world[k].light.a = newLight;
+					}
+
+				}
+
+			}
+		}
+
+
+
+		// }
+		p.x++;
+		if (p.x == width)
+		{
+			p.x = 0;
+			p.y --;
+		}
+		i++;
+		if (i > len) { break;}
+	}
+
+}
+
+
+
 void setupCreatureFromCharArray( int animalIndex, char * start, unsigned int len, unsigned int width, std::string newName, int newMachineCallback )
 {
 	resetAnimal(animalIndex);
@@ -6035,7 +6223,7 @@ void setupCreatureFromCharArray( int animalIndex, char * start, unsigned int len
 		game.animals[animalIndex].isMachine = true;
 		game.animals[animalIndex].machineCallback = newMachineCallback;
 	}
-	Vec_i2 o = Vec_i2(0, 0);
+	// Vec_i2 o = Vec_i2(0, 0);
 	Vec_i2 p = Vec_i2(0, 0);
 	Color c = color_peach_light;
 	int i = 0;
@@ -6410,7 +6598,9 @@ void setupGameItems()
 	// contains eco computer, player, adversary, and message terminal 1
 	int building1 =  getRandomPosition(false);
 
-	setupBuilding_playerBase(building1);
+	// setupBuilding_playerBase(building1);
+
+	setupBasicBuilding( building1);
 
 	int i = 1;
 	setupEcologyCompter( i);
@@ -6551,9 +6741,9 @@ void setupRandomWorld()
 
 	detailTerrain();
 	worldCreationStage = 8;
-	setupGameItems();
-	worldCreationStage = 9;
 	recomputeTerrainLighting();
+	worldCreationStage = 9;
+	setupGameItems();
 	worldCreationStage = 13;
 
 	printf("The expected size of GameState is %lu bytes\n", sizeof(GameState));

@@ -294,5 +294,6 @@ void resetAnimal(int animalIndex);
 
 void paintCreatureFromCharArray( int animalIndex,  char * start, unsigned int len, unsigned int width );
 
+void setupStructureFromCharArray(int worldPositionI, char * walls,char * floors,char * lights, unsigned int len, unsigned int width, unsigned int scale);
 void appendCell(int animalIndex, unsigned int organType, Vec_i2 newPosition);
 #endif //MARLO_H
