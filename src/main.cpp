@@ -190,10 +190,15 @@ void threadInterface()
 				lookAtNextNonretiredAnimal();
 				break;
 			}
-
-			case SDLK_v:
+			case SDLK_q:
 			{
 				toggleRain();
+				break;
+			}
+			case SDLK_v:
+			{
+
+				spawnAnimalAtCursor();
 				break;
 			}
 

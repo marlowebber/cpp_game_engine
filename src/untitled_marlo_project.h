@@ -252,7 +252,8 @@ void decrementSelectedOrgan();
 // void playerGrab();
 // void playerDrop();
 
-    
+ 
+void spawnAnimalAtCursor();   
 void toggleRain();
 
 extern bool playerGrab ;

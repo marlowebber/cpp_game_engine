@@ -423,16 +423,13 @@ void setupExampleAnimal3(int i)
 	resetAnimal(i);
 
 
-	animalAppendCell( i, ORGAN_BIASNEURON );
+
+	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
 	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
 	animalAppendCell( i, ORGAN_MUSCLE );
+	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
-	game.animals[i].body[2].connections[0].used = true;
-	game.animals[i].body[2].connections[0].connectedTo = 0;
-	game.animals[i].body[2].connections[0].weight = 1.0f;
-	game.animals[i].body[3].connections[0].used = true;
-	game.animals[i].body[3].connections[0].connectedTo = 1;
-	game.animals[i].body[3].connections[0].weight = 1.0f;
+
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SCANNING_EYE_PLANT );
@@ -442,19 +439,6 @@ void setupExampleAnimal3(int i)
 	animalAppendCell( i, ORGAN_SENSOR_SCANNINGEYE );
 	animalAppendCell( i, ORGAN_SENSOR_SCANNINGEYE );
 
-	game.animals[i].body[4].workingValue = 10.0f;
-	game.animals[i].body[5].workingValue = 10.0f;
-	game.animals[i].body[6].workingValue = 10.0f;
-	game.animals[i].body[7].workingValue = 10.0f;
-	game.animals[i].body[8].workingValue = 10.0f;
-	game.animals[i].body[9].workingValue = 10.0f;
-	game.animals[i].body[10].workingValue = 10.0f;
-	game.animals[i].body[11].workingValue = 10.0f;
-
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_BIASNEURON );
-	animalAppendCell( i, ORGAN_NEURON );
-	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_NEURON );
 	animalAppendCell( i, ORGAN_BIASNEURON );
@@ -500,6 +484,12 @@ void setupExampleAnimal3(int i)
 	animalAppendCell( i, ORGAN_MOUTH_WOOD );
 	animalAppendCell( i, ORGAN_MOUTH_WOOD );
 	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+
+	// animalAppendCell( i, ORGAN_MUSCLE );
+	// animalAppendCell( i, ORGAN_MUSCLE_TURN );
+
+	// animalAppendCell( i, ORGAN_MUSCLE );
+	// animalAppendCell( i, ORGAN_MUSCLE_TURN );
 	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
 	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
 	// animalAppendCell( i, ORGAN_MOUTH_WOOD );
@@ -1547,7 +1537,7 @@ void mutateAnimal( int animalIndex)
 	int mutation = MATERIAL_NOTHING;// choose a mutation from the group randomly.
 	if (group == 1)
 	{
-		int mutationChoice = extremelyFastNumberFromZeroTo(1);
+		int mutationChoice = extremelyFastNumberFromZeroTo(3);
 		if (mutationChoice == 0)
 		{
 			mutation = MUTATION_ADDWEIGHT;
@@ -1559,6 +1549,10 @@ void mutateAnimal( int animalIndex)
 		else if (mutationChoice == 2)
 		{
 			mutation = MUTATION_ALTERBIAS;
+		}
+		else if (mutationChoice == 3)
+		{
+			mutation = MUTATION_INVERTWEIGHT;
 		}
 	}
 	else if (group == 2)
@@ -1684,7 +1678,7 @@ void mutateAnimal( int animalIndex)
 				if (target >= 0)
 				{
 					game.animals[animalIndex].body[mutantCell].connections[mutantConnection].connectedTo = target;
-					game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight = ((RNG() - 0.5f) * 2.0f );
+					game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight = ((RNG() - 0.5f) * 4.0f );
 				}
 			}
 		}
@@ -1735,7 +1729,19 @@ void mutateAnimal( int animalIndex)
 		{
 			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
 			game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight =
-			    game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight  * (RNG() + 0.5f)   ;    // it can double or halve the value (i.e. multiply from 0.5 to 1.5 times)
+			    game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight  *  (((RNG() - 0.5f) * 0.75) + 1.25)    ; // it can double or halve the value (i.e. multiply from 0.5 to 2 times) but should not change the sign
+		}
+		break;
+	}
+
+	case MUTATION_INVERTWEIGHT:
+	{
+		int mutantCell =  getRandomConnectingCell(animalIndex);
+		if (mutantCell >= 0)
+		{
+			unsigned int mutantConnection = extremelyFastNumberFromZeroTo(NUMBER_OF_CONNECTIONS - 1);
+			game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight =
+			    game.animals[animalIndex].body[mutantCell].connections[mutantConnection].weight  * 1.0f   ;
 		}
 		break;
 	}
@@ -2021,18 +2027,8 @@ void selectCursorAnimal()
 
 void killAnimal(int animalIndex)
 {
-	if (animalIndex == game.playerCreature)
-	{
-		game.playerCreature = -1;
-		appendLog(std::string("You died!"));
-	}
-	if (animalIndex == game.cameraTargetCreature)
-	{
-		game.cameraTargetCreature = -1;
-	}
-	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
-	game.speciesVacancies[speciesIndex] = true;
-	game.animals[animalIndex].retired = true;
+
+
 	for (unsigned int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex) // process organs and signals and clear animalIndex on grid
 	{
 		unsigned int cellWorldPositionI  = game.animals[animalIndex].body[cellIndex].worldPositionI;
@@ -2052,6 +2048,33 @@ void killAnimal(int animalIndex)
 			}
 		}
 	}
+
+	
+	if (animalIndex == game.playerCreature)
+	{
+		appendLog(std::string("You died!"));
+
+		int pre = 0;
+		for (int i = 0; i < game.animals[game.playerCreature].cellsUsed; ++i)
+		{
+			game.animals[game.playerCreature].body[i].damage = 0.0f;
+		}
+		game.animals[game.playerCreature].damageReceived = 0;
+		return;
+
+	}
+	if (animalIndex == game.cameraTargetCreature)
+	{
+		game.cameraTargetCreature = -1;
+	}
+	
+
+
+
+
+	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+	game.speciesVacancies[speciesIndex] = true;
+	game.animals[animalIndex].retired = true;
 }
 
 
@@ -3825,6 +3848,49 @@ void lighterCallback( int gunIndex, int shooterIndex )
 	}
 }
 
+int getGrabbableItemAtCursor ()
+{
+
+
+
+	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
+	int cursorPosY = game.cameraPositionY + game.mousePositionY;
+	unsigned int neighbour = ((cursorPosY * worldSize) + cursorPosX ) % worldSquareSize;
+
+	int result = -1;
+	bool gotSomething = false;
+
+	if (game.world[neighbour].identity >= 0 && game.world[neighbour].identity != game.playerCreature && game.world[neighbour].identity < numberOfAnimals)
+	{
+		int targetLocalPositionI = isAnimalInSquare( game.world[neighbour].identity, neighbour);
+		if (targetLocalPositionI >= 0)
+		{
+
+			bool grabbedByAnotherGrabber = false;// finally, make sure the item is not grabbed by another of your own grabbers.
+			for (unsigned int cellIndexB = 0; cellIndexB < game.animals[game.playerCreature].cellsUsed; ++cellIndexB)                                      // place animalIndex on grid and attack / eat. add captured energy
+			{
+				if (game.animals[game.playerCreature].body[cellIndexB].organ == ORGAN_GRABBER)
+				{
+					if (game.animals[game.playerCreature].body[cellIndexB].grabbedCreature == game.world[neighbour].identity )
+					{
+						grabbedByAnotherGrabber = true;
+						break;
+					}
+				}
+			}
+			if (!grabbedByAnotherGrabber)
+			{
+				gotSomething = true;
+				result = game.world[neighbour].identity;
+				// break;
+			}
+		}
+	}
+
+	return result;
+}
+
+
 int getGrabbableItem( int animalIndex, unsigned int cellIndex)
 {
 	int grabArea = 5;
@@ -4258,7 +4324,7 @@ void animal_organs( int animalIndex)
 			float sum = 0.0f;
 			if (animalIndex == game.playerCreature)
 			{
-				int potentialGrab = getGrabbableItem(game.playerCreature, cellIndex);// check if there is anything grabbable.
+				int potentialGrab = getGrabbableItemAtCursor();// check if there is anything grabbable.
 				if (potentialGrab >= 0)
 				{
 					game.playerCanPickup = true;
@@ -4307,8 +4373,15 @@ void animal_organs( int animalIndex)
 			if (sum >= 1.0f && game.animals[animalIndex].body[cellIndex].grabbedCreature  == -1)
 			{
 				int potentialGrab = getGrabbableItem (animalIndex, cellIndex);
+				if (animalIndex == game.playerCreature)
+				{
+					potentialGrab	= getGrabbableItemAtCursor();// check if there is anything grabbable.
+				}
+
 				if (potentialGrab >= 0)
 				{
+
+
 					game.animals[animalIndex].body[cellIndex].grabbedCreature = potentialGrab;
 				}
 			}
@@ -4322,6 +4395,23 @@ void animal_organs( int animalIndex)
 				game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].fPosX = cellWorldPositionX;
 				game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].fPosY = cellWorldPositionY;
 				game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].position = cellWorldPositionI;
+
+
+				if (animalIndex == game.playerCreature && cellIndex == game.playerActiveGrabber)
+				{
+
+
+					int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
+					int cursorPosY = game.cameraPositionY + game.mousePositionY;
+					unsigned int cursorPosI = ((cursorPosY * worldSize) + cursorPosX ) % worldSquareSize;
+
+					game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].uPosX = cursorPosX;
+					game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].uPosY = cursorPosY;
+					game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].fPosX = cursorPosX;
+					game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].fPosY = cursorPosY;
+					game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].position = cursorPosI;
+
+				}
 
 				// also, if grabbed by the player, adjust the angle of the grabbed object so it points at the mouse cursor. for aiming weapons.
 				float fposx = cellWorldPositionX;
@@ -5081,8 +5171,8 @@ void animal_organs( int animalIndex)
 			{
 				sum = sumInputs(  animalIndex,   cellIndex);
 			}
-			// sum = clamp(sum, -1.0f, 1.0f);
-			sum  = fast_sigmoid(sum);
+			sum = clamp(sum, -1.0f, 1.0f);
+			// sum  = fast_sigmoid(sum);
 			sensorium[cellIndex] = sum;
 
 			float impulse = game.animals[animalIndex].body[cellIndex].signalIntensity  * musclePower;
@@ -5100,8 +5190,8 @@ void animal_organs( int animalIndex)
 			{
 				sum = sumInputs(  animalIndex,   cellIndex);
 			}
-			// sum = clamp(sum, -1.0f, 1.0f);
-			sum  = fast_sigmoid(sum);
+			sum = clamp(sum, -1.0f, 1.0f);
+			// sum  = fast_sigmoid(sum);
 
 			sensorium[cellIndex] = sum;
 
@@ -5119,13 +5209,23 @@ void animal_organs( int animalIndex)
 			{
 				sum = sumInputs(  animalIndex,   cellIndex);
 			}
-			sum  = fast_sigmoid(sum);
+			// sum  = fast_sigmoid(sum);
+
+
 
 			sensorium[cellIndex] = sum;
 
 			if (setOrSteerAngle)
 			{
-				game.animals[animalIndex].fAngle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) * const_pi ;
+
+
+				float angle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) * const_pi;
+
+
+				game.animals[animalIndex].fAngle +=  ((sum - game.animals[animalIndex].fAngle ) * 0.5f) / game.animals[animalIndex].cellsUsed;
+
+
+
 			}
 			else
 			{
@@ -6448,6 +6548,9 @@ void spawnPlayer()
 	appendLog( std::string("Spawned the player.") );
 }
 
+
+
+
 void adjustPlayerPos(Vec_f2 pos)
 {
 	if (game.playerCreature >= 0)
@@ -6758,7 +6861,7 @@ void setupGameItems()
 
 
 	// adversary is outside, under water
-	game.adversaryRespawnPos =  getRandomPosition(0.5f);
+	game.adversaryRespawnPos =  getRandomPosition(0.35f);
 	spawnAdversary(game.adversaryRespawnPos);
 
 
@@ -7339,6 +7442,24 @@ void setupPlantAtCursor()
 	int cursorPosY = game.cameraPositionY + game.mousePositionY;
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 	setupTestPlant3(worldCursorPos);
+}
+
+
+void spawnAnimalAtCursor()
+{
+	int cursorPosX = game.cameraPositionX +  game.mousePositionX ;
+	int cursorPosY = game.cameraPositionY + game.mousePositionY;
+	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
+
+	int j = 1;
+	setupExampleAnimal3(j);
+	paintAnimal(j);
+	int domingo = spawnAnimal( 1,  game.animals[j], worldCursorPos, false);
+	if (domingo >= 0)
+	{
+		game.animals[domingo].energy = game.animals[domingo].cellsUsed / 2;
+	}
+
 }
 
 bool test_animals()
