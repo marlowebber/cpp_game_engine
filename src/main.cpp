@@ -183,6 +183,12 @@ void threadInterface()
 				break;
 			}
 
+			case SDLK_COMMA:
+
+			{
+				incrementVisualizer();
+				break;
+			}
 			case SDLK_n:
 			{
 

@@ -76,6 +76,9 @@ const unsigned int baseSize = 50;
 const unsigned int wallThickness = 8;
 const unsigned int doorThickness = 16;
 const int destroyerRange = 250;
+
+const float plantMaxEnergy = nNeighbours * 3.0f;
+
 const int neighbourOffsets[] =
 {
 	- 1,
@@ -2049,7 +2052,7 @@ void killAnimal(int animalIndex)
 		}
 	}
 
-	
+
 	if (animalIndex == game.playerCreature)
 	{
 		appendLog(std::string("You died!"));
@@ -2067,7 +2070,7 @@ void killAnimal(int animalIndex)
 	{
 		game.cameraTargetCreature = -1;
 	}
-	
+
 
 
 
@@ -3364,8 +3367,8 @@ void updatePlants(unsigned int worldI)
 			damagePlants(worldI);
 		}
 		game.world[worldI].energy -= game.ecoSettings[6];
-		game.world[worldI].energy     = clamp(game.world[worldI].energy ,    -1.0f, nNeighbours * 3.0f);
-		game.world[worldI].nutrients  = clamp(game.world[worldI].nutrients , -1.0f, nNeighbours * 3.0f);
+		game.world[worldI].energy     = clamp(game.world[worldI].energy ,    -1.0f, plantMaxEnergy);
+		game.world[worldI].nutrients  = clamp(game.world[worldI].nutrients , -1.0f, plantMaxEnergy);
 
 		// grow plant into neighboring squares if applicable
 		switch (game.world[worldI].plantState)
@@ -5485,6 +5488,194 @@ void drawNeuroConnections( int animalIndex,  int animalCell, int vx, int vy)
 	}
 }
 
+
+void incrementVisualizer()
+{
+	if (game.visualizer == VISUALIZER_TRUECOLOR)
+	{
+		game.visualizer = VISUALIZER_ENERGY;
+	}
+	else if (game.visualizer == VISUALIZER_ENERGY)
+	{
+		game.visualizer = VISUALIZER_NEURALACTIVITY;
+	}
+	else if (game.visualizer == VISUALIZER_NEURALACTIVITY)
+	{
+		game.visualizer = VISUALIZER_TRUECOLOR;
+	}
+}
+
+Color vis_energy(unsigned int worldI)
+{
+
+	Color displayColor = color_black;
+
+	int occupyingCell = isAnimalInSquare(game.world[worldI].identity, worldI);
+	if ( occupyingCell >= 0 )
+	{
+		int animalIndex = game.world[worldI].identity;
+		if (game.animals[animalIndex].isMachine)
+		{
+
+			displayColor =   color_white;
+		}
+		else
+		{
+		displayColor = 
+		 Color(0.0f, (game.animals[animalIndex].energyDebt / game.animals[animalIndex].cellsUsed), (game.animals[animalIndex].energy / game.animals[animalIndex].maxEnergy), 1.0f);
+
+		}
+	}
+	else
+	{
+
+
+
+		if (game.world[worldI].plantState != MATERIAL_NOTHING)
+		{
+			displayColor =  Color(game.world[worldI].nutrients /plantMaxEnergy , 0.0f, game.world[worldI].energy /plantMaxEnergy, 1.0f);
+		}
+
+
+
+
+		if (game.world[worldI].seedState != MATERIAL_NOTHING)
+		{
+			displayColor =  filterColor(displayColor, multiplyColorByScalar( Color(1.0f, 0.0f, 0.0f, 1.0f), 0.5f  ));
+		}
+
+
+
+		if (game.world[worldI].wall != MATERIAL_NOTHING)
+		{
+			displayColor =  filterColor(displayColor, Color(1.0f, 1.0f, 1.0f, 0.1f));
+		}
+
+
+
+	}
+
+	return displayColor;
+
+}
+
+
+Color vis_neural(unsigned int worldI)
+{
+
+	Color displayColor = color_black;
+
+	int occupyingCell = isAnimalInSquare(game.world[worldI].identity, worldI);
+	if ( occupyingCell >= 0 )
+	{
+
+		if (game.animals[game.world[worldI].identity].isMachine)
+		{
+
+			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 1.0f ));
+		}
+		else
+		{
+			displayColor = multiplyColorByScalar( color_white, game.animals[game.world[worldI].identity]. body [ occupyingCell].signalIntensity );
+
+		}
+	}
+	else
+	{
+
+
+
+		if (game.world[worldI].seedState != MATERIAL_NOTHING)
+		{
+			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.5f  ));
+		}
+
+		if (game.world[worldI].plantState != MATERIAL_NOTHING)
+		{
+			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.5f  ));
+		}
+
+		if (game.world[worldI].wall != MATERIAL_NOTHING)
+		{
+			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.5f  ));
+		}
+
+
+
+	}
+
+
+
+	return displayColor;
+
+}
+
+
+Color vis_truecolor(unsigned int worldI)
+{
+	Color displayColor = whatColorIsThisSquare(worldI);
+
+	bool squareSelected = false;
+	if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals )
+	{
+		if (game.world[worldI].identity == game.selectedAnimal)
+		{
+			squareSelected = true;
+		}
+	}
+
+	if (squareSelected)
+	{
+		if (isAnimalInSquare(game.world[worldI].identity , worldI) >= 0 )
+		{
+
+			displayColor = multiplyColor(displayColor, color_white);
+		}
+		else
+		{
+
+
+
+			displayColor = multiplyColor(displayColor, color_white_half);
+		}
+	}
+	else
+	{
+
+		displayColor = multiplyColor(displayColor, game.world[worldI].light);
+	}
+	displayColor.a = 1.0f;
+
+
+	// shadows
+	if (worldI > worldSize + 1)
+	{
+		unsigned int shadowCaster = worldI - (worldSize + 1);
+		bool shadow = false;
+		int shadowCasterCell = isAnimalInSquare( game.world[shadowCaster].identity,  shadowCaster) ;
+		int currentCell = isAnimalInSquare( game.world[worldI].identity,  worldI);
+		if (currentCell < 0)
+		{
+			if (shadowCasterCell >= 0 )
+			{
+				shadow = true;
+			}
+			else if ( materialIsTransparent(game.world[worldI].wall) && (! (materialIsTransparent(game.world[shadowCaster].wall )  )))
+			{
+				shadow = true;
+			}
+			if (shadow)
+			{
+				displayColor = filterColor(displayColor, tint_shadow);
+			}
+		}
+	}
+
+	return displayColor;
+}
+
+
+
 void camera()
 {
 	ZoneScoped;
@@ -5531,65 +5722,35 @@ void camera()
 				unsigned int worldI = (y * worldSize) + x;
 				if (worldI < worldSquareSize && (!overlap))
 				{
+
 					float fx = vx;
 					float fy = vy;
-					displayColor = whatColorIsThisSquare(worldI);
 
-					bool squareSelected = false;
-					if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals )
-					{
-						if (game.world[worldI].identity == game.selectedAnimal)
-						{
-							squareSelected = true;
-						}
-					}
+					Color displayColor = color_black;
 
-					if (squareSelected)
-					{
-						if (isAnimalInSquare(game.world[worldI].identity , worldI) >= 0 )
-						{
-
-							displayColor = multiplyColor(displayColor, color_white);
-						}
-						else
-						{
-
-
-
-							displayColor = multiplyColor(displayColor, color_white_half);
-						}
-					}
-					else
+					switch (game.visualizer)
 					{
 
-						displayColor = multiplyColor(displayColor, game.world[worldI].light);
-					}
-					displayColor.a = 1.0f;
-
-
-					// shadows
-					if (worldI > worldSize + 1)
+					case VISUALIZER_TRUECOLOR:
 					{
-						unsigned int shadowCaster = worldI - (worldSize + 1);
-						bool shadow = false;
-						int shadowCasterCell = isAnimalInSquare( game.world[shadowCaster].identity,  shadowCaster) ;
-						int currentCell = isAnimalInSquare( game.world[worldI].identity,  worldI);
-						if (currentCell < 0)
-						{
-							if (shadowCasterCell >= 0 )
-							{
-								shadow = true;
-							}
-							else if ( materialIsTransparent(game.world[worldI].wall) && (! (materialIsTransparent(game.world[shadowCaster].wall )  )))
-							{
-								shadow = true;
-							}
-							if (shadow)
-							{
-								displayColor = filterColor(displayColor, tint_shadow);
-							}
-						}
+						displayColor = vis_truecolor(worldI);
+						break;
 					}
+					case VISUALIZER_NEURALACTIVITY:
+					{
+						displayColor = vis_neural(worldI);
+						break;
+					}
+					case VISUALIZER_ENERGY:
+					{
+						displayColor = vis_energy(worldI);
+						break;
+					}
+
+
+					}
+
+
 					if (game.selectedAnimal >= 0 && game.selectedAnimal < numberOfAnimals )
 					{
 						bool squareIsSelectedAnimal = false;

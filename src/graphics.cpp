@@ -438,9 +438,9 @@ Color multiplyColorByScalar(Color a, float b)
 Color filterColor( Color a, Color b)
 {
 	Color c;
-	c.r = (b.r ) + ((1.0f - (b.a)) * (a.r));
-	c.g = (b.g ) + ((1.0f - (b.a)) * (a.g));
-	c.b = (b.b ) + ((1.0f - (b.a)) * (a.b));
+	c.r = (b.r *b.a) + ((1.0f - (b.a)) * (a.r*a.a));
+	c.g = (b.g *b.a) + ((1.0f - (b.a)) * (a.g*a.a));
+	c.b = (b.b *b.a) + ((1.0f - (b.a)) * (a.b*a.a));
 	c.a = a.a + b.a;
 	return clampColor(c);
 }

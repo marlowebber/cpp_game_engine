@@ -156,9 +156,8 @@
 // #define STATUSEFFECT_SICK        3
 
 #define VISUALIZER_TRUECOLOR           1001
-#define VISUALIZER_TRACKS              1003
-#define VISUALIZER_IDENTITY            1004
 #define VISUALIZER_NEURALACTIVITY      1006
+#define VISUALIZER_ENERGY              1007
 
 
 

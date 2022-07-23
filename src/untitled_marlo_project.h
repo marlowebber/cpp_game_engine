@@ -252,6 +252,7 @@ void decrementSelectedOrgan();
 // void playerGrab();
 // void playerDrop();
 
+void incrementVisualizer();
  
 void spawnAnimalAtCursor();   
 void toggleRain();
