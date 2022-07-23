@@ -226,7 +226,11 @@ void threadInterface()
 				decrementSideText();
 				break;
 			}
-
+			case SDLK_SLASH:
+			{
+				 scrambleSelectedAnimal();
+				break;
+			}
 			case SDLK_PERIOD:
 			{
 				if (getPause())

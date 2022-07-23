@@ -401,8 +401,9 @@ int getRandomConnectableCell( int animalIndex)
 	return -1;
 }
 
-void scrambleAnimal(int animalIndex)
+void scrambleAnimal( int animalIndex)
 {
+
 	for (unsigned int cellLocalPositionI = 0; cellLocalPositionI < animalSquareSize; ++cellLocalPositionI)
 	{
 		for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
@@ -418,6 +419,15 @@ void scrambleAnimal(int animalIndex)
 				game.animals[animalIndex].body[cellLocalPositionI].connections[i].used = false; // extremelyFastNumberFromZeroTo(1);
 			}
 		}
+	}
+}
+
+void scrambleSelectedAnimal()
+{
+	if (game.selectedAnimal >= 0)
+	{
+
+		scrambleAnimal(game.selectedAnimal);
 	}
 }
 
@@ -512,6 +522,7 @@ void setupExampleAnimal3(int i)
 	// animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
 
 
+	scrambleAnimal(i);
 	game.animals[i].generation = 0;
 }
 
@@ -4128,11 +4139,11 @@ void animal_organs( int animalIndex)
 			// in this memory, the output is latched to -1 if the sum of inputs goes below -1, and latched to +1 if the sum of inputs goes above 1.
 			// it can be thought of as a 'digital' memory encoding a state with two values.
 			float sum = sumInputs(  animalIndex,   cellIndex);
-			if (sum > 1.0f)
+			if (sum > 0.85f)
 			{
 				sensorium[cellIndex]  = 1.0f;
 			}
-			else if (sum < -1.0f)
+			else if (sum < -0.85f)
 			{
 				sensorium[cellIndex] = -1.0f;
 			}
@@ -4184,11 +4195,11 @@ void animal_organs( int animalIndex)
 
 			if (inA > inB)
 			{
-				sensorium[cellIndex] = 1;
+				sensorium[cellIndex] = 1.0f;
 			}
 			else
 			{
-				sensorium[cellIndex] = -1;
+				sensorium[cellIndex] = -1.0f;
 			}
 
 			break;
@@ -4318,7 +4329,7 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_SENSOR_RANDOM:
 		{
-			sensorium[cellIndex] = ((extremelyFastNumberFromZeroTo(64) - 32.0f) / 32.0f ); //(RNG() - 0.5f) * 2.0f;
+			sensorium[cellIndex] = (RNG() - 0.5f) * 2.0f;
 			break;
 		}
 
@@ -4373,7 +4384,7 @@ void animal_organs( int animalIndex)
 			}
 
 			// Grab stuff.
-			if (sum >= 1.0f && game.animals[animalIndex].body[cellIndex].grabbedCreature  == -1)
+			if (sum >= 0.85f && game.animals[animalIndex].body[cellIndex].grabbedCreature  == -1)
 			{
 				int potentialGrab = getGrabbableItem (animalIndex, cellIndex);
 				if (animalIndex == game.playerCreature)
@@ -4425,7 +4436,7 @@ void animal_organs( int animalIndex)
 				game.animals [ game.animals[animalIndex].body[cellIndex].grabbedCreature  ].fAngle = angleToCursor;
 
 				// Dropping items.
-				if ( sum <= -1.0f)
+				if ( sum <= -0.85f)
 				{
 					game.animals[animalIndex].body[cellIndex].grabbedCreature = -1;
 				}
@@ -4640,7 +4651,7 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_SENSOR_BODYANGLE:
 		{
-			sensorium[cellIndex]  = game.animals[animalIndex].fAngle;
+			sensorium[cellIndex]  = game.animals[animalIndex].fAngle / const_pi;
 			break;
 		}
 
@@ -5124,7 +5135,7 @@ void animal_organs( int animalIndex)
 			sensorium[cellIndex] = 0.0f;
 			if (ate)
 			{
-				sensorium[cellIndex] += 1.0f;
+				sensorium[cellIndex] = 1.0f;
 			}
 			break;
 
@@ -5162,7 +5173,7 @@ void animal_organs( int animalIndex)
 			sensorium[cellIndex] = 0.0f;
 			if (ate)
 			{
-				sensorium[cellIndex] += 1.0f;
+				sensorium[cellIndex] = 1.0f;
 			}
 
 			break;
@@ -5451,41 +5462,128 @@ void census()
 }
 
 
-void drawNeuroConnections( int animalIndex,  int animalCell, int vx, int vy)
+
+
+void drawNeuroConnection(int animalIndex,  int animalCell, unsigned int connection, int vx, int vy)
 {
-	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+
+	int startx = game.animals[animalIndex].body[animalCell].worldPositionI % worldSize;
+	int starty = game.animals[animalIndex].body[animalCell].worldPositionI / worldSize;
+
+	Vec_f2 start = Vec_f2(0, 0);
+	Vec_f2 end    = Vec_f2(0, 0);
+
+	if (game.animals[animalIndex].body[animalCell].connections[connection].used)
 	{
-		if (game.animals[game.selectedAnimal].body[animalCell].connections[i].used)
+		int connected_to_cell = game.animals[animalIndex].body[animalCell].connections[connection].connectedTo;
+		if (connected_to_cell >= 0 && connected_to_cell < game.animals[animalIndex].cellsUsed)
 		{
-			Vec_f2 start = Vec_f2(vx, vy);
-			Vec_f2 end    = Vec_f2(vx, vy);
-			int connected_to_cell = game.animals[game.selectedAnimal].body[animalCell].connections[i].connectedTo;
-			if (connected_to_cell >= 0 && connected_to_cell < game.animals[game.selectedAnimal].cellsUsed)
+
+			// unsigned
+			unsigned	int connectedPos = game.animals[animalIndex].body[connected_to_cell].worldPositionI;
+			if (game.animals[animalIndex].body[connected_to_cell].worldPositionI > 0)
 			{
-				unsigned int connectedPos = game.animals[game.selectedAnimal].body[connected_to_cell].worldPositionI;
 				int connectedX = connectedPos % worldSize;
 				int connectedY = connectedPos / worldSize;
-				unsigned int x = game.animals[game.selectedAnimal].body[connected_to_cell].worldPositionI % worldSize;
-				unsigned int y = game.animals[game.selectedAnimal].body[connected_to_cell].worldPositionI / worldSize;
-				end.x -= (x - connectedX);
-				end.y -= (y - connectedY);
+				end.x -= (startx - connectedX);
+				end.y -= (starty - connectedY);
+				// Vec_f2(game.mousePositionX, game.mousePositionY);
+				// }
+
+
+
+
+
+				// get the difference between the cell local positions.
+				// rotate it by the animal's body angle.
+				// draw that, it is much more reliable. you cannot draw from placed positions because they can be total anarchy.
+
+// 			int diffx =game.animals[connected_to_cell].body[animalCell].localPosX - game.animals[animalIndex].body[animalCell].localPosX    ;
+// 			int diffy =  game.animals[connected_to_cell].body[animalCell].localPosY - game.animals[animalIndex].body[animalCell].localPosY ;
+
+
+
+// 			end.x = diffx;
+// 			end.y = diffy;
+
+
+
+
+
+// // Vec_f2 rotatePointPrecomputed( Vec_f2 center, float s, float c, Vec_f2 point)
+// 			end =rotatePointPrecomputed( Vec_f2(0,0), game.animals[animalIndex].fAngleSin,game.animals[animalIndex].fAngleCos, end  );
+
+				start.x += vx;
+				end.x  += vx;
+
+				start.y += vy;
+				end.y += vy;
+
+
+
+
+
+
+
+
+
+
+				// float amount = game.animals[game.world[worldI].identity]. body [ occupyingCell].signalIntensity;
+				// 		Color signalColor;
+				// 		if (amount > 0)
+				// 		{
+				// 			signalColor = Color(1.0, 0.0f, 0.0f, 1.0f);
+				// 		}
+				// 		else
+				// 		{
+				// 			signalColor = Color(0.0, 0.0f, 1.0f, 1.0f);
+				// 		}
+				// 		displayColor = multiplyColorByScalar( signalColor, abs(amount) );
+
+
+
+
 				Color signalColor = color_white;
-				float brightness = game.animals[game.selectedAnimal].body[connected_to_cell].signalIntensity * game.animals[game.selectedAnimal].body[animalCell].connections[i].weight ;
-				signalColor = multiplyColorByScalar(signalColor, brightness);
-				drawLine(  start, end, 0.1f, signalColor );
+				float brightness = (game.animals[animalIndex].body[connected_to_cell].signalIntensity ); // map -1..1 to 0..1
+
+				if (brightness > 0)
+				{
+					signalColor = Color(1.0, 0.0f, 0.0f, 1.0f);
+				}
+				else
+				{
+					signalColor = Color(0.0, 0.0f, 1.0f, 1.0f);
+				}
+
+				signalColor = multiplyColorByScalar(signalColor, abs( brightness));
+
+
+
+				float apparentWeight = abs(game.animals[animalIndex].body[animalCell].connections[connection].weight);
+				apparentWeight = clamp(apparentWeight, 0.0f, 1.0f);
+				apparentWeight *= 0.25;
+
+				drawLine(  start, end, apparentWeight , signalColor );
+				// printf("peem, %f %f , %f %f\n", start.x, start.y, end.x, end.y);
 			}
 		}
 	}
+}
 
-	//draw eyelooks
-	if (game.animals[animalIndex].body[animalCell].organ == ORGAN_SENSOR_EYE)
+void drawNeuroConnections( int animalIndex,  int animalCell, int vx, int vy)
+{
+
+
+	//
+
+
+	// printf("asad\n");
+	for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
 	{
-		Vec_f2 eyeLook = Vec_f2(game.animals[animalIndex].body[animalCell].eyeLookX , game.animals[animalIndex].body[animalCell].eyeLookY);
-		Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[animalIndex].fAngleSin, game.animals[animalIndex].fAngleCos, eyeLook);
-		Vec_f2 eyelookCameraPosition = Vec_f2( vx + rotatedEyeLook.x, vy + rotatedEyeLook.y );
-		drawLine(  Vec_f2(vx, vy), eyelookCameraPosition, 0.1f, color_white );
-		drawTile(eyelookCameraPosition , color_white);
+		drawNeuroConnection( animalIndex,   animalCell,  i,  vx,  vy);
 	}
+
+
 }
 
 
@@ -5521,8 +5619,8 @@ Color vis_energy(unsigned int worldI)
 		}
 		else
 		{
-		displayColor = 
-		 Color(0.0f, (game.animals[animalIndex].energyDebt / game.animals[animalIndex].cellsUsed), (game.animals[animalIndex].energy / game.animals[animalIndex].maxEnergy), 1.0f);
+			displayColor =
+			    Color( (game.animals[animalIndex].energy / game.animals[animalIndex].maxEnergy), (game.animals[animalIndex].energyDebt / game.animals[animalIndex].cellsUsed), 0.0f , 1.0f);
 
 		}
 	}
@@ -5533,7 +5631,7 @@ Color vis_energy(unsigned int worldI)
 
 		if (game.world[worldI].plantState != MATERIAL_NOTHING)
 		{
-			displayColor =  Color(game.world[worldI].nutrients /plantMaxEnergy , 0.0f, game.world[worldI].energy /plantMaxEnergy, 1.0f);
+			displayColor =  Color(game.world[worldI].nutrients / plantMaxEnergy , 0.0f, game.world[worldI].energy / plantMaxEnergy, 1.0f);
 		}
 
 
@@ -5576,7 +5674,18 @@ Color vis_neural(unsigned int worldI)
 		}
 		else
 		{
-			displayColor = multiplyColorByScalar( color_white, game.animals[game.world[worldI].identity]. body [ occupyingCell].signalIntensity );
+
+			float amount = game.animals[game.world[worldI].identity]. body [ occupyingCell].signalIntensity;
+			Color signalColor;
+			if (amount > 0)
+			{
+				signalColor = Color(1.0, 0.0f, 0.0f, 1.0f);
+			}
+			else
+			{
+				signalColor = Color(0.0, 0.0f, 1.0f, 1.0f);
+			}
+			displayColor = multiplyColorByScalar( signalColor, abs(amount) );
 
 		}
 	}
@@ -5587,18 +5696,20 @@ Color vis_neural(unsigned int worldI)
 
 		if (game.world[worldI].seedState != MATERIAL_NOTHING)
 		{
-			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.5f  ));
+			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.05f  ));
 		}
 
 		if (game.world[worldI].plantState != MATERIAL_NOTHING)
 		{
-			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.5f  ));
+			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.05f  ));
 		}
 
 		if (game.world[worldI].wall != MATERIAL_NOTHING)
 		{
-			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.5f  ));
+			displayColor =  filterColor(displayColor, multiplyColorByScalar( color_white, 0.05f  ));
 		}
+
+
 
 
 
@@ -5675,6 +5786,8 @@ Color vis_truecolor(unsigned int worldI)
 }
 
 
+const int viewFieldMax = +(viewFieldY / 2);
+const int viewFieldMin = -(viewFieldX / 2);
 
 void camera()
 {
@@ -5704,8 +5817,6 @@ void camera()
 	}
 	if (game.playerCanSee)
 	{
-		const int viewFieldMax = +(viewFieldY / 2);
-		const int viewFieldMin = -(viewFieldX / 2);
 		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
 		{
 			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
@@ -5739,6 +5850,9 @@ void camera()
 					case VISUALIZER_NEURALACTIVITY:
 					{
 						displayColor = vis_neural(worldI);
+
+
+
 						break;
 					}
 					case VISUALIZER_ENERGY:
@@ -5758,11 +5872,6 @@ void camera()
 						{
 							if (game.world[worldI].identity == game.selectedAnimal)
 							{
-								int animalCell = isAnimalInSquare(game.world[worldI].identity, worldI );
-								if (animalCell >= 0 && animalCell < game.animals[game.selectedAnimal].cellsUsed)
-								{
-									drawNeuroConnections(game.selectedAnimal, animalCell, vx, vy);
-								}
 								squareIsSelectedAnimal = true;
 							}
 						}
@@ -5791,6 +5900,120 @@ void camera()
 			}
 		}
 	}
+
+
+
+
+	// draw the neuro display if a creature is selected.
+	if (game.visualizer == VISUALIZER_NEURALACTIVITY && game.selectedAnimal >= 0)
+	{
+		for ( int vy = viewFieldMin; vy < viewFieldMax; ++vy)
+		{
+			for ( int vx = viewFieldMin; vx < viewFieldMax; ++vx)
+			{
+				// Color displayColor = color_black;
+				int x = (vx + game.cameraPositionX);// % worldSize;
+				int y = (vy + game.cameraPositionY);// % worldSize;
+
+				bool overlap = false;
+				if (x < 0 || x > worldSize) { overlap = true; }
+				if (y < 0 || y > worldSize) { overlap = true; }
+
+
+				unsigned int worldI = (y * worldSize) + x;
+				if (worldI < worldSquareSize && (!overlap))
+				{
+
+					int animalIndex = game.world[worldI].identity;
+
+					if (animalIndex == game.selectedAnimal)
+					{
+						// printf("yeam\n");
+						float fx = vx;
+						float fy = vy;
+
+
+						int animalCell = isAnimalInSquare(animalIndex, worldI );
+						if (animalCell >= 0 && animalIndex >= 0 && animalIndex < numberOfAnimals)
+						{
+
+							// printf("llengng\n");
+							if (animalCell < game.animals[animalIndex].cellsUsed )
+							{
+
+								// printf("dogueu\n");
+								drawNeuroConnections(animalIndex, animalCell, vx, vy);
+
+
+
+
+if ( // anything that uses eyelook
+
+							     game.animals[animalIndex].body[animalCell].organ == ORGAN_SENSOR_EYE        ||
+							     game.animals[animalIndex].body[animalCell].organ == ORGAN_SENSOR_SCANNINGEYE||
+							     game.animals[animalIndex].body[animalCell].organ == ORGAN_SCANNING_EYE_PLANT||
+							     game.animals[animalIndex].body[animalCell].organ == ORGAN_SCANNING_EYE_CREATURE ||
+							     game.animals[animalIndex].body[animalCell].organ == ORGAN_SCANNING_EYE_OBSTACLE 
+
+							)
+							{
+								Vec_f2 eyeLook = Vec_f2(game.animals[animalIndex].body[animalCell].eyeLookX , game.animals[animalIndex].body[animalCell].eyeLookY);
+								Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[animalIndex].fAngleSin, game.animals[animalIndex].fAngleCos, eyeLook);
+							
+								Vec_f2 eyelookCameraPosition = Vec_f2( vx + rotatedEyeLook.x, vy + rotatedEyeLook.y );
+								drawLine(  Vec_f2(vx, vy), eyelookCameraPosition , 0.25f, Color(1.0f, 1.0f, 1.0f, 0.25f) );
+								drawTile(eyelookCameraPosition , Color(1.0f, 1.0f, 1.0f, 0.25f));
+							}
+
+
+
+							}
+						}
+
+
+
+
+						// draw eyelooks
+						// int id = game.world[worldI].identity;
+						// int occupyingCell = isAnimalInSquare(id , worldI);
+						// if ( occupyingCell >= 0)
+						// {
+
+
+							// if ( // anything that uses eyelook
+
+							//      game.animals[id].body[occupyingCell].organ == ORGAN_SENSOR_EYE        ||
+							//      game.animals[id].body[occupyingCell].organ == ORGAN_SENSOR_SCANNINGEYE||
+							//      game.animals[id].body[occupyingCell].organ == ORGAN_SCANNING_EYE_PLANT||
+							//      game.animals[id].body[occupyingCell].organ == ORGAN_SCANNING_EYE_CREATURE ||
+							//      game.animals[id].body[occupyingCell].organ == ORGAN_SCANNING_EYE_OBSTACLE 
+
+							// )
+							// {
+							// 	Vec_f2 eyeLook = Vec_f2(game.animals[id].body[occupyingCell].eyeLookX , game.animals[id].body[occupyingCell].eyeLookY);
+							// 	Vec_f2 rotatedEyeLook = rotatePointPrecomputed( Vec_f2(0, 0), game.animals[id].fAngleSin, game.animals[id].fAngleCos, eyeLook);
+							
+							// 	Vec_f2 eyelookCameraPosition = Vec_f2( vx + rotatedEyeLook.x, vy + rotatedEyeLook.y );
+							// 	drawLine(  Vec_f2(vx, vy), eyelookCameraPosition , 0.25f, Color(1.0f, 1.0f, 1.0f, 0.25f) );
+							// 	drawTile(eyelookCameraPosition , Color(1.0f, 1.0f, 1.0f, 0.25f));
+							// }
+
+						// }
+
+
+					}
+
+
+
+
+
+
+				}
+			}
+		}
+	}
+
+
 	Color displayColor = color_white; // draw the mouse cursor.
 	Vec_f2 worldMousePos = Vec_f2( game.mousePositionX, game.mousePositionY);
 	Vec_f2 worldMousePosA = Vec_f2( game.mousePositionX + 1, game.mousePositionY);

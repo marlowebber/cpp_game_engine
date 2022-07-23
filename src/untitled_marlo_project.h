@@ -277,6 +277,7 @@ void incrementSelectedGrabber();
 void notifyLMBUp();
 // void drawInterfacePanel();
 
+void scrambleSelectedAnimal();
 
 void setupPlantAtCursor();
 void lookAtNextNonretiredAnimal();

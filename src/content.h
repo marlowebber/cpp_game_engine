@@ -1771,6 +1771,8 @@ void setupExampleHuman(int i)
 {
 	setupCreatureFromCharArray( i, humanBody, (9 * 33), 9 ,  std::string("human"), -1 );
 	paintCreatureFromCharArray( i, humanPaint, (9 * 33), 9 );
+
+
 }
 
 char destroyer[] =
