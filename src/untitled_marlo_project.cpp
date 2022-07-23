@@ -36,10 +36,10 @@
 const bool doReproduction        = true;
 const bool taxIsByMass           = true;
 const bool respawnLowSpecies     = true;
-const bool setOrSteerAngle       = false;
+const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
 const bool doHoney = false;
-const bool doBrambles = false;
+// const bool doBrambles = false;
 const bool environmentScarcity = false;
 const bool killLoiteringAdversary = false;
 const bool erode = true;
@@ -927,17 +927,17 @@ Vec_f2 getTerrainSlope(unsigned int worldPositionI)
 	return Vec_f2(0.0f, 0.0f);
 
 }
-void swapEnergyWithNeighbour(unsigned int worldI, unsigned int neighbour)
+void swapEnergyWithNeighbour(unsigned int worldI, unsigned int neighbour, float rate)
 {
-	float amount = (game.world[worldI].energy - game.world[neighbour].energy);
+	float amount = (game.world[worldI].energy - game.world[neighbour].energy) * rate;
 	game.world[worldI].energy    -=  (amount / 2.0f) ;
 	game.world[neighbour].energy +=  (amount / 2.0f) ;
 }
 
 
-void swapNootsWithNeighbour(unsigned int worldI, unsigned int neighbour)
+void swapNootsWithNeighbour(unsigned int worldI, unsigned int neighbour, float rate)
 {
-	float amount = (game.world[worldI].nutrients - game.world[neighbour].nutrients);
+	float amount = (game.world[worldI].nutrients - game.world[neighbour].nutrients) * rate;
 	game.world[worldI].nutrients    -=  (amount / 2.0f) ;
 	game.world[neighbour].nutrients +=  (amount / 2.0f) ;
 }
@@ -1009,6 +1009,7 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 	}
 	else                                          // production of functional tissues
 	{
+
 		if (fromSeed)										// when spawning from a seed
 		{
 			game.world[to].plantIdentity =  game.world[from].seedIdentity;
@@ -1033,8 +1034,8 @@ void growInto( int to ,  int from,  unsigned int organ, bool fromSeed)
 			game.world[to].nutrients = 0.0f;
 			game.world[to].energy = 0.0f;
 
-			swapNootsWithNeighbour(from, to);
-			swapEnergyWithNeighbour(from, to);
+			swapNootsWithNeighbour(from, to, 0.1f);
+			swapEnergyWithNeighbour(from, to, 0.1f);
 
 			game.world[to].geneCursor = game.world[from].geneCursor + 1 ;
 			game.world[to].sequenceNumber = game.world[from].sequenceNumber;
@@ -2132,7 +2133,7 @@ int plantDefenseAtWorldPoint(unsigned int cellWorldPositionI)
 		unsigned int worldNeighbour = cellWorldPositionI + neighbourOffsets[n];
 		if ( worldNeighbour < worldSquareSize)
 		{
-			if (game.world[worldNeighbour].plantState == MATERIAL_WOOD)
+			if (game.world[worldNeighbour].plantState == MATERIAL_THORNS)
 			{
 				if (game.world[worldNeighbour].plantIdentity == game.world[cellWorldPositionI].plantIdentity)
 				{
@@ -2309,16 +2310,7 @@ void place( int animalIndex)
 
 		if (okToStep)
 		{
-			if (doBrambles)
-			{
-				if (game.world[cellWorldPositionI].plantState == MATERIAL_THORNS)
-				{
-					if (extremelyFastNumberFromZeroTo(10) == 0)
-					{
-						hurtAnimal(  animalIndex, cellIndex, 0.1f, -1 );
-					}
-				}
-			}
+
 
 			game.world[cellWorldPositionI].identity = animalIndex;
 			game.world[cellWorldPositionI].occupyingCell = cellIndex;
@@ -2758,6 +2750,12 @@ void growPlants(unsigned int worldI)
 				}
 				switch (c)
 				{
+
+				case PLANTGENE_STEALYROOT:
+					growIntoNeighbours(worldI, MATERIAL_STEALYROOT);
+					break;
+
+
 				case PLANTGENE_TUBER:
 					growIntoNeighbours(worldI, MATERIAL_TUBER);
 					break;
@@ -3225,8 +3223,14 @@ void equalizeWithNeighbours( unsigned int worldI )
 			{
 				if (game.world[worldI].plantState != MATERIAL_NOTHING && game.world[neighbour].plantState != MATERIAL_NOTHING)
 				{
-					swapNootsWithNeighbour(worldI, neighbour);
-					swapEnergyWithNeighbour(worldI, neighbour);
+					float rate = 0.1f;
+					if (game.world[worldI].plantState == MATERIAL_WOOD || game.world[neighbour].plantState == MATERIAL_WOOD)
+					{
+						rate = 1.0f;
+					}
+
+					swapNootsWithNeighbour(worldI, neighbour , rate );
+					swapEnergyWithNeighbour(worldI, neighbour, rate );
 				}
 			}
 		}
@@ -3383,6 +3387,43 @@ void updatePlants(unsigned int worldI)
 			}
 			break;
 		}
+
+		case MATERIAL_STEALYROOT:
+		{
+
+
+			for (int n = 0; n < nNeighbours; ++n)
+			{
+				unsigned int neighbour = worldI + neighbourOffsets[n];
+				if (neighbour < worldSquareSize)
+				{
+					if (game.world[neighbour].plantState != MATERIAL_NOTHING)
+					{
+						if (game.world[neighbour].plantIdentity != game.world[worldI].plantIdentity)
+						{
+
+							if (game.world[neighbour].nutrients > game.world[worldI].nutrients)
+							{
+
+// get nutrients from the environment
+								float amount = game.world[neighbour].nutrients - game.world[worldI].nutrients;
+
+								amount = amount / plantDefenseAtWorldPoint(neighbour);
+
+								game.world[worldI].nutrients +=    amount / 2;
+								game.world[neighbour].nutrients -= amount / 2;
+
+							}
+
+						}
+					}
+				}
+			}
+
+
+			break;
+		}
+
 		case MATERIAL_BUD_F:
 		{
 			if (game.world[worldI].energy > 1.0f && game.world[worldI].nutrients > 1.0f)
@@ -4012,9 +4053,13 @@ void animal_organs( int animalIndex)
 			{
 				sensorium[cellIndex]  = 1.0f;
 			}
-			else 	if (sum < -1.0f)
+			else if (sum < -1.0f)
 			{
 				sensorium[cellIndex] = -1.0f;
+			}
+			else
+			{
+				sensorium[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity;
 			}
 			break;
 		}
@@ -4039,6 +4084,10 @@ void animal_organs( int animalIndex)
 			{
 				unsigned int switchCell = game.animals[animalIndex].body[cellIndex].connections[0] .connectedTo;
 				sensorium[cellIndex] = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[0] .weight;
+			}
+			else
+			{
+				sensorium[cellIndex] = game.animals[animalIndex].body[cellIndex].signalIntensity;
 			}
 			break;
 		}
@@ -4315,7 +4364,7 @@ void animal_organs( int animalIndex)
 				float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 				float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 				float targetAngle = atan2( fdiffy, fdiffx );
-				sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
+				sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle) / const_pi;
 			}
 			break;
 		}
@@ -4331,7 +4380,7 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
+					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle) / const_pi;
 				}
 			}
 			break;
@@ -4348,7 +4397,7 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
+					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle) / const_pi;
 				}
 			}
 			break;
@@ -4365,7 +4414,7 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle);
+					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle) / const_pi;
 				}
 			}
 			break;
@@ -4481,7 +4530,7 @@ void animal_organs( int animalIndex)
 			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			if ( game.world [cellWorldPositionI].identity != animalIndex )
 			{
-				sensorium[cellIndex]  =  smallestAngleBetween(  game.world[cellWorldPositionI].trail, game.animals[animalIndex].fAngle);
+				sensorium[cellIndex]  =  smallestAngleBetween(  game.world[cellWorldPositionI].trail, game.animals[animalIndex].fAngle) / const_pi;
 			}
 			break;
 		}
@@ -4905,8 +4954,8 @@ void animal_organs( int animalIndex)
 					float amount = (game.animals[game.world[cellWorldPositionI].identity].energy) / animalSquareSize;
 					float defense = defenseAtWorldPoint(game.world[cellWorldPositionI].identity, cellWorldPositionI);
 					amount = amount / defense;
-					game.animals[animalIndex].energy += amount;
-					game.animals[game.world[cellWorldPositionI].identity].energy -= amount;
+					game.animals[animalIndex].energy                             += amount / 2;
+					game.animals[game.world[cellWorldPositionI].identity].energy -= amount / 2;
 
 					unsigned int victimSpecies =  (game.world[cellWorldPositionI].identity / numberOfAnimalsPerSpecies) ;
 					if (victimSpecies < numberOfSpecies)
@@ -5022,7 +5071,8 @@ void animal_organs( int animalIndex)
 			{
 				sum = sumInputs(  animalIndex,   cellIndex);
 			}
-			sum = clamp(sum, -1.0f, 1.0f);
+			// sum = clamp(sum, -1.0f, 1.0f);
+			sum  = fast_sigmoid(sum);
 			sensorium[cellIndex] = sum;
 
 			float impulse = game.animals[animalIndex].body[cellIndex].signalIntensity  * musclePower;
@@ -5040,7 +5090,8 @@ void animal_organs( int animalIndex)
 			{
 				sum = sumInputs(  animalIndex,   cellIndex);
 			}
-			sum = clamp(sum, -1.0f, 1.0f);
+			// sum = clamp(sum, -1.0f, 1.0f);
+			sum  = fast_sigmoid(sum);
 
 			sensorium[cellIndex] = sum;
 
@@ -5058,10 +5109,13 @@ void animal_organs( int animalIndex)
 			{
 				sum = sumInputs(  animalIndex,   cellIndex);
 			}
+			sum  = fast_sigmoid(sum);
+
 			sensorium[cellIndex] = sum;
+
 			if (setOrSteerAngle)
 			{
-				game.animals[animalIndex].fAngle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) ;
+				game.animals[animalIndex].fAngle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) * const_pi ;
 			}
 			else
 			{
@@ -5154,7 +5208,7 @@ void animal_organs( int animalIndex)
 					float fdiffx = targetWorldPositionX - game.animals[animalIndex].fPosX;
 					float fdiffy = targetWorldPositionY - game.animals[animalIndex].fPosY;
 					float targetAngle = atan2( fdiffy, fdiffx );
-					game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle); // direction to remembered location
+					game.animals[animalIndex].body[cellIndex].signalIntensity =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle)  / const_pi; // direction to remembered location, map it to -1..1 for network compatibility.
 				}
 			}
 			break;
@@ -6072,10 +6126,13 @@ void printAnimalCells(int animalIndex)
 
 
 
-void setupStructureFromCharArray(int worldPositionI, char * walls, char * floors, char * lights, unsigned int len, unsigned int width, unsigned int scale)
+void setupStructureFromCharArray(int worldPositionI, char * walls, char * floors, char * lights, unsigned int len, unsigned int width, unsigned int scale, float angle)
 
 {
 
+	angle = 0.0f;
+	float pcsin = sin(angle);
+	float pccos = cos(angle);
 
 	int x = worldPositionI % worldSize;
 	int y = worldPositionI / worldSize;
@@ -6179,7 +6236,18 @@ void setupStructureFromCharArray(int worldPositionI, char * walls, char * floors
 			for (int vvx = 0; vvx < scale; ++vvx)
 			{
 
-				int k = ((vy + vvy) * worldSize) + (vx + vvx);
+
+
+				int pointx = (vx + vvx);
+				int pointy = (vy + vvy) ;
+
+
+
+// Vec_f2  rotatedPoint = rotatePointPrecomputed( Vec_f2( x,y ), pcsin, pccos, Vec_f2(pointx, pointy));
+
+
+
+				int k = (pointy * worldSize) + pointx;
 
 				if (k > 0 && k < worldSquareSize)
 				{
@@ -6493,63 +6561,86 @@ void recomputeTerrainLighting()
 	}
 }
 
-int getRandomPosition(bool underwater)
+
+int getRandomPosition(float depth)
 {
 	while (true)
 	{
-		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+		int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
 		unsigned int x = randomI % worldSize;
 		unsigned int y = randomI / worldSize;
 		if (x > baseSize && x < (worldSize - baseSize) && y > baseSize && y < (worldSize - baseSize)  )
 		{
-			if (underwater)
-			{
-				if (game.world[randomI].height > seaLevel)
-				{
-					continue;
-				}
-			}
-			else
-			{
-				if (game.world[randomI].height < biome_coastal)
-				{
-					continue;
-				}
-			}
-			bool hasAir = false;
-			bool hasWater = false;
-			bool unsuitable = false;
-			for (int k = -(baseSize / 2); k < (baseSize / 2); ++k)
-			{
-				for (int j = -(baseSize / 2); j < (baseSize / 2); ++j)
-				{
-					unsigned int scan = randomI + (k * worldSize) + j;
-					if (game.world[scan].wall == MATERIAL_NOTHING) { hasAir = true; }
-					if (game.world[scan].wall == MATERIAL_WATER) { hasWater = true; }
-					if (game.world[scan].wall == MATERIAL_VOIDMETAL) { unsuitable = true;}
 
-				}
-			}
-			if (unsuitable) { continue; }
 
-			if (underwater)
+			if ( (game.world[randomI].height / worldSize ) > depth - 0.05 &&  (game.world[randomI].height / worldSize ) < depth + 0.05 )
 			{
-				if (!hasAir)
-				{
-					return randomI;
-				}
+				return randomI;
 			}
 
-			if (!underwater)
-			{
-				if (!hasWater)
-				{
-					return randomI;
-				}
-			}
+
 		}
 	}
 }
+
+
+// int getRandomPosition(float depth)
+// {
+// 	while (true)
+// 	{
+// 		unsigned int randomI = extremelyFastNumberFromZeroTo(worldSquareSize - 1);
+// 		unsigned int x = randomI % worldSize;
+// 		unsigned int y = randomI / worldSize;
+// 		if (x > baseSize && x < (worldSize - baseSize) && y > baseSize && y < (worldSize - baseSize)  )
+// 		{
+// 			if (underwater)
+// 			{
+// 				if (game.world[randomI].height > seaLevel)
+// 				{
+// 					continue;
+// 				}
+// 			}
+// 			else
+// 			{
+// 				if (game.world[randomI].height < biome_coastal)
+// 				{
+// 					continue;
+// 				}
+// 			}
+// 			bool hasAir = false;
+// 			bool hasWater = false;
+// 			bool unsuitable = false;
+// 			for (int k = -(baseSize / 2); k < (baseSize / 2); ++k)
+// 			{
+// 				for (int j = -(baseSize / 2); j < (baseSize / 2); ++j)
+// 				{
+// 					unsigned int scan = randomI + (k * worldSize) + j;
+// 					if (game.world[scan].wall == MATERIAL_NOTHING) { hasAir = true; }
+// 					if (game.world[scan].wall == MATERIAL_WATER) { hasWater = true; }
+// 					if (game.world[scan].wall == MATERIAL_VOIDMETAL) { unsuitable = true;}
+
+// 				}
+// 			}
+// 			if (unsuitable) { continue; }
+
+// 			if (underwater)
+// 			{
+// 				if (!hasAir)
+// 				{
+// 					return randomI;
+// 				}
+// 			}
+
+// 			if (!underwater)
+// 			{
+// 				if (!hasWater)
+// 				{
+// 					return randomI;
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
 void setupBuilding_playerBase( int worldPositionI)
 {
@@ -6605,13 +6696,13 @@ void setupGameItems()
 {
 	// BUILDING 1
 	// contains eco computer, player, adversary, and message terminal 1
-	int building1 =  getRandomPosition(false);
+	int building1 =  getRandomPosition(0.9f);
 
 	// setupBuilding_playerBase(building1);
 
 	// setupBasicBuilding( building1);
 
-	setupStructureFromCharArray(building1, basicBuilding, basicBuildingFloor, basicBuildingLight, 10 * 10, 10, 25);
+	setupStructureFromCharArray(building1, basicBuilding, basicBuildingFloor, basicBuildingLight, 10 * 10, 10, 25, RNG() * 2.0f * 3.1415f  );
 	int i = 1;
 	setupEcologyCompter( i);
 	spawnAnimalIntoSlot(2, game.animals[i], building1, false);
@@ -6628,7 +6719,7 @@ void setupGameItems()
 
 	// BUILDING 2
 	// contains hospital and message computer 2
-	int building2 =  getRandomPosition(false);
+	int building2 =  getRandomPosition(0.75f);
 	setupBuilding_playerBase(building2);
 	setupHospitalComputer(i);
 	spawnAnimalIntoSlot(4, game.animals[i], building2, false);
@@ -6640,9 +6731,9 @@ void setupGameItems()
 
 	// BUILDING 3
 	//contains tracker glasses, pistol, and message computer 3
-	int building3 =  getRandomPosition(true);
+	int building3 =  getRandomPosition(0.25f);
 	// setupBuilding_playerBase(building3);
-	setupStructureFromCharArray(building3, arenaBuilding, arenaBuildingFloor, arenaBuildingLight, 11 * 9, 11, 25);
+	setupStructureFromCharArray(building3, arenaBuilding, arenaBuildingFloor, arenaBuildingLight, 11 * 9, 11, 25, RNG() * 2.0f * 3.1415f );
 
 	setupTrackerGlasses(i);
 	spawnAnimalIntoSlot(6, game.animals[i], building3, false);
@@ -6657,17 +6748,17 @@ void setupGameItems()
 
 
 	// adversary is outside, under water
-	game.adversaryRespawnPos =  getRandomPosition(true);
+	game.adversaryRespawnPos =  getRandomPosition(0.5f);
 	spawnAdversary(game.adversaryRespawnPos);
 
 
 	// BUILDING 4
 	// contains knife, lighter, and message computer 4
-	int building4 =  getRandomPosition(true);
+	int building4 =  getRandomPosition(0.1f);
 	// setupBuilding_playerBase(building4);
 
 
-	setupStructureFromCharArray(building4, crashedShip, crashedShipFloor, crashedShipLight, 21 * 47, 21, 15);
+	setupStructureFromCharArray(building4, crashedShip, crashedShipFloor, crashedShipLight, 21 * 47, 21, 10, RNG() * 2.0f * 3.1415f );
 
 
 	setupExampleKnife(i);
