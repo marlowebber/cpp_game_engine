@@ -198,7 +198,7 @@ void threadInterface()
 			}
 			case SDLK_q:
 			{
-				toggleRain();
+				// toggleRain();
 				break;
 			}
 			case SDLK_v:
@@ -237,6 +237,11 @@ void threadInterface()
 				{
 					model();
 				}
+				break;
+			}
+			case SDLK_BACKQUOTE: //`
+			{
+				paintAnimals();
 				break;
 			}
 
