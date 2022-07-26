@@ -39,9 +39,11 @@ const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
 const bool doHoney = false;
-const bool doAsexual = false;
+const bool doAsexualPlants = false;
+const bool doAsexualAnimals = false;
 const bool seedDegradation = false;
 const bool movePollenUnconditionally = true;
+const bool pollenDegradation = false;
 
 // const bool doBrambles = false;
 const bool environmentScarcity = true;
@@ -489,22 +491,37 @@ void setupExampleAnimal3(int i)
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
 	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
-	animalAppendCell( i, ORGAN_GENITAL_B );
-	animalAppendCell( i, ORGAN_GENITAL_B );
-	animalAppendCell( i, ORGAN_GENITAL_B );
-	animalAppendCell( i, ORGAN_GENITAL_B );
-	animalAppendCell( i, ORGAN_GENITAL_B );
-	animalAppendCell( i, ORGAN_GENITAL_B );
-	animalAppendCell( i, ORGAN_GENITAL_B );
-	animalAppendCell( i, ORGAN_GENITAL_B );
-	animalAppendCell( i, ORGAN_GENITAL_A );
-	animalAppendCell( i, ORGAN_GENITAL_A );
-	animalAppendCell( i, ORGAN_GENITAL_A );
-	animalAppendCell( i, ORGAN_GENITAL_A );
-	animalAppendCell( i, ORGAN_GENITAL_A );
-	animalAppendCell( i, ORGAN_GENITAL_A );
-	animalAppendCell( i, ORGAN_GENITAL_A );
-	animalAppendCell( i, ORGAN_GENITAL_A );
+	if (doAsexualAnimals)
+	{
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+	}
+	else
+	{
+		animalAppendCell( i, ORGAN_GENITAL_B );
+		animalAppendCell( i, ORGAN_GENITAL_B );
+		animalAppendCell( i, ORGAN_GENITAL_B );
+		animalAppendCell( i, ORGAN_GENITAL_B );
+		animalAppendCell( i, ORGAN_GENITAL_B );
+		animalAppendCell( i, ORGAN_GENITAL_B );
+		animalAppendCell( i, ORGAN_GENITAL_B );
+		animalAppendCell( i, ORGAN_GENITAL_B );
+		animalAppendCell( i, ORGAN_GENITAL_A );
+		animalAppendCell( i, ORGAN_GENITAL_A );
+		animalAppendCell( i, ORGAN_GENITAL_A );
+		animalAppendCell( i, ORGAN_GENITAL_A );
+		animalAppendCell( i, ORGAN_GENITAL_A );
+		animalAppendCell( i, ORGAN_GENITAL_A );
+		animalAppendCell( i, ORGAN_GENITAL_A );
+		animalAppendCell( i, ORGAN_GENITAL_A );
+	}
+
 	animalAppendCell( i, ORGAN_MOUTH_WOOD );
 	animalAppendCell( i, ORGAN_MOUTH_WOOD );
 	animalAppendCell( i, ORGAN_MOUTH_WOOD );
@@ -740,6 +757,7 @@ void resetGameState()
 	game.ecoSettings[9] =    25000;     // autosave timer.
 
 	game.ecoSettings[10] =    5;     // pollen mobility.
+	game.ecoSettings[11] =    1.0f;     // auto reproduction chance.
 
 	game.activeEcoSetting = 0;
 	resetAnimals();
@@ -2978,7 +2996,7 @@ void growPlants(unsigned int worldI)
 						break;
 
 					case PLANTGENE_BUD_A:
-						if (doAsexual)
+						if (doAsexualPlants)
 						{
 							growIntoNeighbours(worldI, MATERIAL_BUD_A);
 							growIntoNeighbours(worldI, MATERIAL_SEED);
@@ -3003,7 +3021,7 @@ void growPlants(unsigned int worldI)
 						break;
 					case PLANTGENE_RUNNER: // start the plant over again
 					{
-						if (doAsexual)
+						if (doAsexualPlants)
 						{
 							growIntoNeighbours(worldI, SPROUT);
 							for (int i = 0; i < nNeighbours; ++i)
@@ -3479,9 +3497,14 @@ void updatePlants(unsigned int worldI)
 
 				if (neighbour < worldSquareSize)
 				{
-					if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
+
+					if (game.world[worldI].wall == game.world[neighbour].wall)
 					{
-						moveSeed(worldI, neighbour);
+
+						if ( !materialBlocksMovement( game.world[neighbour].wall ) && game.world[neighbour].seedState == MATERIAL_NOTHING )
+						{
+							moveSeed(worldI, neighbour);
+						}
 					}
 
 					// pollen degrades if not attached to an animal, to prevent it building up too much in the game.world.
@@ -3495,11 +3518,11 @@ void updatePlants(unsigned int worldI)
 						}
 					}
 
-					if (seedDegradation)
+					if (pollenDegradation)
 					{
 						if (!bonded)
 						{
-							if (extremelyFastNumberFromZeroTo(100) == 0)
+							if (extremelyFastNumberFromZeroTo(50) == 0)
 							{
 								game.world[neighbour].seedState = MATERIAL_NOTHING;
 							}
@@ -4213,12 +4236,35 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 			int newAnimal = spawnAnimal( bSpecies, game.animals[b], game.animals[b].position, true );
 			if (newAnimal >= 0)
 			{
+
+
+
+				bool AorB = extremelyFastNumberFromZeroTo(1); // gender reveal! all instances of A and B genitals will be converted to one of either A or B across the whole creature.
+
+
+
 				for (int i = 0; i < animalSquareSize; ++i)
 				{
 					if (extremelyFastNumberFromZeroTo(1) == 0)
 					{
 						game.animals[newAnimal].body[i] = game.animals[a].body[i];
 					}
+
+
+					if (game.animals[newAnimal].body[i].organ == ORGAN_GENITAL_A || game.animals[newAnimal].body[i].organ == ORGAN_GENITAL_B)
+					{
+
+						if (AorB)
+						{
+							game.animals[newAnimal].body[i].organ = ORGAN_GENITAL_A;
+						}
+						else
+						{
+							game.animals[newAnimal].body[i].organ = ORGAN_GENITAL_B;
+						}
+					}
+
+
 				}
 				game.animals[newAnimal].energy += energyDonation;
 			}
@@ -5036,7 +5082,7 @@ void animal_organs( int animalIndex)
 
 		case ORGAN_GONAD:
 		{
-			if (doAsexual)
+			if (doAsexualAnimals)
 			{
 				bool bonked = false;
 				if (doReproduction && game.animals[animalIndex].energyDebt <= 0.0f )
@@ -5447,7 +5493,7 @@ void animal_organs( int animalIndex)
 		{
 			bool bonked = false;
 
-			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals)
+			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals && game.world[cellWorldPositionI].identity != animalIndex)
 			{
 				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
 				if (targetLocalPositionI >= 0)
@@ -5476,7 +5522,7 @@ void animal_organs( int animalIndex)
 
 			bool bonked = false;
 
-			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals)
+			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals && game.world[cellWorldPositionI].identity != animalIndex)
 			{
 				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
 				if (targetLocalPositionI >= 0)
@@ -5494,6 +5540,9 @@ void animal_organs( int animalIndex)
 								game.world[neighbour].pheromoneChannel = PHEROMONE_MUSK;
 							}
 						}
+
+						// the genital B is destroyed by this action.
+						game.animals[animalIndex].body[cellIndex].damage = 1.0f;
 
 						bonked = true;
 					}
@@ -5546,6 +5595,109 @@ void animal_organs( int animalIndex)
 	game.animals[animalIndex].maxEnergy = game.animals[animalIndex].cellsUsed + (totalLiver * liverStorage);
 }
 
+
+
+
+void autoReproduce(unsigned int animalIndex)
+{
+
+	// a sexually reproducing animal has matured, find it a partner and teleport them together so their naughty bits are touching.
+
+	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+
+	int applicableGonad = getRandomCellOfType(animalIndex, ORGAN_GENITAL_A);
+
+	if (applicableGonad < 0)
+	{
+		applicableGonad = getRandomCellOfType(animalIndex, ORGAN_GENITAL_B);
+	}
+
+
+	if (applicableGonad >= 0)
+	{
+
+
+
+		// find a suitable partner
+		int partner = (speciesIndex * numberOfAnimalsPerSpecies);
+		bool foundPartner = false;
+		int partnerGenital = -1;
+		unsigned int start = extremelyFastNumberFromZeroTo(numberOfAnimalsPerSpecies);
+		for (int i = 0; i < numberOfAnimalsPerSpecies; ++i)
+		{
+			unsigned int partnerIndexInSpecies = ((start) + i) % numberOfAnimalsPerSpecies;
+			unsigned int candidateIndex = (speciesIndex * numberOfAnimalsPerSpecies) + partnerIndexInSpecies;
+
+			if (!(game.animals[candidateIndex].retired))
+			{
+
+				// check that the candidate has matured and has a suitable compatible gonad
+				if ((game.animals[candidateIndex].energyDebt <= 0.0f))
+				{
+					int candidateGonad = 1;
+					if (game.animals[animalIndex].body[applicableGonad].organ == ORGAN_GENITAL_A)
+					{
+						candidateGonad = getRandomCellOfType(candidateIndex, ORGAN_GENITAL_B);
+					}
+					else if (game.animals[animalIndex].body[applicableGonad].organ == ORGAN_GENITAL_B)
+					{
+						candidateGonad = getRandomCellOfType(candidateIndex, ORGAN_GENITAL_A);
+					}
+
+					if (candidateGonad >= 0)
+					{
+						partnerGenital = candidateGonad;
+						partner = candidateIndex;
+						foundPartner = true;
+						break;
+					}
+				}
+
+			}
+		}
+
+		if (foundPartner)
+		{
+
+			// teleport A onto B so that the are in a sex position.
+			int partnerA_worldX = game.animals[animalIndex].position % worldSize;
+			int partnerA_worldY = game.animals[animalIndex].position / worldSize;
+			int vgA_worldX = game.animals[animalIndex].body[applicableGonad].localPosX;
+			int vgA_worldY = game.animals[animalIndex].body[applicableGonad].localPosY;
+
+			int partnerB_worldX = game.animals[partner].position % worldSize;
+			int partnerB_worldY = game.animals[partner].position / worldSize;
+			int vgB_worldX = game.animals[partner].body[partnerGenital].localPosX;
+			int vgB_worldY = game.animals[partner].body[partnerGenital].localPosY;
+
+			int deltaX = 	 (partnerA_worldX + vgA_worldX) - (partnerB_worldX + vgB_worldX) ;
+			int deltaY = 	 (partnerA_worldY + vgA_worldY) - (partnerB_worldY + vgB_worldY) ;
+
+			int destinationX = (partnerA_worldX - deltaX);
+			int destinationY = (partnerA_worldY - deltaY) ;
+			int destinationI = (destinationY * worldSize ) + destinationX;
+
+			game.animals[animalIndex].uPosX = destinationX;
+			game.animals[animalIndex].uPosY = destinationY;
+			game.animals[animalIndex].fPosX = destinationX;
+			game.animals[animalIndex].fPosY = destinationY;
+			game.animals[animalIndex].position = destinationI;
+
+
+			// hereafter, it is assumed that the copulation will occur next time either one of the participants is placed in the world.
+
+		}
+
+
+
+	}
+
+
+}
+
+
+
+
 void animalEnergy(int animalIndex)
 {
 
@@ -5566,6 +5718,17 @@ void animalEnergy(int animalIndex)
 			float repayment = game.animals[animalIndex].energy  - (game.animals[animalIndex].maxEnergy / 2)  ;
 			game.animals[animalIndex].energyDebt -= repayment;
 			game.animals[animalIndex].energy -= repayment;
+
+			if (game.animals[animalIndex].energyDebt <= 0.0f)
+			{
+				// the debt was just now repayed, and the animal is mature. roll to automatically reproduce it.
+				if (RNG() < game.ecoSettings[11])
+				{
+
+						 autoReproduce(animalIndex);
+				}
+
+			}
 		}
 	}
 	else
@@ -6347,7 +6510,7 @@ void displayComputerText( std::vector<std::string>  * sideText)
 
 			case 11:
 			{
-				sideText->push_back(selectString +  std::string("<reserved>: ") + std::to_string(game.ecoSettings[j]) );
+				sideText->push_back(selectString +  std::string("Auto reproduction chance: ") + std::to_string(game.ecoSettings[j]) );
 				break;
 			}
 
@@ -7695,7 +7858,7 @@ void tournamentController()
 						{
 							if (game.speciesPopulationCounts[k] < 1)
 							{
-								for (int nnn = 0; nnn < 1; ++nnn)
+								for (int nnn = 0; nnn < 100; ++nnn)
 								{
 									int j = 1;
 									int domingo = -1;
