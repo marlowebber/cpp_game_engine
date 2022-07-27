@@ -461,9 +461,22 @@ void setupExampleAnimal3(int i)
 
 	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
 	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
+	animalAppendCell( i, ORGAN_SENSOR_RANDOM );
 	animalAppendCell( i, ORGAN_MUSCLE );
 	animalAppendCell( i, ORGAN_MUSCLE_STRAFE );
 	animalAppendCell( i, ORGAN_MUSCLE_TURN );
+
+	game.animals[i].body[2].connections[0].used = true;
+	game.animals[i].body[2].connections[0].connectedTo = 0;
+	game.animals[i].body[2].connections[0].weight = 1.0f;
+
+	game.animals[i].body[3].connections[0].used = true;
+	game.animals[i].body[3].connections[0].connectedTo = 1;
+	game.animals[i].body[3].connections[0].weight = 1.0f;
+
+	game.animals[i].body[4].connections[0].used = true;
+	game.animals[i].body[4].connections[0].connectedTo = 2;
+	game.animals[i].body[4].connections[0].weight = 1.0f;
 
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
 	animalAppendCell( i, ORGAN_SENSOR_EYE );
@@ -491,6 +504,8 @@ void setupExampleAnimal3(int i)
 	animalAppendCell( i, ORGAN_LIVER );
 	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
 	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_ADDLIFESPAN );
+	animalAppendCell( i, ORGAN_ADDLIFESPAN );
 	if (doAsexualAnimals)
 	{
 		animalAppendCell( i, ORGAN_GONAD);
@@ -566,8 +581,9 @@ void setupExampleAnimal3(int i)
 	// animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
 	// animalAppendCell( i, ORGAN_MOUTH_SCAVENGE );
 
+	paintAnimal(i);
 
-	scrambleAnimal(i);
+	// scrambleAnimal(i);
 	game.animals[i].generation = 0;
 }
 
@@ -743,10 +759,10 @@ void resetGameState()
 	game.logs[logLength][nLogs];
 	game.paletteSelectedOrgan = 0;
 
-	game.ecoSettings[3]       = 0.0002f; // tax energy scale
-	game.ecoSettings[2]     = 0.002f;      // movement energy scale
+	game.ecoSettings[3]       = 0.0001f; // tax energy scale
+	game.ecoSettings[2]     = 0.001f;      // movement energy scale
 	game.ecoSettings[0]           = 0.85f; // food (meat) energy
-	game.ecoSettings[1]          = 0.15f; // grass energy
+	game.ecoSettings[1]          = 0.25f; // grass energy
 	game.ecoSettings[4] = (worldSquareSize / 32) / numberOfMapSectors; ; //updateSize;
 	game.ecoSettings[5] = 0.35f ;  //nutrient rate
 	game.ecoSettings[6] = 0.01f ; // amount of energy a plant tile requires
@@ -2126,21 +2142,21 @@ void spawnAnimalIntoSlot(  int animalIndex,
 
 	memcpy( &( game.animals[animalIndex].displayName[0]), &(parent.displayName[0]), sizeof(char) * displayNameSize  );
 	measureAnimalQualities(animalIndex) ;
-	if (speciesIndex == 0)
-	{
-		game.animals[animalIndex].retired = false;
-	}
-	else
-	{
-		if ( validateAnimal( animalIndex) )
-		{
+	// if (speciesIndex == 0)
+	// {
+	// 	game.animals[animalIndex].retired = false;
+	// }
+	// else
+	// {
+	// 	if ( validateAnimal( animalIndex) )
+	// 	{
 			game.animals[animalIndex].retired = false;
-		}
-		else
-		{
-			game.animals[animalIndex].retired = true;
-		}
-	}
+		// }
+		// else
+		// {
+		// 	game.animals[animalIndex].retired = true;
+		// }
+	// }
 }
 
 // check if an animal is currently occupying a square. return the local index of the occupying cell, otherwise, return -1 if not occupied.
@@ -4267,6 +4283,8 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 
 				}
 				game.animals[newAnimal].energy += energyDonation;
+
+				printf("sexonomically produced animal %i \n",newAnimal);
 			}
 		}
 	}
@@ -5685,6 +5703,8 @@ void autoReproduce(unsigned int animalIndex)
 
 
 			// hereafter, it is assumed that the copulation will occur next time either one of the participants is placed in the world.
+
+			printf("autoreproduced %u and %u. cell A position: %i %i ; cell B position: %i %i \n", animalIndex, partner, partnerA_worldX, partnerA_worldY,partnerB_worldX, partnerB_worldY );
 
 		}
 
@@ -7866,18 +7886,34 @@ void tournamentController()
 
 
 
-									int whatToSpawn = extremelyFastNumberFromZeroTo(1);
-									if (whatToSpawn == 0)  // spawn example game.animals
-									{
+									// int whatToSpawn = extremelyFastNumberFromZeroTo(1);
+									// if (whatToSpawn == 0)  // spawn example game.animals
+									// {
 										setupExampleAnimal3(j);
-										domingo = spawnAnimal( k,  game.animals[j], game.animals[game.adversary].position, true);
-									}
-									else if (whatToSpawn == 1)  // spawn a species champion
-									{
-										domingo = spawnAnimal( k,  game.champions[k], game.animals[game.adversary].position, true);
-									}
+
+										unsigned int rsize=  32;
+										unsigned int position = game.animals[game.adversary].position;
+
+										position += extremelyFastNumberFromZeroTo(rsize);
+										position -= (rsize/2);
+
+										position +=worldSize * extremelyFastNumberFromZeroTo(rsize);
+										position -= worldSize * (rsize/2);
+
+										position = position % worldSquareSize;
+
+										domingo = spawnAnimal( k,  game.animals[j],position , true);
+									// }
+									// else if (whatToSpawn == 1)  // spawn a species champion
+									// {
+									// 	domingo = spawnAnimal( k,  game.champions[k], game.animals[game.adversary].position, true);
+									// }
 									if (domingo >= 0)
 									{
+										// game.animals[domingo].retired= false;
+										// place(domingo);
+
+									printf("spawned new animal %u \n", domingo);
 										// game.animals[domingo].fAngle += ((RNG() - 0.5) );
 										// game.animals[domingo].fAngleCos = cos(game.animals[domingo].fAngle);
 										// game.animals[domingo].fAngleSin = sin(game.animals[domingo].fAngle);
@@ -7921,9 +7957,9 @@ void tournamentController()
 							}
 						}
 					}
-					else
+					else// shift animals in from another species
 					{
-						for (int k = 1; k < numberOfSpecies; ++k)// spawn lots of the example animal
+						for (int k = 1; k < numberOfSpecies; ++k)
 						{
 							if (game.speciesPopulationCounts[k] < emergencyPopulationLimit)
 							{
