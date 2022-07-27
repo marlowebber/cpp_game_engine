@@ -519,22 +519,32 @@ void setupExampleAnimal3(int i)
 	}
 	else
 	{
-		animalAppendCell( i, ORGAN_GENITAL_B );
-		animalAppendCell( i, ORGAN_GENITAL_B );
-		animalAppendCell( i, ORGAN_GENITAL_B );
-		animalAppendCell( i, ORGAN_GENITAL_B );
-		animalAppendCell( i, ORGAN_GENITAL_B );
-		animalAppendCell( i, ORGAN_GENITAL_B );
-		animalAppendCell( i, ORGAN_GENITAL_B );
-		animalAppendCell( i, ORGAN_GENITAL_B );
-		animalAppendCell( i, ORGAN_GENITAL_A );
-		animalAppendCell( i, ORGAN_GENITAL_A );
-		animalAppendCell( i, ORGAN_GENITAL_A );
-		animalAppendCell( i, ORGAN_GENITAL_A );
-		animalAppendCell( i, ORGAN_GENITAL_A );
-		animalAppendCell( i, ORGAN_GENITAL_A );
-		animalAppendCell( i, ORGAN_GENITAL_A );
-		animalAppendCell( i, ORGAN_GENITAL_A );
+
+		if (extremelyFastNumberFromZeroTo(1) == 0)
+		{
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+		}
+
+		else
+		{
+
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+
+		}
 	}
 
 	animalAppendCell( i, ORGAN_MOUTH_WOOD );
@@ -2150,12 +2160,12 @@ void spawnAnimalIntoSlot(  int animalIndex,
 	// {
 	// 	if ( validateAnimal( animalIndex) )
 	// 	{
-			game.animals[animalIndex].retired = false;
-		// }
-		// else
-		// {
-		// 	game.animals[animalIndex].retired = true;
-		// }
+	game.animals[animalIndex].retired = false;
+	// }
+	// else
+	// {
+	// 	game.animals[animalIndex].retired = true;
+	// }
 	// }
 }
 
@@ -4284,7 +4294,7 @@ void sexBetweenTwoCreatures(unsigned int a, unsigned int b)
 				}
 				game.animals[newAnimal].energy += energyDonation;
 
-				printf("sexonomically produced animal %i \n",newAnimal);
+				printf("sexonomically produced animal %i \n", newAnimal);
 			}
 		}
 	}
@@ -5511,19 +5521,33 @@ void animal_organs( int animalIndex)
 		{
 			bool bonked = false;
 
-			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals && game.world[cellWorldPositionI].identity != animalIndex)
-			{
-				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
-				if (targetLocalPositionI >= 0)
-				{
-					if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_B )
-					{
-						sexBetweenTwoCreatures( animalIndex, game.world[cellWorldPositionI].identity );
 
-						bonked = true;
+			for (int i = 0; i < nNeighbours; ++i)
+			{
+				unsigned int neighbour = cellWorldPositionI += neighbourOffsets[i];
+				if ( neighbour < worldSquareSize)
+				{
+
+
+					if ( game.world[neighbour].identity >= 0 &&  game.world[neighbour].identity < numberOfAnimals && game.world[neighbour].identity != animalIndex)
+					{
+						int targetLocalPositionI = isAnimalInSquare( game.world[neighbour].identity, neighbour);
+						if (targetLocalPositionI >= 0)
+						{
+							if (game.animals[game.world[neighbour].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_B )
+							{
+								sexBetweenTwoCreatures( animalIndex, game.world[neighbour].identity );
+								spill(MATERIAL_SEMEN, neighbour);
+								bonked = true;
+								break;
+							}
+						}
 					}
+
 				}
 			}
+
+
 			if (bonked)
 			{
 				sensorium[cellIndex] = 1.0f;
@@ -5538,38 +5562,60 @@ void animal_organs( int animalIndex)
 		case ORGAN_GENITAL_B:
 		{
 
+
+
+
+
+
+
+
+
 			bool bonked = false;
 
-			if ( game.world[cellWorldPositionI].identity >= 0 &&  game.world[cellWorldPositionI].identity < numberOfAnimals && game.world[cellWorldPositionI].identity != animalIndex)
-			{
-				int targetLocalPositionI = isAnimalInSquare( game.world[cellWorldPositionI].identity, cellWorldPositionI);
-				if (targetLocalPositionI >= 0)
-				{
-					if (game.animals[game.world[cellWorldPositionI].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_A )
-					{
-						sexBetweenTwoCreatures( game.world[cellWorldPositionI].identity , animalIndex);
 
-						// distribute pheromones
-						for (int i = 0; i < nNeighbours; ++i)
+			for (int i = 0; i < nNeighbours; ++i)
+			{
+				unsigned int neighbour = cellWorldPositionI += neighbourOffsets[i];
+				if ( neighbour < worldSquareSize)
+				{
+
+
+					if ( game.world[neighbour].identity >= 0 &&  game.world[neighbour].identity < numberOfAnimals && game.world[neighbour].identity != animalIndex)
+					{
+						int targetLocalPositionI = isAnimalInSquare( game.world[neighbour].identity, neighbour);
+						if (targetLocalPositionI >= 0)
 						{
-							unsigned int neighbour = cellWorldPositionI += neighbourOffsets[i];
-							if ( neighbour < worldSquareSize)
+							if (game.animals[game.world[neighbour].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_A )
 							{
-								game.world[neighbour].pheromoneChannel = PHEROMONE_MUSK;
+								sexBetweenTwoCreatures( animalIndex, game.world[neighbour].identity );
+								spill(MATERIAL_SEMEN, neighbour);
+								bonked = true;
+								break;
 							}
 						}
-
-						// the genital B is destroyed by this action.
-						game.animals[animalIndex].body[cellIndex].damage = 1.0f;
-
-						bonked = true;
 					}
+
 				}
 			}
 
 			if (bonked)
 			{
 				sensorium[cellIndex] = 1.0f;
+
+				// distribute pheromones
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					unsigned int neighbour = cellWorldPositionI += neighbourOffsets[i];
+					if ( neighbour < worldSquareSize)
+					{
+						game.world[neighbour].pheromoneChannel = PHEROMONE_MUSK;
+					}
+				}
+
+				// the genital B is destroyed by this action.
+				game.animals[animalIndex].body[cellIndex].damage = 1.0f;
+
+
 			}
 			else
 			{
@@ -5704,7 +5750,7 @@ void autoReproduce(unsigned int animalIndex)
 
 			// hereafter, it is assumed that the copulation will occur next time either one of the participants is placed in the world.
 
-			printf("autoreproduced %u and %u. cell A position: %i %i ; cell B position: %i %i \n", animalIndex, partner, partnerA_worldX, partnerA_worldY,partnerB_worldX, partnerB_worldY );
+			printf("autoreproduced %u and %u. cell A position: %i %i ; cell B position: %i %i \n", animalIndex, partner, partnerA_worldX, partnerA_worldY, partnerB_worldX, partnerB_worldY );
 
 		}
 
@@ -5745,7 +5791,7 @@ void animalEnergy(int animalIndex)
 				if (RNG() < game.ecoSettings[11])
 				{
 
-						 autoReproduce(animalIndex);
+					autoReproduce(animalIndex);
 				}
 
 			}
@@ -7889,20 +7935,20 @@ void tournamentController()
 									// int whatToSpawn = extremelyFastNumberFromZeroTo(1);
 									// if (whatToSpawn == 0)  // spawn example game.animals
 									// {
-										setupExampleAnimal3(j);
+									setupExampleAnimal3(j);
 
-										unsigned int rsize=  32;
-										unsigned int position = game.animals[game.adversary].position;
+									unsigned int rsize =  32;
+									unsigned int position = game.animals[game.adversary].position;
 
-										position += extremelyFastNumberFromZeroTo(rsize);
-										position -= (rsize/2);
+									position += extremelyFastNumberFromZeroTo(rsize);
+									position -= (rsize / 2);
 
-										position +=worldSize * extremelyFastNumberFromZeroTo(rsize);
-										position -= worldSize * (rsize/2);
+									position += worldSize * extremelyFastNumberFromZeroTo(rsize);
+									position -= worldSize * (rsize / 2);
 
-										position = position % worldSquareSize;
+									position = position % worldSquareSize;
 
-										domingo = spawnAnimal( k,  game.animals[j],position , true);
+									domingo = spawnAnimal( k,  game.animals[j], position , true);
 									// }
 									// else if (whatToSpawn == 1)  // spawn a species champion
 									// {
@@ -7913,7 +7959,7 @@ void tournamentController()
 										// game.animals[domingo].retired= false;
 										// place(domingo);
 
-									printf("spawned new animal %u \n", domingo);
+										printf("spawned new animal %u \n", domingo);
 										// game.animals[domingo].fAngle += ((RNG() - 0.5) );
 										// game.animals[domingo].fAngleCos = cos(game.animals[domingo].fAngle);
 										// game.animals[domingo].fAngleSin = sin(game.animals[domingo].fAngle);
