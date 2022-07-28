@@ -4254,14 +4254,14 @@ bool sexBetweenTwoCreatures( int a,  int b)
 
 	bool babied = false;
 
-		printf("j %f %f\n",  game.animals[a].energyDebt ,game.animals[b].energyDebt );
+	printf("j %f %f\n",  game.animals[a].energyDebt , game.animals[b].energyDebt );
 	if ( game.animals[a].energyDebt <= 0.0f && game.animals[b].energyDebt <= 0.0f  )
 	{
 		printf("a\n");
 		if (game.animals[a].energy > game.animals[a].offspringEnergy && game.animals[b].energy > game.animals[b].offspringEnergy )
 		{
 
-		printf("b\n");
+			printf("b\n");
 			float energyDonation = game.animals[a].offspringEnergy + game.animals[b].offspringEnergy ;
 			game.animals[a].energy -= game.animals[a].offspringEnergy;
 			game.animals[b].energy -= game.animals[b].offspringEnergy;
@@ -4270,7 +4270,7 @@ bool sexBetweenTwoCreatures( int a,  int b)
 			if (newAnimal >= 0)
 			{
 
-		printf("c\n");
+				printf("c\n");
 
 
 				bool AorB = extremelyFastNumberFromZeroTo(1); // gender reveal! all instances of A and B genitals will be converted to one of either A or B across the whole creature.
@@ -5546,19 +5546,19 @@ void animal_organs( int animalIndex)
 				if ( neighbour < worldSquareSize)
 				{
 
-					 int neighbourID = game.world[neighbour].identity;
+					int neighbourID = game.world[neighbour].identity;
 
-					if (  neighbourID>= 0 && neighbourID < numberOfAnimals && neighbourID != animalIndex)
+					if (  neighbourID >= 0 && neighbourID < numberOfAnimals && neighbourID != animalIndex)
 					{
 
-			// printf("b\n");
+						// printf("b\n");
 						int targetLocalPositionI = isAnimalInSquare( neighbourID, neighbour);
 						if (targetLocalPositionI >= 0)
 						{
 							if (game.animals[neighbourID].body[targetLocalPositionI].organ == ORGAN_GENITAL_B )
 							{
 
-			// printf("c\n");
+								// printf("c\n");
 								sexBetweenTwoCreatures( animalIndex, neighbourID);
 								spill(MATERIAL_SEMEN, neighbour);
 								bonked = true;
@@ -5610,7 +5610,7 @@ void animal_organs( int animalIndex)
 						{
 							if (game.animals[game.world[neighbour].identity].body[targetLocalPositionI].organ == ORGAN_GENITAL_A )
 							{
-									// printf("c\n");
+								// printf("c\n");
 								sexBetweenTwoCreatures( animalIndex, game.world[neighbour].identity );
 								spill(MATERIAL_SEMEN, neighbour);
 								bonked = true;
@@ -5747,45 +5747,73 @@ void autoReproduce(unsigned int animalIndex)
 		if (foundPartner)
 		{
 
+
+			// for (int i = 0; i < 3; ++i)
+			// {
+			/* code */
+
 			// example:
 			// a is +100, +100. B is +200, +300.
 
-			// teleport A onto B so that the are in a sex position.
-			int partnerA_worldX = game.animals[animalIndex].position % worldSize;
-			int partnerA_worldY = game.animals[animalIndex].position / worldSize;
-			int vgA_worldX =  partnerA_worldX + game.animals[animalIndex].body[applicableGonad].localPosX;
-			int vgA_worldY = partnerA_worldY + game.animals[animalIndex].body[applicableGonad].localPosY;
+			sexBetweenTwoCreatures(animalIndex, partner);
 
-			int partnerB_worldX = game.animals[partner].position % worldSize;
-			int partnerB_worldY = game.animals[partner].position / worldSize;
-			int vgB_worldX = partnerB_worldX + game.animals[partner].body[partnerGenital].localPosX;
-			int vgB_worldY = partnerB_worldY + game.animals[partner].body[partnerGenital].localPosY;
+			// game.animals[animalIndex].fPosX += game.animals[animalIndex].uPosX;
+			// game.animals[animalIndex].fPosY += game.animals[animalIndex].uPosX;
 
-			int deltaX = vgB_worldX - vgA_worldX ;
-			int deltaY = vgB_worldY - vgA_worldY ;
+			// game.animals[partner].fPosX += game.animals[partner].uPosX;
+			// game.animals[partner].fPosY += game.animals[partner].uPosX;
 
-			int destinationX = (partnerA_worldX + deltaX);
-			int destinationY = (partnerA_worldY + deltaY) ;
-			int destinationI = (destinationY * worldSize ) + destinationX;
 
-			game.animals[animalIndex].uPosX = destinationX;
-			game.animals[animalIndex].uPosY = destinationY;
-			game.animals[animalIndex].fPosX = destinationX;
-			game.animals[animalIndex].fPosY = destinationY;
-			game.animals[animalIndex].position = destinationI;
-			game.animals[animalIndex].fAngle= 0.0f;
+
+			// // teleport A onto B so that the are in a sex position.
+			// game.animals[animalIndex].fAngle = 0.0f;
+			// place(animalIndex);
+			// // int partnerA_worldX = game.animals[animalIndex].uPosX;// % worldSize;
+			// // int partnerA_worldY = game.animals[animalIndex].uPosY;// / worldSize;
+			// // int vgA_worldX =  partnerA_worldX + game.animals[animalIndex].body[applicableGonad].localPosX;
+			// // int vgA_worldY = partnerA_worldY + game.animals[animalIndex].body[applicableGonad].localPosY;
+
+			// int vgA_worldX = game.animals[animalIndex].body[applicableGonad].worldPositionI % worldSize;
+			// int vgA_worldY = game.animals[animalIndex].body[applicableGonad].worldPositionI / worldSize;
+
+
+			// game.animals[partner].fAngle = 0.0f;
+			// place(partner);
+			// // int partnerB_worldX = game.animals[partner].uPosX;//position % worldSize;
+			// // int partnerB_worldY = game.animals[partner].uPosY;//position / worldSize;
+			// // int vgB_worldX = partnerB_worldX + game.animals[partner].body[partnerGenital].localPosX;
+			// // int vgB_worldY = partnerB_worldY + game.animals[partner].body[partnerGenital].localPosY;
+
+			// int vgB_worldX = game.animals[partner].body[partnerGenital].worldPositionI % worldSize;
+			// int vgB_worldY = game.animals[partner].body[partnerGenital].worldPositionI / worldSize;
+
+
+			// int deltaX = vgB_worldX - vgA_worldX ;
+			// int deltaY = vgB_worldY - vgA_worldY ;
+
+			// // int destinationX = (partnerA_worldX + deltaX);
+			// // int destinationY = (partnerA_worldY + deltaY) ;
+			// // int destinationI = (destinationY * worldSize ) + destinationX;
+
+			// game.animals[animalIndex].uPosX += deltaX;
+			// game.animals[animalIndex].uPosY += deltaY;
+			// game.animals[animalIndex].fPosX += deltaX;
+			// game.animals[animalIndex].fPosY += deltaY;
+			// place(animalIndex);
+
+			// }
+			// game.animals[animalIndex].position = destinationI;
 
 			// hereafter, it is assumed that the copulation will occur next time either one of the participants is placed in the world.
 
-			printf("autoreproduced %u and %u. positions after A: %i %i; B: %i %i\n", animalIndex, partner, 
-				game.animals[animalIndex].uPosX , 
-				game.animals[animalIndex].uPosY , 
-				game.animals[partner].uPosX , 
-				game.animals[partner].uPosY  
-				);
+			// printf("autoreproduced %u and %u. positions after A: %i %i; B: %i %i\n", animalIndex, partner,
+			//        game.animals[animalIndex].uPosX ,
+			//        game.animals[animalIndex].uPosY ,
+			//        game.animals[partner].uPosX ,
+			//        game.animals[partner].uPosY
+			//       );
 
 		}
-
 
 
 	}
