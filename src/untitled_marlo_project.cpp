@@ -4265,7 +4265,7 @@ bool sexBetweenTwoCreatures( int a,  int b)
 			float energyDonation = game.animals[a].offspringEnergy + game.animals[b].offspringEnergy ;
 			game.animals[a].energy -= game.animals[a].offspringEnergy;
 			game.animals[b].energy -= game.animals[b].offspringEnergy;
-			unsigned int bSpecies = b % numberOfAnimalsPerSpecies;
+			unsigned int bSpecies = b / numberOfAnimalsPerSpecies;
 			int newAnimal = spawnAnimal( bSpecies, game.animals[b], game.animals[b].position, true );
 			if (newAnimal >= 0)
 			{
