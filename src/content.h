@@ -66,8 +66,9 @@
 #define ORGAN_SCANNING_EYE_CREATURE 57
 #define ORGAN_SCANNING_EYE_OBSTACLE 58
 
+#define ORGAN_SENSOR_MATURITY 59
 
-#define numberOfOrganTypes        58 // the number limit of growable genes
+#define numberOfOrganTypes        59 // the number limit of growable genes
 
 #define MARKER                    65  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        66
@@ -851,7 +852,7 @@ std::string tileDescriptions(unsigned int tile)
 
 	case MATERIAL_SEMEN:
 	{
-		return std::string("globs of sticky, bleachy reproductive jelly.");
+		return std::string("globs of sticky reproductive goo.");
 	}
 
 	case MATERIAL_VOMIT:

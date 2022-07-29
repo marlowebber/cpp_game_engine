@@ -453,8 +453,162 @@ void scrambleSelectedAnimal()
 	}
 }
 
+void setupExampleAnimal4(int i)
+{
+	// an animal which random-walks until it reaches maturity, and then seeks out a member of its species.
+
+	resetAnimal(i);
+
+
+	/*
+
+	organ_biasneuron[0.1f] -> organ_muscle
+
+	sensor_maturity ->  switch  ->   organ_muscle_turn
+
+	sensor_lasttouchedkin ^
+	sensor_random         --^
+
+
+
+	"
+			// in a switch, the sum of inputs except 0 and 1 are taken. If the sum is greater than 0, the input 0 is copied to the output. else, the input 1 is copied to the output."
+
+	*/
+
+
+
+	animalAppendCell( i, ORGAN_SENSOR_LAST_KIN );  // 0
+	animalAppendCell( i, ORGAN_SENSOR_RANDOM );    // 1
+
+	animalAppendCell( i, ORGAN_SENSOR_MATURITY);   // 2
+	animalAppendCell( i, ORGAN_BIASNEURON );       // 3
+	game.animals[i].body[3].workingValue = 0.2f;    // this value should adjust how mature the animal is when it seeks a partner.
+
+
+	animalAppendCell( i, ORGAN_ADDER );            // 4
+
+	game.animals[i].body[4].connections[0].used = true;
+	game.animals[i].body[4].connections[0].connectedTo = 2;
+	game.animals[i].body[4].connections[0].weight = 1.0f;
+
+	game.animals[i].body[4].connections[1].used = true;
+	game.animals[i].body[4].connections[1].connectedTo = 3;
+	game.animals[i].body[4].connections[1].weight = 1.0f;
+
+
+	animalAppendCell( i, ORGAN_SWITCH );           // 5
+
+	game.animals[i].body[5].connections[0].used = true;
+	game.animals[i].body[5].connections[0].connectedTo = 0;
+	game.animals[i].body[5].connections[0].weight = 1.0f;
+
+	game.animals[i].body[5].connections[1].used = true;
+	game.animals[i].body[5].connections[1].connectedTo = 1;
+	game.animals[i].body[5].connections[1].weight = 1.0f;
+
+	game.animals[i].body[5].connections[2].used = true;
+	game.animals[i].body[5].connections[2].connectedTo = 4;
+	game.animals[i].body[5].connections[2].weight = 1.0f;
+
+
+
+	animalAppendCell( i, ORGAN_MUSCLE_TURN );      // 6
+
+	game.animals[i].body[6].connections[0].used = true;
+	game.animals[i].body[6].connections[0].connectedTo = 5;
+	game.animals[i].body[6].connections[0].weight = 1.0f;
+
+	animalAppendCell( i, ORGAN_BIASNEURON );       // 7
+	game.animals[i].body[7].workingValue = 0.2f;    // the animal moves forward slowly.
+
+	animalAppendCell( i, ORGAN_MUSCLE );           // 8
+
+
+	game.animals[i].body[8].connections[0].used = true;
+	game.animals[i].body[8].connections[0].connectedTo = 7;
+	game.animals[i].body[8].connections[0].weight = 1.0f;
+
+
+
+
+
+
+	animalAppendCell( i, ORGAN_LIVER );
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
+	animalAppendCell( i, ORGAN_ADDLIFESPAN );
+	animalAppendCell( i, ORGAN_ADDLIFESPAN );
+	if (doAsexualAnimals)
+	{
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+		animalAppendCell( i, ORGAN_GONAD);
+	}
+	else
+	{
+
+		if (extremelyFastNumberFromZeroTo(1) == 0)
+		{
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+			animalAppendCell( i, ORGAN_GENITAL_B );
+		}
+
+		else
+		{
+
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+			animalAppendCell( i, ORGAN_GENITAL_A );
+
+		}
+	}
+
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+
+	animalAppendCell( i, ORGAN_GILL );
+
+	paintAnimal(i);
+
+	game.animals[i].generation = 0;
+}
+
 void setupExampleAnimal3(int i)
 {
+	// an animal which random-walks and eats common vegetation
 	resetAnimal(i);
 
 
@@ -4551,6 +4705,14 @@ void animal_organs( int animalIndex)
 			{
 				spill(MATERIAL_HONEY, cellWorldPositionI);
 				game.animals[animalIndex].energy -= 1.0f;
+			}
+			break;
+		}
+		case ORGAN_SENSOR_MATURITY:
+		{
+			if (game.animals[animalIndex].maxEnergy > 0.0f)
+			{
+				sensorium[cellIndex] = abs(game.animals[animalIndex].energyDebt) / game.animals[animalIndex].maxEnergy;
 			}
 			break;
 		}
