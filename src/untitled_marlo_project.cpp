@@ -39,14 +39,14 @@ const bool respawnLowSpecies     = true;
 const bool setOrSteerAngle       = true;
 const bool printLogs             = true;
 const bool doHoney = false;
-const bool doAsexualPlants = false;
+const bool doAsexualPlants = true;
 const bool doAsexualAnimals = false;
 const bool seedDegradation = false;
 const bool movePollenUnconditionally = true;
 const bool pollenDegradation = false;
-
+const bool doAutoreproduction = false;
 // const bool doBrambles = false;
-const bool environmentScarcity = true;
+const bool environmentScarcity = false;
 const bool killLoiteringAdversary = false;
 const bool erode = true;
 const int prelimSize = worldSize / 10;
@@ -483,7 +483,7 @@ void setupExampleAnimal4(int i)
 
 	animalAppendCell( i, ORGAN_SENSOR_MATURITY);   // 2
 	animalAppendCell( i, ORGAN_BIASNEURON );       // 3
-	game.animals[i].body[3].workingValue = 0.2f;    // this value should adjust how mature the animal is when it seeks a partner.
+	game.animals[i].body[3].workingValue = 0.1f;    // this value should adjust how mature the animal is when it seeks a partner.
 
 
 	animalAppendCell( i, ORGAN_ADDER );            // 4
@@ -520,7 +520,7 @@ void setupExampleAnimal4(int i)
 	game.animals[i].body[6].connections[0].weight = 1.0f;
 
 	animalAppendCell( i, ORGAN_BIASNEURON );       // 7
-	game.animals[i].body[7].workingValue = 0.2f;    // the animal moves forward slowly.
+	game.animals[i].body[7].workingValue = 0.5f;    // the animal moves forward quickly.
 
 	animalAppendCell( i, ORGAN_MUSCLE );           // 8
 
@@ -530,19 +530,12 @@ void setupExampleAnimal4(int i)
 	game.animals[i].body[8].connections[0].weight = 1.0f;
 
 
-
-
-
-
-	animalAppendCell( i, ORGAN_LIVER );
-	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
 	animalAppendCell( i, ORGAN_ADDOFFSPRINGENERGY );
 	animalAppendCell( i, ORGAN_ADDLIFESPAN );
 	animalAppendCell( i, ORGAN_ADDLIFESPAN );
+
 	if (doAsexualAnimals)
 	{
-		animalAppendCell( i, ORGAN_GONAD);
-		animalAppendCell( i, ORGAN_GONAD);
 		animalAppendCell( i, ORGAN_GONAD);
 		animalAppendCell( i, ORGAN_GONAD);
 		animalAppendCell( i, ORGAN_GONAD);
@@ -561,8 +554,6 @@ void setupExampleAnimal4(int i)
 			animalAppendCell( i, ORGAN_GENITAL_B );
 			animalAppendCell( i, ORGAN_GENITAL_B );
 			animalAppendCell( i, ORGAN_GENITAL_B );
-			animalAppendCell( i, ORGAN_GENITAL_B );
-			animalAppendCell( i, ORGAN_GENITAL_B );
 		}
 
 		else
@@ -574,30 +565,16 @@ void setupExampleAnimal4(int i)
 			animalAppendCell( i, ORGAN_GENITAL_A );
 			animalAppendCell( i, ORGAN_GENITAL_A );
 			animalAppendCell( i, ORGAN_GENITAL_A );
-			animalAppendCell( i, ORGAN_GENITAL_A );
-			animalAppendCell( i, ORGAN_GENITAL_A );
 
 		}
 	}
 
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
-	animalAppendCell( i, ORGAN_MOUTH_WOOD );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
+	animalAppendCell( i, ORGAN_MOUTH_VEG );
 
 	animalAppendCell( i, ORGAN_GILL );
 
@@ -824,7 +801,7 @@ void resetAnimals()
 	int j = 1;
 	for (int i = 0; i < numberOfSpecies; ++i)
 	{
-		setupExampleAnimal3(j);
+		setupExampleAnimal4(j);
 		paintAnimal(j);
 		game.champions[i] = game.animals[j];
 		game.championScores[i] = 0;
@@ -2251,7 +2228,7 @@ void normalizeAnimalCellPositions( int animalIndex)
 	centroid.x = centroid.x / game.animals[animalIndex].cellsUsed;
 	centroid.y = centroid.y / game.animals[animalIndex].cellsUsed;
 
-	printf("normalized animal %i. The centroid was %f %f \n", animalIndex, centroid.x, centroid.y);
+	// printf("normalized animal %i. The centroid was %f %f \n", animalIndex, centroid.x, centroid.y);
 
 	Vec_i2 i_centroid = Vec_i2(centroid.x, centroid.y);
 
@@ -4408,14 +4385,14 @@ bool sexBetweenTwoCreatures( int a,  int b)
 
 	bool babied = false;
 
-	printf("j %f %f\n",  game.animals[a].energyDebt , game.animals[b].energyDebt );
+	// printf("j %f %f\n",  game.animals[a].energyDebt , game.animals[b].energyDebt );
 	if ( game.animals[a].energyDebt <= 0.0f && game.animals[b].energyDebt <= 0.0f  )
 	{
-		printf("a\n");
+		// printf("a\n");
 		if (game.animals[a].energy > game.animals[a].offspringEnergy && game.animals[b].energy > game.animals[b].offspringEnergy )
 		{
 
-			printf("b\n");
+			// printf("b\n");
 			float energyDonation = game.animals[a].offspringEnergy + game.animals[b].offspringEnergy ;
 			game.animals[a].energy -= game.animals[a].offspringEnergy;
 			game.animals[b].energy -= game.animals[b].offspringEnergy;
@@ -4424,7 +4401,7 @@ bool sexBetweenTwoCreatures( int a,  int b)
 			if (newAnimal >= 0)
 			{
 
-				printf("c\n");
+				// printf("c\n");
 
 
 				bool AorB = extremelyFastNumberFromZeroTo(1); // gender reveal! all instances of A and B genitals will be converted to one of either A or B across the whole creature.
@@ -4456,7 +4433,7 @@ bool sexBetweenTwoCreatures( int a,  int b)
 				}
 				game.animals[newAnimal].energy += energyDonation;
 
-				printf("sexonomically produced animal %i \n", newAnimal);
+				// printf("sexonomically produced animal %i \n", newAnimal);
 				babied = true;
 			}
 		}
@@ -4560,6 +4537,8 @@ void animal_organs( int animalIndex)
 			}
 			unsigned int switchCell = game.animals[animalIndex].body[cellIndex].connections[switchedChannel] .connectedTo;
 			sensorium[cellIndex] = game.animals[animalIndex].body[switchCell].signalIntensity * game.animals[animalIndex].body[cellIndex].connections[switchedChannel] .weight;
+			// printf("SWITCH  out %f \n", sensorium[cellIndex] );
+
 			break;
 		}
 
@@ -4710,9 +4689,9 @@ void animal_organs( int animalIndex)
 		}
 		case ORGAN_SENSOR_MATURITY:
 		{
-			if (game.animals[animalIndex].maxEnergy > 0.0f)
+			if (game.animals[animalIndex].cellsUsed > 0.0f)
 			{
-				sensorium[cellIndex] = abs(game.animals[animalIndex].energyDebt) / game.animals[animalIndex].maxEnergy;
+				sensorium[cellIndex] = 1.0f - ( abs(game.animals[animalIndex].energyDebt) / game.animals[animalIndex].cellsUsed );
 			}
 			break;
 		}
@@ -4777,6 +4756,8 @@ void animal_organs( int animalIndex)
 		case ORGAN_SENSOR_RANDOM:
 		{
 			sensorium[cellIndex] = (RNG() - 0.5f) * 2.0f;
+			// printf("RANDOM  out %f \n", sensorium[cellIndex] );
+
 			break;
 		}
 
@@ -4978,6 +4959,8 @@ void animal_organs( int animalIndex)
 					sensorium[cellIndex] =  smallestAngleBetween( targetAngle, game.animals[animalIndex].fAngle) / const_pi;
 				}
 			}
+
+			// printf("ORGAN_SENSOR_LAST_KIN %f \n", sensorium[cellIndex]);
 			break;
 		}
 
@@ -5685,7 +5668,7 @@ void animal_organs( int animalIndex)
 				float angle = (game.animals[animalIndex].body[cellIndex].signalIntensity ) * const_pi;
 
 
-				game.animals[animalIndex].fAngle +=  ((sum - game.animals[animalIndex].fAngle ) * 0.5f) / game.animals[animalIndex].cellsUsed;
+				game.animals[animalIndex].fAngle = angle;//+=  ((sum - game.animals[animalIndex].fAngle ) * 0.5f) / game.animals[animalIndex].cellsUsed;
 
 
 
@@ -5694,6 +5677,10 @@ void animal_organs( int animalIndex)
 			{
 				game.animals[animalIndex].fAngle += sum * turnMusclePower;
 			}
+
+
+			// printf("ORGAN_MUSCLE_TURN  sensorium %f,   fangle %f \n",sensorium[cellIndex], game.animals[animalIndex].fAngle);
+
 			break;
 		}
 		case ORGAN_GENITAL_A:
@@ -5722,7 +5709,7 @@ void animal_organs( int animalIndex)
 
 								// printf("c\n");
 								sexBetweenTwoCreatures( animalIndex, neighbourID);
-								spill(MATERIAL_SEMEN, neighbour);
+								// spill(MATERIAL_SEMEN, neighbour);
 								bonked = true;
 								break;
 							}
@@ -5774,7 +5761,7 @@ void animal_organs( int animalIndex)
 							{
 								// printf("c\n");
 								sexBetweenTwoCreatures( animalIndex, game.world[neighbour].identity );
-								spill(MATERIAL_SEMEN, neighbour);
+								// spill(MATERIAL_SEMEN, neighbour);
 								bonked = true;
 								break;
 							}
@@ -5798,8 +5785,8 @@ void animal_organs( int animalIndex)
 					}
 				}
 
-				// the genital B is destroyed by this action.
-				game.animals[animalIndex].body[cellIndex].damage = 1.0f;
+				// the genital B is destroyed by this action. Or not i guess to encourage more sex.
+				// game.animals[animalIndex].body[cellIndex].damage = 1.0f;
 
 
 			}
@@ -6010,12 +5997,14 @@ void animalEnergy(int animalIndex)
 			if (game.animals[animalIndex].energyDebt <= 0.0f)
 			{
 				// the debt was just now repayed, and the animal is mature. roll to automatically reproduce it.
-				if (RNG() < game.ecoSettings[11])
+				if (doAutoreproduction)
 				{
+					if (RNG() < game.ecoSettings[11])
+					{
 
-					autoReproduce(animalIndex);
+						autoReproduce(animalIndex);
+					}
 				}
-
 			}
 		}
 	}
@@ -8157,7 +8146,8 @@ void tournamentController()
 									// int whatToSpawn = extremelyFastNumberFromZeroTo(1);
 									// if (whatToSpawn == 0)  // spawn example game.animals
 									// {
-									setupExampleAnimal3(j);
+									// setupExampleAnimal3(j);
+									setupExampleAnimal4(j);
 
 									unsigned int rsize =  32;
 									unsigned int position = game.animals[game.adversary].position;
@@ -8560,7 +8550,7 @@ void spawnAnimalAtCursor()
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 
 	int j = 1;
-	setupExampleAnimal3(j);
+	setupExampleAnimal4(j);
 	paintAnimal(j);
 	int domingo = spawnAnimal( 1,  game.animals[j], worldCursorPos, false);
 	if (domingo >= 0)
