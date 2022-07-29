@@ -25,7 +25,7 @@
 #define ORGAN_NEURON               15
 #define ORGAN_BIASNEURON           16    // can be thought of as ORGAN_SENSOR_CONSTANTVALUE
 #define ORGAN_SENSOR_BODYANGLE	   17
-#define ORGAN_SENSOR_TRACKER       18
+#define ORGAN_TRACKER_KIN       18
 #define ORGAN_SPEAKER              19
 #define ORGAN_SENSOR_EAR           20
 #define ORGAN_MUSCLE_STRAFE        21
@@ -67,8 +67,9 @@
 #define ORGAN_SCANNING_EYE_OBSTACLE 58
 
 #define ORGAN_SENSOR_MATURITY 59
+#define ORGAN_TRACKER_OTHER 60
 
-#define numberOfOrganTypes        59 // the number limit of growable genes
+#define numberOfOrganTypes        60 // the number limit of growable genes
 
 #define MARKER                    65  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        66
@@ -551,10 +552,10 @@ std::string tileDescriptions(unsigned int tile)
 	{
 		return std::string("part of the brain that senses the body's orientation.");
 	}
-	case ORGAN_SENSOR_TRACKER:
-	{
-		return std::string("part of the brain that seeks prey.");
-	}
+	// case ORGAN_SENSOR_TRACKER:
+	// {
+	// 	return std::string("part of the brain that seeks prey.");
+	// }
 	case ORGAN_SPEAKER:
 	{
 		return std::string("a resonant chamber that is blown with air to produce sound.");
@@ -1008,10 +1009,10 @@ std::string tileShortNames(unsigned int tile)
 	{
 		return std::string("Body angle sensor");
 	}
-	case ORGAN_SENSOR_TRACKER:
-	{
-		return std::string("Tracker sensor");
-	}
+	// case ORGAN_SENSOR_TRACKER:
+	// {
+	// 	return std::string("Tracker sensor");
+	// }
 	case ORGAN_SPEAKER:
 	{
 		return std::string("Speaker");
@@ -1382,10 +1383,10 @@ unsigned int organProduces(unsigned int organ)
 	{
 		return MATERIAL_BLOOD;
 	}
-	case ORGAN_SENSOR_TRACKER:
-	{
-		return MATERIAL_BLOOD;
-	}
+	// case ORGAN_SENSOR_TRACKER:
+	// {
+	// 	return MATERIAL_BLOOD;
+	// }
 	case ORGAN_SENSOR_RANDOM:
 	{
 		return MATERIAL_BLOOD;
@@ -1605,7 +1606,8 @@ bool organIsASensor(unsigned int organ)
 {
 	if (organ == ORGAN_SENSOR_EYE               ||
 	        organ == ORGAN_SENSOR_BODYANGLE     ||
-	        organ == ORGAN_SENSOR_TRACKER       ||
+	        organ == ORGAN_TRACKER_OTHER       ||
+	        organ == ORGAN_TRACKER_KIN       ||
 	        organ == ORGAN_SENSOR_EAR           ||
 	        organ == ORGAN_SENSOR_PHEROMONE     ||
 	        organ == ORGAN_SENSOR_LAST_STRANGER ||
@@ -2450,8 +2452,8 @@ Color organColors(unsigned int organ)
 		return color_brains4;
 	case ORGAN_SENSOR_BODYANGLE	    :
 		return color_tan;
-	case ORGAN_SENSOR_TRACKER       :
-		break;
+	// case ORGAN_SENSOR_TRACKER       :
+	// 	break;
 	case ORGAN_SPEAKER              :
 		return color_offwhite;
 	case ORGAN_SENSOR_EAR           :
@@ -2553,7 +2555,7 @@ bool organVisible(unsigned int organ)
 	        organ == ORGAN_SENSOR_EYE ||
 	        organ == ORGAN_MOUTH_CARNIVORE ||
 	        organ == ORGAN_MOUTH_PARASITE ||
-	        organ == ORGAN_SENSOR_TRACKER ||
+	        // organ == ORGAN_SENSOR_TRACKER ||
 	        organ == ORGAN_SPEAKER )
 	{
 		return true;

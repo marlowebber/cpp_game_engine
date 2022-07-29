@@ -478,7 +478,7 @@ void setupExampleAnimal4(int i)
 
 
 
-	animalAppendCell( i, ORGAN_SENSOR_LAST_KIN );  // 0
+	animalAppendCell( i, ORGAN_TRACKER_KIN );       // 0
 	animalAppendCell( i, ORGAN_SENSOR_RANDOM );    // 1
 
 	animalAppendCell( i, ORGAN_SENSOR_MATURITY);   // 2
@@ -1319,16 +1319,16 @@ void detailTerrain()
 			Vec_f2 slope = getTerrainSlope(worldPositionI);
 			float grade = sqrt( (slope.x * slope.x) +  (slope.y * slope.y)  );
 			float colorNoise = 1 + (((RNG() - 0.5f) * 0.35)) ; // map -1,1 to 0,0.8
-			if (game.world[worldPositionI]. height < seaLevel)
-			{
+			// if (game.world[worldPositionI]. height < seaLevel)
+			// {
 				if (grade < 5.0f)
 				{
-					if (extremelyFastNumberFromZeroTo(5) == 0)
-					{
+			// 		if (extremelyFastNumberFromZeroTo(5) == 0)
+			// 		{
 						spawnRandomPlant( worldPositionI );
-					}
+			// 		}
 				}
-			}
+			// }
 
 			if ( game.world[worldPositionI]. height < biome_marine)
 			{
@@ -5069,12 +5069,32 @@ void animal_organs( int animalIndex)
 			break;
 		}
 
-		case ORGAN_SENSOR_TRACKER:
+		case ORGAN_TRACKER_OTHER:
 		{
-			game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+			// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
 			if ( game.world [cellWorldPositionI].identity != animalIndex )
 			{
-				sensorium[cellIndex]  =  smallestAngleBetween(  game.world[cellWorldPositionI].trail, game.animals[animalIndex].fAngle) / const_pi;
+
+				unsigned int targetSpecies = game.world[cellWorldPositionI].identity / numberOfAnimalsPerSpecies;
+				if (targetSpecies != speciesIndex)
+				{
+					sensorium[cellIndex]  =  smallestAngleBetween(  game.world[cellWorldPositionI].trail, game.animals[animalIndex].fAngle) / const_pi;
+				}
+			}
+			break;
+		}
+
+		case ORGAN_TRACKER_KIN:
+		{
+			// game.animals[animalIndex].body[cellIndex].signalIntensity = 0.0f;
+			if ( game.world [cellWorldPositionI].identity != animalIndex )
+			{
+
+				unsigned int targetSpecies = game.world[cellWorldPositionI].identity / numberOfAnimalsPerSpecies;
+				if (targetSpecies == speciesIndex)
+				{
+					sensorium[cellIndex]  =  smallestAngleBetween(  game.world[cellWorldPositionI].trail, game.animals[animalIndex].fAngle) / const_pi;
+				}
 			}
 			break;
 		}
