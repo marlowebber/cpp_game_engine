@@ -45,6 +45,7 @@ const bool seedDegradation = false;
 const bool movePollenUnconditionally = true;
 const bool pollenDegradation = false;
 const bool doAutoreproduction = false;
+const bool enableSeedMouth = false;
 // const bool doBrambles = false;
 const bool environmentScarcity = false;
 const bool killLoiteringAdversary = false;
@@ -1321,13 +1322,13 @@ void detailTerrain()
 			float colorNoise = 1 + (((RNG() - 0.5f) * 0.35)) ; // map -1,1 to 0,0.8
 			// if (game.world[worldPositionI]. height < seaLevel)
 			// {
-				if (grade < 5.0f)
-				{
-			// 		if (extremelyFastNumberFromZeroTo(5) == 0)
-			// 		{
-						spawnRandomPlant( worldPositionI );
-			// 		}
-				}
+			if (grade < 5.0f)
+			{
+						if (extremelyFastNumberFromZeroTo(10) == 0)
+						{
+				spawnRandomPlant( worldPositionI );
+						}
+			}
 			// }
 
 			if ( game.world[worldPositionI]. height < biome_marine)
@@ -3571,19 +3572,19 @@ void growPlants(unsigned int worldI)
 	}
 }
 
-void damagePlants(unsigned int worldI)
-{
-	// regrow plants if they are damaged
-	for (int i = 0; i < nNeighbours; ++i)
-	{
-		unsigned int neighbour = worldI + neighbourOffsets[i];
-		if (neighbour < worldSquareSize)
-		{
-			game.world[worldI].grown = false;
-		}
-	}
-	game.world[worldI].plantState = MATERIAL_NOTHING;
-}
+// void damagePlants(unsigned int worldI)
+// {
+// 	// regrow plants if they are damaged
+// 	for (int i = 0; i < nNeighbours; ++i)
+// 	{
+// 		unsigned int neighbour = worldI + neighbourOffsets[i];
+// 		if (neighbour < worldSquareSize)
+// 		{
+// 			game.world[worldI].grown = false;
+// 		}
+// 	}
+// 	game.world[worldI].plantState = MATERIAL_NOTHING;
+// }
 
 void moveSeed(unsigned int from, unsigned int to)
 {
@@ -3691,7 +3692,7 @@ void updatePlants(unsigned int worldI)
 		}
 		case MATERIAL_SEED:
 		{
-			if (extremelyFastNumberFromZeroTo(10) == 0)
+			if (extremelyFastNumberFromZeroTo(100) == 0)
 			{
 				growInto(  worldI, worldI, SPROUT, true );
 				game.world[worldI].seedState = MATERIAL_NOTHING;
@@ -3740,7 +3741,9 @@ void updatePlants(unsigned int worldI)
 		}
 		else if (game.world[worldI].energy <= -1.0f || game.world[worldI].nutrients <= -1.0f)
 		{
-			damagePlants(worldI);
+			// damagePlants(worldI);
+			game.world[worldI].plantState  = MATERIAL_NOTHING;
+			return;
 		}
 		game.world[worldI].energy -= game.ecoSettings[6];
 		game.world[worldI].energy     = clamp(game.world[worldI].energy ,    -1.0f, plantMaxEnergy);
@@ -5373,11 +5376,38 @@ void animal_organs( int animalIndex)
 
 			}
 			bool ate = false;
+
 			if (ate_plant)
 			{
 				ate = true;
 				game.animals[animalIndex].energy += game.ecoSettings[1] ;
-				damagePlants(cellWorldPositionI);
+			
+
+
+
+
+				int id =  game.world[cellWorldPositionI].plantIdentity;
+
+				// regrow plants if they are damaged
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					unsigned int neighbour = cellWorldPositionI + neighbourOffsets[i];
+					if (neighbour < worldSquareSize)
+					{
+						if (game.world[neighbour].identity == id && game.world[neighbour].grown )
+						{
+							if ( game.world[neighbour].geneCursor > 0)
+							{
+								game.world[neighbour].geneCursor--; 
+							}
+							game.world[neighbour].grown = false;
+						}
+					}
+				}
+				game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
+
+
+
 			}
 			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
 			{
@@ -5417,7 +5447,30 @@ void animal_organs( int animalIndex)
 			{
 				ate = true;
 				game.animals[animalIndex].energy += game.ecoSettings[1] ;
-				damagePlants(cellWorldPositionI);
+				// damagePlants(cellWorldPositionI);
+
+
+				int id =  game.world[cellWorldPositionI].plantIdentity;
+
+				// regrow plants if they are damaged
+				for (int i = 0; i < nNeighbours; ++i)
+				{
+					unsigned int neighbour = cellWorldPositionI + neighbourOffsets[i];
+					if (neighbour < worldSquareSize)
+					{
+						if (game.world[neighbour].identity == id && game.world[neighbour].grown )
+						{
+							if ( game.world[neighbour].geneCursor > 0)
+							{
+								game.world[neighbour].geneCursor--; 
+							}
+							game.world[neighbour].grown = false;
+						}
+					}
+				}
+				game.world[cellWorldPositionI].plantState = MATERIAL_NOTHING;
+
+
 
 			}
 			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
@@ -5436,23 +5489,26 @@ void animal_organs( int animalIndex)
 		}
 		case ORGAN_MOUTH_SEEDS:
 		{
-			bool ate_plant = false;
-
-			if (
-			    game.world[cellWorldPositionI].seedState     == MATERIAL_SEED  ||
-			    game.world[cellWorldPositionI].seedState     == MATERIAL_POLLEN
-
-			)
+				bool ate = false;
+			if (enableSeedMouth)
 			{
+				bool ate_plant = false;
 
-				ate_plant = true;
-			}
-			bool ate = false;
-			if (ate_plant)
-			{
-				ate = true;
-				game.animals[animalIndex].energy += game.ecoSettings[1] * 3.0f ;
-				game.world[cellWorldPositionI].seedState = MATERIAL_NOTHING;
+				if (
+				    game.world[cellWorldPositionI].seedState     == MATERIAL_SEED  ||
+				    game.world[cellWorldPositionI].seedState     == MATERIAL_POLLEN
+
+				)
+				{
+
+					ate_plant = true;
+				}
+				if (ate_plant)
+				{
+					ate = true;
+					game.animals[animalIndex].energy += game.ecoSettings[1] * 3.0f ;
+					game.world[cellWorldPositionI].seedState = MATERIAL_NOTHING;
+				}
 			}
 			if (game.world[cellWorldPositionI].wall == MATERIAL_HONEY)
 			{
@@ -7745,14 +7801,14 @@ void recomputeTerrainLighting()
 	for (unsigned int worldPositionI = 0; worldPositionI < worldSquareSize - 1; worldPositionI++)
 	{
 		computeLight( worldPositionI, sunXangle, sunYangle);
-		if (game.world[worldPositionI].height < seaLevel)
-		{
-			float depth = (seaLevel - game.world[worldPositionI].height);
-			float brightness = (1 / (1 + (depth / (worldSize / 8))) );
-			if (brightness < 0.2f) { brightness = 0.2f;}
+		// if (game.world[worldPositionI].height < seaLevel)
+		// {
+		// 	float depth = (seaLevel - game.world[worldPositionI].height);
+		// 	float brightness = (1 / (1 + (depth / (worldSize / 8))) );
+		// 	if (brightness < 0.2f) { brightness = 0.2f;}
 
-			game.world[worldPositionI].light = multiplyColorByScalar(game.world[worldPositionI].light, brightness   );
-		}
+		// 	game.world[worldPositionI].light = multiplyColorByScalar(game.world[worldPositionI].light, brightness   );
+		// }
 		float steps = 8;
 		float b = game.world[worldPositionI].light.a * steps;
 		int ib = b;
