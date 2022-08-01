@@ -67,6 +67,8 @@ string
 -
 fstream
 -
+cmath
+-
 boost/thread.hpp
 -
 SDL.h

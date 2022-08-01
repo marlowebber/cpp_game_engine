@@ -10,7 +10,7 @@ const int worldSize = 2400;// 2400;
 const unsigned int worldSquareSize       = worldSize * worldSize;
 const int NUMBER_OF_CONNECTIONS = 8;
 const unsigned int numberOfAnimals = 20000;//100000;//6000;  //20000;
-const unsigned int numberOfSpecies = 6;
+const unsigned int numberOfSpecies = 12;
 const unsigned int animalSquareSize      = 256;
 const unsigned int displayNameSize = 32;
 const unsigned int nLogs = 32;
@@ -24,7 +24,7 @@ const float viewPanLimit = 250.0f;
 const float  maxZoom = 450.0f;
 const float  minZoom = 25.0f;
 
-const bool variedGrowthCost      = false;
+const bool variedGrowthCost      = true;
 const bool variedUpkeep          = false;
 
 const extern float playerSpeed;
@@ -126,7 +126,7 @@ const unsigned int numberOfStatusEffects = 4;
 struct Animal
 {
     Cell body[animalSquareSize];
-    // unsigned int mass;
+    float mass;
     unsigned int numberOfTimesReproduced;
     unsigned int damageDone;
     unsigned int damageReceived;
@@ -219,7 +219,6 @@ struct GameState
     bool speciesVacancies [numberOfSpecies];
     unsigned int speciesPopulationCounts [numberOfSpecies];
     unsigned int populationCountUpdates  [numberOfSpecies];
-    unsigned int speciesAttacksPerTurn   [numberOfSpecies];
 
     float speakerChannels[numberOfSpeakerChannels];
     float speakerChannelsLastTurn[numberOfSpeakerChannels];
