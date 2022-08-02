@@ -102,7 +102,7 @@ struct Cell
     float workingValue;
 
     Color color;
-    unsigned int speakerChannel;
+    char  name;
 
 
     int eyeLookX;
@@ -121,7 +121,7 @@ struct Cell
 
 
 const unsigned int numberOfStatusEffects = 4;
-
+const unsigned int animalGenomeSize = 5888;
 
 struct Animal
 {
@@ -140,11 +140,16 @@ struct Animal
     float energy;
     float maxEnergy;
     float energyDebt;
+
     unsigned int position;
-    unsigned int uPosX;
-    unsigned int uPosY;
+
     float fPosX;
     float fPosY;
+
+    float fVelX;
+    float fVelY; 
+    float fVelA; // rotational velocity
+
     float fAngle;                   // the direction the animal is facing
     float fAngleSin;
     float fAngleCos;
@@ -162,6 +167,8 @@ struct Animal
 
     // char statusEffects[numberOfStatusEffects];
     // unsigned int statusEffect;
+
+    char genes[animalGenomeSize];
 };
 
 

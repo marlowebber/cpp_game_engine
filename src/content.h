@@ -70,12 +70,20 @@
 #define ORGAN_TRACKER_OTHER 60
 #define ORGAN_MUSCLE_TURN_STEER 61
 
-#define numberOfOrganTypes        61 // the number limit of growable genes
+#define ORGAN_FAT  62
+
+#define numberOfOrganTypes        62 // the number limit of growable genes
 
 #define MARKER                    65  // there are some tiles which are used by the program, but can't be grown.
 #define TILE_DESTROYER_EYE        66
 
 
+
+#define ORGAN_GROUP_INSTANCE      67
+#define ORGAN_GROUP_CREATE        68
+#define ORGAN_SEQUENCE            69
+#define ORGAN_BRANCH              70
+#define ORGAN_BREAK               71
 
 
 #define MACHINECALLBACK_PISTOL           100
@@ -516,7 +524,11 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_LIVER:
 	{
-		return std::string("a brownish slab of flesh that stores energy.");
+		return std::string("a smooth, wobbly mass that repairs the body.");
+	}
+	case ORGAN_FAT:
+	{
+		return std::string("soft rolls of white fat that store energy.");
 	}
 	case ORGAN_MUSCLE_TURN:
 	{
@@ -532,7 +544,7 @@ std::string tileDescriptions(unsigned int tile)
 	}
 	case ORGAN_MOUTH_PARASITE:
 	{
-		return std::string("a leech-like sucker lined with drilling teeth.");
+		return std::string("a leech-like sucker that hides a drilling tongue.");
 	}
 	case ORGAN_ADDOFFSPRINGENERGY:
 	{
