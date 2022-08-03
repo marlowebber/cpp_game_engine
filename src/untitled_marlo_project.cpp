@@ -87,6 +87,8 @@ const int destroyerRange = 250;
 
 const float plantMaxEnergy = nNeighbours * 3.0f;
 
+const float animalTopSpeed = 10.0f;
+
 const int neighbourOffsets[] =
 {
 	- 1,
@@ -2320,48 +2322,63 @@ void growAnimalFromGenes(int animalIndex)
 {
 
 
+	printf("grow animal %i from genes\n", animalIndex);
+
 	resetAnimal(animalIndex);
 
 	unsigned int geneCursor = 0;
 	unsigned int skipAhead = 0;
 	unsigned int sequenceDepth = 0;
-	unsigned int sequenceNumber = 0;
+	char sequenceNumber = 0;
 	unsigned int sequenceReturn = 0;
+
+
+	int root = -1;
+
+
 	while (geneCursor < animalGenomeSize)
 	{
+
 		skipAhead = geneCursor + 1;
 
 
 		char c = game.animals[animalIndex].genes[geneCursor];
+
+
+		printf("geneCursor %u char %c : ", geneCursor, c);
+
 		switch (c)
 		{
 
 
-		case ANIMALGENE_GROUPCREATE:
-		{
+		// case ANIMALGENE_GROUPCREATE:
+		// {
 
-			break;
-		}
-		case ANIMALGENE_GROUPINSTANCE:
-		{
+		// 	break;
+		// }
+		// case ANIMALGENE_GROUPINSTANCE:
+		// {
 
-			break;
-		}
-
-
+		// 	break;
+		// }
 
 
-		case ANIMALGENE_ARRAY:
-		{
 
-			break;
-		}
+
+		// case ANIMALGENE_ARRAY:
+		// {
+
+		// 	break;
+		// }
 
 
 		case ANIMALGENE_SEQUENCE:
 		{
-			sequenceNumber           = game.animals[animalIndex].genes[geneCursor + 1];
-			sequenceReturn           =  game.animals[animalIndex].genes[geneCursor + 2];
+
+			sequenceNumber           =  game.animals[animalIndex].genes[geneCursor + 1];
+			sequenceReturn           =  geneCursor + 2;
+
+			printf("sequence %c times\n", sequenceNumber);
 			sequenceDepth ++;
 			skipAhead =  sequenceReturn;
 			break;
@@ -2369,6 +2386,8 @@ void growAnimalFromGenes(int animalIndex)
 
 		case ANIMALGENE_BREAK:
 		{
+
+			printf("break \n");
 			if (sequenceNumber > 0)
 			{
 				skipAhead = sequenceReturn;
@@ -2377,7 +2396,7 @@ void growAnimalFromGenes(int animalIndex)
 			else
 			{
 				sequenceDepth--;
-				skipAhead = game.animals[animalIndex].genes[geneCursor + 1];
+				skipAhead = geneCursor + 1;
 			}
 			break;
 		}
@@ -2387,31 +2406,49 @@ void growAnimalFromGenes(int animalIndex)
 		{
 
 
-			unsigned int name            = game.animals[animalIndex].genes[geneCursor + 1];
-			unsigned int organType       = game.animals[animalIndex].genes[geneCursor + 2];
-			unsigned int workingValue    = game.animals[animalIndex].genes[geneCursor + 3];
-			unsigned int attachedTo      = game.animals[animalIndex].genes[geneCursor + 4];
-			unsigned int connectionAngle = game.animals[animalIndex].genes[geneCursor + 5];
+			char name            = game.animals[animalIndex].genes[geneCursor + 1];
+			char organType       = game.animals[animalIndex].genes[geneCursor + 2];
+			char workingValue    = game.animals[animalIndex].genes[geneCursor + 3];
+			char attachedTo      = game.animals[animalIndex].genes[geneCursor + 4];
+			char connectionAngle = game.animals[animalIndex].genes[geneCursor + 5] % nNeighbours;
+
+
+			printf("organ n %c, type %c, workingValue %c, attachedTo %c, connectionAngle %c  \n", name, organType, workingValue, attachedTo, connectionAngle);
+
 			skipAhead = geneCursor + 6;
 
 			int connectedToCell = getCellByName(animalIndex, attachedTo);
-			if (connectedToCell >= 0)
+			if (connectedToCell >= 0 || root == -1)
 			{
+					Vec_i2 connectedToCellPosition = Vec_i2(0,0);
 
-				Vec_i2 connectedToCellPosition = Vec_i2(  game.animals[animalIndex].body[connectedToCell].localPosX, game.animals[animalIndex].body[connectedToCell].localPosY  );
+				if (root != -1)
+				{
+					
 
-				if      (connectionAngle == 0) {connectedToCellPosition.x -= 1; connectedToCellPosition.y -= 0;}
-				else if (connectionAngle == 1) {connectedToCellPosition.x -= 1; connectedToCellPosition.y -= 1;}
-				else if (connectionAngle == 2) {connectedToCellPosition.x -= 0; connectedToCellPosition.y -= 1;}
-				else if (connectionAngle == 3) {connectedToCellPosition.x += 1; connectedToCellPosition.y -= 1;}
-				else if (connectionAngle == 4) {connectedToCellPosition.x += 1; connectedToCellPosition.y -= 0;}
-				else if (connectionAngle == 5) {connectedToCellPosition.x += 1; connectedToCellPosition.y += 1;}
-				else if (connectionAngle == 6) {connectedToCellPosition.x -= 0; connectedToCellPosition.y += 1;}
-				else if (connectionAngle == 7) {connectedToCellPosition.x -= 1; connectedToCellPosition.y += 1;}
 
+
+					Vec_i2 connectedToCellPosition = Vec_i2(  game.animals[animalIndex].body[connectedToCell].localPosX, game.animals[animalIndex].body[connectedToCell].localPosY  );
+
+					if      (connectionAngle == 0) {connectedToCellPosition.x -= 1; connectedToCellPosition.y -= 0;}
+					else if (connectionAngle == 1) {connectedToCellPosition.x -= 1; connectedToCellPosition.y -= 1;}
+					else if (connectionAngle == 2) {connectedToCellPosition.x -= 0; connectedToCellPosition.y -= 1;}
+					else if (connectionAngle == 3) {connectedToCellPosition.x += 1; connectedToCellPosition.y -= 1;}
+					else if (connectionAngle == 4) {connectedToCellPosition.x += 1; connectedToCellPosition.y -= 0;}
+					else if (connectionAngle == 5) {connectedToCellPosition.x += 1; connectedToCellPosition.y += 1;}
+					else if (connectionAngle == 6) {connectedToCellPosition.x -= 0; connectedToCellPosition.y += 1;}
+					else if (connectionAngle == 7) {connectedToCellPosition.x -= 1; connectedToCellPosition.y += 1;}
+
+				}
 				appendCell(animalIndex, organType, connectedToCellPosition);
-				game.animals[animalIndex].body [game.animals[animalIndex].cellsUsed - 1] . workingValue = workingValue;
-				game.animals[animalIndex].body[  game.animals[animalIndex].cellsUsed - 1   ].name = name;
+				unsigned int newCellIndex = game.animals[animalIndex].cellsUsed - 1  ;
+				game.animals[animalIndex].body [newCellIndex] . workingValue = workingValue;
+				game.animals[animalIndex].body[ newCellIndex   ].name = name;
+				if (root == -1)
+				{
+					root= newCellIndex;
+				}
+
 
 			}
 			break;
@@ -2421,11 +2458,15 @@ void growAnimalFromGenes(int animalIndex)
 		{
 
 			// find
-			unsigned int from   = game.animals[animalIndex].genes[geneCursor + 1];
-			unsigned int to     = game.animals[animalIndex].genes[geneCursor + 2];
-			unsigned int weight = game.animals[animalIndex].genes[geneCursor + 3];
-			skipAhead = geneCursor + 4;
+			char from   = game.animals[animalIndex].genes[geneCursor + 1];
+			char to     = game.animals[animalIndex].genes[geneCursor + 2];
+			char weight = game.animals[animalIndex].genes[geneCursor + 3];
 			float fweight = weight / 255.0f;
+
+			printf("connection from %c to %c weight %f \n", from , to, fweight);
+
+
+			skipAhead = geneCursor + 4;
 
 			int fromCell = getCellByName(animalIndex, from);
 			int toCell   = getCellByName(animalIndex, to);
@@ -2453,7 +2494,12 @@ void growAnimalFromGenes(int animalIndex)
 			break;
 		}
 
+		default:
+		{
 
+			printf("\n");
+			break;
+		}
 
 
 
@@ -2470,6 +2516,7 @@ void growAnimalFromGenes(int animalIndex)
 
 
 
+	printf("finished gene drawing.\n");
 }
 
 
@@ -2925,7 +2972,8 @@ void place( int animalIndex)
 	game.animals[animalIndex].fVelX *= 0.9f;
 	game.animals[animalIndex].fVelY *= 0.9f;
 
-
+	game.animals[animalIndex].fVelX  = clamp(game.animals[animalIndex].fVelX , -animalTopSpeed, animalTopSpeed);
+	game.animals[animalIndex].fVelY  = clamp(game.animals[animalIndex].fVelY , -animalTopSpeed, animalTopSpeed);
 
 	game.animals[animalIndex].fAngleCos = cos(game.animals[animalIndex].fAngle);
 	game.animals[animalIndex].fAngleSin = sin(game.animals[animalIndex].fAngle);

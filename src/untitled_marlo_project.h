@@ -122,7 +122,7 @@ struct Cell
 
 
 const unsigned int numberOfStatusEffects = 4;
-const unsigned int animalGenomeSize = 5888;
+const unsigned int animalGenomeSize = 1024;
 
 struct Animal
 {
