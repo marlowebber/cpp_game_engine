@@ -100,6 +100,7 @@ struct Cell
     unsigned int organ;
     float signalIntensity;
     float workingValue;
+    int speakerChannel;
 
     Color color;
     char  name;

@@ -79,11 +79,17 @@
 
 
 
-#define ORGAN_GROUP_INSTANCE      67
-#define ORGAN_GROUP_CREATE        68
-#define ORGAN_SEQUENCE            69
-#define ORGAN_BRANCH              70
-#define ORGAN_BREAK               71
+#define ANIMALGENE_NOTHING       1
+#define ANIMALGENE_ORGAN         2
+#define ANIMALGENE_BREAK         3
+#define ANIMALGENE_SEQUENCE      4
+#define ANIMALGENE_ARRAY         5
+#define ANIMALGENE_GROUPCREATE   6
+#define ANIMALGENE_GROUPINSTANCE 7
+#define ANIMALGENE_CONNECTION    8
+// #define ANIMALGENE_NOTHING       9
+
+#define numberOfAnimalGenes 10 // number limit of growable genes
 
 
 #define MACHINECALLBACK_PISTOL           100

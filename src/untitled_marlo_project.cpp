@@ -1735,7 +1735,8 @@ int findOccupiedChannel( int animalIndex,  int organType)
 	{
 		std::list< int>::iterator iterator = cellsOfType.begin();
 		std::advance(iterator, extremelyFastNumberFromZeroTo( found - 1)) ;
-		return game.animals[animalIndex] .body[(*iterator)].speakerChannel;
+		int result = game.animals[animalIndex] .body[(*iterator)].workingValue;
+		return result;
 	}
 	else
 	{
@@ -1749,9 +1750,10 @@ void modifyChannel( int animalIndex, int channel, int increment)
 	int newChannel = abs((channel + increment)) % numberOfSpeakerChannels;
 	for (int cellIndex = 0; cellIndex < game.animals[animalIndex].cellsUsed; ++cellIndex)
 	{
-		if (game.animals[animalIndex].body[cellIndex].speakerChannel == channel)
+		int ival = game.animals[animalIndex].body[cellIndex].workingValue ;
+		if (ival == channel)
 		{
-			game.animals[animalIndex].body[cellIndex].speakerChannel = newChannel;
+			game.animals[animalIndex].body[cellIndex].workingValue = newChannel;
 		}
 	}
 }
@@ -2311,46 +2313,92 @@ int getCellByName(int animalIndex, char name)
 const unsigned int cellCodonSize = 20;
 const char rootName = 0;
 
-void makeAnimalFromGenes(int animalIndex)
+
+
+
+void growAnimalFromGenes(int animalIndex)
 {
 
 
 	resetAnimal(animalIndex);
 
-
-// go through the animal genes and interpret them.
-	// each cell codon is a set of 20 chars that define a cell and what it connects to.
-
-
-
-	unsigned int maximumNumberOfCellCodons = animalGenomeSize / cellCodonSize;
-	for (int i = 0; i < maximumNumberOfCellCodons; ++i)
+	unsigned int geneCursor = 0;
+	unsigned int skipAhead = 0;
+	unsigned int sequenceDepth = 0;
+	unsigned int sequenceNumber = 0;
+	unsigned int sequenceReturn = 0;
+	while (geneCursor < animalGenomeSize)
 	{
-
-		// | name [1] | organ type [1] |  working value [1] |   connectionAngle[1]  |  connectedto [name,weight]x8 |
-		char name            = game.animals[animalIndex].genes[ (i * cellCodonSize) + 0];
-		char organType       = game.animals[animalIndex].genes[ (i * cellCodonSize) + 1];
-		char workingValue    = game.animals[animalIndex].genes[ (i * cellCodonSize) + 2];
-		char connectionAngle = game.animals[animalIndex].genes[ (i * cellCodonSize) + 3];
+		skipAhead = geneCursor + 1;
 
 
-
-
-		if (name == rootName)
+		char c = game.animals[animalIndex].genes[geneCursor];
+		switch (c)
 		{
-			appendCell(animalIndex, organType, Vec_i2(0, 0));
-			game.animals[animalIndex].body [game.animals[animalIndex].cellsUsed - 1] . workingValue = workingValue;
+
+
+		case ANIMALGENE_GROUPCREATE:
+		{
+
+			break;
 		}
-		else
+		case ANIMALGENE_GROUPINSTANCE:
 		{
 
-			char connectedToCellName = game.animals[animalIndex].genes[ (i * cellCodonSize) + 4];
+			break;
+		}
 
-			int connectedToCell = getCellByName(animalIndex, connectedToCellName);
+
+
+
+		case ANIMALGENE_ARRAY:
+		{
+
+			break;
+		}
+
+
+		case ANIMALGENE_SEQUENCE:
+		{
+			sequenceNumber           = game.animals[animalIndex].genes[geneCursor + 1];
+			sequenceReturn           =  game.animals[animalIndex].genes[geneCursor + 2];
+			sequenceDepth ++;
+			skipAhead =  sequenceReturn;
+			break;
+		}
+
+		case ANIMALGENE_BREAK:
+		{
+			if (sequenceNumber > 0)
+			{
+				skipAhead = sequenceReturn;
+				sequenceNumber--;
+			}
+			else
+			{
+				sequenceDepth--;
+				skipAhead = game.animals[animalIndex].genes[geneCursor + 1];
+			}
+			break;
+		}
+
+
+		case ANIMALGENE_ORGAN:
+		{
+
+
+			unsigned int name            = game.animals[animalIndex].genes[geneCursor + 1];
+			unsigned int organType       = game.animals[animalIndex].genes[geneCursor + 2];
+			unsigned int workingValue    = game.animals[animalIndex].genes[geneCursor + 3];
+			unsigned int attachedTo      = game.animals[animalIndex].genes[geneCursor + 4];
+			unsigned int connectionAngle = game.animals[animalIndex].genes[geneCursor + 5];
+			skipAhead = geneCursor + 6;
+
+			int connectedToCell = getCellByName(animalIndex, attachedTo);
 			if (connectedToCell >= 0)
 			{
 
-				Vec_i2 connectedToCellPosition = Vec_i2(  game.animals[animalIndex].body[connectedToCell].localPosX,game.animals[animalIndex].body[connectedToCell].localPosY  );
+				Vec_i2 connectedToCellPosition = Vec_i2(  game.animals[animalIndex].body[connectedToCell].localPosX, game.animals[animalIndex].body[connectedToCell].localPosY  );
 
 				if      (connectionAngle == 0) {connectedToCellPosition.x -= 1; connectedToCellPosition.y -= 0;}
 				else if (connectionAngle == 1) {connectedToCellPosition.x -= 1; connectedToCellPosition.y -= 1;}
@@ -2363,24 +2411,172 @@ void makeAnimalFromGenes(int animalIndex)
 
 				appendCell(animalIndex, organType, connectedToCellPosition);
 				game.animals[animalIndex].body [game.animals[animalIndex].cellsUsed - 1] . workingValue = workingValue;
+				game.animals[animalIndex].body[  game.animals[animalIndex].cellsUsed - 1   ].name = name;
+
 			}
+			break;
+		}
+
+		case ANIMALGENE_CONNECTION:
+		{
+
+			// find
+			unsigned int from   = game.animals[animalIndex].genes[geneCursor + 1];
+			unsigned int to     = game.animals[animalIndex].genes[geneCursor + 2];
+			unsigned int weight = game.animals[animalIndex].genes[geneCursor + 3];
+			skipAhead = geneCursor + 4;
+			float fweight = weight / 255.0f;
+
+			int fromCell = getCellByName(animalIndex, from);
+			int toCell   = getCellByName(animalIndex, to);
+
+
+			// get the lowest unused connection index
+			int connectionIndex = -1;
+			for (int i = 0; i < NUMBER_OF_CONNECTIONS; ++i)
+			{
+				if ( ! (game.animals[animalIndex].body[toCell].connections[i].used))
+				{
+					connectionIndex = i;
+				}
+			}
+			if (connectionIndex >= 0)
+			{
+				game.animals[animalIndex].body[toCell].connections[connectionIndex].used = true;
+				game.animals[animalIndex].body[toCell].connections[connectionIndex].connectedTo = fromCell;
+				game.animals[animalIndex].body[toCell].connections[connectionIndex].weight = fweight;
+			}
+
+
+
+
+			break;
+		}
+
+
+
 
 
 		}
 
 
 
+
+		geneCursor = skipAhead;
+
 	}
 
 
+
+
+
 }
 
 
-// this is just to get the ball rolling.
-void makeGenesFromAnimal()
+
+void setupExampleAnimal5(int animalIndex)
 {
 
+
+
+	for (int i = 0; i < animalGenomeSize; ++i)
+	{
+		game.animals[animalIndex].genes[i]  = extremelyFastNumberFromZeroTo(255);//examplegenes[i];
+	}
+
+	growAnimalFromGenes( animalIndex);
+
+
 }
+
+
+
+
+
+// void makeAnimalFromGenes(int animalIndex)
+// {
+
+
+// 	resetAnimal(animalIndex);
+
+
+// // go through the animal genes and interpret them.
+// 	// each cell codon is a set of 20 chars that define a cell and what it connects to.
+
+
+
+// 	unsigned int maximumNumberOfCellCodons = animalGenomeSize / cellCodonSize;
+// 	for (int i = 0; i < maximumNumberOfCellCodons; ++i)
+// 	{
+
+// 		// | name [1] | organ type [1] |  working value [1] |   connectionAngle[1]  |  connectedto [name,weight]x8 |
+// 		char name            = game.animals[animalIndex].genes[ (i * cellCodonSize) + 0];
+// 		char organType       = game.animals[animalIndex].genes[ (i * cellCodonSize) + 1];
+// 		char workingValue    = game.animals[animalIndex].genes[ (i * cellCodonSize) + 2];
+// 		char connectionAngle = game.animals[animalIndex].genes[ (i * cellCodonSize) + 3];
+
+
+// 		// sequence: repeat the next n over m times, connected end-to-end.
+// 		// array   : repeat the next individual over n times, all connected in the same way.
+
+
+// 		if (organType == ORGAN_GROUP_CREATE)
+// 		{
+
+// 		}
+
+
+// 		if (name == rootName)
+// 		{
+// 			appendCell(animalIndex, organType, Vec_i2(0, 0));
+// 			game.animals[animalIndex].body [game.animals[animalIndex].cellsUsed - 1] . workingValue = workingValue;
+// 		}
+// 		else
+// 		{
+
+// 			char connectedToCellName = game.animals[animalIndex].genes[ (i * cellCodonSize) + 4];
+
+// 			int connectedToCell = getCellByName(animalIndex, connectedToCellName);
+// 			if (connectedToCell >= 0)
+// 			{
+
+// 				Vec_i2 connectedToCellPosition = Vec_i2(  game.animals[animalIndex].body[connectedToCell].localPosX,game.animals[animalIndex].body[connectedToCell].localPosY  );
+
+// 				if      (connectionAngle == 0) {connectedToCellPosition.x -= 1; connectedToCellPosition.y -= 0;}
+// 				else if (connectionAngle == 1) {connectedToCellPosition.x -= 1; connectedToCellPosition.y -= 1;}
+// 				else if (connectionAngle == 2) {connectedToCellPosition.x -= 0; connectedToCellPosition.y -= 1;}
+// 				else if (connectionAngle == 3) {connectedToCellPosition.x += 1; connectedToCellPosition.y -= 1;}
+// 				else if (connectionAngle == 4) {connectedToCellPosition.x += 1; connectedToCellPosition.y -= 0;}
+// 				else if (connectionAngle == 5) {connectedToCellPosition.x += 1; connectedToCellPosition.y += 1;}
+// 				else if (connectionAngle == 6) {connectedToCellPosition.x -= 0; connectedToCellPosition.y += 1;}
+// 				else if (connectionAngle == 7) {connectedToCellPosition.x -= 1; connectedToCellPosition.y += 1;}
+
+// 				appendCell(animalIndex, organType, connectedToCellPosition);
+// 				game.animals[animalIndex].body [game.animals[animalIndex].cellsUsed - 1] . workingValue = workingValue;
+
+
+// 				// go and hook up the connections.
+
+
+
+// 			}
+
+
+// 		}
+
+
+
+// 	}
+
+
+// }
+
+
+// // this is just to get the ball rolling.
+// void makeGenesFromAnimal()
+// {
+
+// }
 
 
 
@@ -2410,10 +2606,10 @@ void spawnAnimalIntoSlot(  int animalIndex,
 
 
 	game.animals[animalIndex].position = position;
-	game.animals[animalIndex].uPosX = position % worldSize; // set the new creature to the desired position
-	game.animals[animalIndex].uPosY = position / worldSize;
-	game.animals[animalIndex].fPosX = game.animals[animalIndex].uPosX;//position % worldSize; // set the new creature to the desired position
-	game.animals[animalIndex].fPosY = game.animals[animalIndex].uPosY;//position / worldSize;
+	game.animals[animalIndex].fPosX = position % worldSize; // set the new creature to the desired position
+	game.animals[animalIndex].fPosY = position / worldSize;
+	// game.animals[animalIndex].fPosX = game.animals[animalIndex].uPosX;//position % worldSize; // set the new creature to the desired position
+	// game.animals[animalIndex].fPosY = game.animals[animalIndex].uPosY;//position / worldSize;
 
 
 
@@ -2721,6 +2917,16 @@ void place( int animalIndex)
 {
 	ZoneScoped;
 	unsigned int speciesIndex = animalIndex / numberOfAnimalsPerSpecies;
+
+
+	game.animals[animalIndex].fAngle += game.animals[animalIndex].fVelA;
+
+	game.animals[animalIndex].fVelA *= 0.9f;
+	game.animals[animalIndex].fVelX *= 0.9f;
+	game.animals[animalIndex].fVelY *= 0.9f;
+
+
+
 	game.animals[animalIndex].fAngleCos = cos(game.animals[animalIndex].fAngle);
 	game.animals[animalIndex].fAngleSin = sin(game.animals[animalIndex].fAngle);
 
@@ -2741,20 +2947,20 @@ void place( int animalIndex)
 		game.animals[animalIndex].lastfposy = game.animals[animalIndex].fPosY;
 	}
 
-	unsigned int newPosX  = game.animals[animalIndex].fPosX;
-	unsigned int newPosY  = game.animals[animalIndex].fPosY;
+	unsigned int newPosX  = game.animals[animalIndex].fPosX + game.animals[animalIndex].fVelX;
+	unsigned int newPosY  = game.animals[animalIndex].fPosY + game.animals[animalIndex].fVelY;
 	unsigned int newPosition  =  (newPosY * worldSize) + newPosX;
 
 	if (newPosition < worldSquareSize)
 	{
-		if (game.animals[animalIndex].position < worldSquareSize)
-		{
-			if (  materialBlocksMovement( game.world[game.animals[animalIndex].position].wall ) ) // vibrate out of wall if stuck.
-			{
-				game.animals[animalIndex].fPosX += ( (RNG() - 0.5f) * 10.0f  );
-				game.animals[animalIndex].fPosY += ( (RNG() - 0.5f) * 10.0f  );
-			}
-		}
+		// if (game.animals[animalIndex].position < worldSquareSize)
+		// {
+		// 	if (  materialBlocksMovement( game.world[game.animals[animalIndex].position].wall ) ) // vibrate out of wall if stuck.
+		// 	{
+		// 		game.animals[animalIndex].fPosX += ( (RNG() - 0.5f) * 10.0f  );
+		// 		game.animals[animalIndex].fPosY += ( (RNG() - 0.5f) * 10.0f  );
+		// 	}
+		// }
 
 		bool animalInTheWay = false;
 
@@ -2791,8 +2997,8 @@ void place( int animalIndex)
 		}
 		else
 		{
-			// game.animals[animalIndex].uPosX  = game.animals[animalIndex].fPosX;
-			// game.animals[animalIndex].uPosY  = game.animals[animalIndex].fPosY;
+			game.animals[animalIndex].fPosX  = newPosX;//game.animals[animalIndex].fPosX;
+			game.animals[animalIndex].fPosY  = newPosY;//game.animals[animalIndex].fPosY;
 			game.animals[animalIndex].position = newPosition;
 		}
 	}
@@ -5960,8 +6166,8 @@ void animal_organs( int animalIndex)
 
 			float impulse = (game.animals[animalIndex].body[cellIndex].signalIntensity  * musclePower);
 
-			game.animals[animalIndex].fPosX += ((impulse) / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleSin;
-			game.animals[animalIndex].fPosY += ((impulse) / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleCos;
+			game.animals[animalIndex].fVelX += ((impulse) / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleSin;
+			game.animals[animalIndex].fVelY += ((impulse) / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleCos;
 
 			float cost = abs(game.animals[animalIndex].body[cellIndex].signalIntensity ) ;
 			if (cost > 1.0f)
@@ -5988,8 +6194,8 @@ void animal_organs( int animalIndex)
 
 			float impulse = (game.animals[animalIndex].body[cellIndex].signalIntensity  * musclePower) ;
 
-			game.animals[animalIndex].fPosX += ((impulse) / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleCos;
-			game.animals[animalIndex].fPosY += ((impulse) / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleSin;
+			game.animals[animalIndex].fVelX += ((impulse) / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleCos;
+			game.animals[animalIndex].fVelY += ((impulse) / game.animals[animalIndex].mass) * game.animals[animalIndex].fAngleSin;
 
 			float cost = abs(game.animals[animalIndex].body[cellIndex].signalIntensity ) ;
 			if (cost > 1.0f)
@@ -6030,7 +6236,7 @@ void animal_organs( int animalIndex)
 
 			sensorium[cellIndex] = sum;
 
-			game.animals[animalIndex].fAngle += (sum ) / (game.animals[animalIndex].mass / 2);
+			game.animals[animalIndex].fVelA += (sum ) / (game.animals[animalIndex].mass / 2);
 			game.animals[animalIndex].energy -= abs(sum) * game.ecoSettings[2]  ;
 
 			break;
@@ -6846,8 +7052,8 @@ void camera()
 
 	if (game.cameraTargetCreature >= 0)
 	{
-		game.cameraPositionX = game.animals[game.cameraTargetCreature].position % worldSize;
-		game.cameraPositionY = game.animals[game.cameraTargetCreature].position / worldSize;
+		game.cameraPositionX = game.animals[game.cameraTargetCreature].fPosX ;//% worldSize;
+		game.cameraPositionY = game.animals[game.cameraTargetCreature].fPosY ;/// worldSize;
 	}
 	if (game.playerCreature >= 0 )	// if the player doesn't have any eyes, don't draw anything!
 	{
@@ -9017,13 +9223,18 @@ void spawnAnimalAtCursor()
 	unsigned int worldCursorPos = (cursorPosY * worldSize) + cursorPosX;
 
 	int j = 1;
-	setupExampleAnimal4(j);
-	paintAnimal(j);
+	// setupExampleAnimal4(j);
+	// paintAnimal(j);
+
+
+	setupExampleAnimal5( j);
 	int domingo = spawnAnimal( 1,  game.animals[j], worldCursorPos, false);
 	if (domingo >= 0)
 	{
 		game.animals[domingo].energy = game.animals[domingo].cellsUsed / 2;
 	}
+
+
 
 }
 
